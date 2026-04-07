@@ -8,92 +8,118 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', system-ui, sans-serif; }
-        .card { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); }
-        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); transition: all 0.2s; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4); }
+        .card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
+        .btn-primary { background: linear-gradient(135deg,#667eea,#764ba2); transition: all 0.2s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.4); }
         .btn-google { background: white; color: #1f2937; transition: all 0.2s; border: 1px solid #e5e7eb; }
         .btn-google:hover { background: #f9fafb; transform: translateY(-2px); }
-        .btn-danger { background: linear-gradient(135deg, #f093fb, #f5576c); transition: all 0.2s; }
+        .btn-danger { background: linear-gradient(135deg,#f093fb,#f5576c); transition: all 0.2s; }
     </style>
 </head>
 <body class="bg-gray-950 min-h-screen text-white">
-    <div id="app" class="max-w-2xl mx-auto p-4">
+    <div class="max-w-2xl mx-auto p-4">
         <header class="flex justify-between items-center mb-8 bg-gray-900 p-4 rounded-2xl border border-gray-800">
             <h1 class="text-xl font-bold">קהילת המפתחים</h1>
             <div id="auth-status"></div>
         </header>
-        <div id="login-section" class="hidden text-center py-20">
+
+        <div id="login-section" class="text-center py-20">
             <h2 class="text-3xl font-bold mb-4">ברוכים הבאים</h2>
             <p class="text-gray-400 mb-8">התחברו כדי לשתף ולהתעדכן</p>
-            <button id="google-login" class="btn-google flex items-center gap-2 px-6 py-3 rounded-xl mx-auto font-medium">
+            <button id="google-login" class="btn-google inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium">
                 <img src="https://www.google.com/favicon.ico" class="w-5 h-5">
                 התחברות עם Google
             </button>
         </div>
-        <div id="content-section" class="hidden">
-            <div class="mb-8">
+
+        <div id="content-section" style="display:none">
+            <div class="mb-6">
                 <textarea id="post-content" class="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:ring-2 focus:ring-purple-500 outline-none" rows="3" placeholder="מה חדש בקהילה?"></textarea>
-                <button id="send-post" class="btn-primary w-full mt-2 py-3 rounded-xl font-bold">פרסם פוסט</button>
+                <button id="send-post" class="btn-primary w-full mt-2 py-3 rounded-xl font-bold text-white">פרסם פוסט</button>
             </div>
             <div id="posts-container" class="space-y-4"></div>
         </div>
     </div>
+
     <script>
         const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_VWqg5KanuCRMFAAMCBWnuA_ZtSWIBWr';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_KEY = 'sb_publishable_VWqg5KanuCRMFAAMCBWnuA_ZtSWIBWr';
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const loginSection = document.getElementById('login-section');
         const contentSection = document.getElementById('content-section');
         const authStatus = document.getElementById('auth-status');
         const postsContainer = document.getElementById('posts-container');
         const postInput = document.getElementById('post-content');
-        const sendBtn = document.getElementById('send-post');
-        supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                loginSection.classList.add('hidden');
-                contentSection.classList.remove('hidden');
-                authStatus.innerHTML = \`
-                    <div class=\"flex items-center gap-2\">
-                        <img src=\"\${session.user.user_metadata.avatar_url}\" class=\"w-8 h-8 rounded-full\">
-                        <span class=\"text-sm font-medium\">\${session.user.user_metadata.full_name}</span>
-                        <button onclick=\"supabaseClient.auth.signOut()\" class=\"text-xs text-red-400 hover:underline\">יציאה</button>
-                    </div>
-                \`;
-                fetchPosts();
+
+        function showLogin() {
+            loginSection.style.display = 'block';
+            contentSection.style.display = 'none';
+            authStatus.innerHTML = '';
+        }
+
+        function showContent(user) {
+            loginSection.style.display = 'none';
+            contentSection.style.display = 'block';
+            authStatus.innerHTML = \`
+                <div class=\"flex items-center gap-2\">
+                    <img src=\"\${user.user_metadata.avatar_url || ''}\" class=\"w-8 h-8 rounded-full\" onerror=\"this.style.display='none'\">
+                    <span class=\"text-sm font-medium\">\${user.user_metadata.full_name || user.email}</span>
+                    <button onclick=\"sb.auth.signOut()\" class=\"text-xs text-red-400 hover:underline ml-2\">יציאה</button>
+                </div>\`;
+            fetchPosts();
+        }
+
+        sb.auth.onAuthStateChange((event, session) => {
+            if (session && session.user) {
+                showContent(session.user);
             } else {
-                loginSection.classList.remove('hidden');
-                contentSection.classList.add('hidden');
-                authStatus.innerHTML = '';
+                showLogin();
             }
         });
+
         document.getElementById('google-login').onclick = async () => {
-            await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+            const { error } = await sb.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: 'https://moshikoomg.github.io/community-app/' }
+            });
+            if (error) alert('שגיאה: ' + error.message);
         };
+
         async function fetchPosts() {
-            const { data, error } = await supabaseClient.from('posts').select('*').order('created_at', { ascending: false });
-            if (error) return console.error(error);
+            const { data, error } = await sb.from('posts').select('*').order('created_at', { ascending: false });
+            if (error) { console.error(error); return; }
+            if (!data || data.length === 0) {
+                postsContainer.innerHTML = '<p class=\"text-gray-500 text-center py-8\">אין פוסטים עדיין. היו הראשונים לשתף!</p>';
+                return;
+            }
             postsContainer.innerHTML = data.map(post => \`
-                <div class=\"card p-4 rounded-2xl\">
+                <div class=\"card p-4 rounded-2xl mb-4\">
                     <div class=\"flex items-center gap-3 mb-2\">
-                        <img src=\"\${post.author_avatar}\" class=\"w-10 h-10 rounded-full border border-gray-700\">
+                        <img src=\"\${post.author_avatar || ''}\" class=\"w-10 h-10 rounded-full border border-gray-700\" onerror=\"this.style.display='none'\">
                         <div>
-                            <p class=\"font-bold text-sm\">\${post.author_name}</p>
+                            <p class=\"font-bold text-sm\">\${post.author_name || 'אנונימי'}</p>
                             <p class=\"text-xs text-gray-400\">\${new Date(post.created_at).toLocaleString('he-IL')}</p>
                         </div>
                     </div>
-                    <p class=\"text-gray-200\">\${post.content}</p>
-                </div>
-            \`).join('');
+                    <p class=\"text-gray-200 leading-relaxed\">\${post.content}</p>
+                </div>\`).join('');
         }
-        sendBtn.onclick = async () => {
+
+        document.getElementById('send-post').onclick = async () => {
             const content = postInput.value.trim();
             if (!content) return;
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const { error } = await supabaseClient.from('posts').insert([{ content, user_id: user.id, author_name: user.user_metadata.full_name, author_avatar: user.user_metadata.avatar_url }]);
-            if (error) alert('Error: ' + error.message);
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) { showLogin(); return; }
+            const { error } = await sb.from('posts').insert([{
+                content,
+                user_id: user.id,
+                author_name: user.user_metadata.full_name || user.email,
+                author_avatar: user.user_metadata.avatar_url || ''
+            }]);
+            if (error) alert('שגיאה: ' + error.message);
             else { postInput.value = ''; fetchPosts(); }
         };
-        supabaseClient.auth.getSession().then(({ data: { session } }) => { if (session) fetchPosts(); });
     </script>
 </body>
 </html>
