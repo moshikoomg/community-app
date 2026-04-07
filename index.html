@@ -27,9 +27,10 @@
             <h2 class="text-3xl font-bold mb-4">ברוכים הבאים</h2>
             <p class="text-gray-400 mb-8">התחברו כדי לשתף ולהתעדכן</p>
             <button id="google-login" class="btn-google inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium">
-                <img src="https://www.google.com/favicon.ico" class="w-5 h-5">
+                <img src="https://www.google.com/favicon.ico" class="w-5 h-5" alt="G">
                 התחברות עם Google
             </button>
+            <div id="login-error" class="mt-4 text-red-400 text-sm hidden"></div>
         </div>
 
         <div id="content-section" style="display:none">
@@ -43,7 +44,7 @@
 
     <script>
         const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_VWqg5KanuCRMFAAMCBWnuA_ZtSWIBWr';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww';
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const loginSection = document.getElementById('login-section');
@@ -51,58 +52,61 @@
         const authStatus = document.getElementById('auth-status');
         const postsContainer = document.getElementById('posts-container');
         const postInput = document.getElementById('post-content');
+        const loginError = document.getElementById('login-error');
 
-        function showLogin() {
+        function showLogin(msg) {
             loginSection.style.display = 'block';
             contentSection.style.display = 'none';
             authStatus.innerHTML = '';
+            if (msg) { loginError.textContent = msg; loginError.classList.remove('hidden'); }
         }
 
         function showContent(user) {
             loginSection.style.display = 'none';
             contentSection.style.display = 'block';
-            authStatus.innerHTML = \`
-                <div class=\"flex items-center gap-2\">
-                    <img src=\"\${user.user_metadata.avatar_url || ''}\" class=\"w-8 h-8 rounded-full\" onerror=\"this.style.display='none'\">
-                    <span class=\"text-sm font-medium\">\${user.user_metadata.full_name || user.email}</span>
-                    <button onclick=\"sb.auth.signOut()\" class=\"text-xs text-red-400 hover:underline ml-2\">יציאה</button>
-                </div>\`;
+            authStatus.innerHTML = \`<div class=\"flex items-center gap-2\">
+                <img src=\"\${user.user_metadata.avatar_url||''}\" class=\"w-8 h-8 rounded-full\" onerror=\"this.style.display='none'\">
+                <span class=\"text-sm font-medium\">\${user.user_metadata.full_name||user.email}</span>
+                <button onclick=\"sb.auth.signOut()\" class=\"text-xs text-red-400 hover:underline ml-2\">יציאה</button>
+            </div>\`;
             fetchPosts();
         }
 
         sb.auth.onAuthStateChange((event, session) => {
-            if (session && session.user) {
-                showContent(session.user);
-            } else {
-                showLogin();
-            }
+            console.log('Auth event:', event, session);
+            if (session && session.user) showContent(session.user);
+            else showLogin();
         });
 
         document.getElementById('google-login').onclick = async () => {
-            const { error } = await sb.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: 'https://moshikoomg.github.io/community-app/' }
-            });
-            if (error) alert('שגיאה: ' + error.message);
+            loginError.classList.add('hidden');
+            try {
+                const { data, error } = await sb.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: 'https://moshikoomg.github.io/community-app/' }
+                });
+                console.log('OAuth result:', data, error);
+                if (error) showLogin('שגיאה: ' + error.message);
+            } catch(e) {
+                console.error('OAuth error:', e);
+                showLogin('שגיאה: ' + e.message);
+            }
         };
 
         async function fetchPosts() {
             const { data, error } = await sb.from('posts').select('*').order('created_at', { ascending: false });
-            if (error) { console.error(error); return; }
-            if (!data || data.length === 0) {
-                postsContainer.innerHTML = '<p class=\"text-gray-500 text-center py-8\">אין פוסטים עדיין. היו הראשונים לשתף!</p>';
-                return;
-            }
-            postsContainer.innerHTML = data.map(post => \`
-                <div class=\"card p-4 rounded-2xl mb-4\">
+            if (error) { console.error('Fetch error:', error); return; }
+            postsContainer.innerHTML = !data||data.length===0
+                ? '<p class=\"text-gray-500 text-center py-8\">אין פוסטים עדיין. היו הראשונים!</p>'
+                : data.map(p => \`<div class=\"card p-4 rounded-2xl mb-4\">
                     <div class=\"flex items-center gap-3 mb-2\">
-                        <img src=\"\${post.author_avatar || ''}\" class=\"w-10 h-10 rounded-full border border-gray-700\" onerror=\"this.style.display='none'\">
+                        <img src=\"\${p.author_avatar||''}\" class=\"w-10 h-10 rounded-full border border-gray-700\" onerror=\"this.style.display='none'\">
                         <div>
-                            <p class=\"font-bold text-sm\">\${post.author_name || 'אנונימי'}</p>
-                            <p class=\"text-xs text-gray-400\">\${new Date(post.created_at).toLocaleString('he-IL')}</p>
+                            <p class=\"font-bold text-sm\">\${p.author_name||'אנונימי'}</p>
+                            <p class=\"text-xs text-gray-400\">\${new Date(p.created_at).toLocaleString('he-IL')}</p>
                         </div>
                     </div>
-                    <p class=\"text-gray-200 leading-relaxed\">\${post.content}</p>
+                    <p class=\"text-gray-200 leading-relaxed\">\${p.content}</p>
                 </div>\`).join('');
         }
 
@@ -111,12 +115,7 @@
             if (!content) return;
             const { data: { user } } = await sb.auth.getUser();
             if (!user) { showLogin(); return; }
-            const { error } = await sb.from('posts').insert([{
-                content,
-                user_id: user.id,
-                author_name: user.user_metadata.full_name || user.email,
-                author_avatar: user.user_metadata.avatar_url || ''
-            }]);
+            const { error } = await sb.from('posts').insert([{ content, user_id: user.id, author_name: user.user_metadata.full_name||user.email, author_avatar: user.user_metadata.avatar_url||'' }]);
             if (error) alert('שגיאה: ' + error.message);
             else { postInput.value = ''; fetchPosts(); }
         };
