@@ -14,206 +14,86 @@
         .btn-google { background: white; color: #1f2937; transition: all 0.2s; border: 1px solid #e5e7eb; }
         .btn-google:hover { background: #f9fafb; transform: translateY(-2px); }
         .btn-danger { background: linear-gradient(135deg, #f093fb, #f5576c); transition: all 0.2s; }
-        .btn-green { background: linear-gradient(135deg, #11998e, #38ef7d); transition: all 0.2s; }
-        .entry-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.2s; }
-        .entry-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateX(-4px); }
     </style>
 </head>
 <body class="bg-gray-950 min-h-screen text-white">
-    <div class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-lg">🏠</div>
-            <div>
-                <h1 class="font-bold text-lg leading-none">Community App</h1>
-                <p class="text-xs text-gray-400">פלטפורמה קהילתית מאובטחת</p>
-            </div>
+    <div id="app" class="max-w-2xl mx-auto p-4">
+        <header class="flex justify-between items-center mb-8 bg-gray-900 p-4 rounded-2xl border border-gray-800">
+            <h1 class="text-xl font-bold">קהילת המפתחים</h1>
+            <div id="auth-status"></div>
+        </header>
+        <div id="login-section" class="hidden text-center py-20">
+            <h2 class="text-3xl font-bold mb-4">ברוכים הבאים</h2>
+            <p class="text-gray-400 mb-8">התחברו כדי לשתף ולהתעדכן</p>
+            <button id="google-login" class="btn-google flex items-center gap-2 px-6 py-3 rounded-xl mx-auto font-medium">
+                <img src="https://www.google.com/favicon.ico" class="w-5 h-5">
+                התחברות עם Google
+            </button>
         </div>
-        <div id="header-user" class="hidden flex items-center gap-3">
-            <p id="header-email" class="text-sm font-medium text-gray-300"></p>
-            <button id="signout-btn" class="btn-danger text-white text-sm px-4 py-2 rounded-xl font-medium">יציאה</button>
+        <div id="content-section" class="hidden">
+            <div class="mb-8">
+                <textarea id="post-content" class="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:ring-2 focus:ring-purple-500 outline-none" rows="3" placeholder="מה חדש בקהילה?"></textarea>
+                <button id="send-post" class="btn-primary w-full mt-2 py-3 rounded-xl font-bold">פרסם פוסט</button>
+            </div>
+            <div id="posts-container" class="space-y-4"></div>
         </div>
     </div>
-
-    <div class="max-w-2xl mx-auto p-6 space-y-6">
-        <div id="loading" class="text-center py-20">
-            <div class="inline-block w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-gray-400 mt-4 text-sm">טוען...</p>
-        </div>
-
-        <div id="auth-section" class="hidden">
-            <div class="card rounded-2xl p-8 space-y-5">
-                <div class="text-center mb-6">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-3xl mx-auto mb-3">🔒</div>
-                    <h2 class="text-2xl font-bold">ברוכים הבאים</h2>
-                    <p class="text-gray-400 text-sm mt-1">התחברו כדי להמשיך</p>
-                </div>
-
-                <div class="space-y-4">
-                    <button id="google-btn" class="btn-google w-full flex items-center justify-center gap-3 py-3 rounded-xl font-semibold">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
-                        התחבר עם Google
-                    </button>
-                    <div class="flex items-center gap-4 text-gray-600">
-                        <div class="flex-1 h-px bg-gray-800"></div>
-                        <span class="text-xs uppercase font-bold text-gray-500">או</span>
-                        <div class="flex-1 h-px bg-gray-800"></div>
-                    </div>
-                    <input id="email" type="email" placeholder="כתובת אימייל" class="w-full p-4 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition">
-                    <input id="password" type="password" placeholder="סיסמה (מינימום 6 תווים)" class="w-full p-4 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition">
-                </div>
-
-                <div id="auth-error" class="hidden text-red-400 text-sm bg-red-900/30 border border-red-800 rounded-xl p-3"></div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <button id="signin-btn" class="btn-primary text-white py-3 rounded-xl font-semibold">התחבר</button>
-                    <button id="signup-btn" class="btn-green text-white py-3 rounded-xl font-semibold">הרשם</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="app-section" class="hidden space-y-6">
-            <div class="card rounded-2xl p-6 space-y-4">
-                <h2 class="font-bold text-lg">✍️ הוסף רשומה חדשה</h2>
-                <textarea id="content" placeholder="מה תרצה לשמור? כתוב כאן..." rows="4" class="w-full p-4 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition resize-none"></textarea>
-                <button id="submit-btn" class="btn-primary w-full text-white py-4 rounded-xl font-bold text-lg">🚀 שמור רשומה</button>
-            </div>
-
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-xl">📅 ההיסטוריה שלך</h2>
-                    <span id="count-badge" class="bg-gray-800 px-3 py-1 rounded-full text-xs font-bold text-purple-400">0 רשומות</span>
-                </div>
-                <div id="history-items" class="space-y-3"></div>
-            </div>
-        </div>
-    </div>
-
     <script>
         const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww';
-        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        const $ = id => document.getElementById(id);
-
-        async function init() {
-            const { data: { session } } = await supabase.auth.getSession();
-            $('loading').classList.add('hidden');
-            
+        const SUPABASE_ANON_KEY = 'sb_publishable_VWqg5KanuCRMFAAMCBWnuA_ZtSWIBWr';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const loginSection = document.getElementById('login-section');
+        const contentSection = document.getElementById('content-section');
+        const authStatus = document.getElementById('auth-status');
+        const postsContainer = document.getElementById('posts-container');
+        const postInput = document.getElementById('post-content');
+        const sendBtn = document.getElementById('send-post');
+        supabaseClient.auth.onAuthStateChange((event, session) => {
             if (session) {
-                showApp(session.user);
-            } else {
-                $('auth-section').classList.remove('hidden');
-            }
-
-            supabase.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_IN') {
-                    $('auth-section').classList.add('hidden');
-                    $('loading').classList.add('hidden');
-                    showApp(session.user);
-                }
-                if (event === 'SIGNED_OUT') {
-                    $('app-section').classList.add('hidden');
-                    $('header-user').classList.add('hidden');
-                    $('auth-section').classList.remove('hidden');
-                }
-            });
-        }
-
-        function showApp(user) {
-            $('app-section').classList.remove('hidden');
-            $('header-user').classList.remove('hidden');
-            $('header-email').textContent = user.email;
-            loadHistory();
-            subscribeRealtime();
-        }
-
-        $('google-btn').addEventListener('click', async () => {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.href }
-            });
-            if (error) alert('שגיאה בהתחברות עם Google: ' + error.message);
-        });
-
-        $('signup-btn').addEventListener('click', async () => {
-            const email = $('email').value.trim();
-            const password = $('password').value;
-            $('auth-error').classList.add('hidden');
-            const { error } = await supabase.auth.signUp({ email, password });
-            if (error) {
-                $('auth-error').textContent = error.message;
-                $('auth-error').classList.remove('hidden');
-            } else {
-                $('auth-error').style.color = '#34d399';
-                $('auth-error').textContent = 'נשלח אימייל אימות - בדוק את תיבת הדואר!';
-                $('auth-error').classList.remove('hidden');
-            }
-        });
-
-        $('signin-btn').addEventListener('click', async () => {
-            const email = $('email').value.trim();
-            const password = $('password').value;
-            $('auth-error').classList.add('hidden');
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) {
-                $('auth-error').textContent = error.message;
-                $('auth-error').classList.remove('hidden');
-            }
-        });
-
-        $('signout-btn').addEventListener('click', () => supabase.auth.signOut());
-
-        $('submit-btn').addEventListener('click', async () => {
-            const content = $('content').value.trim();
-            if (!content) return;
-            
-            $('submit-btn').disabled = true;
-            $('submit-btn').textContent = 'שומר...';
-            
-            const { error } = await supabase.from('history').insert({ content });
-            
-            $('submit-btn').disabled = false;
-            $('submit-btn').textContent = '🚀 שמור רשומה';
-            
-            if (error) alert('שגיאה: ' + error.message);
-            else $('content').value = '';
-        });
-
-        async function loadHistory() {
-            const { data } = await supabase.from('history').select('*').order('created_at', { ascending: false });
-            const items = data || [];
-            $('count-badge').textContent = items.length + ' רשומות';
-            
-            if (items.length === 0) {
-                $('history-items').innerHTML = '<div class="text-center text-gray-500 py-8"><p>אין רשומות עדיין. הוסף את הראשונה!</p></div>';
-                return;
-            }
-
-            $('history-items').innerHTML = items.map(item => `
-                <div class="entry-card rounded-xl p-4">
-                    <p class="text-white text-sm leading-relaxed">${item.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>
-                    <div class="flex items-center justify-between mt-3">
-                        <span class="text-xs text-gray-500">${new Date(item.created_at).toLocaleString('he-IL')}</span>
-                        <button onclick="deleteEntry('${item.id}')" class="text-xs text-red-400 hover:text-red-300 transition">מחק</button>
+                loginSection.classList.add('hidden');
+                contentSection.classList.remove('hidden');
+                authStatus.innerHTML = \`
+                    <div class=\"flex items-center gap-2\">
+                        <img src=\"\${session.user.user_metadata.avatar_url}\" class=\"w-8 h-8 rounded-full\">
+                        <span class=\"text-sm font-medium\">\${session.user.user_metadata.full_name}</span>
+                        <button onclick=\"supabaseClient.auth.signOut()\" class=\"text-xs text-red-400 hover:underline\">יציאה</button>
                     </div>
+                \`;
+                fetchPosts();
+            } else {
+                loginSection.classList.remove('hidden');
+                contentSection.classList.add('hidden');
+                authStatus.innerHTML = '';
+            }
+        });
+        document.getElementById('google-login').onclick = async () => {
+            await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+        };
+        async function fetchPosts() {
+            const { data, error } = await supabaseClient.from('posts').select('*').order('created_at', { ascending: false });
+            if (error) return console.error(error);
+            postsContainer.innerHTML = data.map(post => \`
+                <div class=\"card p-4 rounded-2xl\">
+                    <div class=\"flex items-center gap-3 mb-2\">
+                        <img src=\"\${post.author_avatar}\" class=\"w-10 h-10 rounded-full border border-gray-700\">
+                        <div>
+                            <p class=\"font-bold text-sm\">\${post.author_name}</p>
+                            <p class=\"text-xs text-gray-400\">\${new Date(post.created_at).toLocaleString('he-IL')}</p>
+                        </div>
+                    </div>
+                    <p class=\"text-gray-200\">\${post.content}</p>
                 </div>
-            `).join('');
+            \`).join('');
         }
-
-        async function deleteEntry(id) {
-            if (!confirm('למחוק רשומה זו?')) return;
-            await supabase.from('history').delete().eq('id', id);
-            loadHistory();
-        }
-
-        function subscribeRealtime() {
-            supabase.channel('history-ch').on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'history' }, 
-                () => loadHistory()
-            ).subscribe();
-        }
-
-        init();
+        sendBtn.onclick = async () => {
+            const content = postInput.value.trim();
+            if (!content) return;
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const { error } = await supabaseClient.from('posts').insert([{ content, user_id: user.id, author_name: user.user_metadata.full_name, author_avatar: user.user_metadata.avatar_url }]);
+            if (error) alert('Error: ' + error.message);
+            else { postInput.value = ''; fetchPosts(); }
+        };
+        supabaseClient.auth.getSession().then(({ data: { session } }) => { if (session) fetchPosts(); });
     </script>
 </body>
 </html>
