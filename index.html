@@ -33,7 +33,7 @@
     import { createRoot } from 'react-dom/client';
     import { createClient } from '@supabase/supabase-js';
     import { 
-      Star, Check, Lightbulb, Trophy, Crown, Medal, Award, Users, ArrowLeft, TrendingUp, Menu, Plus, Clock, Trash2, GripVertical, ArrowUpToLine, ArrowDownAZ, Sun, Sunset, Moon, AlignLeft, ChevronDown, ChevronUp, Lock, Target, Send, Sparkles, PartyPopper, Search, AlertCircle, Move, Droplet, Zap, Edit3, Minus, Calendar, Camera, Settings, ArrowRight, User, Palette, CreditCard, Wrench, Share2, ChevronLeft, Flag, Loader2
+      Star, Check, Lightbulb, Trophy, Crown, Medal, Award, Users, ArrowLeft, TrendingUp, Menu, Plus, Clock, Trash2, GripVertical, ArrowUpToLine, ArrowDownAZ, Sun, Sunset, Moon, AlignLeft, ChevronDown, ChevronUp, Lock, Target, Send, Sparkles, PartyPopper, Search, AlertCircle, Move, Droplet, Zap, Edit3, Minus, Calendar, Camera, Settings, ArrowRight, User, Palette, CreditCard, Wrench, Share2, ChevronLeft, Flag, Loader2, Cloud
     } from 'lucide-react';
 
     const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
@@ -141,6 +141,7 @@
     function App() {
       const [session, setSession] = useState(null);
       const [isDataLoaded, setIsDataLoaded] = useState(false);
+      const [syncStatus, setSyncStatus] = useState('synced');
       
       const [headerView, setHeaderView] = useState('daily'); 
       const [habitsStatus, setHabitsStatus] = useState({});
@@ -196,8 +197,6 @@
            if (d.user) setUser(d.user);
            if (d.theme) setTheme(d.theme);
            if (d.avatars) setAvatars(d.avatars);
-           
-           // התיקון שלנו: משחזרים את ציורי האייקונים מהקוד המקומי אחרי הטעינה ממסד הנתונים
            if (d.badges) {
              const restoredBadges = d.badges.map(savedBadge => {
                  const original = INITIAL_BADGES.find(ib => ib.id === savedBadge.id);
@@ -214,10 +213,18 @@
 
       useEffect(() => {
         if (!isDataLoaded || !session) return;
+        setSyncStatus('saving');
         const timer = setTimeout(async () => {
            const appDataToSave = { habits, habitsStatus, tasks, user, theme, badges, avatars };
-           await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
-        }, 2000);
+           const { error } = await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
+           
+           if (error) {
+               console.error("Supabase Save Error:", error);
+               setSyncStatus('error');
+           } else {
+               setSyncStatus('synced');
+           }
+        }, 1000); 
         return () => clearTimeout(timer);
       }, [habits, habitsStatus, tasks, user, theme, badges, avatars, isDataLoaded, session]);
 
@@ -332,12 +339,29 @@
         }
       };
 
+      // === תוקן כאן: פונקציית הוספת משימה כדי שלא תמחק דברים ===
       const addTask = () => {
-        if(!newTaskText.trim()) return;
-        setTasks([...tasks, { id: Date.now().toString(), text: newTaskText, date: getTodayDate(), time: '', notes: '', isDone: false }]);
+        if(!newTaskText || !newTaskText.trim()) return;
+        setTasks(prevTasks => [...prevTasks, { 
+           id: Date.now().toString(), 
+           text: newTaskText.trim(), 
+           date: getTodayDate(), 
+           time: '', 
+           notes: '', 
+           isDone: false 
+        }]);
         setNewTaskText('');
       };
+      
+      const handleTaskInputKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTask();
+        }
+      };
+
       const toggleTaskDone = (id) => setTasks(tasks.map(t => t.id === id ? { ...t, isDone: !t.isDone } : t));
+      const deleteTask = (id) => setTasks(tasks.filter(t => t.id !== id));
       
       const onDragStart = (e, index) => { e.dataTransfer.effectAllowed = "move"; setTimeout(() => setDraggedIdx(index), 0); };
       const onDragEnd = () => { setDraggedIdx(null); setDragOverIdx(null); };
@@ -459,7 +483,14 @@
               <span className="text-[11px] font-black c-dark">{user.name}</span>
             </button>
 
-            <div className={`absolute top-0 left-0 w-full z-[140] bg-white/95 backdrop-blur-xl border-b border-gray-100 pt-12 pb-2 px-4 shadow-sm transition-all duration-500 ease-in-out ${isScrolled ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
+            {/* חיווי שמירה בענן */}
+            <div className="absolute top-4 right-4 z-[150] flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-3 py-2 rounded-full shadow-sm border border-gray-100 text-[10px] font-bold c-dark">
+               {syncStatus === 'saving' ? <><Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500"/> <span className="mt-0.5">מתעדכן...</span></> : 
+                syncStatus === 'error' ? <><AlertCircle className="w-3.5 h-3.5 text-red-500"/> <span className="mt-0.5">שגיאת רשת</span></> :
+                <><Cloud className="w-3.5 h-3.5 text-green-500"/> <span className="mt-0.5">מגובה בענן</span></>}
+            </div>
+
+            <div className={`absolute top-0 left-0 w-full z-[140] bg-white/95 backdrop-blur-xl border-b border-gray-100 pt-16 pb-2 px-4 shadow-sm transition-all duration-500 ease-in-out ${isScrolled ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
               <nav className="flex gap-4 overflow-x-auto no-scrollbar whitespace-nowrap">
                 {HEADER_TABS.map(item => (
                   <button key={item.id} onClick={() => goToTab(item.id)} className={`text-[11px] font-black transition-all px-3 py-1.5 rounded-full border-2 ${headerView === item.id ? 'bg-primary text-white border-primary' : 'text-gray-400 border-transparent'}`}>{item.label}</button>
@@ -468,7 +499,7 @@
             </div>
 
             <div ref={mainScrollAreaRef} onScroll={handleMainScroll} className="flex-1 overflow-y-auto overflow-x-hidden theme-bg-gradient c-dark select-none relative no-scrollbar">
-              <div className="w-full px-4 pb-12 pt-2 mt-12">
+              <div className="w-full px-4 pb-12 pt-2 mt-16">
                 
                 {activeAvatar && (
                   <div className="w-full h-32 mb-4 flex items-center justify-center animate-in zoom-in-95 duration-700">
@@ -639,14 +670,17 @@
                       <div key={t.id} draggable onDragStart={(e) => onDragStart(e, i)} onDragEnd={onDragEnd} onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)} className="p-3 bg-white rounded-2xl border border-gray-100 flex items-center gap-3">
                         <GripVertical className="w-4 h-4 text-gray-300 shrink-0" />
                         <span className="text-sm font-bold flex-1 text-right truncate">{t.text}</span>
-                        <button onClick={() => toggleTaskDone(t.id)} className="w-7 h-7 rounded-full border-2 border-gray-100 text-transparent active:scale-90 transition-transform"><Check className="w-4 h-4 fill-current"/></button>
+                        <div className="flex gap-2 shrink-0">
+                            <button onClick={() => deleteTask(t.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                            <button onClick={() => toggleTaskDone(t.id)} className="w-7 h-7 rounded-full border-2 border-gray-100 text-transparent active:scale-90 transition-transform"><Check className="w-4 h-4 fill-current"/></button>
+                        </div>
                       </div>
                     ))}
                 </div>
                 <div className="p-5 bg-white border-t border-gray-100 shrink-0">
                    <div className="flex gap-2">
                      <button onClick={addTask} className="w-12 h-12 bg-dark text-white rounded-2xl flex items-center justify-center shrink-0 shadow-md active:scale-90 transition-transform"><Plus className="w-5 h-5"/></button>
-                     <input value={newTaskText} onChange={e => setNewTaskText(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTask()} placeholder="הוסף משימה..." className="flex-1 bg-gray-50 rounded-2xl px-4 text-right text-sm font-bold outline-none border border-transparent focus:border-primary transition-all" />
+                     <input value={newTaskText} onChange={e => setNewTaskText(e.target.value)} onKeyDown={handleTaskInputKeyDown} placeholder="הוסף משימה (לחץ Enter לשמירה)..." className="flex-1 bg-gray-50 rounded-2xl px-4 text-right text-sm font-bold outline-none border border-transparent focus:border-primary transition-all" />
                    </div>
                 </div>
               </div>
