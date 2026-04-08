@@ -2,608 +2,153 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>אפליקציית הרגלים</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>אפליקציית קהילה</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "lucide-react": "https://esm.sh/lucide-react@0.292.0"
-      }
-    }
-  </script>
-  
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { margin: 0; padding: 0; background-color: #F0F2F5; font-family: system-ui, -apple-system, sans-serif; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; }
+    .card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
+    .btn-primary { background: linear-gradient(135deg,#667eea,#764ba2); transition: all 0.2s; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.4); }
+    .btn-google { background: white; color: #1f2937; transition: all 0.2s; border: 1px solid #e5e7eb; }
+    .btn-google:hover { background: #f9fafb; transform: translateY(-2px); }
+    .btn-danger { background: linear-gradient(135deg,#f093fb,#f5576c); transition: all 0.2s; }
   </style>
 </head>
-<body>
-  <div id="root"></div>
+<body class="bg-gray-950 min-h-screen text-white">
+  <div class="max-w-2xl mx-auto p-4">
+    <header class="flex justify-between items-center mb-8 bg-gray-900 p-4 rounded-2xl border border-gray-800">
+      <h1 class="text-xl font-bold">קהילת המפתחים</h1>
+      <div id="auth-status"></div>
+    </header>
 
-  <script type="text/babel" data-type="module">
-    import React, { useState, useMemo, useEffect, useRef } from 'react';
-    import { createRoot } from 'react-dom/client';
-    import { 
-      Star, Check, Lightbulb, Trophy, Crown, Medal, Award, Users, ArrowLeft, TrendingUp, Menu, Plus, Clock, Trash2, GripVertical, ArrowUpToLine, ArrowDownAZ, Sun, Sunset, Moon, AlignLeft, ChevronDown, ChevronUp, Lock, Target, Send, Sparkles, PartyPopper, Search, AlertCircle, Move, Droplet, Zap, Edit3, Minus, Calendar, Camera, Settings, ArrowRight, User, Palette, CreditCard, Wrench, Share2, ChevronLeft, Flag
-    } from 'lucide-react';
+    <div id="login-section" class="text-center py-20">
+      <h2 class="text-3xl font-bold mb-4">ברוכים הבאים</h2>
+      <p class="text-gray-400 mb-8">התחברו כדי לשתף ולהתעדכן</p>
+      <button id="google-login" class="btn-google inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium">
+        <img src="https://www.google.com/favicon.ico" class="w-5 h-5" alt="G">
+        התחברות עם Google
+      </button>
+      <div id="login-error" class="mt-4 text-red-400 text-sm hidden"></div>
+      <div id="login-loading" class="mt-4 text-gray-400 text-sm hidden">מתחבר...</div>
+    </div>
 
-    const INITIAL_HABITS_DATA = [
-      { id: 1, title: 'שכיבות סמיכה', targetValue: 15, unit: 'חזרות', bestTime: '09:00' },
-      { id: 2, title: 'שתיית מים', targetValue: 8, unit: 'כוסות', bestTime: '12:00' },
-      { id: 3, title: 'מדיטציה', targetValue: 15, unit: 'דקות', bestTime: '18:00' }
-    ];
+    <div id="content-section" style="display:none">
+      <div class="mb-6">
+        <textarea id="post-content" class="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:ring-2 focus:ring-purple-500 outline-none" rows="3" placeholder="מה חדש בקהילה?"></textarea>
+        <button id="send-post" class="btn-primary mt-2 px-6 py-2 rounded-xl font-medium text-white">פרסם פוסט</button>
+      </div>
+      <div id="posts-container"></div>
+    </div>
+  </div>
 
-    const SUGGESTED_HABITS = [
-      { id: 's1', title: 'הליכה בחוץ', icon: <Move className="w-4 h-4" /> },
-      { id: 's2', title: 'קריאת ספר', icon: <AlignLeft className="w-4 h-4" /> },
-      { id: 's3', title: 'כתיבת יומן', icon: <Edit3 className="w-4 h-4" /> },
-      { id: 's4', title: 'תכנון לו"ז', icon: <Clock className="w-4 h-4" /> },
-      { id: 's5', title: 'אימון כוח', icon: <Zap className="w-4 h-4" /> },
-      { id: 's6', title: 'מתיחות בוקר', icon: <Sun className="w-4 h-4" /> },
-      { id: 's7', title: 'שתיית מים', icon: <Droplet className="w-4 h-4" /> },
-      { id: 's8', title: 'מדיטציה', icon: <Target className="w-4 h-4" /> }
-    ];
+  <script>
+    const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww';
 
-    const getTodayDate = () => {
-      const d = new Date();
-      return d.toISOString().split('T')[0];
-    };
-
-    const INITIAL_BADGES = [
-      { id: 1, icon: <Trophy />, completed: true, label: 'שלב היסודות', imageUrl: null },
-      { id: 2, icon: <Crown />, completed: true, label: 'שלב המנהיגות', imageUrl: null },
-      { id: 3, icon: <Medal />, completed: true, label: 'שלב הביצוע', imageUrl: null },
-      { id: 4, icon: <Award />, completed: false, label: 'שלב המאסטרי', imageUrl: null },
-      { id: 5, icon: <Star />, completed: false, label: 'שלב השפעה', imageUrl: null },
-      { id: 6, icon: <Zap />, completed: false, label: 'שלב השיא', imageUrl: null }
-    ];
-
-    const NLP_QUESTIONS = [
-      "אילו הרגלים ותכונות תרצה לרכוש כדי להגשים את החזון?",
-      "אילו אנשים תרצה לפגוש יותר בחייך שיקדמו אותך למטרה?",
-      "אילו אמונות מגבילות היית רוצה להטיל בהן ספק ולאמץ חדשות?",
-      "איך ייראה יום אידיאלי בחייך בעוד שנה מהיום?",
-      "מהו הצעד הקטן והפשוט ביותר שאתה יכול לעשות כבר היום?"
-    ];
-
-    const CURRENT_DAY = 10;
-    const TARGET_DAY = 17;
-
-    const ALL_DAYS = Array.from({ length: 28 }, (_, i) => {
-      const date = i + 1;
-      const labels = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-      const status = date < CURRENT_DAY ? 'past' : (date === CURRENT_DAY ? 'today' : 'future');
-      let completionLevel = 'none';
-      if (status === 'past') {
-        if (date % 4 === 0) completionLevel = 'all_extra';
-        else if (date % 3 === 0) completionLevel = 'some_extra';
-        else if (date % 2 === 0) completionLevel = 'all_done';
-        else completionLevel = 'partial';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        flowType: 'pkce',
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        persistSession: true
       }
-      return { date, label: labels[(date - 1) % 7], status, isToday: date === CURRENT_DAY, isTarget: date === TARGET_DAY, completionLevel };
     });
 
-    const HEADER_TABS = [
-      { id: 'daily', label: 'משימה יומית' },
-      { id: 'news', label: 'קהילה' },
-      { id: 'grades', label: 'הישגים' },
-      { id: 'vision', label: 'חזון' }
-    ];
+    const loginSection = document.getElementById('login-section');
+    const contentSection = document.getElementById('content-section');
+    const authStatus = document.getElementById('auth-status');
+    const postsContainer = document.getElementById('posts-container');
+    const postInput = document.getElementById('post-content');
+    const loginError = document.getElementById('login-error');
+    const loginLoading = document.getElementById('login-loading');
 
-    const Badge = ({ icon, completed, label, imageUrl }) => (
-      <div className="relative flex-shrink-0 px-4 flex flex-col items-center justify-center min-w-[90px]">
-        <div className={`relative w-14 h-14 flex items-center justify-center mb-2 ${!completed ? 'opacity-20 grayscale' : 'drop-shadow-md'}`}>
-          {imageUrl ? (
-             <img src={imageUrl} alt={label} className="w-full h-full object-contain" />
-          ) : (
-             React.cloneElement(icon, { 
-               style: { width: '100%', height: '100%', fill: completed ? 'currentColor' : 'none' }, 
-               className: completed ? 'c-gold' : 'text-[#8E8E93]' 
-             })
-          )}
-          {!completed && <div className="absolute inset-0 flex items-center justify-center z-10"><Lock className="w-5 h-5 c-dark fill-white opacity-80" /></div>}
-        </div>
-        <span className={`text-[9px] font-black text-center leading-tight ${completed ? 'c-dark' : 'text-gray-400'}`}>{label}</span>
-      </div>
-    );
+    function showError(msg) {
+      loginError.textContent = msg;
+      loginError.classList.remove('hidden');
+      loginLoading.classList.add('hidden');
+    }
 
-    const SettingsMenuItem = ({ icon, label, onClick }) => (
-      <button onClick={onClick} className="w-full bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:border-gray-200 active:scale-[0.98] transition-all">
-          <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500">{icon}</div>
-              <span className="font-bold text-sm c-dark">{label}</span>
-          </div>
-          <ChevronLeft className="w-4 h-4 text-gray-300" />
-      </button>
-    );
+    function showContent(user) {
+      loginSection.style.display = 'none';
+      contentSection.style.display = 'block';
+      authStatus.innerHTML = `<div class="flex items-center gap-2">
+        <img src="${user.user_metadata.avatar_url||''}" class="w-8 h-8 rounded-full" onerror="this.style.display='none'">
+        <span class="text-sm font-medium">${user.user_metadata.full_name||user.email}</span>
+        <button onclick="sb.auth.signOut()" class="text-xs text-red-400 hover:underline ml-2">יציאה</button>
+      </div>`;
+      fetchPosts();
+    }
 
-    function App() {
-      const [headerView, setHeaderView] = useState('daily'); 
-      const [habitsStatus, setHabitsStatus] = useState({});
-      const [habits, setHabits] = useState(INITIAL_HABITS_DATA);
-      const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
-      const calendarRef = useRef(null);
-      const scrollRef = useRef(null);
-      const isAutoScrolling = useRef(false);
-      const calendarTimeoutRef = useRef(null);
-      const isAnimatingRef = useRef(false);
-      const animationFrameRef = useRef(null);
+    function showLogin() {
+      loginSection.style.display = 'block';
+      contentSection.style.display = 'none';
+      authStatus.innerHTML = '';
+      loginLoading.classList.add('hidden');
+    }
 
-      const [isScrolled, setIsScrolled] = useState(false);
-      const mainScrollAreaRef = useRef(null);
+    sb.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event, session?.user?.email);
+      if (session && session.user) {
+        showContent(session.user);
+      } else {
+        showLogin();
+      }
+    });
 
-      const [user, setUser] = useState({ level: 1, name: 'נבו' });
-      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-      const [settingsView, setSettingsView] = useState('main'); 
-      const [badges, setBadges] = useState(INITIAL_BADGES);
-      const [theme, setTheme] = useState({
-        primary: '#007AFF',
-        gold: '#FFCC00',
-        accent: '#FF9500',
-        dark: '#1C1C1E',
-        bgStart: '#F4F7F9',
-        bgEnd: '#FFFFFF',
-        dailyCardBg: null,
-        wizardBg: null,
-        popupBg: null
-      });
-
-      const [avatars, setAvatars] = useState({
-        start: null,
-        firstAction: null,
-        day10: null,
-        levelUp: null
-      });
-
-      const [showHabitRewardPopup, setShowHabitRewardPopup] = useState(false);
-      const [habitRewardPhase, setHabitRewardPhase] = useState(1); 
-      const [isHabitWizardOpen, setIsHabitWizardOpen] = useState(false);
-      const [wizardStep, setWizardStep] = useState(1);
-      const [showSuggestedList, setShowSuggestedList] = useState(false);
-      const [newHabitData, setNewHabitData] = useState({ action: '', quantityValue: 1, quantityUnit: 'דקות', bestTime: '10:00', why: '' });
-      const [isCustomUnit, setIsCustomUnit] = useState(false);
-      const [wizardError, setWizardError] = useState('');
-
-      const [tasks, setTasks] = useState([
-        { id: '1', text: 'לקרוא 5 עמודים בספר', date: getTodayDate(), time: '09:00', notes: 'שים לב לציטוטים חשובים בפרק 4.', isDone: false },
-        { id: '2', text: 'לסדר את סביבת העבודה', date: getTodayDate(), time: '10:30', notes: '', isDone: false }, 
-        { id: '3', text: 'תכנון לוז למחר בערב', date: '', time: '20:00', notes: '', isDone: false },
-        { id: '4', text: 'שיחה עם ספק', date: '', time: '', notes: '', isDone: true }
-      ]);
-      
-      const [newTaskText, setNewTaskText] = useState('');
-      const [draggedIdx, setDraggedIdx] = useState(null);
-      const [dragOverIdx, setDragOverIdx] = useState(null);
-      const [expandedTaskId, setExpandedTaskId] = useState(null);
-      const [visionAnswer, setVisionAnswer] = useState('');
-      const [nlpQuestionIdx, setNlpQuestionIdx] = useState(0);
-      const [showCommunityPopup, setShowCommunityPopup] = useState(false);
-
-      const activeAvatar = useMemo(() => {
-        if (user.level > 1 && avatars.levelUp) return avatars.levelUp;
-        if (CURRENT_DAY >= 10 && avatars.day10) return avatars.day10;
-        const hasDoneSomething = Object.values(habitsStatus).some(s => s !== 'none') || tasks.some(t => t.isDone);
-        if (hasDoneSomething && avatars.firstAction) return avatars.firstAction;
-        return avatars.start;
-      }, [user.level, CURRENT_DAY, habitsStatus, tasks, avatars]);
-
-      const handleMainScroll = (e) => {
-        const scrollTop = e.target.scrollTop;
-        if (scrollTop > 80 && !isScrolled) {
-          setIsScrolled(true);
-        } else if (scrollTop <= 80 && isScrolled) {
-          setIsScrolled(false);
-        }
-      };
-
-      const handleAvatarUpload = (e, stage) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => setAvatars(prev => ({ ...prev, [stage]: event.target.result }));
-          reader.readAsDataURL(file);
-        }
-      };
-
-      const handleThemeImageUpload = (e, key) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => setTheme(prev => ({ ...prev, [key]: event.target.result }));
-          reader.readAsDataURL(file);
-        }
-      };
-
-      const handleBadgeImageUpload = (e, id) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => setBadges(prev => prev.map(b => b.id === id ? { ...b, imageUrl: event.target.result } : b));
-          reader.readAsDataURL(file);
-        }
-      };
-
-      const activeTasks = tasks.filter(t => !t.isDone);
-      const completedTasks = tasks.filter(t => t.isDone);
-      const pendingTask = activeTasks[0];
-      const [displayTask, setDisplayTask] = useState(pendingTask);
-      const [isCardCompletedAnim, setIsCardCompletedAnim] = useState(false);
-      const [showTrophyReminder, setShowTrophyReminder] = useState(CURRENT_DAY < TARGET_DAY - 2);
-
-      const calculateDynamicTarget = (habit) => {
-        const now = new Date();
-        const [bestH, bestM] = habit.bestTime.split(':').map(Number);
-        const bestTimeDate = new Date();
-        bestTimeDate.setHours(bestH, bestM, 0);
-        const diffInHours = (now - bestTimeDate) / (1000 * 60 * 60);
-        if (diffInHours <= 0) return habit.targetValue; 
-        if (diffInHours <= 1) return Math.max(1, Math.ceil(habit.targetValue * 0.5)); 
-        if (diffInHours <= 2) return Math.max(1, Math.ceil(habit.targetValue * 0.25)); 
-        return 1; 
-      };
-
-      const isLateForHabit = (bestTime) => {
-        const now = new Date();
-        const [bestH, bestM] = bestTime.split(':').map(Number);
-        const bestTimeDate = new Date();
-        bestTimeDate.setHours(bestH, bestM, 0);
-        return now > bestTimeDate;
-      };
-
-      useEffect(() => {
-        const dayElement = document.getElementById(`day-${CURRENT_DAY}`);
-        if (dayElement && calendarRef.current) {
-          setTimeout(() => dayElement.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' }), 100);
-        }
-      }, []);
-
-      useEffect(() => {
-        const isTriggerDay = [1, 3, 10, 21].includes(CURRENT_DAY) || (CURRENT_DAY > 21 && (CURRENT_DAY - 21) % 21 === 0);
-        if (isTriggerDay) {
-          setShowHabitRewardPopup(true);
-          const timer = setTimeout(() => setHabitRewardPhase(2), 3000);
-          return () => clearTimeout(timer);
-        }
-      }, []);
-
-      useEffect(() => {
-        if (!isCardCompletedAnim) setDisplayTask(pendingTask);
-      }, [pendingTask, isCardCompletedAnim]);
-
-      useEffect(() => {
-        if (!isSettingsOpen) {
-          const timer = setTimeout(() => setSettingsView('main'), 300);
-          return () => clearTimeout(timer);
-        }
-      }, [isSettingsOpen]);
-
-      const scrollToDayBouncy = (day) => {
-        const container = calendarRef.current;
-        const targetEl = document.getElementById(`day-${day}`);
-        if (!container || !targetEl) return;
-        isAnimatingRef.current = true;
-        const start = container.scrollLeft;
-        container.style.scrollSnapType = 'none';
-        targetEl.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
-        const target = container.scrollLeft;
-        container.scrollLeft = start;
-        if (Math.abs(target - start) < 5) {
-           isAnimatingRef.current = false;
-           return;
-        }
-        const distance = target - start;
-        const duration = 1200;
-        let startTime = null;
-        const easeOutElastic = (x) => {
-          const c4 = (2 * Math.PI) / 3;
-          return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
-        };
-        const animation = (currentTime) => {
-          if (startTime === null) startTime = currentTime;
-          const timeElapsed = currentTime - startTime;
-          const progress = Math.min(timeElapsed / duration, 1);
-          container.scrollLeft = start + distance * easeOutElastic(progress);
-          if (timeElapsed < duration) animationFrameRef.current = requestAnimationFrame(animation);
-          else {
-            container.scrollLeft = target;
-            container.style.scrollSnapType = 'x mandatory';
-            setTimeout(() => { isAnimatingRef.current = false; }, 100);
+    document.getElementById('google-login').addEventListener('click', async () => {
+      loginError.classList.add('hidden');
+      loginLoading.classList.remove('hidden');
+      try {
+        const { data, error } = await sb.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: 'https://moshikoomg.github.io/community-app/',
+            skipBrowserRedirect: false
           }
-        };
-        animationFrameRef.current = requestAnimationFrame(animation);
-      };
-
-      const handleUserInteraction = () => {
-        if (isAnimatingRef.current && animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-          isAnimatingRef.current = false;
-          if (calendarRef.current) calendarRef.current.style.scrollSnapType = '';
-        }
-      };
-
-      const addTask = () => {
-        if(!newTaskText.trim()) return;
-        setTasks([...tasks, { id: Date.now().toString(), text: newTaskText, date: getTodayDate(), time: '', notes: '', isDone: false }]);
-        setNewTaskText('');
-      };
-      const toggleTaskDone = (id) => setTasks(tasks.map(t => t.id === id ? { ...t, isDone: !t.isDone } : t));
-      const updateTaskField = (id, field, value) => setTasks(tasks.map(t => t.id === id ? { ...t, [field]: value } : t));
-      const deleteTask = (id) => setTasks(tasks.filter(t => t.id !== id));
-      const moveToTop = (id) => {
-        const newTasks = [...tasks];
-        const idx = newTasks.findIndex(t => t.id === id);
-        if(idx <= 0) return;
-        const [task] = newTasks.splice(idx, 1);
-        newTasks.unshift(task);
-        setTasks(newTasks);
-        setExpandedTaskId(id);
-      };
-
-      const onDragStart = (e, index) => { 
-        e.dataTransfer.effectAllowed = "move";
-        setTimeout(() => setDraggedIdx(index), 0);
-      };
-      const onDragEnd = () => { 
-        setDraggedIdx(null); 
-        setDragOverIdx(null); 
-      };
-      const onDragOver = (e, index) => { 
-        e.preventDefault(); 
-        if (dragOverIdx !== index) setDragOverIdx(index); 
-      };
-      const onDrop = (e, index) => {
-        e.preventDefault();
-        if(draggedIdx === null || draggedIdx === index) {
-           setDraggedIdx(null);
-           setDragOverIdx(null);
-           return;
-        }
-        const active = tasks.filter(t => !t.isDone);
-        const dragged = active[draggedIdx];
-        let list = tasks.filter(t => t.id !== dragged.id);
-        const targetGlobalIdx = list.findIndex(t => t.id === active[index].id);
-        list.splice(targetGlobalIdx, 0, dragged);
-        setTasks(list);
-        setDraggedIdx(null);
-        setDragOverIdx(null);
-      };
-
-      const handleWizardNext = () => {
-        setWizardError('');
-        if (wizardStep === 1) {
-          if (newHabitData.action.trim().length < 2) { setWizardError("אנא הגדר מה הפעולה."); return; }
-          setWizardStep(2);
-        } else if (wizardStep === 2) {
-          if (!newHabitData.quantityValue || !newHabitData.quantityUnit) { 
-            setWizardError("חובה להגדיר כמות ויחידת מדידה."); 
-            return; 
-          }
-          setWizardStep(3);
-        } else {
-          const finalHabit = { 
-            id: Date.now(), 
-            title: newHabitData.action, 
-            targetValue: parseInt(newHabitData.quantityValue) || 1,
-            unit: newHabitData.quantityUnit,
-            bestTime: '10:00'
-          };
-          setHabits([...habits, finalHabit]);
-          setIsHabitWizardOpen(false);
-          setWizardStep(1);
-          setNewHabitData({ action: '', quantityValue: 1, quantityUnit: 'דקות', bestTime: '10:00', why: '' });
-          setIsCustomUnit(false);
-          setShowSuggestedList(false);
-        }
-      };
-
-      const handleSelectSuggested = (title) => {
-        setNewHabitData({ ...newHabitData, action: title });
-        setShowSuggestedList(false);
-        setWizardStep(2); 
-      };
-
-      const handleHabitClick = (habit) => {
-        const status = habitsStatus[habit.id] || 'none';
-        const late = isLateForHabit(habit.bestTime);
-        if (status === 'none') {
-          setHabitsStatus(prev => ({ ...prev, [habit.id]: 'done' }));
-        } else if (status === 'done' && !late) {
-          setHabitsStatus(prev => ({ ...prev, [habit.id]: 'extra' }));
-        }
-      };
-
-      const handleCalendarScroll = () => {
-        if (!calendarRef.current) return;
-        const container = calendarRef.current;
-        const containerCenter = container.getBoundingClientRect().left + container.offsetWidth / 2;
-        let closestDay = CURRENT_DAY;
-        let minDistance = Infinity;
-        container.querySelectorAll('.day-item').forEach(el => {
-            const dist = Math.abs(containerCenter - (el.getBoundingClientRect().left + el.offsetWidth / 2));
-            if (dist < minDistance) { minDistance = dist; closestDay = parseInt(el.dataset.day, 10); }
         });
-        setShowTrophyReminder(closestDay < TARGET_DAY - 2);
-        if (calendarTimeoutRef.current) clearTimeout(calendarTimeoutRef.current);
-        if (!isAnimatingRef.current) calendarTimeoutRef.current = setTimeout(() => { scrollToDayBouncy(CURRENT_DAY); }, 5000);
-      };
-
-      const handleVisionSend = () => {
-        if (!visionAnswer.trim()) return;
-        setVisionAnswer('');
-        setNlpQuestionIdx((prev) => (prev + 1) % NLP_QUESTIONS.length);
-      };
-
-      const goToTab = (id) => {
-        const el = document.getElementById(`card-${id}`);
-        if (el && scrollRef.current) {
-          isAutoScrolling.current = true;
-          el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-          setHeaderView(id);
-          setTimeout(() => { isAutoScrolling.current = false; }, 600);
+        if (error) {
+          console.error('OAuth error:', error);
+          showError('שגיאה: ' + error.message);
         }
-      };
+      } catch(e) {
+        console.error('Catch error:', e);
+        showError('שגיאה: ' + e.message);
+      }
+    });
 
-      const handleScroll = () => {
-        if (isAutoScrolling.current || !scrollRef.current) return;
-        const container = scrollRef.current;
-        const idx = Math.round(Math.abs(container.scrollLeft) / container.offsetWidth);
-        if (HEADER_TABS[idx] && headerView !== HEADER_TABS[idx].id) setHeaderView(HEADER_TABS[idx].id);
-      };
-
-      const scrollToTargetDay = () => document.getElementById(`day-${TARGET_DAY}`)?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-
-      const cardClassName = "w-full flex-shrink-0 snap-center snap-always flex items-center justify-center px-1";
-
-      return (
-        <div className="min-h-screen bg-[#F0F2F5] flex items-center justify-center font-arial" dir="rtl">
-          
-          <style>{`
-            .theme-bg-gradient { background: linear-gradient(180deg, ${theme.bgStart} 0%, ${theme.bgEnd} 100%) !important; }
-            .c-primary { color: ${theme.primary} !important; }
-            .bg-primary { background-color: ${theme.primary} !important; }
-            .border-primary { border-color: ${theme.primary} !important; }
-            .c-gold { color: ${theme.gold} !important; }
-            .bg-gold { background-color: ${theme.gold} !important; }
-            .border-gold { border-color: ${theme.gold} !important; }
-            .c-accent { color: ${theme.accent} !important; }
-            .bg-accent { background-color: ${theme.accent} !important; }
-            .c-dark { color: ${theme.dark} !important; }
-            .bg-dark { background-color: ${theme.dark} !important; }
-            .bg-primary-10 { background-color: ${theme.primary}1A !important; }
-            .bg-primary-5 { background-color: ${theme.primary}0D !important; }
-            .border-primary-30 { border-color: ${theme.primary}4D !important; }
-            .border-primary-20 { border-color: ${theme.primary}33 !important; }
-            .bg-gold-20 { background-color: ${theme.gold}33 !important; }
-            .bg-accent-10 { background-color: ${theme.accent}1A !important; }
-            .shadow-gold-glow { box-shadow: 0 4px 15px ${theme.gold}66 !important; }
-            .shadow-primary-glow { box-shadow: 0 8px 15px ${theme.primary}1A !important; }
-            .focus-border-primary:focus { border-color: ${theme.primary} !important; }
-            .focus-border-accent:focus { border-color: ${theme.accent} !important; }
-            .hover-bg-primary-10:hover { background-color: ${theme.primary}1A !important; }
-            .hover-border-primary:hover { border-color: ${theme.primary} !important; }
-            .no-scrollbar::-webkit-scrollbar { display: none; }
-            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-          `}</style>
-
-          <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] md:shadow-2xl md:border-[12px] md:border-[#1C1C1E] relative overflow-hidden flex flex-col transition-all">
-            
-            {/* Status Bar / Notch (Simulated) */}
-            <div className="h-10 w-full flex items-center justify-between px-8 bg-transparent z-[100] shrink-0 hidden md:flex">
-              <span className="text-[12px] font-black c-dark">9:41</span>
-              <div className="flex gap-1.5 items-center">
-                <div className="w-4 h-4 rounded-full border-2 border-gray-400" />
-                <div className="w-5 h-2.5 rounded-sm bg-gray-400" />
+    async function fetchPosts() {
+      const { data, error } = await sb.from('posts').select('*').order('created_at', { ascending: false });
+      if (error) { console.error('Fetch error:', error); return; }
+      postsContainer.innerHTML = !data || data.length === 0
+        ? '<p class="text-gray-500 text-center py-8">אין פוסטים עדיין. היו הראשונים!</p>'
+        : data.map(p => `<div class="card p-4 rounded-2xl mb-4">
+            <div class="flex items-center gap-3 mb-2">
+              <img src="${p.author_avatar||''}" class="w-10 h-10 rounded-full border border-gray-700" onerror="this.style.display='none'">
+              <div>
+                <p class="font-bold text-sm">${p.author_name||'אנונימי'}</p>
+                <p class="text-xs text-gray-400">${new Date(p.created_at).toLocaleString('he-IL')}</p>
               </div>
             </div>
+            <p class="text-gray-200 leading-relaxed">${p.content}</p>
+          </div>`).join('');
+    }
 
-            {/* --- HEADER PROFILE TRIGGER (Instead of Settings Gear) --- */}
-            <button 
-              onClick={() => setIsSettingsOpen(true)} 
-              className="absolute top-4 left-4 z-[150] flex items-center gap-2.5 bg-white/90 backdrop-blur-md px-3 py-2 rounded-full shadow-sm border border-gray-100 hover:bg-white transition-all active:scale-95"
-            >
-              <div className="w-7 h-7 rounded-full bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center">
-                {activeAvatar ? (
-                  <img src={activeAvatar} className="w-full h-full object-contain" />
-                ) : (
-                  <User className="w-4 h-4 text-gray-400" />
-                )}
-              </div>
-              <span className="text-[11px] font-black c-dark">{user.name}</span>
-            </button>
-
-            {/* --- DYNAMIC STICKY NAV BAR (Only on scroll) --- */}
-            <div className={`absolute top-0 left-0 w-full z-[140] bg-white/95 backdrop-blur-xl border-b border-gray-100 pt-12 pb-2 px-4 shadow-sm transition-all duration-500 ease-in-out ${isScrolled ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
-              <nav className="flex gap-4 overflow-x-auto no-scrollbar whitespace-nowrap">
-                {HEADER_TABS.map(item => (
-                  <button 
-                    key={item.id} 
-                    onClick={() => goToTab(item.id)} 
-                    className={`text-[11px] font-black transition-all px-3 py-1.5 rounded-full border-2 ${headerView === item.id ? 'bg-primary text-white border-primary' : 'text-gray-400 border-transparent'}`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            <div 
-              ref={mainScrollAreaRef}
-              onScroll={handleMainScroll}
-              className="flex-1 overflow-y-auto overflow-x-hidden theme-bg-gradient c-dark select-none relative no-scrollbar"
-            >
-              
-              <div className="w-full px-4 pb-12 pt-2 mt-12">
-                
-                {/* Avatar Section (Big) */}
-                {activeAvatar && (
-                  <div className="w-full h-32 mb-4 flex items-center justify-center animate-in zoom-in-95 duration-700">
-                     <img src={activeAvatar} alt="Avatar" className="max-w-full max-h-full object-contain p-2 drop-shadow-xl" />
-                  </div>
-                )}
-
-                {/* Calendar */}
-                <section className="mb-5 relative w-full h-20">
-                  {showTrophyReminder && (
-                    <div onClick={scrollToTargetDay} className="absolute right-[-10px] top-[10px] z-20 cursor-pointer">
-                      <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center shadow-gold-glow border-2 border-white">
-                        <Trophy className="w-3.5 h-3.5 text-white fill-current" />
-                      </div>
-                    </div>
-                  )}
-                  <div ref={calendarRef} onScroll={handleCalendarScroll} onTouchStart={handleUserInteraction} onMouseDown={handleUserInteraction} className="flex flex-row-reverse w-full overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 pt-2">
-                    <div className="flex-shrink-0 w-[40%]" />
-                    {ALL_DAYS.map((day) => (
-                      <div key={day.date} id={`day-${day.date}`} data-day={day.date} className="day-item flex flex-col items-center flex-shrink-0 w-[20%] snap-center">
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border-2 relative ${day.isToday ? 'bg-dark text-white scale-110 shadow-xl border-transparent' : day.isTarget ? 'bg-gold text-white scale-110 shadow-gold-glow border-transparent' : day.status === 'past' ? (day.completionLevel === 'all_extra' ? 'bg-gold border-transparent shadow-gold-glow' : day.completionLevel === 'some_extra' ? 'bg-accent border-transparent' : day.completionLevel === 'all_done' ? 'bg-dark border-transparent' : 'bg-gray-200 border-transparent') : 'bg-white text-gray-500 border-gray-50'}`}>
-                          <span className="text-sm font-black leading-none">{day.isTarget ? <Trophy className="w-5 h-5 fill-current" /> : day.status === 'past' ? <Check className={`w-5 h-5 stroke-[4px] ${day.completionLevel === 'partial' ? 'text-gray-500' : 'text-white'}`} /> : day.date}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex-shrink-0 w-[40%]" />
-                  </div>
-                </section>
-
-                {/* STATIC NAV (Visible only at the top) */}
-                <nav className={`flex gap-4 mb-4 overflow-x-auto no-scrollbar whitespace-nowrap border-b border-gray-100 pb-2 transition-opacity duration-300 ${isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                  {HEADER_TABS.map(item => (
-                    <button key={item.id} onClick={() => goToTab(item.id)} className={`text-[12px] font-bold transition-all px-1 border-b-2 ${headerView === item.id ? 'c-primary border-primary -mb-[10px]' : 'text-gray-400 border-transparent'}`}>{item.label}</button>
-                  ))}
-                </nav>
-
-                {/* Cards Slider */}
-                <div ref={scrollRef} onScroll={handleScroll} className="w-full h-[170px] overflow-x-auto snap-x snap-mandatory flex no-scrollbar scroll-smooth mb-8">
-                  
-                  <div id="card-daily" className={cardClassName}>
-                    {displayTask ? (
-                      <div onClick={() => !isCardCompletedAnim && setIsCardCompletedAnim(true)} className={`w-full h-full rounded-3xl p-4 border transition-all duration-500 flex flex-col justify-between relative overflow-hidden ${isCardCompletedAnim ? 'bg-dark border-transparent shadow-2xl' : 'bg-white border-gray-100 shadow-sm cursor-pointer'}`}>
-                        {theme.dailyCardBg && <div className="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none" style={{ backgroundImage: `url(${theme.dailyCardBg})`, opacity: isCardCompletedAnim ? 0.2 : 0.8 }} />}
-                        <div className="relative z-10 flex items-center justify-between mb-3">
-                          <div className={`text-[9px] font-black uppercase px-2 py-1 rounded-md tracking-widest ${isCardCompletedAnim ? 'bg-gold-20 c-gold' : 'bg-accent-10 c-accent'}`}>{isCardCompletedAnim ? 'הושלם' : 'משימת היום'}</div>
-                          <button onClick={(e) => { e.stopPropagation(); setIsTaskDrawerOpen(true); }} className="p-2 rounded-full bg-white/50 border border-gray-100 shadow-sm"><Menu className="w-4 h-4 text-gray-500" /></button>
-                        </div>
-                        <div className="relative z-10 flex flex-row-reverse items-center justify-between w-full gap-2">
-                          <div className="text-right flex-1 min-w-0"><h3 className={`text-sm font-black truncate ${isCardCompletedAnim ? 'text-white' : 'c-dark'}`}>{displayTask.text}</h3></div>
-                          <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-500 border-2 ${isCardCompletedAnim ? 'bg-gold border-gold scale-110 shadow-lg' : 'bg-white/80 border-gray-100'}`}><Check className={`w-4 h-4 stroke-[3.5px] transition-colors ${isCardCompletedAnim ? 'c-dark' : 'text-gray-300'}`} /></div>
-                        </div>
-                        {isCardCompletedAnim && <button onClick={(e) => { e.stopPropagation(); toggleTaskDone(displayTask.id); setIsCardCompletedAnim(false); }} className="relative z-10 bg-white c-dark px-6 py-1.5 rounded-xl font-black text-[10px] self-center shadow-lg">הבאה <ArrowLeft className="w-3 h-3" /></button>}
-                      </div>
-                    ) : <div onClick={() => setIsTaskDrawerOpen(true)} className="w-full h-full rounded-3xl p-5 border border-dashed border-gray-200 bg-white/50 backdrop-blur-sm flex flex-col items-center justify-center cursor-pointer"><Trophy className="w-8 h-8 c-gold mb-2" /><h3 className="font-black c-dark">הכל הושלם!</h3></div>}
-                  </div>
-
-                  <div id="card-news" className={cardClassName}>
-                    <div className="w-full h-full bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
-                      <div className="bg-primary-10 p-3 rounded-full mb-3"><Users className="w-6 h-6 c-primary" /></div>
-                      <h3 className="text-sm font-black mb-1 c-dark">קהילה</h3>
-                      <button onClick={() => setShowCommunityPopup(true)} className="bg-primary text-white px-5 py-1.5 rounded-full text-[10px] font-black border-none shadow-primary-glow">הצטרפות</button>
-                    </div>
-                  </div>
-
-                  <div id="card-grades" className={cardClassName}>
-                    <div className="w-full h-full bg-white rounded-3xl p-4 border border-gray-100 shadow-sm flex flex-col justify-center">
-                      <h3 className="text-[10px] font-black text-gray-400 uppercase mb-4 text-right">הישגים</h3>
-                      <div className="flex flex-row-reverse items-start overflow-x-auto no-scrollbar gap-1
+    document.getElementById('send-post').addEventListener('click', async () => {
+      const content = postInput.value.trim();
+      if (!content) return;
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) { showLogin(); return; }
+      const { error } = await sb.from('posts').insert([{
+        content,
+        user_id: user.id,
+        author_name: user.user_metadata.full_name || user.email,
+        author_avatar: user.user_metadata.avatar_url || ''
+      }]);
+      if (error) alert('שגיאה: ' + error.message);
+      else { postInput.value = ''; fetchPosts(); }
+    });
+  </script>
+</body>
+</html>
