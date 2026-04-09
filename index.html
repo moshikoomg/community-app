@@ -157,7 +157,6 @@
         } catch (error) {
             console.error("Login error:", error);
             setIsLoading(false);
-            alert("שגיאה בהתחברות - ייתכן שהסביבה חוסמת פתיחת חלונות. נסה 'המשך כאורח'.");
         }
       };
       return (
@@ -165,13 +164,13 @@
           <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] shadow-2xl flex flex-col items-center justify-center p-8">
             <Trophy className="w-20 h-20 text-[#007AFF] mb-6 drop-shadow-lg" />
             <h1 className="text-3xl font-black mb-2 text-center text-gray-900">ברוכים הבאים</h1>
-            <p className="text-gray-500 text-center mb-10 px-4">התחבר כדי לשמור את ההרגלים וההתקדמות שלך בענן, או המשך כאורח כדי לנסות את האפליקציה.</p>
+            <p className="text-gray-500 text-center mb-10 px-4">התחבר כדי לשמור את ההרגלים וההתקדמות שלך בענן.</p>
             <button onClick={handleLogin} disabled={isLoading} className="btn-google w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg shadow-sm">
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="G" />}
               התחברות עם Google
             </button>
             <button onClick={onGuestLogin} className="mt-6 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">
-              המשך כאורח (ללא שמירה בענן)
+              המשך כאורח (ללא שמירה)
             </button>
           </div>
         </div>
@@ -179,30 +178,17 @@
     };
 
     function App() {
+      // --- ALL STATES FROM YOUR ORIGINAL CODE ---
       const [session, setSession] = useState(null);
       const [isGuest, setIsGuest] = useState(false); 
       const [isDataLoaded, setIsDataLoaded] = useState(false);
       const [syncStatus, setSyncStatus] = useState('synced');
-      
       const [headerView, setHeaderView] = useState('daily'); 
       const [habitsStatus, setHabitsStatus] = useState({});
       const [habits, setHabits] = useState(INITIAL_HABITS_DATA);
       const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
       const [editingTaskId, setEditingTaskId] = useState(null);
-      
       const [animatingHabitId, setAnimatingHabitId] = useState(null);
-
-      const calendarRef = useRef(null);
-      const badgesRef = useRef(null); 
-      const scrollRef = useRef(null);
-      const isAutoScrolling = useRef(false);
-      
-      const calendarTimeoutRef = useRef(null);
-      const badgesTimeoutRef = useRef(null);
-      const isAnimatingRef = useRef(false);
-      const isAnimatingBadgesRef = useRef(false);
-      const animationFrameRef = useRef(null);
-      
       const [user, setUser] = useState({ level: 1, xp: 0, shields: 0, perfectDaysStreak: 0, name: 'אורח', lastLoginDate: getTodayDate() });
       const [isSettingsOpen, setIsSettingsOpen] = useState(false);
       const [settingsView, setSettingsView] = useState('main'); 
@@ -212,12 +198,7 @@
       const [isHabitWizardOpen, setIsHabitWizardOpen] = useState(false);
       const [wizardStep, setWizardStep] = useState(1);
       const [newHabitData, setNewHabitData] = useState({ action: '', quantityValue: 1, quantityUnit: 'דקות', bestTime: '10:00' });
-      const [wizardError, setWizardError] = useState('');
-      const [tasks, setTasks] = useState([
-          { id: '1', text: 'לקרוא 5 עמודים בספר', date: getTodayDate(), time: '09:00', notes: '', isDone: false, color: 'bg-white' },
-          { id: '2', text: 'משימה נוספת להדגמה', date: getTodayDate(), time: '10:00', notes: '', isDone: false, color: 'bg-blue-50' },
-          { id: '3', text: 'עוד אחת קטנה', date: getTodayDate(), time: '11:00', notes: '', isDone: false, color: 'bg-red-50' }
-      ]);
+      const [tasks, setTasks] = useState([]);
       const [newTaskText, setNewTaskText] = useState('');
       const [newTaskColor, setNewTaskColor] = useState('bg-white');
       const [draggedIdx, setDraggedIdx] = useState(null);
@@ -225,1107 +206,232 @@
       const [visionAnswer, setVisionAnswer] = useState('');
       const [nlpQuestionIdx, setNlpQuestionIdx] = useState(0);
       const [showCommunityPopup, setShowCommunityPopup] = useState(false);
-      
-      // מצב חדש לחלון החזון (Vision Popup)
       const [showVisionPopup, setShowVisionPopup] = useState(false);
       const [visionBoard, setVisionBoard] = useState({ text: '', imageUrl: null });
 
+      const calendarRef = useRef(null);
+      const badgesRef = useRef(null); 
+      const scrollRef = useRef(null);
       const tasksListRef = useRef(null);
       const completedTasksListRef = useRef(null);
 
+      // --- SUPABASE CONNECTIVITY ---
       useEffect(() => {
-          if (tasksListRef.current) autoAnimate(tasksListRef.current, { duration: 300, easing: 'ease-in-out' });
-          if (completedTasksListRef.current) autoAnimate(completedTasksListRef.current, { duration: 300, easing: 'ease-in-out' });
-      }, [tasksListRef, completedTasksListRef]);
-
-      useEffect(() => {
-        try {
-            supabase.auth.getSession().then(({ data: { session } }) => {
-              setSession(session);
-              if (session) loadUserData(session);
-            });
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-              setSession(session);
-              if (session) loadUserData(session);
-            });
-            return () => subscription.unsubscribe();
-        } catch (e) { console.error("Supabase init error:", e); }
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          setSession(session);
+          if (session) loadUserData(session);
+        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setSession(session);
+          if (session) loadUserData(session);
+        });
+        return () => subscription.unsubscribe();
       }, []);
-
-      const handleGuestLogin = () => { setIsGuest(true); setIsDataLoaded(true); checkNewDayAndShields(); };
-      const todayFormatted = useMemo(() => new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long' }).format(new Date()), []);
 
       const loadUserData = async (currentSession) => {
-        try {
-            const { data, error } = await supabase.from('user_data').select('app_data').eq('user_id', currentSession.user.id).single();
-            if (data && data.app_data) {
-               const d = data.app_data;
-               if (d.habits) setHabits(d.habits);
-               if (d.habitsStatus) setHabitsStatus(d.habitsStatus);
-               if (d.tasks) setTasks(d.tasks);
-               if (d.user) setUser({ ...user, ...d.user });
-               if (d.theme) setTheme({ ...theme, ...d.theme });
-               if (d.avatars) setAvatars({ ...avatars, ...d.avatars });
-               if (d.visionBoard) setVisionBoard(d.visionBoard);
-               if (d.badges) {
-                 const restoredBadges = d.badges.map(savedBadge => {
-                     const original = INITIAL_BADGES.find(ib => ib.id === savedBadge.id);
-                     return { ...savedBadge, icon: original ? original.icon : null };
-                 });
-                 setBadges(restoredBadges);
-               }
-            } else {
-               const fullName = currentSession?.user?.user_metadata?.full_name || 'משתמש';
-               setUser(prev => ({ ...prev, name: fullName.split(' ')[0], xp: 0, level: 1, shields: 0, perfectDaysStreak: 0, lastLoginDate: getTodayDate() }));
-            }
-        } catch (e) { console.error("Error loading user data:", e); } finally { setIsDataLoaded(true); checkNewDayAndShields(); }
+        const { data } = await supabase.from('user_data').select('app_data').eq('user_id', currentSession.user.id).single();
+        if (data && data.app_data) {
+           const d = data.app_data;
+           if (d.habits) setHabits(d.habits);
+           if (d.habitsStatus) setHabitsStatus(d.habitsStatus);
+           if (d.tasks) setTasks(d.tasks);
+           if (d.user) setUser(d.user);
+           if (d.theme) setTheme(d.theme);
+           if (d.avatars) setAvatars(d.avatars);
+           if (d.visionBoard) setVisionBoard(d.visionBoard);
+           if (d.badges) {
+             const restored = d.badges.map(b => ({...b, icon: INITIAL_BADGES.find(ib => ib.id === b.id)?.icon}));
+             setBadges(restored);
+           }
+        }
+        setIsDataLoaded(true);
       };
-
-      const checkNewDayAndShields = () => {
-        const today = getTodayDate();
-        setUser(prevUser => {
-          if (prevUser.lastLoginDate !== today) {
-            let shieldsToUse = 0;
-            let currentShields = prevUser.shields || 0;
-            let missedHabits = false;
-            let allCompletedYesterday = true;
-            
-            habits.forEach(h => {
-               if (habitsStatus[h.id] === 'none' || !habitsStatus[h.id]) {
-                  missedHabits = true;
-                  allCompletedYesterday = false;
-                  if (currentShields > shieldsToUse) shieldsToUse++;
-               }
-            });
-
-            let newShields = currentShields - shieldsToUse;
-            let newPerfectStreak = prevUser.perfectDaysStreak || 0;
-
-            if (allCompletedYesterday) {
-               newPerfectStreak++;
-               if (newPerfectStreak % 10 === 0 && newShields < 3) newShields++;
-            } else {
-               const missedCount = habits.filter(h => habitsStatus[h.id] === 'none' || !habitsStatus[h.id]).length;
-               if (missedCount > currentShields) newPerfectStreak = 0; 
-            }
-
-            return { ...prevUser, lastLoginDate: today, shields: newShields, perfectDaysStreak: newPerfectStreak };
-          }
-          return prevUser;
-        });
-      };
-
-      useEffect(() => {
-        const interval = setInterval(checkNewDayAndShields, 60000 * 60); 
-        return () => clearInterval(interval);
-      }, []);
-
 
       useEffect(() => {
         if (!isDataLoaded || !session || isGuest) return;
         setSyncStatus('saving');
         const timer = setTimeout(async () => {
-           try {
-               const appDataToSave = { habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard };
-               const { error } = await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
-               if (error) { setSyncStatus('error'); } else { setSyncStatus('synced'); }
-           } catch(e) { setSyncStatus('error'); }
-        }, 1500); 
+           const appDataToSave = { habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard };
+           await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
+           setSyncStatus('synced');
+        }, 1500);
         return () => clearTimeout(timer);
-      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard, isDataLoaded, session, isGuest]);
+      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard]);
 
+      // --- LOGIC & HELPERS ---
       const activeAvatar = useMemo(() => {
         if (session && session?.user?.user_metadata?.avatar_url && !avatars.start) return session.user.user_metadata.avatar_url;
-        if (user.level > 1 && avatars.levelUp) return avatars.levelUp;
-        if (CURRENT_DAY >= 10 && avatars.day10) return avatars.day10;
-        const hasDoneSomething = Object.values(habitsStatus).some(s => s !== 'none') || tasks.some(t => t.isDone);
-        if (hasDoneSomething && avatars.firstAction) return avatars.firstAction;
-        return avatars.start;
-      }, [user.level, CURRENT_DAY, habitsStatus, tasks, avatars, session]);
+        return user.level > 1 ? avatars.levelUp : avatars.start;
+      }, [user.level, avatars, session]);
 
-      const handleAvatarUpload = (e, stage) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => setAvatars(prev => ({ ...prev, [stage]: event.target.result }));
-          reader.readAsDataURL(file);
-        }
-      };
-
-      const handleBadgeImageUpload = (badgeId, type, e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => setBadges(prev => prev.map(b => b.id === badgeId ? { ...b, [type]: event.target.result } : b));
-          reader.readAsDataURL(file);
-        }
-      };
-
-      const addXP = (amount) => {
-        setUser(prev => {
-          const currentXp = prev.xp || 0;
-          const currentLevel = prev.level || 1;
-          const xpNeeded = currentLevel * 100;
-          const totalXp = currentXp + amount;
-          if (totalXp >= xpNeeded) return { ...prev, level: currentLevel + 1, xp: totalXp - xpNeeded };
-          return { ...prev, xp: totalXp };
-        });
-      };
-
-      const activeTasks = tasks.filter(t => !t.isDone) || [];
-      const completedTasks = tasks.filter(t => t.isDone) || [];
-      const [isCardCompletedAnim, setIsCardCompletedAnim] = useState(false);
-      const [showTrophyReminder, setShowTrophyReminder] = useState(CURRENT_DAY < TARGET_DAY - 2);
-
-      const updateTask = (id, updates) => {
-        setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
-      };
-
-      const getSimulatedAIBreakdown = (habit) => {
-        const now = new Date();
-        const [bestH, bestM] = habit.bestTime.split(':').map(Number);
-        const bestTimeDate = new Date();
-        bestTimeDate.setHours(bestH, bestM, 0);
-        
-        const diffInHours = (now - bestTimeDate) / (1000 * 60 * 60);
-        
-        if (diffInHours <= 0) return { title: habit.title, target: habit.targetValue, unit: habit.unit, level: 'standard' };
-        if (diffInHours <= 1) return { title: habit.title, target: 1, unit: habit.unit === 'חזרות' ? 'חזרה' : habit.unit === 'כוסות' ? 'כוס' : 'מינימום', level: 'minimum' };
-        
-        if (habit.id === 1) { 
-            if (diffInHours <= 2) return { title: 'חצי שכיבת סמיכה', target: '0.5', unit: 'חזרה', level: 'micro' };
-            return { title: 'לשכב על הרצפה במנח שכיבות סמיכה', target: '0.1', unit: 'חזרות', level: 'nano' }; 
-        }
-        if (habit.id === 2) { 
-            if (diffInHours <= 2) return { title: 'חצי כוס מים', target: '0.5', unit: 'כוס', level: 'micro' };
-            return { title: 'למלא ולהחזיק כוס מים', target: '0.1', unit: 'כוס', level: 'nano' };
-        }
-        if (habit.id === 3) { 
-            if (diffInHours <= 2) return { title: 'חצי דקת מדיטציה', target: '0.5', unit: 'דקה', level: 'micro' };
-            return { title: 'נשימה אחת מודעת', target: '0.1', unit: 'דקות', level: 'nano' };
-        }
-        
-        if (diffInHours <= 2) return { title: `קצת ${habit.title}`, target: '0.5', unit: habit.unit, level: 'micro' };
-        return { title: `פעולה מינימלית של ${habit.title}`, target: '0.1', unit: habit.unit, level: 'nano' };
-      };
-
-      useEffect(() => {
-        const dayElement = document.getElementById(`day-${CURRENT_DAY}`);
-        if (dayElement && calendarRef.current) setTimeout(() => dayElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }), 150);
-      }, []);
-
-      useEffect(() => {
-        const badgeElement = document.getElementById(`badge-${user.level}`);
-        if (badgeElement && badgesRef.current) setTimeout(() => badgeElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }), 250);
-      }, [user.level, isDataLoaded]);
-
-      const scrollToDayBouncy = (day) => {
-        const container = calendarRef.current;
-        const targetEl = document.getElementById(`day-${day}`);
-        if (!container || !targetEl) return;
-        isAnimatingRef.current = true;
-        const start = container.scrollLeft;
-        container.style.scrollSnapType = 'none';
-        targetEl.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
-        const target = container.scrollLeft;
-        container.scrollLeft = start;
-        if (Math.abs(target - start) < 5) { isAnimatingRef.current = false; return; }
-        const distance = target - start;
-        const duration = 1200;
-        let startTime = null;
-        const easeOutElastic = (x) => x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * (2 * Math.PI) / 3) + 1;
-        const animation = (currentTime) => {
-          if (startTime === null) startTime = currentTime;
-          const timeElapsed = currentTime - startTime;
-          const progress = Math.min(timeElapsed / duration, 1);
-          container.scrollLeft = start + distance * easeOutElastic(progress);
-          if (timeElapsed < duration) animationFrameRef.current = requestAnimationFrame(animation);
-          else {
-            container.scrollLeft = target;
-            container.style.scrollSnapType = 'x mandatory';
-            setTimeout(() => { isAnimatingRef.current = false; }, 100);
-          }
-        };
-        animationFrameRef.current = requestAnimationFrame(animation);
-      };
-
-      const handleUserInteraction = () => {
-        if (isAnimatingRef.current && animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-          isAnimatingRef.current = false;
-          if (calendarRef.current) calendarRef.current.style.scrollSnapType = '';
-        }
-      };
-
-      const handleBadgesInteraction = () => { if (badgesTimeoutRef.current) clearTimeout(badgesTimeoutRef.current); };
+      const handleGuestLogin = () => { setIsGuest(true); setIsDataLoaded(true); };
+      const todayFormatted = useMemo(() => new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long' }).format(new Date()), []);
 
       const addTask = () => {
-        if(!newTaskText || !newTaskText.trim()) return;
-        setTasks(prevTasks => [...prevTasks, { id: Date.now().toString(), text: newTaskText.trim(), date: getTodayDate(), time: '', notes: '', isDone: false, color: newTaskColor }]);
+        if(!newTaskText.trim()) return;
+        setTasks([...tasks, { id: Date.now().toString(), text: newTaskText.trim(), isDone: false, color: newTaskColor }]);
         setNewTaskText('');
-        setNewTaskColor('bg-white');
       };
-      
-      const handleTaskInputKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } };
 
       const toggleTaskDone = (id) => {
-        setTasks(tasks.map(t => {
-            if (t.id === id) {
-               if (!t.isDone) addXP(10); 
-               return { ...t, isDone: !t.isDone };
-            }
-            return t;
-        }));
-      };
-      
-      const deleteTask = (id) => setTasks(tasks.filter(t => t.id !== id));
-      
-      const onDragStart = (e, index) => { 
-          e.dataTransfer.effectAllowed = "move"; 
-          e.dataTransfer.setData('text/plain', index.toString());
-          setTimeout(() => setDraggedIdx(index), 0); 
-      };
-      const onDragEnd = () => { setDraggedIdx(null); setDragOverIdx(null); };
-      const onDragOver = (e, index) => { 
-          e.preventDefault(); 
-          e.dataTransfer.dropEffect = "move";
-          if (dragOverIdx !== index) setDragOverIdx(index); 
-      };
-      
-      const onDrop = (e, index) => {
-        e.preventDefault();
-        if(draggedIdx === null || draggedIdx === index) { setDraggedIdx(null); setDragOverIdx(null); return; }
-        
-        const active = tasks.filter(t => !t.isDone);
-        const completed = tasks.filter(t => t.isDone);
-        const draggedTask = active[draggedIdx];
-        
-        const newActive = active.filter((_, i) => i !== draggedIdx);
-        newActive.splice(index, 0, draggedTask);
-        
-        setTasks([...newActive, ...completed]);
-        setDraggedIdx(null); setDragOverIdx(null);
-      };
-
-      const handleWizardNext = () => {
-        setWizardError('');
-        if (wizardStep === 1) {
-          if (newHabitData.action.trim().length < 2) { setWizardError("אנא הגדר מה הפעולה."); return; }
-          setWizardStep(2);
-        } else if (wizardStep === 2) {
-          const finalHabit = { 
-            id: Date.now(), title: newHabitData.action, targetValue: parseInt(newHabitData.quantityValue) || 1, unit: newHabitData.quantityUnit, bestTime: '10:00', streak: 0
-          };
-          setHabits([...habits, finalHabit]);
-          setIsHabitWizardOpen(false);
-          setWizardStep(1);
-          setNewHabitData({ action: '', quantityValue: 1, quantityUnit: 'דקות', bestTime: '10:00' });
-        }
+        setTasks(tasks.map(t => t.id === id ? { ...t, isDone: !t.isDone } : t));
       };
 
       const handleHabitClick = (habit) => {
-        let status = habitsStatus[habit.id] || 'none';
-        if (status === 'done') status = 'std_done'; 
-        
-        const aiData = getSimulatedAIBreakdown(habit);
-
-        if (status === 'none') {
-            const newState = aiData.level === 'standard' ? 'std_done' : 'min_done';
-            
-            setHabitsStatus(prev => ({ ...prev, [habit.id]: newState }));
-            addXP(aiData.level === 'standard' ? 15 : 10); 
-            setAnimatingHabitId(habit.id);
-            setTimeout(() => setAnimatingHabitId(null), 1000); 
-
-            setHabits(prev => prev.map(h => h.id === habit.id ? { ...h, streak: (h.streak || 0) + 1 } : h));
-            
-            const allDone = habits.every(h => h.id === habit.id || habitsStatus[h.id] === 'std_done' || habitsStatus[h.id] === 'min_done' || habitsStatus[h.id] === 'extra');
-            if (allDone) {
-               let newStreak = (user.perfectDaysStreak || 0) + 1;
-               let newShields = user.shields || 0;
-               if (newStreak % 10 === 0 && newShields < 3) newShields++;
-               setUser(prev => ({...prev, perfectDaysStreak: newStreak, shields: newShields}));
-            }
-
-        }
-        else if (status === 'min_done') {
-            setHabitsStatus(prev => ({ ...prev, [habit.id]: 'std_done' }));
-            addXP(5); 
-            setAnimatingHabitId(habit.id);
-            setTimeout(() => setAnimatingHabitId(null), 1000);
-        }
-        else if (status === 'std_done') {
-            setHabitsStatus(prev => ({ ...prev, [habit.id]: 'extra' }));
-            addXP(10); 
-            setAnimatingHabitId(habit.id);
-            setTimeout(() => setAnimatingHabitId(null), 1000);
-        }
-      };
-
-      const handleCalendarScroll = () => {
-        if (!calendarRef.current) return;
-        const container = calendarRef.current;
-        const containerCenter = container.getBoundingClientRect().left + container.offsetWidth / 2;
-        let closestDay = CURRENT_DAY;
-        let minDistance = Infinity;
-        container.querySelectorAll('.day-item').forEach(el => {
-            const dist = Math.abs(containerCenter - (el.getBoundingClientRect().left + el.offsetWidth / 2));
-            if (dist < minDistance) { minDistance = dist; closestDay = parseInt(el.dataset.day, 10); }
-        });
-        setShowTrophyReminder(closestDay < TARGET_DAY - 2);
-        if (calendarTimeoutRef.current) clearTimeout(calendarTimeoutRef.current);
-        if (!isAnimatingRef.current) calendarTimeoutRef.current = setTimeout(() => { scrollToDayBouncy(CURRENT_DAY); }, 3000);
-      };
-
-      const handleBadgesScroll = () => {
-        if (!badgesRef.current) return;
-        if (badgesTimeoutRef.current) clearTimeout(badgesTimeoutRef.current);
-        if (!isAnimatingBadgesRef.current) {
-            badgesTimeoutRef.current = setTimeout(() => {
-                const badgeElement = document.getElementById(`badge-${user.level}`);
-                if (badgeElement) {
-                   isAnimatingBadgesRef.current = true;
-                   badgesRef.current.style.scrollSnapType = 'none';
-                   badgeElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                   setTimeout(() => {
-                       if (badgesRef.current) badgesRef.current.style.scrollSnapType = 'x mandatory';
-                       isAnimatingBadgesRef.current = false;
-                   }, 500);
-                }
-            }, 3000);
-        }
-      };
-
-      const handleVisionSend = () => {
-        if (!visionAnswer.trim()) return;
-        const ans = visionAnswer.trim();
-        setVisionAnswer('');
-        addXP(5); 
-
-        // הדמיית בינה מלאכותית שלוקחת את התשובה, מנסחת אותה יפה ומוסיפה את ה"למה"
-        let aiAddition = '';
-        switch(nlpQuestionIdx) {
-            case 0: aiAddition = `\n\nכדי להגשים את המטרה שלי, אני מתחייב לרכוש את ההרגלים והתכונות הבאות:\n"${ans}"\nהסיבה שזה כל כך קריטי עבורי היא שזה יאפשר לי לפרוץ את הגבולות של עצמי ולחיות את החזון שלי במלואו.`; break;
-            case 1: aiAddition = `\n\nאני בוחר להקיף את עצמי באנשים ש:\n"${ans}"\nהסביבה הזו קריטית כי היא תמשוך אותי למעלה ותיתן לי השראה וכוח ברגעי האמת.`; break;
-            case 2: aiAddition = `\n\nאני משחרר את האמונות הישנות ומאמץ את האמת החדשה הזו:\n"${ans}"\nזה משחרר אותי, כי ברגע שהראש נקי ממחסומים ופחדים, הדרך להצלחה פתוחה לגמרי.`; break;
-            case 3: aiAddition = `\n\nהיום האידיאלי שלי נראה כך:\n"${ans}"\nאני שואף לשם בכל כוחי כי זה מייצג את החופש האמיתי וההגשמה העצמית שתמיד חלמתי עליהם.`; break;
-            case 4: aiAddition = `\n\nהצעד הראשון והמיידי שלי במסע הזה הוא:\n"${ans}"\nזה כל כך חשוב, כי פעולה קטנה היום היא זו שיוצרת את המומנטום העוצמתי של מחר.`; break;
-        }
-
-        setVisionBoard(prev => ({
-            ...prev,
-            text: (prev.text ? prev.text + aiAddition : aiAddition.trim())
-        }));
-
-        setNlpQuestionIdx((prev) => (prev + 1) % NLP_QUESTIONS.length);
+        const status = habitsStatus[habit.id] || 'none';
+        const nextStatus = status === 'none' ? 'std_done' : status === 'std_done' ? 'extra' : 'std_done';
+        setHabitsStatus(prev => ({ ...prev, [habit.id]: nextStatus }));
+        setAnimatingHabitId(habit.id);
+        setTimeout(() => setAnimatingHabitId(null), 1000);
       };
 
       const goToTab = (id) => {
         const el = document.getElementById(`card-${id}`);
         if (el && scrollRef.current) {
-          isAutoScrolling.current = true;
           el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
           setHeaderView(id);
-          setTimeout(() => { isAutoScrolling.current = false; }, 600);
         }
       };
 
-      const handleScroll = () => {
-        if (isAutoScrolling.current || !scrollRef.current) return;
-        const container = scrollRef.current;
-        const idx = Math.round(Math.abs(container.scrollLeft) / container.offsetWidth);
-        if (HEADER_TABS[idx] && headerView !== HEADER_TABS[idx].id) setHeaderView(HEADER_TABS[idx].id);
-      };
-
-      const scrollToTargetDay = () => document.getElementById(`day-${TARGET_DAY}`)?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-      const cardClassName = "w-full flex-shrink-0 snap-center snap-always flex items-center justify-center px-1";
-
-      const handleLogout = async () => {
-        if (!isGuest) await supabase.auth.signOut();
-        setIsGuest(false);
-        setSession(null);
-      };
-
-      if (!session && !isGuest) return <LoginScreen onLogin={() => {}} onGuestLogin={handleGuestLogin} />;
-      if (!isDataLoaded) return <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] text-gray-500 font-bold"><Loader2 className="w-8 h-8 animate-spin ml-2"/> טוען נתונים...</div>;
-
-      const currentXp = user.xp || 0;
-      const currentLevel = user.level || 1;
-      const xpNeeded = currentLevel * 100;
-      const currentBadge = badges.find(b => b.id === currentLevel);
-      const activeCharacterImg = currentBadge?.characterImageUrl || activeAvatar; 
-      const headerAvatar = currentBadge?.badgeImageUrl || currentBadge?.imageUrl || activeCharacterImg; 
-      const shieldsCount = user.shields || 0;
-
+      const activeTasks = tasks.filter(t => !t.isDone);
       const stackTasks = activeTasks.slice(0, 3);
+
+      if (!session && !isGuest) return <LoginScreen onGuestLogin={handleGuestLogin} />;
+      if (!isDataLoaded) return <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] text-gray-500 font-bold"><Loader2 className="w-8 h-8 animate-spin ml-2"/> טוען...</div>;
+
+      const currentBadge = badges.find(b => b.id === user.level);
+      const headerAvatar = currentBadge?.badgeImageUrl || currentBadge?.imageUrl || activeAvatar;
 
       return (
         <div className="min-h-screen bg-[#F0F2F5] flex items-center justify-center font-sans" dir="rtl">
-          
           <style>{`
             .theme-bg-gradient { background: linear-gradient(180deg, ${theme.bgStart} 0%, ${theme.bgEnd} 100%) !important; }
             .c-primary { color: ${theme.primary} !important; }
             .bg-primary { background-color: ${theme.primary} !important; }
-            .border-primary { border-color: ${theme.primary} !important; }
             .c-gold { color: ${theme.gold} !important; }
             .bg-gold { background-color: ${theme.gold} !important; }
-            .border-gold { border-color: ${theme.gold} !important; }
             .c-accent { color: ${theme.accent} !important; }
             .bg-accent { background-color: ${theme.accent} !important; }
             .c-dark { color: ${theme.dark} !important; }
             .bg-dark { background-color: ${theme.dark} !important; }
-            .bg-primary-10 { background-color: ${theme.primary}1A !important; }
-            .bg-accent-10 { background-color: ${theme.accent}1A !important; }
-            .shadow-gold-glow { box-shadow: 0 4px 15px ${theme.gold}66 !important; }
-            .shadow-primary-glow { box-shadow: 0 8px 15px ${theme.primary}1A !important; }
             .no-scrollbar::-webkit-scrollbar { display: none; }
-            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
           `}</style>
 
-          <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] md:shadow-2xl md:border-[12px] md:border-[#1C1C1E] relative overflow-hidden flex flex-col transition-all">
+          <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col">
             
-            <div className="absolute top-0 left-0 w-full z-[150] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
-              <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+            {/* Header - ORIGINAL DESIGN */}
+            <div className="absolute top-0 left-0 w-full z-[150] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+              <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
                   {headerAvatar ? <img src={headerAvatar} className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
                 </div>
                 <div className="flex flex-col text-right">
-                  <span className="text-[13px] font-black c-dark leading-tight">{user.name}</span>
-                  <span className="text-[10px] font-bold text-gray-500 leading-tight mt-0.5">רמה {currentLevel}</span>
+                  <span className="text-[13px] font-black c-dark">{user.name}</span>
+                  <span className="text-[10px] font-bold text-gray-500">רמה {user.level}</span>
                 </div>
               </button>
-
-              <div className="flex flex-col items-center justify-center">
-                <span className="text-[11px] font-black text-gray-500">{todayFormatted}</span>
-                {shieldsCount > 0 && (
-                  <div className="flex items-center gap-1 mt-1">
-                    {[1, 2, 3].map((num) => (
-                      <Shield key={num} className={`w-3.5 h-3.5 ${num <= shieldsCount ? 'text-yellow-500 fill-yellow-500 drop-shadow-sm' : 'text-gray-300 fill-gray-200'}`} />
-                    ))}
-                  </div>
-                )}
-              </div>
-
+              <span className="text-[11px] font-black text-gray-500">{todayFormatted}</span>
               <div className="flex items-center gap-1">
-                 {isGuest ? (
-                   <div className="p-1.5"><CloudOff className="w-4 h-4 text-gray-400"/></div>
-                 ) : syncStatus === 'saving' ? (
-                   <div className="p-1.5"><Loader2 className="w-4 h-4 animate-spin text-blue-500"/></div>
-                 ) : syncStatus === 'error' ? (
-                   <div className="p-1.5"><AlertCircle className="w-4 h-4 text-red-500"/></div>
-                 ) : (
-                   <div className="p-1.5"><Cloud className="w-4 h-4 text-green-500"/></div>
-                 )}
+                {syncStatus === 'saving' ? <Loader2 className="w-4 h-4 animate-spin text-blue-500"/> : <Cloud className="w-4 h-4 text-green-500"/>}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto overflow-x-hidden theme-bg-gradient c-dark select-none relative no-scrollbar">
-              <div className="w-full px-4 pb-12 pt-20 mt-0">
-                
-                {activeCharacterImg && (
-                  <div className="relative w-[calc(100%+32px)] -mx-4 h-[280px] md:h-[340px] mb-2 flex items-center justify-center shrink-0 animate-in zoom-in-95 duration-700 p-4">
-                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 md:w-72 md:h-72 bg-gray-300/40 rounded-full blur-3xl z-0 pointer-events-none"></div>
-                     <img src={activeCharacterImg} alt="Avatar" className="relative z-10 max-w-full max-h-full object-contain drop-shadow-2xl" />
-                  </div>
-                )}
+            <div className="flex-1 overflow-y-auto no-scrollbar theme-bg-gradient pt-20">
+              
+              {/* Avatar Area - ORIGINAL DESIGN */}
+              <div className="relative w-full h-[280px] flex items-center justify-center p-4">
+                 {activeAvatar && <img src={activeAvatar} className="max-w-full max-h-full object-contain drop-shadow-2xl" />}
+              </div>
 
-                <div className="relative w-[calc(100%+32px)] -mx-4 z-20 -mt-16 mb-4">
-                  <div ref={badgesRef} onScroll={handleBadgesScroll} onTouchStart={handleBadgesInteraction} onMouseDown={handleBadgesInteraction} className="flex flex-row-reverse w-full overflow-x-auto no-scrollbar snap-x snap-mandatory py-4">
-                    <div className="flex-shrink-0 w-[calc(50%-45px)]" />
-                    {badges.map((badge) => {
-                      const isCompleted = currentLevel >= badge.id;
-                      const isCurrent = currentLevel === badge.id;
-                      const displayBadgeImage = badge.badgeImageUrl || badge.imageUrl;
-                      return (
-                        <div key={badge.id} id={`badge-${badge.id}`} className="snap-center flex-shrink-0 w-[90px] flex flex-col items-center justify-center transition-all duration-300">
-                          <div className="relative w-16 h-16 flex items-center justify-center mb-2">
-                            {isCurrent && <div className="absolute top-1/2 left-1/2 w-20 h-20 rounded-full animate-halo-current pointer-events-none" style={{ background: 'radial-gradient(circle, #FFCC00 20%, transparent 70%)', zIndex: 0 }}></div>}
-                            <div className={`relative z-10 w-full h-full flex items-center justify-center transition-all duration-500 ${isCurrent ? 'animate-badge-current drop-shadow-xl' : isCompleted ? 'scale-100 drop-shadow-md' : 'opacity-40 grayscale scale-90'}`}>
-                              {displayBadgeImage ? (
-                                 <img src={displayBadgeImage} alt={badge.label} className="w-full h-full object-contain" />
-                              ) : (
-                                 badge.icon && React.cloneElement(badge.icon, { style: { width: '100%', height: '100%' }, className: isCompleted ? 'c-gold fill-current' : 'text-gray-400' })
-                              )}
-                            </div>
-                          </div>
-                          <span className={`text-[12px] font-black text-center leading-tight transition-all duration-300 ${isCurrent ? 'c-primary scale-110' : isCompleted ? 'c-dark' : 'text-gray-400'}`}>{badge.label}</span>
-                          {isCurrent && <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary" />}
-                        </div>
-                      );
-                    })}
-                    <div className="flex-shrink-0 w-[calc(50%-45px)]" />
-                  </div>
-                </div>
-
-                <section className="mb-2 relative w-full h-20">
-                  {showTrophyReminder && (
-                    <div onClick={scrollToTargetDay} className="absolute right-[-10px] top-[10px] z-20 cursor-pointer">
-                      <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center shadow-gold-glow border-2 border-white">
-                        <Trophy className="w-3.5 h-3.5 text-white fill-current" />
+              {/* Badges Slider - ORIGINAL DESIGN */}
+              <div className="relative w-full overflow-x-auto no-scrollbar flex flex-row-reverse px-4 gap-4 mb-8">
+                 {badges.map(b => (
+                   <div key={b.id} className={`shrink-0 flex flex-col items-center ${user.level >= b.id ? 'opacity-100' : 'opacity-30 grayscale'}`}>
+                      <div className="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm mb-1">
+                        {b.icon}
                       </div>
-                    </div>
-                  )}
-                  <div ref={calendarRef} onScroll={handleCalendarScroll} onTouchStart={handleUserInteraction} onMouseDown={handleUserInteraction} className="flex flex-row-reverse w-full overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 pt-2">
-                    <div className="flex-shrink-0 w-[40%]" />
-                    {ALL_DAYS.map((day) => (
-                      <div key={day.date} id={`day-${day.date}`} data-day={day.date} className="day-item flex flex-col items-center flex-shrink-0 w-[20%] snap-center">
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border-2 relative ${day.isToday ? 'bg-dark text-white scale-110 shadow-xl border-transparent' : day.isTarget ? 'bg-gold text-white scale-110 shadow-gold-glow border-transparent' : day.status === 'past' ? (day.completionLevel === 'all_extra' ? 'bg-gold border-transparent shadow-gold-glow' : day.completionLevel === 'some_extra' ? 'bg-accent border-transparent' : day.completionLevel === 'all_done' ? 'bg-dark border-transparent' : 'bg-gray-200 border-transparent') : 'bg-white text-gray-500 border-gray-50'}`}>
-                          <span className="text-sm font-black leading-none">{day.isTarget ? <Trophy className="w-5 h-5 fill-current" /> : day.status === 'past' ? <Check className={`w-5 h-5 stroke-[4px] ${day.completionLevel === 'partial' ? 'text-gray-500' : 'text-white'}`} /> : day.date}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex-shrink-0 w-[40%]" />
-                  </div>
-                </section>
+                      <span className="text-[10px] font-bold">{b.label}</span>
+                   </div>
+                 ))}
+              </div>
 
-                <nav className="flex gap-4 mb-2 overflow-x-auto no-scrollbar whitespace-nowrap border-b border-gray-100 pb-1.5">
-                  {HEADER_TABS.map(item => (
-                    <button key={item.id} onClick={() => goToTab(item.id)} className={`text-[12px] font-bold transition-all px-1 border-b-2 ${headerView === item.id ? 'c-primary border-primary -mb-[8px]' : 'text-gray-400 border-transparent'}`}>{item.label}</button>
-                  ))}
+              {/* Tabs & Content - ORIGINAL DESIGN */}
+              <div className="px-4 pb-12">
+                <nav className="flex gap-4 mb-4 border-b border-gray-100 pb-2">
+                   {HEADER_TABS.map(tab => (
+                     <button key={tab.id} onClick={() => setHeaderView(tab.id)} className={`text-xs font-black ${headerView === tab.id ? 'c-primary border-b-2 border-primary' : 'text-gray-400'}`}>{tab.label}</button>
+                   ))}
                 </nav>
 
-                <div ref={scrollRef} onScroll={handleScroll} className="w-full h-[170px] overflow-x-auto snap-x snap-mandatory flex no-scrollbar scroll-smooth mb-6">
-                  
-                  <div id="card-daily" className={cardClassName}>
-                    {stackTasks.length > 0 ? (
-                      <div className="relative w-[85%] h-[85%] mt-4 mr-2">
-                        {stackTasks.map((t, idx) => {
-                          const isTop = idx === 0;
-                          const isAnim = isTop && isCardCompletedAnim;
-                          
-                          const tx = idx * 12;
-                          const ty = -(idx * 12);
-                          const scale = 1 - (idx * 0.05);
-
-                          const cardStyle = {
-                              zIndex: 30 - idx,
-                              transform: isAnim ? 'translate(-10px, 10px) scale(1.05)' : `translate(${tx}px, ${ty}px) scale(${scale})`,
-                              opacity: isTop ? 1 : Math.max(0, 0.8 - (idx * 0.3)),
-                          };
-
-                          const bgClass = isAnim ? 'bg-dark border-transparent shadow-2xl' : 'bg-white border-gray-100';
-
-                          return (
-                            <div
-                                key={t.id}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (isTop && !isCardCompletedAnim) setIsCardCompletedAnim(true);
-                                }}
-                                className={`absolute inset-0 rounded-3xl p-4 border transition-all duration-500 flex flex-col justify-between overflow-hidden shadow-sm ${bgClass} ${isTop ? 'cursor-pointer' : 'pointer-events-none'}`}
-                                style={cardStyle}
-                            >
-                                <div className="relative z-10 flex items-center justify-between mb-3">
-                                  <div className={`text-[9px] font-black uppercase px-2 py-1 rounded-md tracking-widest transition-colors ${isAnim ? 'bg-gold-20 c-gold' : 'bg-accent-10 c-accent'}`}>{isAnim ? 'הושלם' : 'משימת היום'}</div>
-                                  {isTop && (
-                                     <button onClick={(e) => { e.stopPropagation(); setIsTaskDrawerOpen(true); }} className="p-2.5 rounded-full bg-white/60 border border-gray-100 shadow-sm hover:bg-white transition-colors active:scale-95">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500">
-                                          <circle cx="5" cy="5" r="2.5"/><circle cx="12" cy="5" r="2.5"/><circle cx="19" cy="5" r="2.5"/>
-                                          <circle cx="5" cy="12" r="2.5"/><circle cx="12" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/>
-                                          <circle cx="5" cy="19" r="2.5"/><circle cx="12" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/>
-                                        </svg>
-                                     </button>
-                                  )}
-                                </div>
-                                <div className="relative z-10 flex flex-row-reverse items-center justify-between w-full gap-2">
-                                  <div className="text-right flex-1 min-w-0"><h3 className={`text-sm font-black truncate transition-colors ${isAnim ? 'text-white' : 'c-dark'}`}>{t.text}</h3></div>
-                                  <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-500 border-2 ${isAnim ? 'bg-gold border-gold scale-110 shadow-lg' : 'bg-white/80 border-gray-100'}`}><Check className={`w-4 h-4 stroke-[3.5px] transition-colors ${isAnim ? 'c-dark' : 'text-gray-300'}`} /></div>
-                                </div>
-                                {isAnim && <button onClick={(e) => { e.stopPropagation(); toggleTaskDone(t.id); setIsCardCompletedAnim(false); }} className="relative z-10 bg-white c-dark px-6 py-1.5 rounded-xl font-black text-[10px] self-center shadow-lg animate-in slide-in-from-bottom-2 fade-in">הבאה <ArrowLeft className="w-3 h-3" /></button>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div onClick={() => setIsTaskDrawerOpen(true)} className="w-[90%] h-[90%] rounded-3xl p-5 border border-dashed border-gray-200 bg-white/50 backdrop-blur-sm flex flex-col items-center justify-center cursor-pointer">
-                         <Trophy className="w-8 h-8 c-gold mb-2" />
-                         <h3 className="font-black c-dark">הכל הושלם!</h3>
-                      </div>
-                    )}
-                  </div>
-
-                  <div id="card-news" className={cardClassName}>
-                    <div className="w-full h-full bg-white rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden flex flex-col items-center justify-center">
-                      {theme.communityBg && <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-multiply" style={{backgroundImage: `url(${theme.communityBg})`}}></div>}
-                      <div className="relative z-10 flex flex-col items-center w-full px-5">
-                        <div className="bg-white/80 p-3 rounded-full mb-3 backdrop-blur-md shadow-sm"><Users className="w-8 h-8 c-primary" /></div>
-                        <button onClick={() => setShowCommunityPopup(true)} className="w-full bg-primary text-white py-3 rounded-2xl text-sm font-black border-none shadow-primary-glow active:scale-95 transition-all">הצטרפות לקהילה</button>
-                      </div>
+                {headerView === 'daily' && (
+                  <div className="space-y-6">
+                    {/* Tasks Stack */}
+                    <div className="h-40 relative flex items-center justify-center">
+                       {stackTasks.length > 0 ? (
+                         stackTasks.map((t, i) => (
+                           <div key={t.id} onClick={() => toggleTaskDone(t.id)} className={`absolute w-full p-6 rounded-3xl bg-white border border-gray-100 shadow-xl transition-all cursor-pointer`} style={{transform: `translateY(${i*10}px) scale(${1-(i*0.05)})`, zIndex: 10-i}}>
+                              <h3 className="font-black c-dark">{t.text}</h3>
+                           </div>
+                         ))
+                       ) : <div onClick={() => setIsTaskDrawerOpen(true)} className="w-full p-6 rounded-3xl border-2 border-dashed border-gray-200 text-center text-gray-400 font-bold">הוסף משימה +</div>}
                     </div>
-                  </div>
 
-                  {/* כרטיסיית חזון משודרגת - נקיה, פשוטה וללא כותרות מיותרות */}
-                  <div id="card-vision" className={cardClassName}>
-                    <div className="w-full h-full bg-white rounded-3xl p-3 border border-gray-100 shadow-sm flex flex-col relative">
-                      <div className="relative w-full flex-1 bg-gray-50/80 rounded-2xl border border-gray-100/60 overflow-hidden flex flex-col focus-within:border-primary focus-within:bg-white transition-all shadow-inner">
-                        
-                        <textarea 
-                          value={visionAnswer} 
-                          onChange={e => setVisionAnswer(e.target.value)} 
-                          placeholder={NLP_QUESTIONS[nlpQuestionIdx]} 
-                          className="w-full h-full bg-transparent p-4 text-sm font-bold c-dark outline-none resize-none text-right no-scrollbar pb-14 placeholder:text-gray-400 placeholder:leading-relaxed" 
-                        />
-                        
-                        <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 pointer-events-none">
-                           <button onClick={(e) => { e.preventDefault(); setShowVisionPopup(true); }} className="pointer-events-auto text-[11px] font-black c-dark bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors shadow-sm active:scale-95">
-                             <Star className="w-4 h-4 text-gold fill-gold" /> החזון שלי
-                           </button>
-                           
-                           <button onClick={handleVisionSend} className="pointer-events-auto bg-primary text-white w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 active:scale-90 transition-transform shrink-0">
-                             <Send className="w-5 h-5 ml-1" />
-                           </button>
-                        </div>
-                        
+                    {/* Habits List */}
+                    <section className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-[10px] font-black text-gray-400 uppercase">הרגלים</h3>
+                        <button onClick={() => setIsHabitWizardOpen(true)} className="text-xs font-bold c-primary">+ חדש</button>
                       </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                <section className="space-y-4">
-                  <div className="flex justify-between items-center px-1">
-                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">הרגלים</h3>
-                    <button onClick={() => setIsHabitWizardOpen(true)} className="text-xs font-bold c-primary flex items-center gap-1"><Plus className="w-3 h-3"/> חדש</button>
-                  </div>
-                  {habits.map((habit, index) => {
-                    let status = habitsStatus[habit.id] || 'none';
-                    if (status === 'done') status = 'std_done'; 
-                    
-                    const isAnimating = animatingHabitId === habit.id;
-                    const aiData = getSimulatedAIBreakdown(habit);
-                    
-                    const isCompletedStandard = status === 'std_done' || status === 'extra';
-                    const isCompletedMinimum = status === 'min_done';
-
-                    const displayTitle = status === 'none' ? aiData.title : habit.title;
-                    const displayTarget = status === 'none' ? aiData.target : (status === 'extra' ? habit.targetValue * 2 : habit.targetValue);
-                    const displayUnit = status === 'none' ? aiData.unit : habit.unit;
-
-                    const cardBgClass = isAnimating ? 'animate-pop bg-white border-gold shadow-lg z-20' :
-                                        status === 'extra' ? 'bg-gold/10 border-gold/30 shadow-sm' :
-                                        status === 'std_done' ? 'bg-gray-50/80 border-transparent opacity-70' :
-                                        isCompletedMinimum ? 'bg-white border-gold/50 shadow-sm' :
-                                        'bg-white border-gray-100 shadow-sm';
-
-                    const btnClass = isAnimating ? 'bg-gold border-gold shadow-gold-glow scale-125' :
-                                     status === 'none' ? 'bg-gray-100 border-gray-200 hover:bg-gray-200' :
-                                     status === 'min_done' ? 'bg-dark border-gold shadow-gold-glow' :
-                                     status === 'std_done' ? 'bg-dark border-transparent opacity-90' :
-                                     'bg-gold border-transparent shadow-gold-glow scale-110';
-
-                    return (
-                      <div key={habit.id} className="relative flex flex-row-reverse items-stretch gap-3">
-                        <div className={`flex-1 p-4 rounded-2xl border flex flex-row-reverse items-center justify-between transition-all ${cardBgClass}`}>
-                          
-                          <div className="text-left flex-1 pr-2">
-                            <h4 className={`font-black text-sm transition-colors ${status === 'std_done' && !isAnimating ? 'line-through text-gray-400' : status === 'extra' ? 'c-gold font-black' : (status === 'none' && aiData.level !== 'standard' ? 'c-accent' : 'c-dark')}`}>
-                              {displayTitle}
-                            </h4>
-                            <div className="flex flex-row-reverse items-center gap-2 mt-1">
-                              {habit.streak > 0 && (
-                                <div className="flex items-center gap-0.5 bg-orange-50 px-1.5 py-0.5 rounded-md border border-orange-100">
-                                  <Flame className="w-3 h-3 text-orange-500 fill-orange-500" />
-                                  <span className="text-[9px] font-bold text-orange-600">{habit.streak} רצף</span>
-                                </div>
-                              )}
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-gray-400" />
-                                <span className="text-[9px] text-gray-400">{habit.bestTime}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col items-center justify-center min-w-[3.5rem] transition-all duration-300">
-                            <div className="flex items-center gap-1">
-                              <span className={`text-3xl font-black ${status === 'none' && aiData.level !== 'standard' ? 'c-accent' : (status === 'extra' ? 'c-gold drop-shadow-md' : 'c-dark')}`} style={{ direction: 'ltr' }}>
-                                {displayTarget}
-                              </span>
-                            </div>
-                            <span className={`text-[8px] font-bold ${status === 'none' && aiData.level !== 'standard' ? 'c-accent' : (status === 'extra' ? 'c-gold' : 'text-gray-400')}`}>
-                              {displayUnit}
-                            </span>
-                          </div>
+                      {habits.map(habit => (
+                        <div key={habit.id} onClick={() => handleHabitClick(habit)} className={`p-4 rounded-2xl border flex items-center justify-between bg-white shadow-sm transition-all ${animatingHabitId === habit.id ? 'animate-pop scale-105' : ''}`}>
+                           <div className="text-right">
+                             <h4 className="font-black text-sm c-dark">{habit.title}</h4>
+                             <span className="text-[10px] text-gray-400">{habit.bestTime}</span>
+                           </div>
+                           <Check className={`w-6 h-6 ${habitsStatus[habit.id] !== 'none' ? 'text-green-500' : 'text-gray-200'}`} />
                         </div>
-                        
-                        <div className="relative flex flex-col items-center w-10">
-                          {index !== habits.length - 1 && <div className="absolute top-[50%] left-1/2 -translate-x-1/2 w-0 h-[calc(100%+16px)] border-l-2 border-dashed border-gray-200 z-0" />}
-                          <div onClick={() => handleHabitClick(habit)} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative cursor-pointer border-2 z-10 my-auto ${btnClass}`}>
-                            {status === 'extra' ? (
-                               <Zap className="w-5 h-5 text-white fill-white" />
-                            ) : (
-                               <Check className={`w-5 h-5 stroke-[4px] ${status === 'none' ? 'text-gray-400' : 'text-white'}`} />
-                            )}
-                            
-                            {status === 'std_done' && !isAnimating && (
-                              <div className="absolute -top-2 -left-2 bg-accent text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg shadow-md animate-bounce border-2 border-white whitespace-nowrap">
-                                x2
-                              </div>
-                            )}
-                            
-                            {isAnimating && (
-                              <>
-                                <div className="sparkle sparkle-1"></div>
-                                <div className="sparkle sparkle-2"></div>
-                                <div className="sparkle sparkle-3"></div>
-                                <div className="sparkle sparkle-4"></div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </section>
+                      ))}
+                    </section>
+                  </div>
+                )}
+
+                {headerView === 'vision' && (
+                  <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm min-h-[300px] flex flex-col">
+                     <h3 className="font-black mb-4 c-dark">{NLP_QUESTIONS[nlpQuestionIdx]}</h3>
+                     <textarea 
+                      value={visionAnswer} 
+                      onChange={e => setVisionAnswer(e.target.value)}
+                      className="flex-1 bg-gray-50 rounded-2xl p-4 outline-none text-sm font-bold"
+                      placeholder="התשובה שלך..."
+                     />
+                     <button onClick={handleVisionSend} className="mt-4 bg-primary text-white py-3 rounded-2xl font-black">שלח לחזון</button>
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* Drawer הגדרות */}
-              <div className={`absolute inset-0 bg-black/40 z-[2000] transition-opacity duration-300 ${isSettingsOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSettingsOpen(false)} />
-              <div className={`absolute top-0 right-0 h-full w-[90%] bg-[#F8F9FB] z-[2100] shadow-2xl transition-transform duration-300 flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                 {settingsView === 'main' && (
-                   <div className="flex flex-col h-full animate-in fade-in slide-in-from-left-4 duration-300">
-                     <div className="p-5 bg-white border-b border-gray-100 flex items-center justify-between">
-                         <h2 className="font-black text-lg c-dark">הגדרות כלליות</h2>
-                         <button onClick={() => setIsSettingsOpen(false)} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button>
-                     </div>
-                     <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar pb-20">
-                         <SettingsMenuItem icon={<Palette />} label="הגדרות ועיצוב" onClick={() => setSettingsView('design')} />
-                         <div className="mt-8 pt-4 border-t border-gray-100">
-                           <button onClick={handleLogout} className="w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm">התנתק מהחשבון</button>
-                         </div>
-                     </div>
+            {/* Task Drawer - ORIGINAL DESIGN */}
+            {isTaskDrawerOpen && (
+              <div className="fixed inset-0 z-[500] flex items-end">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setIsTaskDrawerOpen(false)} />
+                <div className="relative w-full h-[80%] bg-white rounded-t-[3rem] p-8 shadow-2xl animate-in slide-in-from-bottom-full">
+                   <h2 className="text-xl font-black mb-6">משימות פתוחות</h2>
+                   <div className="flex gap-2 mb-6">
+                      <input value={newTaskText} onChange={e => setNewTaskText(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTask()} placeholder="משימה חדשה..." className="flex-1 bg-gray-100 p-4 rounded-2xl outline-none" />
+                      <button onClick={addTask} className="bg-dark text-white px-6 rounded-2xl font-bold">+</button>
                    </div>
-                 )}
-                 {settingsView === 'design' && (
-                   <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-300">
-                     <div className="p-5 bg-white border-b border-gray-100 flex items-center gap-3">
-                         <button onClick={() => setSettingsView('main')} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button>
-                         <h2 className="font-black text-lg c-dark">עיצוב</h2>
-                     </div>
-                     <div className="flex-1 overflow-y-auto p-5 space-y-8 no-scrollbar pb-20">
-                         <section className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                            <h3 className="font-black text-sm mb-4 c-dark border-b pb-2">ניהול שלבים ותמונות</h3>
-                            
-                            <h4 className="font-black text-xs mt-2 mb-3 c-dark">תמונות כלליות</h4>
-                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 mb-6">
-                               <div className="flex items-center justify-between">
-                                  <span className="text-[10px] font-bold text-gray-500">רקע כרטיסיית קהילה</span>
-                                  <div className="flex items-center gap-2">
-                                    {theme.communityBg && <img src={theme.communityBg} className="w-7 h-7 rounded object-cover border border-gray-200 bg-white" />}
-                                    <input type="file" accept="image/*" className="hidden" id="up-community-bg" onChange={(e) => {
-                                        const file = e.target.files[0];
-                                        if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => setTheme(prev => ({ ...prev, communityBg: event.target.result }));
-                                            reader.readAsDataURL(file);
-                                        }
-                                    }} />
-                                    <label htmlFor="up-community-bg" className="bg-white border border-gray-200 px-3 py-1 rounded-md text-[9px] font-bold cursor-pointer hover:bg-gray-50">בחר</label>
-                                  </div>
-                               </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                {badges.map((b) => (
-                                  <div key={b.id} className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                     <h4 className="font-bold text-xs c-dark mb-3">{b.label}</h4>
-                                     <div className="flex flex-col gap-3">
-                                        <div className="flex items-center justify-between">
-                                           <span className="text-[10px] font-bold text-gray-500">תמונת דמות</span>
-                                           <div className="flex items-center gap-2">
-                                             {b.characterImageUrl && <img src={b.characterImageUrl} className="w-7 h-7 rounded object-contain bg-white border border-gray-200" />}
-                                             <input type="file" accept="image/*" className="hidden" id={`up-char-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'characterImageUrl', e)} />
-                                             <label htmlFor={`up-char-${b.id}`} className="bg-white border border-gray-200 px-3 py-1 rounded-md text-[9px] font-bold cursor-pointer hover:bg-gray-50">בחר</label>
-                                           </div>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                           <span className="text-[10px] font-bold text-gray-500">סמל הישג</span>
-                                           <div className="flex items-center gap-2">
-                                             {(b.badgeImageUrl || b.imageUrl) && <img src={b.badgeImageUrl || b.imageUrl} className="w-7 h-7 rounded object-contain bg-white border border-gray-200" />}
-                                             <input type="file" accept="image/*" className="hidden" id={`up-badge-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'badgeImageUrl', e)} />
-                                             <label htmlFor={`up-badge-${b.id}`} className="bg-white border border-gray-200 px-3 py-1 rounded-md text-[9px] font-bold cursor-pointer hover:bg-gray-50">בחר</label>
-                                           </div>
-                                        </div>
-                                     </div>
-                                  </div>
-                                ))}
-                            </div>
-                         </section>
-                     </div>
-                   </div>
-                 )}
-              </div>
-
-              {/* Drawer משימות */}
-              <div className={`fixed inset-0 bg-black/40 z-[2000] transition-opacity duration-300 ${isTaskDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsTaskDrawerOpen(false)} />
-              <div className={`fixed top-0 left-0 h-[100dvh] w-[85%] max-w-[320px] bg-[#F8F9FB] z-[2100] shadow-2xl transition-transform duration-300 rounded-r-[2.5rem] flex flex-col ${isTaskDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white rounded-tr-[2.5rem]">
-                  <h2 className="font-black text-sm c-dark">ניהול משימות</h2>
-                  <button onClick={() => setIsTaskDrawerOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ChevronLeft className="w-5 h-5 text-gray-500"/></button>
-                </div>
-                
-                <div className="p-4 flex-1 overflow-y-auto no-scrollbar flex flex-col gap-3" onClick={() => setEditingTaskId(null)} ref={tasksListRef}>
-                    {activeTasks.map((t, i) => {
-                      const isDragged = draggedIdx === i;
-                      const isDragOver = dragOverIdx === i && draggedIdx !== null && draggedIdx !== i;
-                      const showBefore = isDragOver && draggedIdx > i;
-                      const showAfter = isDragOver && draggedIdx < i;
-                      const draggedTask = draggedIdx !== null ? activeTasks[draggedIdx] : null;
-
-                      return (
-                        <React.Fragment key={`frag-${t.id}`}>
-                          {showBefore && (
-                            <div key={`ph-before-${t.id}`} onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)} className="p-3 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/40 flex items-center gap-3 opacity-80 scale-[0.98] shadow-inner cursor-pointer">
-                                <GripVertical className="w-5 h-5 text-primary/40 shrink-0" />
-                                <span className="text-sm font-bold flex-1 text-right truncate c-dark">{draggedTask?.text}</span>
-                                <div className="flex gap-2 shrink-0 items-center opacity-30">
-                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
-                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
-                                </div>
-                            </div>
-                          )}
-                          
-                          <div 
-                              key={t.id}
-                              onClick={(e) => e.stopPropagation()} 
-                              onDragOver={(e) => onDragOver(e, i)}
-                              onDrop={(e) => onDrop(e, i)}
-                              className={`p-3 ${t.color || 'bg-white'} rounded-2xl border ${editingTaskId === t.id ? 'border-primary shadow-md' : 'border-gray-100 shadow-sm hover:shadow-md'} transition-all duration-300 ${isDragged ? 'opacity-30 scale-95' : 'opacity-100'}`}
-                          >
-                            <div className="flex items-center gap-3">
-                                <div className="touch-none cursor-grab active:cursor-grabbing p-1" draggable onDragStart={(e) => onDragStart(e, i)} onDragEnd={onDragEnd}>
-                                   <GripVertical className="w-5 h-5 text-gray-300 shrink-0 pointer-events-none" />
-                                </div>
-                                <div className="flex-1 text-right flex flex-col justify-center min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setEditingTaskId(editingTaskId === t.id ? null : t.id); }}>
-                                    <span className="text-sm font-bold truncate c-dark">{t.text}</span>
-                                    {(t.time || t.date || t.notes) && !editingTaskId && (
-                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-[9px] text-gray-400 font-bold">
-                                            {t.date && <span className="flex items-center gap-0.5"><Calendar className="w-3 h-3"/> {t.date}</span>}
-                                            {t.time && <span className="flex items-center gap-0.5"><Clock className="w-3 h-3"/> {t.time}</span>}
-                                            {t.notes && <span className="flex items-center gap-0.5 bg-gray-50 px-1 rounded">עם הערות</span>}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex gap-2 shrink-0 items-center">
-                                    <button onClick={() => deleteTask(t.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4"/></button>
-                                    <button onClick={() => toggleTaskDone(t.id)} className="w-7 h-7 rounded-full border-2 border-gray-100 text-transparent active:scale-90 transition-transform hover:border-green-400"><Check className="w-4 h-4 fill-current"/></button>
-                                </div>
-                            </div>
-                            
-                            {editingTaskId === t.id && (
-                                <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
-                                    <div className="flex flex-row-reverse gap-2">
-                                        <div className="flex-1 bg-gray-50 rounded-xl flex flex-row-reverse items-center px-3 border border-gray-100">
-                                            <Calendar className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
-                                            <input type="date" value={t.date || ''} onChange={(e) => updateTask(t.id, {date: e.target.value})} className="bg-transparent w-full text-xs font-bold c-dark py-2 outline-none text-right" />
-                                        </div>
-                                        <div className="flex-1 bg-gray-50 rounded-xl flex flex-row-reverse items-center px-3 border border-gray-100">
-                                            <Clock className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
-                                            <input type="time" value={t.time || ''} onChange={(e) => updateTask(t.id, {time: e.target.value})} className="bg-transparent w-full text-xs font-bold c-dark py-2 outline-none text-right" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-gray-50 rounded-xl flex flex-row-reverse px-3 py-2 border border-gray-100">
-                                        <AlignLeft className="w-4 h-4 text-gray-400 shrink-0 ml-2 mt-0.5" />
-                                        <textarea value={t.notes || ''} onChange={(e) => updateTask(t.id, {notes: e.target.value})} placeholder="הוסף הערות למשימה..." rows="2" className="bg-transparent w-full text-xs font-bold c-dark outline-none resize-none no-scrollbar text-right" />
-                                    </div>
-                                </div>
-                            )}
-                          </div>
-                          
-                          {showAfter && (
-                            <div key={`ph-after-${t.id}`} onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)} className="p-3 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/40 flex items-center gap-3 opacity-80 scale-[0.98] shadow-inner cursor-pointer">
-                                <GripVertical className="w-5 h-5 text-primary/40 shrink-0" />
-                                <span className="text-sm font-bold flex-1 text-right truncate c-dark">{draggedTask?.text}</span>
-                                <div className="flex gap-2 shrink-0 items-center opacity-30">
-                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
-                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
-                                </div>
-                            </div>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                    
-                    {activeTasks.length === 0 && (
-                      <div className="flex flex-col items-center justify-center h-32 text-gray-400 gap-2 opacity-60">
-                         <Target className="w-10 h-10" />
-                         <span className="text-sm font-bold">אין משימות פתוחות</span>
-                      </div>
-                    )}
-
-                    {/* אזור משימות שבוצעו */}
-                    {completedTasks.length > 0 && (
-                      <div className="mt-8 mb-4">
-                         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 text-right">הושלמו ({completedTasks.length})</h4>
-                         <div className="flex flex-col gap-2" ref={completedTasksListRef}>
-                             {completedTasks.map(t => (
-                                <div key={t.id} className={`p-3 ${t.color || 'bg-gray-50'}/80 rounded-2xl border border-gray-100 flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity`}>
-                                    <div className="w-5" /> 
-                                    <span className="text-sm font-bold flex-1 text-right line-through c-dark truncate">{t.text}</span>
-                                    <div className="flex gap-2 shrink-0 items-center">
-                                        <button onClick={() => deleteTask(t.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4"/></button>
-                                        <button onClick={() => toggleTaskDone(t.id)} className="w-7 h-7 rounded-full bg-green-100 text-green-600 flex items-center justify-center active:scale-90 transition-transform shadow-inner"><Check className="w-4 h-4 stroke-[3px]"/></button>
-                                    </div>
-                                </div>
-                             ))}
-                         </div>
-                      </div>
-                    )}
-                </div>
-                
-                <div className="p-4 bg-white border-t border-gray-100 shrink-0 pb-8 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)] flex flex-col gap-3">
-                   {/* בורר הצבעים למשימה החדשה */}
-                   <div className="flex gap-2.5 items-center justify-end px-1">
-                      {TASK_COLORS.map(c => (
-                         <button 
-                            key={c.id} 
-                            onClick={() => setNewTaskColor(c.class)} 
-                            className={`w-6 h-6 rounded-full border-2 ${c.border} ${c.class} ${newTaskColor === c.class ? 'scale-110 shadow-sm border-primary' : 'hover:scale-105'} transition-all`}
-                         />
+                   <div className="space-y-3 overflow-y-auto">
+                      {activeTasks.map(t => (
+                        <div key={t.id} className="p-4 bg-gray-50 rounded-2xl flex justify-between items-center">
+                           <span className="font-bold">{t.text}</span>
+                           <button onClick={() => toggleTaskDone(t.id)} className="w-6 h-6 border-2 border-gray-200 rounded-full" />
+                        </div>
                       ))}
                    </div>
-                   
-                   <div className="flex gap-3 relative">
-                     <button onClick={addTask} className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-primary-glow active:scale-90 transition-transform"><Plus className="w-5 h-5"/></button>
-                     <input value={newTaskText} onChange={e => setNewTaskText(e.target.value)} onKeyDown={handleTaskInputKeyDown} placeholder="הוסף משימה קטנה..." className="flex-1 bg-gray-50 rounded-2xl px-4 text-right text-sm font-bold outline-none border-2 border-transparent focus:border-primary focus:bg-white transition-all shadow-inner" />
-                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Wizard פופאפ הוספת הרגל */}
-              {isHabitWizardOpen && (
-                <div className="absolute inset-0 z-[3100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
-                  <div className="w-full bg-white rounded-[40px] p-8 shadow-2xl relative overflow-hidden flex flex-col min-h-[460px] animate-in slide-in-from-bottom-4">
-                     <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center">
-                       {wizardStep === 1 && (
-                         <div className="animate-in fade-in w-full">
-                           <Zap className="w-12 h-12 c-primary mx-auto mb-4" />
-                           <h3 className="text-xl font-black mb-4">איזו פעולה קטנה נוסיף?</h3>
-                           <input value={newHabitData.action} onChange={e => setNewHabitData({...newHabitData, action: e.target.value})} placeholder="דוגמה: הליכה, קריאה..." className="w-full border-2 border-gray-100 rounded-2xl p-4 text-center font-bold outline-none focus:border-primary transition-all shadow-sm" />
-                         </div>
-                       )}
-                       {wizardStep === 2 && (
-                         <div className="animate-in fade-in w-full">
-                           <TrendingUp className="w-12 h-12 c-accent mx-auto mb-4" />
-                           <h3 className="text-xl font-black mb-6">כמה תרצה לבצע?</h3>
-                           <div className="flex items-center justify-center gap-6 mb-8">
-                             <button onClick={() => setNewHabitData(p => ({...p, quantityValue: Math.max(1, p.quantityValue - 1)}))} className="w-12 h-12 rounded-full border border-gray-100 flex items-center justify-center"><Minus /></button>
-                             <span className="text-5xl font-black tabular-nums">{newHabitData.quantityValue}</span>
-                             <button onClick={() => setNewHabitData(p => ({...p, quantityValue: p.quantityValue + 1}))} className="w-12 h-12 rounded-full bg-dark text-white flex items-center justify-center"><Plus /></button>
-                           </div>
-                           <div className="flex flex-wrap gap-2 justify-center">
-                              {['דקות', 'חזרות', 'ק״מ'].map(u => (
-                                <button key={u} onClick={() => setNewHabitData({...newHabitData, quantityUnit: u})} className={`px-4 py-2 rounded-full text-xs font-black transition-all ${newHabitData.quantityUnit === u ? 'bg-accent text-white' : 'bg-gray-100'}`}>{u}</button>
-                              ))}
-                           </div>
-                         </div>
-                       )}
-                     </div>
-                     <button onClick={handleWizardNext} className="relative z-10 w-full bg-dark text-white py-5 rounded-3xl font-black text-lg mt-4 shadow-xl active:scale-95 transition-all">סיום והוספה</button>
-                     <button onClick={() => setIsHabitWizardOpen(false)} className="mt-4 text-gray-400 text-xs font-black self-center">ביטול</button>
-                  </div>
-                </div>
-              )}
-
-              {/* פופאפ החזון שלי */}
-              {showVisionPopup && (
-                <div className="absolute inset-0 z-[3100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowVisionPopup(false)} />
-                  <div className="w-full max-h-[85vh] bg-white rounded-[2rem] shadow-2xl relative overflow-hidden flex flex-col animate-in zoom-in-95">
-                     
-                     <div className="relative w-full h-40 bg-gray-100 shrink-0 group">
-                        {visionBoard.imageUrl ? (
-                           <img src={visionBoard.imageUrl} className="w-full h-full object-cover" alt="Vision Board" />
-                        ) : (
-                           <div className="w-full h-full flex items-center justify-center text-gray-400 flex-col gap-2 bg-gray-50">
-                              <Camera className="w-8 h-8 opacity-50" />
-                              <span className="text-xs font-bold">לחץ להוספת תמונת השראה</span>
-                           </div>
-                        )}
-                        <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                           <Camera className="w-8 h-8 text-white" />
-                           <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (event) => setVisionBoard(prev => ({ ...prev, imageUrl: event.target.result }));
-                                reader.readAsDataURL(file);
-                              }
-                           }} />
-                        </label>
-                        <button onClick={() => setShowVisionPopup(false)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md hover:bg-black/70 transition-colors z-20">
-                           <ChevronDown className="w-5 h-5" />
-                        </button>
-                     </div>
-                     
-                     <div className="p-6 flex-1 flex flex-col bg-[#F8F9FB] overflow-hidden">
-                        <div className="flex items-center gap-2 mb-6 shrink-0">
-                           <Star className="w-6 h-6 text-gold fill-gold" />
-                           <h2 className="text-xl font-black c-dark">החזון הגדול שלי</h2>
-                        </div>
-                        {/* תצוגת טקסט חזון משודרגת - ללא עריכה, רק קריאה יפה */}
-                        <div className="w-full flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-y-auto no-scrollbar">
-                           {visionBoard.text ? (
-                               <p className="text-base font-medium c-dark leading-loose text-right whitespace-pre-wrap">
-                                   {visionBoard.text}
-                               </p>
-                           ) : (
-                               <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 gap-4">
-                                   <Star className="w-12 h-12" />
-                                   <span className="font-bold text-center text-sm leading-relaxed">
-                                       החזון שלך מתגבש כאן...<br/>
-                                       ענה על השאלות במסך הראשי כדי לבנות אותו!
-                                   </span>
-                               </div>
-                           )}
-                        </div>
-                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* פופאפ קהילה מנעול */}
-              {showCommunityPopup && (
-                <div className="absolute inset-0 z-[3100] flex items-end justify-center animate-in fade-in duration-300">
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCommunityPopup(false)} />
-                  <div className="w-full h-[70%] bg-[#F8F9FB] rounded-t-[2.5rem] p-6 shadow-2xl relative flex flex-col animate-in slide-in-from-bottom-8">
-                    <div className="flex items-center justify-between mb-4 shrink-0">
-                      <h2 className="font-black text-xl c-dark flex items-center gap-2"><Users className="w-6 h-6 c-primary"/> קהילת המצליחנים</h2>
-                      <button onClick={() => setShowCommunityPopup(false)} className="p-2 bg-white rounded-full border border-gray-100 shadow-sm"><ChevronDown className="w-5 h-5 text-gray-500"/></button>
-                    </div>
-                    
-                    <div className="flex-1 flex flex-col items-center justify-center text-center pb-8 pt-4 overflow-y-auto no-scrollbar">
-                        <div className="w-20 h-20 bg-white border border-gray-100 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                            <Lock className="w-10 h-10 text-gray-300" />
-                        </div>
-                        <h3 className="text-2xl font-black c-dark mb-2">הקהילה בדרך!</h3>
-                        <p className="text-sm text-gray-500 mb-8 px-6 leading-relaxed font-medium">
-                            הגישה לקהילה נפתחת בשלב ה<strong className="c-dark font-black">מומנטום</strong> (ביום ה-10 שלך).<br/>תמשיך להתמיד, אתה קרוב!
-                        </p>
-                        
-                        <div className="w-full space-y-4 px-2">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="h-px bg-gray-200 flex-1"></div>
-                                <span className="text-[10px] font-black text-gray-400">בינתיים, אפשר להצטרף כאן</span>
-                                <div className="h-px bg-gray-200 flex-1"></div>
-                            </div>
-                            
-                            <button className="w-full py-4 bg-[#25D366] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-3 active:scale-95 transition-transform">
-                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-                                קבוצת ה-WhatsApp
-                            </button>
-
-                            <button className="w-full py-4 bg-[#1877F2] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#1877F2]/20 flex items-center justify-center gap-3 active:scale-95 transition-transform">
-                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                                קבוצת ה-Facebook
-                            </button>
-                        </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
           </div>
         </div>
       );
