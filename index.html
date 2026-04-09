@@ -339,7 +339,13 @@
           const globalData = await loadGlobalAdminData();
           if (globalData) {
               if (globalData.theme) setTheme(prev => ({ ...prev, ...globalData.theme }));
-              if (globalData.badges) setBadges(globalData.badges);
+              // מיזוג חכם למקרה שבעבר נשמרו פחות מ-35 שלבים
+              if (globalData.badges) {
+                  setBadges(INITIAL_BADGES.map(b => {
+                      const saved = globalData.badges.find(gb => gb.id === b.id);
+                      return saved ? { ...b, characterImageUrl: saved.characterImageUrl, badgeImageUrl: saved.badgeImageUrl, imageUrl: saved.imageUrl } : b;
+                  }));
+              }
           }
           setIsDataLoaded(true); 
           checkNewDayAndShields(); 
@@ -354,8 +360,18 @@
                 loadGlobalAdminData()
             ]);
             
+            // תמיד דורסים עיצוב מקומי עם הנתונים העדכניים של האדמין!
+            if (globalData) {
+                if (globalData.theme) setTheme(prev => ({ ...prev, ...globalData.theme }));
+                if (globalData.badges) {
+                    setBadges(INITIAL_BADGES.map(b => {
+                        const saved = globalData.badges.find(gb => gb.id === b.id);
+                        return saved ? { ...b, characterImageUrl: saved.characterImageUrl, badgeImageUrl: saved.badgeImageUrl, imageUrl: saved.imageUrl } : b;
+                    }));
+                }
+            }
+
             const d = userRes.data?.app_data;
-            
             if (d) {
                if (d.habits) setHabits(d.habits);
                if (d.habitsStatus) setHabitsStatus(d.habitsStatus);
@@ -363,17 +379,11 @@
                if (d.user) setUser({ ...user, ...d.user });
                if (d.avatars) setAvatars({ ...avatars, ...d.avatars });
                if (d.visionBoard) setVisionBoard(d.visionBoard);
+               // לא לוקחים badges ו-theme מהמשתמש כדי שלא ידרוס את הגלובלי!
             } else {
                const fullName = currentSession?.user?.user_metadata?.full_name || 'משתמש';
                setUser(prev => ({ ...prev, name: fullName.split(' ')[0], xp: 0, level: 1, shields: 0, perfectDaysStreak: 0, lastLoginDate: getTodayDate() }));
             }
-
-            // קדימות לנתוני האדמין (עיצוב וסמלים), ואם אין אז לנתוני המשתמש
-            if (globalData?.theme) setTheme(prev => ({ ...prev, ...globalData.theme }));
-            else if (d?.theme) setTheme(prev => ({ ...prev, ...d.theme }));
-
-            if (globalData?.badges) setBadges(globalData.badges);
-            else if (d?.badges) setBadges(d.badges);
 
         } catch (e) { console.error("Error loading user data:", e); } finally { setIsDataLoaded(true); checkNewDayAndShields(); }
       };
@@ -418,26 +428,36 @@
       }, []);
 
       useEffect(() => {
-        if (!isDataLoaded || !session || isGuest) return;
+        if (!isDataLoaded) return;
+        // לא שומרים אם זה אורח מוחלט (שלא אדמין)
+        if (!session && !isAdmin) return;
+
         setSyncStatus('saving');
         const timer = setTimeout(async () => {
            try {
-               const appDataToSave = { habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard };
-               const { error } = await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
+               let hasError = false;
+
+               // 1. שמירת נתונים אישיים של משתמש מחובר בלבד (בלי עיצוב ואייקונים!)
+               if (session) {
+                   const appDataToSave = { habits, habitsStatus, tasks, user, avatars, visionBoard };
+                   const { error } = await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
+                   if (error) hasError = true;
+               }
                
-               // שמירת נתונים גלובליים אם המשתמש הוא האדמין
+               // 2. שמירת נתונים גלובליים *רק* אם זה אדמין (עובד גם בטסט מקומי!)
                if (isAdmin) {
-                   await supabase.from('user_data').upsert({ 
+                   const { error } = await supabase.from('user_data').upsert({ 
                        user_id: 'GLOBAL_ADMIN_DATA', 
                        app_data: { badges, theme } 
                    });
+                   if (error) hasError = true;
                }
 
-               if (error) { setSyncStatus('error'); } else { setSyncStatus('synced'); }
+               if (hasError) { setSyncStatus('error'); } else { setSyncStatus('synced'); }
            } catch(e) { setSyncStatus('error'); }
         }, 1500); 
         return () => clearTimeout(timer);
-      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard, isDataLoaded, session, isGuest, isAdmin]);
+      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard, isDataLoaded, session, isAdmin]);
 
       // פונקציית טסט להחלפת משתמש
       const handleSwitchToMockUser = (mockUser) => {
