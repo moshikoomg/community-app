@@ -114,8 +114,6 @@
 
     const getTodayDate = () => new Date().toISOString().split('T')[0];
 
-    const ICONS_POOL = [<Trophy />, <Crown />, <Medal />, <Award />, <Star />, <Zap />];
-    
     const BADGE_NAMES = [
       'יסוד', 'מומנטום', 'קצב', 'רצף', 'שגרה', 'משמעת',
       'מיקוד', 'עקביות', 'החלטה', 'נחישות', 'רצון', 'חוסן',
@@ -125,7 +123,7 @@
     ];
     
     const INITIAL_BADGES = BADGE_NAMES.map((name, idx) => ({
-      id: idx + 1, icon: ICONS_POOL[idx % ICONS_POOL.length], completed: idx === 0, label: name, imageUrl: null
+      id: idx + 1, completed: idx === 0, label: name, imageUrl: null, characterImageUrl: null
     }));
 
     const NLP_QUESTIONS = [
@@ -214,6 +212,7 @@
 
     function App() {
       const [session, setSession] = useState(null);
+      const [isAdmin, setIsAdmin] = useState(false);
       const [isGuest, setIsGuest] = useState(false); 
       const [isDataLoaded, setIsDataLoaded] = useState(false);
       const [syncStatus, setSyncStatus] = useState('synced');
@@ -275,42 +274,73 @@
         try {
             supabase.auth.getSession().then(({ data: { session } }) => {
               setSession(session);
-              if (session) loadUserData(session);
+              if (session) {
+                  setIsAdmin(session.user.email === 'mosheally@gmail.com');
+                  loadUserData(session);
+              }
             });
             const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
               setSession(session);
-              if (session) loadUserData(session);
+              if (session) {
+                  setIsAdmin(session.user.email === 'mosheally@gmail.com');
+                  loadUserData(session);
+              } else {
+                  setIsAdmin(false);
+              }
             });
             return () => subscription.unsubscribe();
         } catch (e) { console.error("Supabase init error:", e); }
       }, []);
 
-      const handleGuestLogin = () => { setIsGuest(true); setIsDataLoaded(true); checkNewDayAndShields(); };
+      const loadGlobalAdminData = async () => {
+          try {
+              const { data } = await supabase.from('user_data').select('app_data').eq('user_id', 'GLOBAL_ADMIN_DATA').single();
+              if (data && data.app_data) return data.app_data;
+          } catch (e) { console.error("No global admin data yet", e); }
+          return null;
+      };
+
+      const handleGuestLogin = async () => { 
+          setIsGuest(true); 
+          const globalData = await loadGlobalAdminData();
+          if (globalData) {
+              if (globalData.theme) setTheme(prev => ({ ...prev, ...globalData.theme }));
+              if (globalData.badges) setBadges(globalData.badges);
+          }
+          setIsDataLoaded(true); 
+          checkNewDayAndShields(); 
+      };
+      
       const todayFormatted = useMemo(() => new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long' }).format(new Date()), []);
 
       const loadUserData = async (currentSession) => {
         try {
-            const { data, error } = await supabase.from('user_data').select('app_data').eq('user_id', currentSession.user.id).single();
-            if (data && data.app_data) {
-               const d = data.app_data;
+            const [userRes, globalData] = await Promise.all([
+                supabase.from('user_data').select('app_data').eq('user_id', currentSession.user.id).single(),
+                loadGlobalAdminData()
+            ]);
+            
+            const d = userRes.data?.app_data;
+            
+            if (d) {
                if (d.habits) setHabits(d.habits);
                if (d.habitsStatus) setHabitsStatus(d.habitsStatus);
                if (d.tasks) setTasks(d.tasks);
                if (d.user) setUser({ ...user, ...d.user });
-               if (d.theme) setTheme({ ...theme, ...d.theme });
                if (d.avatars) setAvatars({ ...avatars, ...d.avatars });
                if (d.visionBoard) setVisionBoard(d.visionBoard);
-               if (d.badges) {
-                 const restoredBadges = d.badges.map(savedBadge => {
-                     const original = INITIAL_BADGES.find(ib => ib.id === savedBadge.id);
-                     return { ...savedBadge, icon: original ? original.icon : null };
-                 });
-                 setBadges(restoredBadges);
-               }
             } else {
                const fullName = currentSession?.user?.user_metadata?.full_name || 'משתמש';
                setUser(prev => ({ ...prev, name: fullName.split(' ')[0], xp: 0, level: 1, shields: 0, perfectDaysStreak: 0, lastLoginDate: getTodayDate() }));
             }
+
+            // קדימות לנתוני האדמין (עיצוב וסמלים), ואם אין אז לנתוני המשתמש
+            if (globalData?.theme) setTheme(prev => ({ ...prev, ...globalData.theme }));
+            else if (d?.theme) setTheme(prev => ({ ...prev, ...d.theme }));
+
+            if (globalData?.badges) setBadges(globalData.badges);
+            else if (d?.badges) setBadges(d.badges);
+
         } catch (e) { console.error("Error loading user data:", e); } finally { setIsDataLoaded(true); checkNewDayAndShields(); }
       };
 
@@ -360,11 +390,20 @@
            try {
                const appDataToSave = { habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard };
                const { error } = await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
+               
+               // שמירת נתונים גלובליים אם המשתמש הוא האדמין
+               if (isAdmin) {
+                   await supabase.from('user_data').upsert({ 
+                       user_id: 'GLOBAL_ADMIN_DATA', 
+                       app_data: { badges, theme } 
+                   });
+               }
+
                if (error) { setSyncStatus('error'); } else { setSyncStatus('synced'); }
            } catch(e) { setSyncStatus('error'); }
         }, 1500); 
         return () => clearTimeout(timer);
-      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard, isDataLoaded, session, isGuest]);
+      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard, isDataLoaded, session, isGuest, isAdmin]);
 
       // פונקציית טסט להחלפת משתמש
       const handleSwitchToMockUser = (mockUser) => {
@@ -791,7 +830,7 @@
                               {displayBadgeImage ? (
                                  <img src={displayBadgeImage} alt={badge.label} className="w-full h-full object-contain" />
                               ) : (
-                                 badge.icon && React.cloneElement(badge.icon, { style: { width: '100%', height: '100%' }, className: isCompleted ? 'c-gold fill-current' : 'text-gray-400' })
+                                 <div className={`w-[80%] h-[80%] rounded-full border-2 border-dashed ${isCompleted ? 'border-gold' : 'border-gray-300'} opacity-50`}></div>
                               )}
                             </div>
                           </div>
@@ -1034,7 +1073,9 @@
                          <button onClick={() => setIsSettingsOpen(false)} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button>
                      </div>
                      <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar pb-20">
-                         <SettingsMenuItem icon={<Palette />} label="הגדרות ועיצוב" onClick={() => setSettingsView('design')} />
+                         {isAdmin && (
+                             <SettingsMenuItem icon={<Palette />} label="הגדרות ועיצוב (אדמין)" onClick={() => setSettingsView('design')} />
+                         )}
                          
                          {/* כפתור חדש לטסטים */}
                          <SettingsMenuItem icon={<UserPlus />} label="החלפת משתמש (טסט)" onClick={() => setSettingsView('test_users')} />
