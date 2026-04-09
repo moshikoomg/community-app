@@ -65,12 +65,46 @@
     import { createClient } from '@supabase/supabase-js';
     import autoAnimate from '@formkit/auto-animate';
     import { 
-      Star, Check, Lightbulb, Trophy, Crown, Medal, Award, Users, ArrowLeft, TrendingUp, Menu, Plus, Clock, Trash2, GripVertical, ArrowUpToLine, ArrowDownAZ, Sun, Sunset, Moon, AlignLeft, ChevronDown, ChevronUp, Lock, Target, Send, Sparkles, PartyPopper, Search, AlertCircle, Move, Droplet, Zap, Edit3, Minus, Calendar, Camera, Settings, ArrowRight, User, Palette, CreditCard, Wrench, Share2, ChevronLeft, Flag, Loader2, Cloud, CloudOff, Shield, Flame
+      Star, Check, Lightbulb, Trophy, Crown, Medal, Award, Users, ArrowLeft, TrendingUp, Menu, Plus, Clock, Trash2, GripVertical, ArrowUpToLine, ArrowDownAZ, Sun, Sunset, Moon, AlignLeft, ChevronDown, ChevronUp, Lock, Target, Send, Sparkles, PartyPopper, Search, AlertCircle, Move, Droplet, Zap, Edit3, Minus, Calendar, Camera, Settings, ArrowRight, User, Palette, CreditCard, Wrench, Share2, ChevronLeft, Flag, Loader2, Cloud, CloudOff, Shield, Flame, UserPlus
     } from 'lucide-react';
 
     const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww';
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // נתוני טסט עבור החלפת משתמשים
+    const MOCK_TEST_USERS = [
+      {
+        id: 'u1',
+        user: { name: 'אביב כהן', level: 14, xp: 45, shields: 2, perfectDaysStreak: 12, lastLoginDate: new Date().toISOString().split('T')[0] },
+        habits: [
+          { id: 1, title: 'שכיבות סמיכה', targetValue: 30, unit: 'חזרות', bestTime: '08:00', streak: 12 },
+          { id: 2, title: 'קריאת ספר', targetValue: 20, unit: 'דקות', bestTime: '22:00', streak: 8 }
+        ],
+        tasks: [{ id: 't1', text: 'לסיים את הפרויקט', date: '', time: '', notes: '', isDone: false, color: 'bg-blue-50' }],
+        visionBoard: { text: 'החזון של אביב: להיות בכושר שיא ולסיים לקרוא 12 ספרים בשנה.', imageUrl: null }
+      },
+      {
+        id: 'u2',
+        user: { name: 'מיכל לוי', level: 9, xp: 80, shields: 1, perfectDaysStreak: 5, lastLoginDate: new Date().toISOString().split('T')[0] },
+        habits: [
+          { id: 1, title: 'שתיית מים', targetValue: 10, unit: 'כוסות', bestTime: '10:00', streak: 5 },
+          { id: 2, title: 'מדיטציה', targetValue: 10, unit: 'דקות', bestTime: '07:00', streak: 5 }
+        ],
+        tasks: [{ id: 't2', text: 'קניות לשבת', date: '', time: '', notes: '', isDone: true, color: 'bg-white' }],
+        visionBoard: { text: 'החזון של מיכל: לחיות חיים רגועים ומאוזנים עם דגש על בריאות.', imageUrl: null }
+      },
+      {
+        id: 'u3',
+        user: { name: 'דניאל ארז', level: 22, xp: 12, shields: 3, perfectDaysStreak: 31, lastLoginDate: new Date().toISOString().split('T')[0] },
+        habits: [
+          { id: 1, title: 'ריצה', targetValue: 5, unit: 'ק"מ', bestTime: '06:00', streak: 31 },
+          { id: 2, title: 'כתיבת יומן', targetValue: 1, unit: 'דף', bestTime: '23:00', streak: 45 }
+        ],
+        tasks: [{ id: 't3', text: 'משימה חשובה מאוד', date: '', time: '', notes: '', isDone: false, color: 'bg-red-50' }],
+        visionBoard: { text: 'החזון של דניאל: להפוך לסופר ולרוץ מרתון שלם.', imageUrl: null }
+      }
+    ];
 
     const INITIAL_HABITS_DATA = [
       { id: 1, title: 'שכיבות סמיכה', targetValue: 15, unit: 'חזרות', bestTime: '09:00', streak: 12 },
@@ -226,7 +260,6 @@
       const [nlpQuestionIdx, setNlpQuestionIdx] = useState(0);
       const [showCommunityPopup, setShowCommunityPopup] = useState(false);
       
-      // מצב חדש לחלון החזון (Vision Popup)
       const [showVisionPopup, setShowVisionPopup] = useState(false);
       const [visionBoard, setVisionBoard] = useState({ text: '', imageUrl: null });
 
@@ -320,7 +353,6 @@
         return () => clearInterval(interval);
       }, []);
 
-
       useEffect(() => {
         if (!isDataLoaded || !session || isGuest) return;
         setSyncStatus('saving');
@@ -333,6 +365,22 @@
         }, 1500); 
         return () => clearTimeout(timer);
       }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard, isDataLoaded, session, isGuest]);
+
+      // פונקציית טסט להחלפת משתמש
+      const handleSwitchToMockUser = (mockUser) => {
+        setIsDataLoaded(false);
+        setTimeout(() => {
+          setUser(mockUser.user);
+          setHabits(mockUser.habits);
+          setTasks(mockUser.tasks);
+          setVisionBoard(mockUser.visionBoard);
+          setHabitsStatus({});
+          setIsDataLoaded(true);
+          setIsGuest(true); // מגדיר אותו כאורח לצורך הטסט
+          setIsSettingsOpen(false);
+          setSettingsView('main');
+        }, 300);
+      };
 
       const activeAvatar = useMemo(() => {
         if (session && session?.user?.user_metadata?.avatar_url && !avatars.start) return session.user.user_metadata.avatar_url;
@@ -602,7 +650,6 @@
         setVisionAnswer('');
         addXP(5); 
 
-        // הדמיית בינה מלאכותית שלוקחת את התשובה, מנסחת אותה יפה ומוסיפה את ה"למה"
         let aiAddition = '';
         switch(nlpQuestionIdx) {
             case 0: aiAddition = `\n\nכדי להגשים את המטרה שלי, אני מתחייב לרכוש את ההרגלים והתכונות הבאות:\n"${ans}"\nהסיבה שזה כל כך קריטי עבורי היא שזה יאפשר לי לפרוץ את הגבולות של עצמי ולחיות את החזון שלי במלואו.`; break;
@@ -854,7 +901,6 @@
                     </div>
                   </div>
 
-                  {/* כרטיסיית חזון משודרגת - נקיה, פשוטה וללא כותרות מיותרות */}
                   <div id="card-vision" className={cardClassName}>
                     <div className="w-full h-full bg-white rounded-3xl p-3 border border-gray-100 shadow-sm flex flex-col relative">
                       <div className="relative w-full flex-1 bg-gray-50/80 rounded-2xl border border-gray-100/60 overflow-hidden flex flex-col focus-within:border-primary focus-within:bg-white transition-all shadow-inner">
@@ -917,7 +963,7 @@
                       <div key={habit.id} className="relative flex flex-row-reverse items-stretch gap-3">
                         <div className={`flex-1 p-4 rounded-2xl border flex flex-row-reverse items-center justify-between transition-all ${cardBgClass}`}>
                           
-                          <div className="text-left flex-1 pr-2">
+                          <div className="text-right flex-1 pr-2">
                             <h4 className={`font-black text-sm transition-colors ${status === 'std_done' && !isAnimating ? 'line-through text-gray-400' : status === 'extra' ? 'c-gold font-black' : (status === 'none' && aiData.level !== 'standard' ? 'c-accent' : 'c-dark')}`}>
                               {displayTitle}
                             </h4>
@@ -989,12 +1035,40 @@
                      </div>
                      <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar pb-20">
                          <SettingsMenuItem icon={<Palette />} label="הגדרות ועיצוב" onClick={() => setSettingsView('design')} />
+                         
+                         {/* כפתור חדש לטסטים */}
+                         <SettingsMenuItem icon={<UserPlus />} label="החלפת משתמש (טסט)" onClick={() => setSettingsView('test_users')} />
+                         
                          <div className="mt-8 pt-4 border-t border-gray-100">
                            <button onClick={handleLogout} className="w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm">התנתק מהחשבון</button>
                          </div>
                      </div>
                    </div>
                  )}
+
+                 {/* תצוגת משתמשי טסט */}
+                 {settingsView === 'test_users' && (
+                   <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-300">
+                     <div className="p-5 bg-white border-b border-gray-100 flex items-center gap-3">
+                         <button onClick={() => setSettingsView('main')} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button>
+                         <h2 className="font-black text-lg c-dark">בחר משתמש לטסט</h2>
+                     </div>
+                     <div className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
+                        {MOCK_TEST_USERS.map(mock => (
+                          <button key={mock.id} onClick={() => handleSwitchToMockUser(mock)} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 hover:border-primary transition-all">
+                             <div className="w-12 h-12 rounded-full border bg-gray-50 overflow-hidden">
+                               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${mock.user.name}`} className="w-full h-full" />
+                             </div>
+                             <div className="text-right">
+                               <div className="font-black text-sm c-dark">{mock.user.name}</div>
+                               <div className="text-[10px] text-gray-500 font-bold">רמה {mock.user.level} • רצף {mock.user.perfectDaysStreak}</div>
+                             </div>
+                          </button>
+                        ))}
+                     </div>
+                   </div>
+                 )}
+
                  {settingsView === 'design' && (
                    <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-300">
                      <div className="p-5 bg-white border-b border-gray-100 flex items-center gap-3">
@@ -1077,10 +1151,6 @@
                             <div key={`ph-before-${t.id}`} onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)} className="p-3 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/40 flex items-center gap-3 opacity-80 scale-[0.98] shadow-inner cursor-pointer">
                                 <GripVertical className="w-5 h-5 text-primary/40 shrink-0" />
                                 <span className="text-sm font-bold flex-1 text-right truncate c-dark">{draggedTask?.text}</span>
-                                <div className="flex gap-2 shrink-0 items-center opacity-30">
-                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
-                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
-                                </div>
                             </div>
                           )}
                           
@@ -1097,13 +1167,6 @@
                                 </div>
                                 <div className="flex-1 text-right flex flex-col justify-center min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setEditingTaskId(editingTaskId === t.id ? null : t.id); }}>
                                     <span className="text-sm font-bold truncate c-dark">{t.text}</span>
-                                    {(t.time || t.date || t.notes) && !editingTaskId && (
-                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-[9px] text-gray-400 font-bold">
-                                            {t.date && <span className="flex items-center gap-0.5"><Calendar className="w-3 h-3"/> {t.date}</span>}
-                                            {t.time && <span className="flex items-center gap-0.5"><Clock className="w-3 h-3"/> {t.time}</span>}
-                                            {t.notes && <span className="flex items-center gap-0.5 bg-gray-50 px-1 rounded">עם הערות</span>}
-                                        </div>
-                                    )}
                                 </div>
                                 <div className="flex gap-2 shrink-0 items-center">
                                     <button onClick={() => deleteTask(t.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4"/></button>
@@ -1135,10 +1198,6 @@
                             <div key={`ph-after-${t.id}`} onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)} className="p-3 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/40 flex items-center gap-3 opacity-80 scale-[0.98] shadow-inner cursor-pointer">
                                 <GripVertical className="w-5 h-5 text-primary/40 shrink-0" />
                                 <span className="text-sm font-bold flex-1 text-right truncate c-dark">{draggedTask?.text}</span>
-                                <div className="flex gap-2 shrink-0 items-center opacity-30">
-                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
-                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
-                                </div>
                             </div>
                           )}
                         </React.Fragment>
@@ -1152,7 +1211,6 @@
                       </div>
                     )}
 
-                    {/* אזור משימות שבוצעו */}
                     {completedTasks.length > 0 && (
                       <div className="mt-8 mb-4">
                          <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 text-right">הושלמו ({completedTasks.length})</h4>
@@ -1173,7 +1231,6 @@
                 </div>
                 
                 <div className="p-4 bg-white border-t border-gray-100 shrink-0 pb-8 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)] flex flex-col gap-3">
-                   {/* בורר הצבעים למשימה החדשה */}
                    <div className="flex gap-2.5 items-center justify-end px-1">
                       {TASK_COLORS.map(c => (
                          <button 
@@ -1191,7 +1248,7 @@
                 </div>
               </div>
 
-              {/* Wizard פופאפ הוספת הרגל */}
+              {/* Habit Wizard */}
               {isHabitWizardOpen && (
                 <div className="absolute inset-0 z-[3100] flex items-center justify-center p-4 animate-in fade-in duration-300">
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
@@ -1213,11 +1270,6 @@
                              <span className="text-5xl font-black tabular-nums">{newHabitData.quantityValue}</span>
                              <button onClick={() => setNewHabitData(p => ({...p, quantityValue: p.quantityValue + 1}))} className="w-12 h-12 rounded-full bg-dark text-white flex items-center justify-center"><Plus /></button>
                            </div>
-                           <div className="flex flex-wrap gap-2 justify-center">
-                              {['דקות', 'חזרות', 'ק״מ'].map(u => (
-                                <button key={u} onClick={() => setNewHabitData({...newHabitData, quantityUnit: u})} className={`px-4 py-2 rounded-full text-xs font-black transition-all ${newHabitData.quantityUnit === u ? 'bg-accent text-white' : 'bg-gray-100'}`}>{u}</button>
-                              ))}
-                           </div>
                          </div>
                        )}
                      </div>
@@ -1227,7 +1279,7 @@
                 </div>
               )}
 
-              {/* פופאפ החזון שלי */}
+              {/* Vision Board */}
               {showVisionPopup && (
                 <div className="absolute inset-0 z-[3100] flex items-center justify-center p-4 animate-in fade-in duration-300">
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowVisionPopup(false)} />
@@ -1263,7 +1315,6 @@
                            <Star className="w-6 h-6 text-gold fill-gold" />
                            <h2 className="text-xl font-black c-dark">החזון הגדול שלי</h2>
                         </div>
-                        {/* תצוגת טקסט חזון משודרגת - ללא עריכה, רק קריאה יפה */}
                         <div className="w-full flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-y-auto no-scrollbar">
                            {visionBoard.text ? (
                                <p className="text-base font-medium c-dark leading-loose text-right whitespace-pre-wrap">
@@ -1284,7 +1335,7 @@
                 </div>
               )}
 
-              {/* פופאפ קהילה מנעול */}
+              {/* Community Popup */}
               {showCommunityPopup && (
                 <div className="absolute inset-0 z-[3100] flex items-end justify-center animate-in fade-in duration-300">
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCommunityPopup(false)} />
