@@ -54,9 +54,6 @@
     .sparkle-2 { background: #007AFF; animation: spark 0.6s ease-out forwards 0.1s; bottom: 10px; left: 10px; }
     .sparkle-3 { background: #34C759; animation: spark 0.6s ease-out forwards 0.2s; top: 20px; left: 20px; }
     .sparkle-4 { background: #FF9500; animation: spark 0.6s ease-out forwards 0.05s; bottom: 20px; right: 20px; }
-
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body>
@@ -74,8 +71,6 @@
     const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww';
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    const ADMIN_EMAIL = 'mosheally@gmail.com';
 
     const INITIAL_HABITS_DATA = [
       { id: 1, title: 'שכיבות סמיכה', targetValue: 15, unit: 'חזרות', bestTime: '09:00', streak: 12 },
@@ -96,7 +91,7 @@
     ];
     
     const INITIAL_BADGES = BADGE_NAMES.map((name, idx) => ({
-      id: idx + 1, icon: ICONS_POOL[idx % ICONS_POOL.length], completed: idx === 0, label: name, badgeImageUrl: null, characterImageUrl: null
+      id: idx + 1, icon: ICONS_POOL[idx % ICONS_POOL.length], completed: idx === 0, label: name, imageUrl: null
     }));
 
     const NLP_QUESTIONS = [
@@ -139,6 +134,50 @@
       { id: 'vision', label: 'חזון' }
     ];
 
+    const SettingsMenuItem = ({ icon, label, onClick }) => (
+      <button onClick={onClick} className="w-full bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:border-gray-200 active:scale-[0.98] transition-all">
+          <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500">{icon}</div>
+              <span className="font-bold text-sm c-dark">{label}</span>
+          </div>
+          <ChevronLeft className="w-4 h-4 text-gray-300" />
+      </button>
+    );
+
+    const LoginScreen = ({ onLogin, onGuestLogin }) => {
+      const [isLoading, setIsLoading] = useState(false);
+      const handleLogin = async () => {
+        setIsLoading(true);
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin + window.location.pathname }
+            });
+            if (error) throw error;
+        } catch (error) {
+            console.error("Login error:", error);
+            setIsLoading(false);
+            alert("שגיאה בהתחברות - ייתכן שהסביבה חוסמת פתיחת חלונות. נסה 'המשך כאורח'.");
+        }
+      };
+      return (
+        <div className="min-h-screen bg-[#F0F2F5] flex items-center justify-center font-sans" dir="rtl">
+          <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] shadow-2xl flex flex-col items-center justify-center p-8">
+            <Trophy className="w-20 h-20 text-[#007AFF] mb-6 drop-shadow-lg" />
+            <h1 className="text-3xl font-black mb-2 text-center text-gray-900">ברוכים הבאים</h1>
+            <p className="text-gray-500 text-center mb-10 px-4">התחבר כדי לשמור את ההרגלים וההתקדמות שלך בענן, או המשך כאורח כדי לנסות את האפליקציה.</p>
+            <button onClick={handleLogin} disabled={isLoading} className="btn-google w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg shadow-sm">
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="G" />}
+              התחברות עם Google
+            </button>
+            <button onClick={onGuestLogin} className="mt-6 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">
+              המשך כאורח (ללא שמירה בענן)
+            </button>
+          </div>
+        </div>
+      );
+    };
+
     function App() {
       const [session, setSession] = useState(null);
       const [isGuest, setIsGuest] = useState(false); 
@@ -168,7 +207,7 @@
       const [isSettingsOpen, setIsSettingsOpen] = useState(false);
       const [settingsView, setSettingsView] = useState('main'); 
       const [badges, setBadges] = useState(INITIAL_BADGES);
-      const [theme, setTheme] = useState({ primary: '#007AFF', gold: '#FFCC00', accent: '#FF9500', dark: '#1C1C1E', bgStart: '#F4F7F9', bgEnd: '#FFFFFF', communityBg: null });
+      const [theme, setTheme] = useState({ primary: '#007AFF', gold: '#FFCC00', accent: '#FF9500', dark: '#1C1C1E', bgStart: '#F4F7F9', bgEnd: '#FFFFFF' });
       const [avatars, setAvatars] = useState({ start: null, firstAction: null, day10: null, levelUp: null });
       const [isHabitWizardOpen, setIsHabitWizardOpen] = useState(false);
       const [wizardStep, setWizardStep] = useState(1);
@@ -187,10 +226,9 @@
       const [nlpQuestionIdx, setNlpQuestionIdx] = useState(0);
       const [showCommunityPopup, setShowCommunityPopup] = useState(false);
       
+      // מצב חדש לחלון החזון (Vision Popup)
       const [showVisionPopup, setShowVisionPopup] = useState(false);
       const [visionBoard, setVisionBoard] = useState({ text: '', imageUrl: null });
-
-      const isMoshe = session?.user?.email === ADMIN_EMAIL;
 
       const tasksListRef = useRef(null);
       const completedTasksListRef = useRef(null);
@@ -219,17 +257,7 @@
 
       const loadUserData = async (currentSession) => {
         try {
-            // טעינת תמונות שלבים גלובליות
-            const { data: globalData } = await supabase.from('user_data').select('app_data').eq('user_id', 'global_config').maybeSingle();
-            if (globalData && globalData.app_data && globalData.app_data.badges) {
-               setBadges(prev => prev.map(pb => {
-                   const found = globalData.app_data.badges.find(gb => gb.id === pb.id);
-                   return found ? { ...pb, badgeImageUrl: found.badgeImageUrl, characterImageUrl: found.characterImageUrl } : pb;
-               }));
-            }
-
-            // טעינת נתוני משתמש
-            const { data, error } = await supabase.from('user_data').select('app_data').eq('user_id', currentSession.user.id).maybeSingle();
+            const { data, error } = await supabase.from('user_data').select('app_data').eq('user_id', currentSession.user.id).single();
             if (data && data.app_data) {
                const d = data.app_data;
                if (d.habits) setHabits(d.habits);
@@ -239,6 +267,13 @@
                if (d.theme) setTheme({ ...theme, ...d.theme });
                if (d.avatars) setAvatars({ ...avatars, ...d.avatars });
                if (d.visionBoard) setVisionBoard(d.visionBoard);
+               if (d.badges) {
+                 const restoredBadges = d.badges.map(savedBadge => {
+                     const original = INITIAL_BADGES.find(ib => ib.id === savedBadge.id);
+                     return { ...savedBadge, icon: original ? original.icon : null };
+                 });
+                 setBadges(restoredBadges);
+               }
             } else {
                const fullName = currentSession?.user?.user_metadata?.full_name || 'משתמש';
                setUser(prev => ({ ...prev, name: fullName.split(' ')[0], xp: 0, level: 1, shields: 0, perfectDaysStreak: 0, lastLoginDate: getTodayDate() }));
@@ -285,31 +320,28 @@
         return () => clearInterval(interval);
       }, []);
 
+
       useEffect(() => {
         if (!isDataLoaded || !session || isGuest) return;
         setSyncStatus('saving');
         const timer = setTimeout(async () => {
            try {
-               const appDataToSave = { habits, habitsStatus, tasks, user, theme, avatars, visionBoard };
-               await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
-               
-               if (isMoshe) {
-                   const globalBadgeData = badges.map(b => ({ id: b.id, badgeImageUrl: b.badgeImageUrl, characterImageUrl: b.characterImageUrl }));
-                   await supabase.from('user_data').upsert({ user_id: 'global_config', app_data: { badges: globalBadgeData } });
-               }
-
-               setSyncStatus('synced');
+               const appDataToSave = { habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard };
+               const { error } = await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
+               if (error) { setSyncStatus('error'); } else { setSyncStatus('synced'); }
            } catch(e) { setSyncStatus('error'); }
         }, 1500); 
         return () => clearTimeout(timer);
       }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard, isDataLoaded, session, isGuest]);
 
       const activeAvatar = useMemo(() => {
-        const currentLevelBadge = badges.find(b => b.id === user.level);
-        if (currentLevelBadge && currentLevelBadge.characterImageUrl) return currentLevelBadge.characterImageUrl;
         if (session && session?.user?.user_metadata?.avatar_url && !avatars.start) return session.user.user_metadata.avatar_url;
+        if (user.level > 1 && avatars.levelUp) return avatars.levelUp;
+        if (CURRENT_DAY >= 10 && avatars.day10) return avatars.day10;
+        const hasDoneSomething = Object.values(habitsStatus).some(s => s !== 'none') || tasks.some(t => t.isDone);
+        if (hasDoneSomething && avatars.firstAction) return avatars.firstAction;
         return avatars.start;
-      }, [user.level, badges, avatars, session]);
+      }, [user.level, CURRENT_DAY, habitsStatus, tasks, avatars, session]);
 
       const handleAvatarUpload = (e, stage) => {
         const file = e.target.files[0];
@@ -321,13 +353,10 @@
       };
 
       const handleBadgeImageUpload = (badgeId, type, e) => {
-        if (!isMoshe) return;
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
-          reader.onload = (event) => {
-            setBadges(prev => prev.map(b => b.id === badgeId ? { ...b, [type]: event.target.result } : b));
-          };
+          reader.onload = (event) => setBadges(prev => prev.map(b => b.id === badgeId ? { ...b, [type]: event.target.result } : b));
           reader.readAsDataURL(file);
         }
       };
@@ -380,28 +409,14 @@
         return { title: `פעולה מינימלית של ${habit.title}`, target: '0.1', unit: habit.unit, level: 'nano' };
       };
 
-      const centerInContainer = (elementId, containerRef) => {
-        const el = document.getElementById(elementId);
-        const container = containerRef.current;
-        if (el && container) {
-          const containerWidth = container.offsetWidth;
-          const elLeft = el.offsetLeft;
-          const elWidth = el.offsetWidth;
-          const scrollPos = elLeft - (containerWidth / 2) + (elWidth / 2);
-          container.scrollTo({ left: scrollPos, behavior: 'smooth' });
-        }
-      };
+      useEffect(() => {
+        const dayElement = document.getElementById(`day-${CURRENT_DAY}`);
+        if (dayElement && calendarRef.current) setTimeout(() => dayElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }), 150);
+      }, []);
 
       useEffect(() => {
-        if (isDataLoaded && calendarRef.current) {
-          setTimeout(() => centerInContainer(`day-${CURRENT_DAY}`, calendarRef), 600);
-        }
-      }, [isDataLoaded]);
-
-      useEffect(() => {
-        if (isDataLoaded && badgesRef.current) {
-          setTimeout(() => centerInContainer(`badge-${user.level}`, badgesRef), 800);
-        }
+        const badgeElement = document.getElementById(`badge-${user.level}`);
+        if (badgeElement && badgesRef.current) setTimeout(() => badgeElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }), 250);
       }, [user.level, isDataLoaded]);
 
       const scrollToDayBouncy = (day) => {
@@ -480,11 +495,14 @@
       const onDrop = (e, index) => {
         e.preventDefault();
         if(draggedIdx === null || draggedIdx === index) { setDraggedIdx(null); setDragOverIdx(null); return; }
+        
         const active = tasks.filter(t => !t.isDone);
         const completed = tasks.filter(t => t.isDone);
         const draggedTask = active[draggedIdx];
+        
         const newActive = active.filter((_, i) => i !== draggedIdx);
         newActive.splice(index, 0, draggedTask);
+        
         setTasks([...newActive, ...completed]);
         setDraggedIdx(null); setDragOverIdx(null);
       };
@@ -508,14 +526,19 @@
       const handleHabitClick = (habit) => {
         let status = habitsStatus[habit.id] || 'none';
         if (status === 'done') status = 'std_done'; 
+        
         const aiData = getSimulatedAIBreakdown(habit);
+
         if (status === 'none') {
             const newState = aiData.level === 'standard' ? 'std_done' : 'min_done';
+            
             setHabitsStatus(prev => ({ ...prev, [habit.id]: newState }));
             addXP(aiData.level === 'standard' ? 15 : 10); 
             setAnimatingHabitId(habit.id);
             setTimeout(() => setAnimatingHabitId(null), 1000); 
+
             setHabits(prev => prev.map(h => h.id === habit.id ? { ...h, streak: (h.streak || 0) + 1 } : h));
+            
             const allDone = habits.every(h => h.id === habit.id || habitsStatus[h.id] === 'std_done' || habitsStatus[h.id] === 'min_done' || habitsStatus[h.id] === 'extra');
             if (allDone) {
                let newStreak = (user.perfectDaysStreak || 0) + 1;
@@ -523,6 +546,7 @@
                if (newStreak % 10 === 0 && newShields < 3) newShields++;
                setUser(prev => ({...prev, perfectDaysStreak: newStreak, shields: newShields}));
             }
+
         }
         else if (status === 'min_done') {
             setHabitsStatus(prev => ({ ...prev, [habit.id]: 'std_done' }));
@@ -577,6 +601,8 @@
         const ans = visionAnswer.trim();
         setVisionAnswer('');
         addXP(5); 
+
+        // הדמיית בינה מלאכותית שלוקחת את התשובה, מנסחת אותה יפה ומוסיפה את ה"למה"
         let aiAddition = '';
         switch(nlpQuestionIdx) {
             case 0: aiAddition = `\n\nכדי להגשים את המטרה שלי, אני מתחייב לרכוש את ההרגלים והתכונות הבאות:\n"${ans}"\nהסיבה שזה כל כך קריטי עבורי היא שזה יאפשר לי לפרוץ את הגבולות של עצמי ולחיות את החזון שלי במלואו.`; break;
@@ -585,10 +611,12 @@
             case 3: aiAddition = `\n\nהיום האידיאלי שלי נראה כך:\n"${ans}"\nאני שואף לשם בכל כוחי כי זה מייצג את החופש האמיתי וההגשמה העצמית שתמיד חלמתי עליהם.`; break;
             case 4: aiAddition = `\n\nהצעד הראשון והמיידי שלי במסע הזה הוא:\n"${ans}"\nזה כל כך חשוב, כי פעולה קטנה היום היא זו שיוצרת את המומנטום העוצמתי של מחר.`; break;
         }
+
         setVisionBoard(prev => ({
             ...prev,
             text: (prev.text ? prev.text + aiAddition : aiAddition.trim())
         }));
+
         setNlpQuestionIdx((prev) => (prev + 1) % NLP_QUESTIONS.length);
       };
 
@@ -618,6 +646,17 @@
         setSession(null);
       };
 
+      if (!session && !isGuest) return <LoginScreen onLogin={() => {}} onGuestLogin={handleGuestLogin} />;
+      if (!isDataLoaded) return <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] text-gray-500 font-bold"><Loader2 className="w-8 h-8 animate-spin ml-2"/> טוען נתונים...</div>;
+
+      const currentXp = user.xp || 0;
+      const currentLevel = user.level || 1;
+      const xpNeeded = currentLevel * 100;
+      const currentBadge = badges.find(b => b.id === currentLevel);
+      const activeCharacterImg = currentBadge?.characterImageUrl || activeAvatar; 
+      const headerAvatar = currentBadge?.badgeImageUrl || currentBadge?.imageUrl || activeCharacterImg; 
+      const shieldsCount = user.shields || 0;
+
       const stackTasks = activeTasks.slice(0, 3);
 
       return (
@@ -639,6 +678,8 @@
             .bg-accent-10 { background-color: ${theme.accent}1A !important; }
             .shadow-gold-glow { box-shadow: 0 4px 15px ${theme.gold}66 !important; }
             .shadow-primary-glow { box-shadow: 0 8px 15px ${theme.primary}1A !important; }
+            .no-scrollbar::-webkit-scrollbar { display: none; }
+            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
           `}</style>
 
           <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] md:shadow-2xl md:border-[12px] md:border-[#1C1C1E] relative overflow-hidden flex flex-col transition-all">
@@ -650,7 +691,7 @@
                 </div>
                 <div className="flex flex-col text-right">
                   <span className="text-[13px] font-black c-dark leading-tight">{user.name}</span>
-                  <span className="text-[10px] font-bold text-gray-500 leading-tight mt-0.5">רמה {user.level}</span>
+                  <span className="text-[10px] font-bold text-gray-500 leading-tight mt-0.5">רמה {currentLevel}</span>
                 </div>
               </button>
 
@@ -681,10 +722,10 @@
             <div className="flex-1 overflow-y-auto overflow-x-hidden theme-bg-gradient c-dark select-none relative no-scrollbar">
               <div className="w-full px-4 pb-12 pt-20 mt-0">
                 
-                {activeAvatar && (
+                {activeCharacterImg && (
                   <div className="relative w-[calc(100%+32px)] -mx-4 h-[280px] md:h-[340px] mb-2 flex items-center justify-center shrink-0 animate-in zoom-in-95 duration-700 p-4">
                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 md:w-72 md:h-72 bg-gray-300/40 rounded-full blur-3xl z-0 pointer-events-none"></div>
-                     <img src={activeAvatar} alt="Avatar" className="relative z-10 max-w-full max-h-full object-contain drop-shadow-2xl" />
+                     <img src={activeCharacterImg} alt="Avatar" className="relative z-10 max-w-full max-h-full object-contain drop-shadow-2xl" />
                   </div>
                 )}
 
@@ -692,16 +733,14 @@
                   <div ref={badgesRef} onScroll={handleBadgesScroll} onTouchStart={handleBadgesInteraction} onMouseDown={handleBadgesInteraction} className="flex flex-row-reverse w-full overflow-x-auto no-scrollbar snap-x snap-mandatory py-4">
                     <div className="flex-shrink-0 w-[calc(50%-45px)]" />
                     {badges.map((badge) => {
-                      const isCompleted = user.level >= badge.id;
-                      const isCurrent = user.level === badge.id;
-                      const isLocked = user.level < badge.id;
-                      const displayBadgeImage = badge.badgeImageUrl || badge.characterImageUrl;
-                      
+                      const isCompleted = currentLevel >= badge.id;
+                      const isCurrent = currentLevel === badge.id;
+                      const displayBadgeImage = badge.badgeImageUrl || badge.imageUrl;
                       return (
-                        <div key={badge.id} id={`badge-${badge.id}`} className={`snap-center flex-shrink-0 w-[90px] flex flex-col items-center justify-center transition-all duration-300 ${isLocked ? 'filter blur-[2px] grayscale opacity-30' : ''}`}>
+                        <div key={badge.id} id={`badge-${badge.id}`} className="snap-center flex-shrink-0 w-[90px] flex flex-col items-center justify-center transition-all duration-300">
                           <div className="relative w-16 h-16 flex items-center justify-center mb-2">
                             {isCurrent && <div className="absolute top-1/2 left-1/2 w-20 h-20 rounded-full animate-halo-current pointer-events-none" style={{ background: 'radial-gradient(circle, #FFCC00 20%, transparent 70%)', zIndex: 0 }}></div>}
-                            <div className={`relative z-10 w-full h-full flex items-center justify-center transition-all duration-500 ${isCurrent ? 'animate-badge-current drop-shadow-xl' : isCompleted ? 'scale-100 drop-shadow-md' : 'scale-90'}`}>
+                            <div className={`relative z-10 w-full h-full flex items-center justify-center transition-all duration-500 ${isCurrent ? 'animate-badge-current drop-shadow-xl' : isCompleted ? 'scale-100 drop-shadow-md' : 'opacity-40 grayscale scale-90'}`}>
                               {displayBadgeImage ? (
                                  <img src={displayBadgeImage} alt={badge.label} className="w-full h-full object-contain" />
                               ) : (
@@ -753,22 +792,38 @@
                         {stackTasks.map((t, idx) => {
                           const isTop = idx === 0;
                           const isAnim = isTop && isCardCompletedAnim;
+                          
                           const tx = idx * 12;
                           const ty = -(idx * 12);
                           const scale = 1 - (idx * 0.05);
+
                           const cardStyle = {
                               zIndex: 30 - idx,
                               transform: isAnim ? 'translate(-10px, 10px) scale(1.05)' : `translate(${tx}px, ${ty}px) scale(${scale})`,
                               opacity: isTop ? 1 : Math.max(0, 0.8 - (idx * 0.3)),
                           };
+
                           const bgClass = isAnim ? 'bg-dark border-transparent shadow-2xl' : 'bg-white border-gray-100';
+
                           return (
-                            <div key={t.id} onClick={(e) => { e.stopPropagation(); if (isTop && !isCardCompletedAnim) setIsCardCompletedAnim(true); }} className={`absolute inset-0 rounded-3xl p-4 border transition-all duration-500 flex flex-col justify-between overflow-hidden shadow-sm ${bgClass} ${isTop ? 'cursor-pointer' : 'pointer-events-none'}`} style={cardStyle}>
+                            <div
+                                key={t.id}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isTop && !isCardCompletedAnim) setIsCardCompletedAnim(true);
+                                }}
+                                className={`absolute inset-0 rounded-3xl p-4 border transition-all duration-500 flex flex-col justify-between overflow-hidden shadow-sm ${bgClass} ${isTop ? 'cursor-pointer' : 'pointer-events-none'}`}
+                                style={cardStyle}
+                            >
                                 <div className="relative z-10 flex items-center justify-between mb-3">
                                   <div className={`text-[9px] font-black uppercase px-2 py-1 rounded-md tracking-widest transition-colors ${isAnim ? 'bg-gold-20 c-gold' : 'bg-accent-10 c-accent'}`}>{isAnim ? 'הושלם' : 'משימת היום'}</div>
                                   {isTop && (
                                      <button onClick={(e) => { e.stopPropagation(); setIsTaskDrawerOpen(true); }} className="p-2.5 rounded-full bg-white/60 border border-gray-100 shadow-sm hover:bg-white transition-colors active:scale-95">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500"><circle cx="5" cy="5" r="2.5"/><circle cx="12" cy="5" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="5" cy="12" r="2.5"/><circle cx="12" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="12" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500">
+                                          <circle cx="5" cy="5" r="2.5"/><circle cx="12" cy="5" r="2.5"/><circle cx="19" cy="5" r="2.5"/>
+                                          <circle cx="5" cy="12" r="2.5"/><circle cx="12" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/>
+                                          <circle cx="5" cy="19" r="2.5"/><circle cx="12" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/>
+                                        </svg>
                                      </button>
                                   )}
                                 </div>
@@ -799,26 +854,32 @@
                     </div>
                   </div>
 
+                  {/* כרטיסיית חזון משודרגת - נקיה, פשוטה וללא כותרות מיותרות */}
                   <div id="card-vision" className={cardClassName}>
                     <div className="w-full h-full bg-white rounded-3xl p-3 border border-gray-100 shadow-sm flex flex-col relative">
                       <div className="relative w-full flex-1 bg-gray-50/80 rounded-2xl border border-gray-100/60 overflow-hidden flex flex-col focus-within:border-primary focus-within:bg-white transition-all shadow-inner">
+                        
                         <textarea 
                           value={visionAnswer} 
                           onChange={e => setVisionAnswer(e.target.value)} 
                           placeholder={NLP_QUESTIONS[nlpQuestionIdx]} 
                           className="w-full h-full bg-transparent p-4 text-sm font-bold c-dark outline-none resize-none text-right no-scrollbar pb-14 placeholder:text-gray-400 placeholder:leading-relaxed" 
                         />
+                        
                         <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 pointer-events-none">
                            <button onClick={(e) => { e.preventDefault(); setShowVisionPopup(true); }} className="pointer-events-auto text-[11px] font-black c-dark bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors shadow-sm active:scale-95">
                              <Star className="w-4 h-4 text-gold fill-gold" /> החזון שלי
                            </button>
+                           
                            <button onClick={handleVisionSend} className="pointer-events-auto bg-primary text-white w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 active:scale-90 transition-transform shrink-0">
                              <Send className="w-5 h-5 ml-1" />
                            </button>
                         </div>
+                        
                       </div>
                     </div>
                   </div>
+
                 </div>
 
                 <section className="space-y-4">
@@ -829,28 +890,37 @@
                   {habits.map((habit, index) => {
                     let status = habitsStatus[habit.id] || 'none';
                     if (status === 'done') status = 'std_done'; 
+                    
                     const isAnimating = animatingHabitId === habit.id;
                     const aiData = getSimulatedAIBreakdown(habit);
+                    
                     const isCompletedStandard = status === 'std_done' || status === 'extra';
                     const isCompletedMinimum = status === 'min_done';
+
                     const displayTitle = status === 'none' ? aiData.title : habit.title;
                     const displayTarget = status === 'none' ? aiData.target : (status === 'extra' ? habit.targetValue * 2 : habit.targetValue);
                     const displayUnit = status === 'none' ? aiData.unit : habit.unit;
+
                     const cardBgClass = isAnimating ? 'animate-pop bg-white border-gold shadow-lg z-20' :
                                         status === 'extra' ? 'bg-gold/10 border-gold/30 shadow-sm' :
                                         status === 'std_done' ? 'bg-gray-50/80 border-transparent opacity-70' :
                                         isCompletedMinimum ? 'bg-white border-gold/50 shadow-sm' :
                                         'bg-white border-gray-100 shadow-sm';
+
                     const btnClass = isAnimating ? 'bg-gold border-gold shadow-gold-glow scale-125' :
                                      status === 'none' ? 'bg-gray-100 border-gray-200 hover:bg-gray-200' :
                                      status === 'min_done' ? 'bg-dark border-gold shadow-gold-glow' :
                                      status === 'std_done' ? 'bg-dark border-transparent opacity-90' :
                                      'bg-gold border-transparent shadow-gold-glow scale-110';
+
                     return (
                       <div key={habit.id} className="relative flex flex-row-reverse items-stretch gap-3">
                         <div className={`flex-1 p-4 rounded-2xl border flex flex-row-reverse items-center justify-between transition-all ${cardBgClass}`}>
+                          
                           <div className="text-left flex-1 pr-2">
-                            <h4 className={`font-black text-sm transition-colors ${status === 'std_done' && !isAnimating ? 'line-through text-gray-400' : status === 'extra' ? 'c-gold font-black' : (status === 'none' && aiData.level !== 'standard' ? 'c-accent' : 'c-dark')}`}>{displayTitle}</h4>
+                            <h4 className={`font-black text-sm transition-colors ${status === 'std_done' && !isAnimating ? 'line-through text-gray-400' : status === 'extra' ? 'c-gold font-black' : (status === 'none' && aiData.level !== 'standard' ? 'c-accent' : 'c-dark')}`}>
+                              {displayTitle}
+                            </h4>
                             <div className="flex flex-row-reverse items-center gap-2 mt-1">
                               {habit.streak > 0 && (
                                 <div className="flex items-center gap-0.5 bg-orange-50 px-1.5 py-0.5 rounded-md border border-orange-100">
@@ -858,20 +928,48 @@
                                   <span className="text-[9px] font-bold text-orange-600">{habit.streak} רצף</span>
                                 </div>
                               )}
-                              <div className="flex items-center gap-1"><Clock className="w-3 h-3 text-gray-400" /><span className="text-[9px] text-gray-400">{habit.bestTime}</span></div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-gray-400" />
+                                <span className="text-[9px] text-gray-400">{habit.bestTime}</span>
+                              </div>
                             </div>
                           </div>
+
                           <div className="flex flex-col items-center justify-center min-w-[3.5rem] transition-all duration-300">
-                            <div className="flex items-center gap-1"><span className={`text-3xl font-black ${status === 'none' && aiData.level !== 'standard' ? 'c-accent' : (status === 'extra' ? 'c-gold drop-shadow-md' : 'c-dark')}`} style={{ direction: 'ltr' }}>{displayTarget}</span></div>
-                            <span className={`text-[8px] font-bold ${status === 'none' && aiData.level !== 'standard' ? 'c-accent' : (status === 'extra' ? 'c-gold' : 'text-gray-400')}`}>{displayUnit}</span>
+                            <div className="flex items-center gap-1">
+                              <span className={`text-3xl font-black ${status === 'none' && aiData.level !== 'standard' ? 'c-accent' : (status === 'extra' ? 'c-gold drop-shadow-md' : 'c-dark')}`} style={{ direction: 'ltr' }}>
+                                {displayTarget}
+                              </span>
+                            </div>
+                            <span className={`text-[8px] font-bold ${status === 'none' && aiData.level !== 'standard' ? 'c-accent' : (status === 'extra' ? 'c-gold' : 'text-gray-400')}`}>
+                              {displayUnit}
+                            </span>
                           </div>
                         </div>
+                        
                         <div className="relative flex flex-col items-center w-10">
                           {index !== habits.length - 1 && <div className="absolute top-[50%] left-1/2 -translate-x-1/2 w-0 h-[calc(100%+16px)] border-l-2 border-dashed border-gray-200 z-0" />}
                           <div onClick={() => handleHabitClick(habit)} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative cursor-pointer border-2 z-10 my-auto ${btnClass}`}>
-                            {status === 'extra' ? <Zap className="w-5 h-5 text-white fill-white" /> : <Check className={`w-5 h-5 stroke-[4px] ${status === 'none' ? 'text-gray-400' : 'text-white'}`} />}
-                            {status === 'std_done' && !isAnimating && <div className="absolute -top-2 -left-2 bg-accent text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg shadow-md animate-bounce border-2 border-white whitespace-nowrap">x2</div>}
-                            {isAnimating && <><div className="sparkle sparkle-1"></div><div className="sparkle sparkle-2"></div><div className="sparkle sparkle-3"></div><div className="sparkle sparkle-4"></div></>}
+                            {status === 'extra' ? (
+                               <Zap className="w-5 h-5 text-white fill-white" />
+                            ) : (
+                               <Check className={`w-5 h-5 stroke-[4px] ${status === 'none' ? 'text-gray-400' : 'text-white'}`} />
+                            )}
+                            
+                            {status === 'std_done' && !isAnimating && (
+                              <div className="absolute -top-2 -left-2 bg-accent text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg shadow-md animate-bounce border-2 border-white whitespace-nowrap">
+                                x2
+                              </div>
+                            )}
+                            
+                            {isAnimating && (
+                              <>
+                                <div className="sparkle sparkle-1"></div>
+                                <div className="sparkle sparkle-2"></div>
+                                <div className="sparkle sparkle-3"></div>
+                                <div className="sparkle sparkle-4"></div>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -880,23 +978,33 @@
                 </section>
               </div>
 
+              {/* Drawer הגדרות */}
               <div className={`absolute inset-0 bg-black/40 z-[2000] transition-opacity duration-300 ${isSettingsOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSettingsOpen(false)} />
               <div className={`absolute top-0 right-0 h-full w-[90%] bg-[#F8F9FB] z-[2100] shadow-2xl transition-transform duration-300 flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                  {settingsView === 'main' && (
                    <div className="flex flex-col h-full animate-in fade-in slide-in-from-left-4 duration-300">
-                     <div className="p-5 bg-white border-b border-gray-100 flex items-center justify-between"><h2 className="font-black text-lg c-dark">הגדרות כלליות</h2><button onClick={() => setIsSettingsOpen(false)} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button></div>
+                     <div className="p-5 bg-white border-b border-gray-100 flex items-center justify-between">
+                         <h2 className="font-black text-lg c-dark">הגדרות כלליות</h2>
+                         <button onClick={() => setIsSettingsOpen(false)} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button>
+                     </div>
                      <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar pb-20">
-                         {isMoshe && <SettingsMenuItem icon={<Palette />} label="ניהול שלבים ותמונות (אדמין)" onClick={() => setSettingsView('design')} />}
-                         <div className="mt-8 pt-4 border-t border-gray-100"><button onClick={handleLogout} className="w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm">התנתק מהחשבון</button></div>
+                         <SettingsMenuItem icon={<Palette />} label="הגדרות ועיצוב" onClick={() => setSettingsView('design')} />
+                         <div className="mt-8 pt-4 border-t border-gray-100">
+                           <button onClick={handleLogout} className="w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm">התנתק מהחשבון</button>
+                         </div>
                      </div>
                    </div>
                  )}
                  {settingsView === 'design' && (
                    <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-300">
-                     <div className="p-5 bg-white border-b border-gray-100 flex items-center gap-3"><button onClick={() => setSettingsView('main')} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button><h2 className="font-black text-lg c-dark">עיצוב</h2></div>
+                     <div className="p-5 bg-white border-b border-gray-100 flex items-center gap-3">
+                         <button onClick={() => setSettingsView('main')} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button>
+                         <h2 className="font-black text-lg c-dark">עיצוב</h2>
+                     </div>
                      <div className="flex-1 overflow-y-auto p-5 space-y-8 no-scrollbar pb-20">
                          <section className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                             <h3 className="font-black text-sm mb-4 c-dark border-b pb-2">ניהול שלבים ותמונות</h3>
+                            
                             <h4 className="font-black text-xs mt-2 mb-3 c-dark">תמונות כלליות</h4>
                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 mb-6">
                                <div className="flex items-center justify-between">
@@ -915,6 +1023,7 @@
                                   </div>
                                </div>
                             </div>
+
                             <div className="space-y-4">
                                 {badges.map((b) => (
                                   <div key={b.id} className="bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -931,7 +1040,7 @@
                                         <div className="flex items-center justify-between">
                                            <span className="text-[10px] font-bold text-gray-500">סמל הישג</span>
                                            <div className="flex items-center gap-2">
-                                             {b.badgeImageUrl && <img src={b.badgeImageUrl} className="w-7 h-7 rounded object-contain bg-white border border-gray-200" />}
+                                             {(b.badgeImageUrl || b.imageUrl) && <img src={b.badgeImageUrl || b.imageUrl} className="w-7 h-7 rounded object-contain bg-white border border-gray-200" />}
                                              <input type="file" accept="image/*" className="hidden" id={`up-badge-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'badgeImageUrl', e)} />
                                              <label htmlFor={`up-badge-${b.id}`} className="bg-white border border-gray-200 px-3 py-1 rounded-md text-[9px] font-bold cursor-pointer hover:bg-gray-50">בחר</label>
                                            </div>
@@ -946,9 +1055,14 @@
                  )}
               </div>
 
+              {/* Drawer משימות */}
               <div className={`fixed inset-0 bg-black/40 z-[2000] transition-opacity duration-300 ${isTaskDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsTaskDrawerOpen(false)} />
               <div className={`fixed top-0 left-0 h-[100dvh] w-[85%] max-w-[320px] bg-[#F8F9FB] z-[2100] shadow-2xl transition-transform duration-300 rounded-r-[2.5rem] flex flex-col ${isTaskDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white rounded-tr-[2.5rem]"><h2 className="font-black text-sm c-dark">ניהול משימות</h2><button onClick={() => setIsTaskDrawerOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ChevronLeft className="w-5 h-5 text-gray-500"/></button></div>
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white rounded-tr-[2.5rem]">
+                  <h2 className="font-black text-sm c-dark">ניהול משימות</h2>
+                  <button onClick={() => setIsTaskDrawerOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ChevronLeft className="w-5 h-5 text-gray-500"/></button>
+                </div>
+                
                 <div className="p-4 flex-1 overflow-y-auto no-scrollbar flex flex-col gap-3" onClick={() => setEditingTaskId(null)} ref={tasksListRef}>
                     {activeTasks.map((t, i) => {
                       const isDragged = draggedIdx === i;
@@ -956,53 +1070,156 @@
                       const showBefore = isDragOver && draggedIdx > i;
                       const showAfter = isDragOver && draggedIdx < i;
                       const draggedTask = draggedIdx !== null ? activeTasks[draggedIdx] : null;
+
                       return (
                         <React.Fragment key={`frag-${t.id}`}>
-                          {showBefore && <div className="p-3 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/40 flex items-center gap-3 opacity-80 scale-[0.98] shadow-inner cursor-pointer" onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)}><GripVertical className="w-5 h-5 text-primary/40 shrink-0" /><span className="text-sm font-bold flex-1 text-right truncate c-dark">{draggedTask?.text}</span></div>}
-                          <div key={t.id} onClick={(e) => e.stopPropagation()} onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)} className={`p-3 ${t.color || 'bg-white'} rounded-2xl border ${editingTaskId === t.id ? 'border-primary shadow-md' : 'border-gray-100 shadow-sm hover:shadow-md'} transition-all duration-300 ${isDragged ? 'opacity-30 scale-95' : 'opacity-100'}`}>
-                            <div className="flex items-center gap-3">
-                                <div className="touch-none cursor-grab active:cursor-grabbing p-1" draggable onDragStart={(e) => onDragStart(e, i)} onDragEnd={onDragEnd}><GripVertical className="w-5 h-5 text-gray-300 shrink-0 pointer-events-none" /></div>
-                                <div className="flex-1 text-right flex flex-col justify-center min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setEditingTaskId(editingTaskId === t.id ? null : t.id); }}><span className="text-sm font-bold truncate c-dark">{t.text}</span></div>
-                                <div className="flex gap-2 shrink-0 items-center"><button onClick={() => deleteTask(t.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4"/></button><button onClick={() => toggleTaskDone(t.id)} className="w-7 h-7 rounded-full border-2 border-gray-100 text-transparent active:scale-90 transition-transform hover:border-green-400"><Check className="w-4 h-4 fill-current"/></button></div>
+                          {showBefore && (
+                            <div key={`ph-before-${t.id}`} onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)} className="p-3 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/40 flex items-center gap-3 opacity-80 scale-[0.98] shadow-inner cursor-pointer">
+                                <GripVertical className="w-5 h-5 text-primary/40 shrink-0" />
+                                <span className="text-sm font-bold flex-1 text-right truncate c-dark">{draggedTask?.text}</span>
+                                <div className="flex gap-2 shrink-0 items-center opacity-30">
+                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
+                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
+                                </div>
                             </div>
+                          )}
+                          
+                          <div 
+                              key={t.id}
+                              onClick={(e) => e.stopPropagation()} 
+                              onDragOver={(e) => onDragOver(e, i)}
+                              onDrop={(e) => onDrop(e, i)}
+                              className={`p-3 ${t.color || 'bg-white'} rounded-2xl border ${editingTaskId === t.id ? 'border-primary shadow-md' : 'border-gray-100 shadow-sm hover:shadow-md'} transition-all duration-300 ${isDragged ? 'opacity-30 scale-95' : 'opacity-100'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                                <div className="touch-none cursor-grab active:cursor-grabbing p-1" draggable onDragStart={(e) => onDragStart(e, i)} onDragEnd={onDragEnd}>
+                                   <GripVertical className="w-5 h-5 text-gray-300 shrink-0 pointer-events-none" />
+                                </div>
+                                <div className="flex-1 text-right flex flex-col justify-center min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setEditingTaskId(editingTaskId === t.id ? null : t.id); }}>
+                                    <span className="text-sm font-bold truncate c-dark">{t.text}</span>
+                                    {(t.time || t.date || t.notes) && !editingTaskId && (
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-[9px] text-gray-400 font-bold">
+                                            {t.date && <span className="flex items-center gap-0.5"><Calendar className="w-3 h-3"/> {t.date}</span>}
+                                            {t.time && <span className="flex items-center gap-0.5"><Clock className="w-3 h-3"/> {t.time}</span>}
+                                            {t.notes && <span className="flex items-center gap-0.5 bg-gray-50 px-1 rounded">עם הערות</span>}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex gap-2 shrink-0 items-center">
+                                    <button onClick={() => deleteTask(t.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                                    <button onClick={() => toggleTaskDone(t.id)} className="w-7 h-7 rounded-full border-2 border-gray-100 text-transparent active:scale-90 transition-transform hover:border-green-400"><Check className="w-4 h-4 fill-current"/></button>
+                                </div>
+                            </div>
+                            
                             {editingTaskId === t.id && (
                                 <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
-                                    <div className="flex flex-row-reverse gap-2"><div className="flex-1 bg-gray-50 rounded-xl flex flex-row-reverse items-center px-3 border border-gray-100"><Calendar className="w-4 h-4 text-gray-400 shrink-0 ml-2" /><input type="date" value={t.date || ''} onChange={(e) => updateTask(t.id, {date: e.target.value})} className="bg-transparent w-full text-xs font-bold c-dark py-2 outline-none text-right" /></div><div className="flex-1 bg-gray-50 rounded-xl flex flex-row-reverse items-center px-3 border border-gray-100"><Clock className="w-4 h-4 text-gray-400 shrink-0 ml-2" /><input type="time" value={t.time || ''} onChange={(e) => updateTask(t.id, {time: e.target.value})} className="bg-transparent w-full text-xs font-bold c-dark py-2 outline-none text-right" /></div></div>
-                                    <div className="bg-gray-50 rounded-xl flex flex-row-reverse px-3 py-2 border border-gray-100"><AlignLeft className="w-4 h-4 text-gray-400 shrink-0 ml-2 mt-0.5" /><textarea value={t.notes || ''} onChange={(e) => updateTask(t.id, {notes: e.target.value})} placeholder="הוסף הערות למשימה..." rows="2" className="bg-transparent w-full text-xs font-bold c-dark outline-none resize-none no-scrollbar text-right" /></div>
+                                    <div className="flex flex-row-reverse gap-2">
+                                        <div className="flex-1 bg-gray-50 rounded-xl flex flex-row-reverse items-center px-3 border border-gray-100">
+                                            <Calendar className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
+                                            <input type="date" value={t.date || ''} onChange={(e) => updateTask(t.id, {date: e.target.value})} className="bg-transparent w-full text-xs font-bold c-dark py-2 outline-none text-right" />
+                                        </div>
+                                        <div className="flex-1 bg-gray-50 rounded-xl flex flex-row-reverse items-center px-3 border border-gray-100">
+                                            <Clock className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
+                                            <input type="time" value={t.time || ''} onChange={(e) => updateTask(t.id, {time: e.target.value})} className="bg-transparent w-full text-xs font-bold c-dark py-2 outline-none text-right" />
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-xl flex flex-row-reverse px-3 py-2 border border-gray-100">
+                                        <AlignLeft className="w-4 h-4 text-gray-400 shrink-0 ml-2 mt-0.5" />
+                                        <textarea value={t.notes || ''} onChange={(e) => updateTask(t.id, {notes: e.target.value})} placeholder="הוסף הערות למשימה..." rows="2" className="bg-transparent w-full text-xs font-bold c-dark outline-none resize-none no-scrollbar text-right" />
+                                    </div>
                                 </div>
                             )}
                           </div>
-                          {showAfter && <div className="p-3 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/40 flex items-center gap-3 opacity-80 scale-[0.98] shadow-inner cursor-pointer" onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)}><GripVertical className="w-5 h-5 text-primary/40 shrink-0" /><span className="text-sm font-bold flex-1 text-right truncate c-dark">{draggedTask?.text}</span></div>}
+                          
+                          {showAfter && (
+                            <div key={`ph-after-${t.id}`} onDragOver={(e) => onDragOver(e, i)} onDrop={(e) => onDrop(e, i)} className="p-3 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/40 flex items-center gap-3 opacity-80 scale-[0.98] shadow-inner cursor-pointer">
+                                <GripVertical className="w-5 h-5 text-primary/40 shrink-0" />
+                                <span className="text-sm font-bold flex-1 text-right truncate c-dark">{draggedTask?.text}</span>
+                                <div className="flex gap-2 shrink-0 items-center opacity-30">
+                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
+                                    <div className="w-7 h-7 rounded-full bg-gray-300"/>
+                                </div>
+                            </div>
+                          )}
                         </React.Fragment>
                       );
                     })}
-                    {activeTasks.length === 0 && <div className="flex flex-col items-center justify-center h-32 text-gray-400 gap-2 opacity-60"><Target className="w-10 h-10" /><span className="text-sm font-bold">אין משימות פתוחות</span></div>}
+                    
+                    {activeTasks.length === 0 && (
+                      <div className="flex flex-col items-center justify-center h-32 text-gray-400 gap-2 opacity-60">
+                         <Target className="w-10 h-10" />
+                         <span className="text-sm font-bold">אין משימות פתוחות</span>
+                      </div>
+                    )}
+
+                    {/* אזור משימות שבוצעו */}
                     {completedTasks.length > 0 && (
                       <div className="mt-8 mb-4">
                          <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 text-right">הושלמו ({completedTasks.length})</h4>
                          <div className="flex flex-col gap-2" ref={completedTasksListRef}>
                              {completedTasks.map(t => (
-                                <div key={t.id} className={`p-3 ${t.color || 'bg-gray-50'}/80 rounded-2xl border border-gray-100 flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity`}><div className="w-5" /><span className="text-sm font-bold flex-1 text-right line-through c-dark truncate">{t.text}</span><div className="flex gap-2 shrink-0 items-center"><button onClick={() => deleteTask(t.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4"/></button><button onClick={() => toggleTaskDone(t.id)} className="w-7 h-7 rounded-full bg-green-100 text-green-600 flex items-center justify-center active:scale-90 transition-transform shadow-inner"><Check className="w-4 h-4 stroke-[3px]"/></button></div></div>
+                                <div key={t.id} className={`p-3 ${t.color || 'bg-gray-50'}/80 rounded-2xl border border-gray-100 flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity`}>
+                                    <div className="w-5" /> 
+                                    <span className="text-sm font-bold flex-1 text-right line-through c-dark truncate">{t.text}</span>
+                                    <div className="flex gap-2 shrink-0 items-center">
+                                        <button onClick={() => deleteTask(t.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                                        <button onClick={() => toggleTaskDone(t.id)} className="w-7 h-7 rounded-full bg-green-100 text-green-600 flex items-center justify-center active:scale-90 transition-transform shadow-inner"><Check className="w-4 h-4 stroke-[3px]"/></button>
+                                    </div>
+                                </div>
                              ))}
                          </div>
                       </div>
                     )}
                 </div>
+                
                 <div className="p-4 bg-white border-t border-gray-100 shrink-0 pb-8 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)] flex flex-col gap-3">
+                   {/* בורר הצבעים למשימה החדשה */}
                    <div className="flex gap-2.5 items-center justify-end px-1">
-                      {TASK_COLORS.map(c => <button key={c.id} onClick={() => setNewTaskColor(c.class)} className={`w-6 h-6 rounded-full border-2 ${c.border} ${c.class} ${newTaskColor === c.class ? 'scale-110 shadow-sm border-primary' : 'hover:scale-105'} transition-all`} />)}
+                      {TASK_COLORS.map(c => (
+                         <button 
+                            key={c.id} 
+                            onClick={() => setNewTaskColor(c.class)} 
+                            className={`w-6 h-6 rounded-full border-2 ${c.border} ${c.class} ${newTaskColor === c.class ? 'scale-110 shadow-sm border-primary' : 'hover:scale-105'} transition-all`}
+                         />
+                      ))}
                    </div>
-                   <div className="flex gap-3 relative"><button onClick={addTask} className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-primary-glow active:scale-90 transition-transform"><Plus className="w-5 h-5"/></button><input value={newTaskText} onChange={e => setNewTaskText(e.target.value)} onKeyDown={handleTaskInputKeyDown} placeholder="הוסף משימה קטנה..." className="flex-1 bg-gray-50 rounded-2xl px-4 text-right text-sm font-bold outline-none border-2 border-transparent focus:border-primary focus:bg-white transition-all shadow-inner" /></div>
+                   
+                   <div className="flex gap-3 relative">
+                     <button onClick={addTask} className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-primary-glow active:scale-90 transition-transform"><Plus className="w-5 h-5"/></button>
+                     <input value={newTaskText} onChange={e => setNewTaskText(e.target.value)} onKeyDown={handleTaskInputKeyDown} placeholder="הוסף משימה קטנה..." className="flex-1 bg-gray-50 rounded-2xl px-4 text-right text-sm font-bold outline-none border-2 border-transparent focus:border-primary focus:bg-white transition-all shadow-inner" />
+                   </div>
                 </div>
               </div>
 
+              {/* Wizard פופאפ הוספת הרגל */}
               {isHabitWizardOpen && (
                 <div className="absolute inset-0 z-[3100] flex items-center justify-center p-4 animate-in fade-in duration-300">
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
                   <div className="w-full bg-white rounded-[40px] p-8 shadow-2xl relative overflow-hidden flex flex-col min-h-[460px] animate-in slide-in-from-bottom-4">
                      <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center">
-                       {wizardStep === 1 && (<div className="animate-in fade-in w-full"><Zap className="w-12 h-12 c-primary mx-auto mb-4" /><h3 className="text-xl font-black mb-4">איזו פעולה קטנה נוסיף?</h3><input value={newHabitData.action} onChange={e => setNewHabitData({...newHabitData, action: e.target.value})} placeholder="דוגמה: הליכה, קריאה..." className="w-full border-2 border-gray-100 rounded-2xl p-4 text-center font-bold outline-none focus:border-primary transition-all shadow-sm" /></div>)}
-                       {wizardStep === 2 && (<div className="animate-in fade-in w-full"><TrendingUp className="w-12 h-12 c-accent mx-auto mb-4" /><h3 className="text-xl font-black mb-6">כמה תרצה לבצע?</h3><div className="flex items-center justify-center gap-6 mb-8"><button onClick={() => setNewHabitData(p => ({...p, quantityValue: Math.max(1, p.quantityValue - 1)}))} className="w-12 h-12 rounded-full border border-gray-100 flex items-center justify-center"><Minus /></button><span className="text-5xl font-black tabular-nums">{newHabitData.quantityValue}</span><button onClick={() => setNewHabitData(p => ({...p, quantityValue: p.quantityValue + 1}))} className="w-12 h-12 rounded-full bg-dark text-white flex items-center justify-center"><Plus /></button></div><div className="flex flex-wrap gap-2 justify-center">{['דקות', 'חזרות', 'ק״מ'].map(u => <button key={u} onClick={() => setNewHabitData({...newHabitData, quantityUnit: u})} className={`px-4 py-2 rounded-full text-xs font-black transition-all ${newHabitData.quantityUnit === u ? 'bg-accent text-white' : 'bg-gray-100'}`}>{u}</button>)}</div></div>)}
+                       {wizardStep === 1 && (
+                         <div className="animate-in fade-in w-full">
+                           <Zap className="w-12 h-12 c-primary mx-auto mb-4" />
+                           <h3 className="text-xl font-black mb-4">איזו פעולה קטנה נוסיף?</h3>
+                           <input value={newHabitData.action} onChange={e => setNewHabitData({...newHabitData, action: e.target.value})} placeholder="דוגמה: הליכה, קריאה..." className="w-full border-2 border-gray-100 rounded-2xl p-4 text-center font-bold outline-none focus:border-primary transition-all shadow-sm" />
+                         </div>
+                       )}
+                       {wizardStep === 2 && (
+                         <div className="animate-in fade-in w-full">
+                           <TrendingUp className="w-12 h-12 c-accent mx-auto mb-4" />
+                           <h3 className="text-xl font-black mb-6">כמה תרצה לבצע?</h3>
+                           <div className="flex items-center justify-center gap-6 mb-8">
+                             <button onClick={() => setNewHabitData(p => ({...p, quantityValue: Math.max(1, p.quantityValue - 1)}))} className="w-12 h-12 rounded-full border border-gray-100 flex items-center justify-center"><Minus /></button>
+                             <span className="text-5xl font-black tabular-nums">{newHabitData.quantityValue}</span>
+                             <button onClick={() => setNewHabitData(p => ({...p, quantityValue: p.quantityValue + 1}))} className="w-12 h-12 rounded-full bg-dark text-white flex items-center justify-center"><Plus /></button>
+                           </div>
+                           <div className="flex flex-wrap gap-2 justify-center">
+                              {['דקות', 'חזרות', 'ק״מ'].map(u => (
+                                <button key={u} onClick={() => setNewHabitData({...newHabitData, quantityUnit: u})} className={`px-4 py-2 rounded-full text-xs font-black transition-all ${newHabitData.quantityUnit === u ? 'bg-accent text-white' : 'bg-gray-100'}`}>{u}</button>
+                              ))}
+                           </div>
+                         </div>
+                       )}
                      </div>
                      <button onClick={handleWizardNext} className="relative z-10 w-full bg-dark text-white py-5 rounded-3xl font-black text-lg mt-4 shadow-xl active:scale-95 transition-all">סיום והוספה</button>
                      <button onClick={() => setIsHabitWizardOpen(false)} className="mt-4 text-gray-400 text-xs font-black self-center">ביטול</button>
@@ -1010,26 +1227,100 @@
                 </div>
               )}
 
+              {/* פופאפ החזון שלי */}
               {showVisionPopup && (
                 <div className="absolute inset-0 z-[3100] flex items-center justify-center p-4 animate-in fade-in duration-300">
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowVisionPopup(false)} />
                   <div className="w-full max-h-[85vh] bg-white rounded-[2rem] shadow-2xl relative overflow-hidden flex flex-col animate-in zoom-in-95">
+                     
                      <div className="relative w-full h-40 bg-gray-100 shrink-0 group">
-                        {visionBoard.imageUrl ? <img src={visionBoard.imageUrl} className="w-full h-full object-cover" alt="Vision Board" /> : <div className="w-full h-full flex items-center justify-center text-gray-400 flex-col gap-2 bg-gray-50"><Camera className="w-8 h-8 opacity-50" /><span className="text-xs font-bold">תמונת השראה לחזון</span></div>}
-                        {isMoshe && (<label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"><Camera className="w-8 h-8 text-white" /><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => setVisionBoard(prev => ({ ...prev, imageUrl: event.target.result })); reader.readAsDataURL(file); } }} /></label>)}
-                        <button onClick={() => setShowVisionPopup(false)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md hover:bg-black/70 transition-colors z-20"><ChevronDown className="w-5 h-5" /></button>
+                        {visionBoard.imageUrl ? (
+                           <img src={visionBoard.imageUrl} className="w-full h-full object-cover" alt="Vision Board" />
+                        ) : (
+                           <div className="w-full h-full flex items-center justify-center text-gray-400 flex-col gap-2 bg-gray-50">
+                              <Camera className="w-8 h-8 opacity-50" />
+                              <span className="text-xs font-bold">לחץ להוספת תמונת השראה</span>
+                           </div>
+                        )}
+                        <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                           <Camera className="w-8 h-8 text-white" />
+                           <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (event) => setVisionBoard(prev => ({ ...prev, imageUrl: event.target.result }));
+                                reader.readAsDataURL(file);
+                              }
+                           }} />
+                        </label>
+                        <button onClick={() => setShowVisionPopup(false)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md hover:bg-black/70 transition-colors z-20">
+                           <ChevronDown className="w-5 h-5" />
+                        </button>
                      </div>
-                     <div className="p-6 flex-1 flex flex-col bg-[#F8F9FB] overflow-hidden"><div className="flex items-center gap-2 mb-6 shrink-0"><Star className="w-6 h-6 text-gold fill-gold" /><h2 className="text-xl font-black c-dark">החזון הגדול שלי</h2></div><div className="w-full flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-y-auto no-scrollbar">{visionBoard.text ? <p className="text-base font-medium c-dark leading-loose text-right whitespace-pre-wrap">{visionBoard.text}</p> : <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 gap-4"><Star className="w-12 h-12" /><span className="font-bold text-center text-sm leading-relaxed">החזון שלך מתגבש כאן...<br/>ענה על השאלות במסך הראשי כדי לבנות אותו!</span></div>}</div></div>
+                     
+                     <div className="p-6 flex-1 flex flex-col bg-[#F8F9FB] overflow-hidden">
+                        <div className="flex items-center gap-2 mb-6 shrink-0">
+                           <Star className="w-6 h-6 text-gold fill-gold" />
+                           <h2 className="text-xl font-black c-dark">החזון הגדול שלי</h2>
+                        </div>
+                        {/* תצוגת טקסט חזון משודרגת - ללא עריכה, רק קריאה יפה */}
+                        <div className="w-full flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-y-auto no-scrollbar">
+                           {visionBoard.text ? (
+                               <p className="text-base font-medium c-dark leading-loose text-right whitespace-pre-wrap">
+                                   {visionBoard.text}
+                               </p>
+                           ) : (
+                               <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 gap-4">
+                                   <Star className="w-12 h-12" />
+                                   <span className="font-bold text-center text-sm leading-relaxed">
+                                       החזון שלך מתגבש כאן...<br/>
+                                       ענה על השאלות במסך הראשי כדי לבנות אותו!
+                                   </span>
+                               </div>
+                           )}
+                        </div>
+                     </div>
                   </div>
                 </div>
               )}
 
+              {/* פופאפ קהילה מנעול */}
               {showCommunityPopup && (
                 <div className="absolute inset-0 z-[3100] flex items-end justify-center animate-in fade-in duration-300">
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCommunityPopup(false)} />
                   <div className="w-full h-[70%] bg-[#F8F9FB] rounded-t-[2.5rem] p-6 shadow-2xl relative flex flex-col animate-in slide-in-from-bottom-8">
-                    <div className="flex items-center justify-between mb-4 shrink-0"><h2 className="font-black text-xl c-dark flex items-center gap-2"><Users className="w-6 h-6 c-primary"/> קהילת המצליחנים</h2><button onClick={() => setShowCommunityPopup(false)} className="p-2 bg-white rounded-full border border-gray-100 shadow-sm"><ChevronDown className="w-5 h-5 text-gray-500"/></button></div>
-                    <div className="flex-1 flex flex-col items-center justify-center text-center pb-8 pt-4 overflow-y-auto no-scrollbar"><div className="w-20 h-20 bg-white border border-gray-100 rounded-full flex items-center justify-center mb-4 shadow-sm"><Lock className="w-10 h-10 text-gray-300" /></div><h3 className="text-2xl font-black c-dark mb-2">הקהילה בדרך!</h3><p className="text-sm text-gray-500 mb-8 px-6 leading-relaxed font-medium">הגישה לקהילה נפתחת בשלב ה<strong className="c-dark font-black">מומנטום</strong> (ביום ה-10 שלך).<br/>תמשיך להתמיד, אתה קרוב!</p><div className="w-full space-y-4 px-2"><div className="flex items-center gap-3 mb-2"><div className="h-px bg-gray-200 flex-1"></div><span className="text-[10px] font-black text-gray-400">בינתיים, אפשר להצטרף כאן</span><div className="h-px bg-gray-200 flex-1"></div></div><button className="w-full py-4 bg-[#25D366] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-3 active:scale-95 transition-transform"><svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>קבוצת ה-WhatsApp</button><button className="w-full py-4 bg-[#1877F2] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#1877F2]/20 flex items-center justify-center gap-3 active:scale-95 transition-transform"><svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>קבוצת ה-Facebook</button></div></div>
+                    <div className="flex items-center justify-between mb-4 shrink-0">
+                      <h2 className="font-black text-xl c-dark flex items-center gap-2"><Users className="w-6 h-6 c-primary"/> קהילת המצליחנים</h2>
+                      <button onClick={() => setShowCommunityPopup(false)} className="p-2 bg-white rounded-full border border-gray-100 shadow-sm"><ChevronDown className="w-5 h-5 text-gray-500"/></button>
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col items-center justify-center text-center pb-8 pt-4 overflow-y-auto no-scrollbar">
+                        <div className="w-20 h-20 bg-white border border-gray-100 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                            <Lock className="w-10 h-10 text-gray-300" />
+                        </div>
+                        <h3 className="text-2xl font-black c-dark mb-2">הקהילה בדרך!</h3>
+                        <p className="text-sm text-gray-500 mb-8 px-6 leading-relaxed font-medium">
+                            הגישה לקהילה נפתחת בשלב ה<strong className="c-dark font-black">מומנטום</strong> (ביום ה-10 שלך).<br/>תמשיך להתמיד, אתה קרוב!
+                        </p>
+                        
+                        <div className="w-full space-y-4 px-2">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="h-px bg-gray-200 flex-1"></div>
+                                <span className="text-[10px] font-black text-gray-400">בינתיים, אפשר להצטרף כאן</span>
+                                <div className="h-px bg-gray-200 flex-1"></div>
+                            </div>
+                            
+                            <button className="w-full py-4 bg-[#25D366] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-3 active:scale-95 transition-transform">
+                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                קבוצת ה-WhatsApp
+                            </button>
+
+                            <button className="w-full py-4 bg-[#1877F2] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#1877F2]/20 flex items-center justify-center gap-3 active:scale-95 transition-transform">
+                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                קבוצת ה-Facebook
+                            </button>
+                        </div>
+                    </div>
                   </div>
                 </div>
               )}
