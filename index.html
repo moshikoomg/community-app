@@ -486,6 +486,22 @@
             return drawer ? drawer.offsetHeight : 150;
         }
 
+        // פונקציה חדשה לעדכון דינמי של גובה הרצפה
+        window.recalculateFloor = function() {
+            if(state.canvasHeight === 0) return;
+            const thickness = 100;
+            const drawerHeight = getDrawerHeight();
+            const modal = document.getElementById('addHabitModal');
+            const isModalOpen = modal && !modal.classList.contains('translate-y-full');
+            const modalHeight = modal ? modal.offsetHeight : 350;
+            
+            // הרמה קלה של הקרקעית (15 פיקסלים) כדי שהכדורים ישבו בצורה מושלמת מעל המגרה
+            const visualOffset = 15; 
+            
+            const baseFloorY = state.canvasHeight - drawerHeight + (thickness / 2) - visualOffset;
+            state.floorTargetY = isModalOpen ? (state.canvasHeight - modalHeight + (thickness/2) - visualOffset) : baseFloorY;
+        };
+
         function initPhysics() {
             if(engine) return;
             engine = Engine.create({ enableSleeping: true });
@@ -542,13 +558,7 @@
             const h = state.canvasHeight;
             const thickness = 100;
             
-            const drawerHeight = getDrawerHeight();
-            const modal = document.getElementById('addHabitModal');
-            const isModalOpen = modal && !modal.classList.contains('translate-y-full');
-            const modalHeight = modal ? modal.offsetHeight : 350;
-            
-            const baseFloorY = h - drawerHeight + (thickness / 2);
-            state.floorTargetY = isModalOpen ? (h - modalHeight + thickness/2) : baseFloorY;
+            window.recalculateFloor(); // משתמש בפונקציה החדשה
             
             walls = [
                 Bodies.rectangle(w/2, state.floorTargetY, w + 200, thickness, { isStatic: true, render: { visible: false } }),
@@ -824,6 +834,9 @@
 
                 list.appendChild(btn);
             });
+
+            // חשוב: לאחר רינדור הכפתורים, גובה המגרה עשוי להשתנות, לכן נחשב מחדש את הרצפה
+            setTimeout(() => window.recalculateFloor(), 50);
         }
 
         // --- Edit & Manage Habits Modal ---
@@ -888,13 +901,13 @@
 
         window.openAddHabitModal = () => {
             document.getElementById('addHabitModal').classList.replace('translate-y-full', 'translate-y-0');
-            state.floorTargetY = state.canvasHeight - (document.getElementById('addHabitModal').offsetHeight || 350) + 50;
+            setTimeout(() => window.recalculateFloor(), 50); // עדכון רצפה בפתיחת מודל
             setTimeout(() => document.getElementById('newHabitName').focus(), 300);
         }
         window.closeAddHabitModal = () => {
             document.getElementById('addHabitModal').classList.replace('translate-y-0', 'translate-y-full');
             document.getElementById('newHabitName').value = ''; // מתנקה אחרי סגירה!
-            state.floorTargetY = state.canvasHeight - getDrawerHeight() + 50;
+            setTimeout(() => window.recalculateFloor(), 50); // עדכון רצפה בסגירת מודל
         }
         window.selectNewHabitType = (type) => state.newHabitType = type;
         window.saveNewHabit = () => {
