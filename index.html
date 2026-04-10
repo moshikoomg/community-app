@@ -120,9 +120,9 @@
                     <p id="viewSubtitle" class="text-xs text-slate-300 font-medium tracking-wider">טוען נתונים...</p>
                 </div>
                 
-                <button onclick="window.toggleFilter()" class="p-2 rounded-full glass-panel text-white hover:bg-white/10 transition relative">
+                <button onclick="window.toggleFilter()" class="p-2 rounded-full glass-panel text-white hover:bg-white/10 transition relative opacity-0 pointer-events-none">
+                    <!-- Filter visually hidden since there's no UI for it now, kept for spacing -->
                     <i data-lucide="filter" class="w-5 h-5"></i>
-                    <span id="filterIndicator" class="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full hidden"></span>
                 </button>
             </div>
 
@@ -130,15 +130,11 @@
             <div id="settingsModal" class="absolute top-24 left-4 right-4 glass-panel rounded-2xl p-4 pointer-events-auto transform transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none flex flex-col gap-4 shadow-2xl z-40 max-h-[70vh] overflow-y-auto no-scrollbar">
                 <h3 class="text-white font-bold text-lg mb-2">הגדרות תצוגה</h3>
                 
-                <div class="flex justify-between items-center text-white">
-                    <span class="text-sm text-slate-300">תקופה:</span>
-                    <div class="bg-black/30 rounded-lg p-1 flex gap-1">
-                        <button onclick="window.changeView('weekly')" id="btnWeekly" class="px-3 py-1 rounded-md bg-white/20 text-sm font-medium transition">שבועי</button>
-                        <button onclick="window.changeView('monthly')" id="btnMonthly" class="px-3 py-1 rounded-md text-slate-400 text-sm font-medium transition">חודשי</button>
-                    </div>
-                </div>
-
-                <div class="mt-2 pt-3 border-t border-white/10 flex flex-col gap-2">
+                <div class="mt-2 flex flex-col gap-2">
+                    <button onclick="window.openManageHabitsModal()" class="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-bold shadow-md transition flex items-center justify-center gap-2">
+                        <i data-lucide="list-edit" class="w-4 h-4"></i> ניהול הרגלים (עריכה/מחיקה)
+                    </button>
+                    
                     <button onclick="window.advanceDebugDay()" class="w-full py-2 bg-purple-500/20 border border-purple-500/50 rounded-xl text-purple-300 text-sm font-medium transition">
                         טסט: התקדם יום אחד קדימה
                     </button>
@@ -155,6 +151,20 @@
                 </div>
             </div>
 
+            <!-- Manage Habits Modal -->
+            <div id="manageHabitsModal" class="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-[60] hidden flex-col items-center pt-10 px-4 pb-4 pointer-events-auto overflow-y-auto">
+                <div class="w-full max-w-md">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">ניהול הרגלים</h2>
+                        <button onclick="window.closeManageHabitsModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    </div>
+                    <p class="text-slate-400 text-sm mb-4">כאן תוכל לשנות את השמות של ההרגלים שלך או למחוק אותם לחלוטין.</p>
+                    <div id="manageHabitsList" class="space-y-3">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Floating Add Button -->
             <button onclick="window.openAddHabitModal()" class="absolute bottom-[170px] left-6 w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full text-white font-bold text-3xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-40 pointer-events-auto border-2 border-white/20">
                 +
@@ -165,14 +175,9 @@
                 <h3 class="text-white font-bold text-xl mb-4 text-center">הרגל חדש</h3>
                 <input type="text" id="newHabitName" placeholder="שם ההרגל (לדוג: קריאה)" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4 outline-none focus:border-blue-500">
                 
-                <div class="flex gap-2 mb-4">
-                    <button onclick="window.selectNewHabitType('positive')" id="btnTypePos" class="flex-1 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-400 font-medium">חיובי</button>
-                    <button onclick="window.selectNewHabitType('negative')" id="btnTypeNeg" class="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 font-medium">שלילי</button>
-                </div>
-
                 <div class="flex justify-between gap-3 mt-6">
                     <button onclick="window.closeAddHabitModal()" class="flex-1 py-2 rounded-xl bg-white/10 text-white font-medium">ביטול</button>
-                    <button onclick="window.saveNewHabit()" class="flex-1 py-2 rounded-xl bg-blue-500 text-white font-medium shadow-lg shadow-blue-500/30">שמור</button>
+                    <button onclick="window.saveNewHabit()" class="flex-1 py-3 rounded-xl bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/30">שמור והתחל</button>
                 </div>
             </div>
 
@@ -255,9 +260,9 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- Constants ---
-        const MAX_VISUAL_BUBBLES = 150; // מגבלת ביצועים כדי שהטלפון לא יקרוס
-        const BUBBLE_RADIUS = 18; // גודל אחיד לכל הכדורים
-        const LONG_PRESS_DURATION = 500; // חצי שנייה ללחיצה ארוכה
+        const MAX_VISUAL_BUBBLES = 150; // מגבלת ביצועים
+        const BUBBLE_RADIUS = 18;
+        const LONG_PRESS_DURATION = 500;
 
         // --- State Management ---
         const state = {
@@ -265,10 +270,7 @@
             userData: {
                 startDate: Date.now(),
                 debugDaysAdded: 0,
-                habits: [
-                    { id: 1, name: 'ריצה', type: 'positive', count: 0, breachCount: 0 },
-                    { id: 2, name: 'קריאה', type: 'positive', count: 0, breachCount: 0 }
-                ]
+                habits: [] // מתחילים מאפס! ללא הרגלי דמו
             },
             currentDay: 1,
             currentStage: 1,
@@ -277,15 +279,15 @@
             view: 'weekly',
             filter: 'all',
             floorTargetY: 0,
-            bubbles: [], // מערך של כל הכדורים הפיזיים במסך
-            particles: [], // מערך לחלקיקי הפיצוץ
+            bubbles: [],
+            particles: [],
             newHabitType: 'positive',
             canvasWidth: 0,
             canvasHeight: 0,
             isAdmin: false
         };
 
-        let globalBubbleImgCache = null; // תמונה גלובלית מהאדמין
+        let globalBubbleImgCache = null;
 
         lucide.createIcons();
         const canvas = document.getElementById('gameCanvas');
@@ -354,18 +356,15 @@
                     state.userData.debugDaysAdded = serverData.debugDaysAdded || 0;
                     
                     if (serverData.habits) {
-                        serverData.habits.forEach(serverHabit => {
-                            let localHabit = state.userData.habits.find(h => h.id === serverHabit.id);
-                            if (localHabit) {
-                                localHabit.count = serverHabit.count || 0;
-                                localHabit.breachCount = serverHabit.breachCount || 0;
-                                localHabit.name = serverHabit.name;
-                            } else {
-                                state.userData.habits.push({...serverHabit, count: serverHabit.count||0, breachCount: serverHabit.breachCount||0});
-                            }
-                        });
+                        // מעדכן את המערך המקומי מהענן (אם ריק ישאר ריק, אם יש ישחזר)
+                        state.userData.habits = serverData.habits.map(serverHabit => ({
+                            ...serverHabit,
+                            count: serverHabit.count || 0,
+                            breachCount: serverHabit.breachCount || 0
+                        }));
                     }
                 } else {
+                    // יוזר חדש - שמירה ראשונית (עם מערך הרגלים ריק)
                     saveUserData();
                 }
                 
@@ -421,14 +420,15 @@
 
         async function loadStageConfig() {
             try {
+                // המזהה הקבוע להגדרות גלובליות של המנהל (עוקף חסימות ל-IDs שונים)
                 const { data, error } = await supabaseClient
                     .from('user_data')
                     .select('app_data')
-                    .eq('user_id', `stage_config_${state.currentStage}`)
+                    .eq('user_id', 'GLOBAL_ADMIN_DATA')
                     .maybeSingle();
 
-                if (data && data.app_data) {
-                    state.stageConfig = data.app_data;
+                if (data && data.app_data && data.app_data.stages && data.app_data.stages[state.currentStage]) {
+                    state.stageConfig = data.app_data.stages[state.currentStage];
                 } else {
                     state.stageConfig = null;
                 }
@@ -460,7 +460,6 @@
             }
         }
 
-        // --- Utility ---
         function compressImage(file, callback) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -491,7 +490,7 @@
             if(engine) return;
             engine = Engine.create({ enableSleeping: true });
             world = engine.world;
-            world.gravity.y = 1.0; // כבידה חזקה וטבעית יותר
+            world.gravity.y = 1.0; 
 
             setupWalls();
 
@@ -519,8 +518,8 @@
         function handleImpact(body) {
             const bubble = state.bubbles.find(b => b.body.id === body.id);
             if (bubble && bubble.isBreach && !bubble.hasImpacted) {
-                bubble.hasImpacted = true; // מבטיח פיצוץ פעם אחת בלבד
-                spawnExplosion(body.position.x, body.position.y, '#EAB308'); // צבע צהוב זוהר
+                bubble.hasImpacted = true;
+                spawnExplosion(body.position.x, body.position.y, '#EAB308'); 
             }
         }
 
@@ -581,7 +580,6 @@
         }
 
         function rebuildAllBubbles() {
-            // ניקוי הכדורים הקיימים
             state.bubbles.forEach(b => Composite.remove(world, b.body));
             state.bubbles = [];
 
@@ -593,7 +591,6 @@
                 for(let i=0; i<brcCount; i++) bubblesToCreate.push({ isBreach: true });
             });
             
-            // מניעת קריסה: הצגה של מקסימום כדורים
             let visualData = bubblesToCreate.slice(-MAX_VISUAL_BUBBLES);
             
             for(let i=0; i<visualData.length; i++) {
@@ -628,16 +625,13 @@
 
             const startX = state.canvasWidth / 2 + (Math.random() * 40 - 20);
             
-            // מעירים את כל הכדורים הנחים כדי שיגיבו למכה
             state.bubbles.forEach(b => Sleeping.set(b.body, false));
 
-            // הגדרות פיזיקה לכדור רגיל (כמו כדור סנוקר רגיל)
             let options = {
                 restitution: 0.7, friction: 0.01, frictionAir: 0.005, density: 0.05
             };
 
             if (isBreach) {
-                // הכדור הצהוב ("מכת פתיחה"): כבד פי 8 וקופצני יותר!
                 options.density = 0.4;
                 options.restitution = 0.85;
             }
@@ -645,7 +639,6 @@
             const body = Bodies.circle(startX, 60, BUBBLE_RADIUS, options);
 
             if (isBreach) {
-                // משגרים את הכדור כלפי מטה במהירות אדירה ליצירת אפקט הפיצוץ/סנוקר
                 Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 8, y: 30 });
             }
 
@@ -661,7 +654,6 @@
                 drawBubble(ctx, b.body.position.x, b.body.position.y, b.radius, b.body.angle, b.isBreach);
             });
 
-            // רינדור חלקיקי הפיצוץ
             for (let i = state.particles.length - 1; i >= 0; i--) {
                 let p = state.particles[i];
                 p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= p.decay;
@@ -685,7 +677,6 @@
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
 
             if (globalBubbleImgCache && !isBreach) {
-                // If global image is set, use it (unless it's a breach, breaches always glow yellow to stand out)
                 ctx.save();
                 ctx.clip();
                 ctx.globalAlpha = state.stageConfig?.bubbleOpacity !== undefined ? state.stageConfig.bubbleOpacity / 100 : 1;
@@ -695,19 +686,19 @@
                 let baseColor, highlightColor, shadowGlow;
                 
                 if (isBreach) {
-                    baseColor = '#EAB308'; // Yellow-500
-                    highlightColor = '#FEF08A'; // Yellow-200
+                    baseColor = '#EAB308'; 
+                    highlightColor = '#FEF08A'; 
                     shadowGlow = 'rgba(234, 179, 8, 0.8)';
-                    ctx.shadowBlur = radius * 1.5; // Stronger glow for breach
+                    ctx.shadowBlur = radius * 1.5; 
                 } else {
-                    baseColor = '#3B82F6'; // Blue-500
-                    highlightColor = '#93C5FD'; // Blue-200
+                    baseColor = '#3B82F6'; 
+                    highlightColor = '#93C5FD'; 
                     shadowGlow = 'rgba(0,0,0,0.3)';
                     ctx.shadowBlur = radius * 0.5;
                 }
 
                 ctx.shadowColor = shadowGlow;
-                ctx.shadowOffsetY = isBreach ? 0 : radius * 0.2; // Centered glow for breach
+                ctx.shadowOffsetY = isBreach ? 0 : radius * 0.2;
 
                 let grad = ctx.createRadialGradient(-radius*0.3, -radius*0.3, radius*0.1, 0, 0, radius);
                 grad.addColorStop(0, highlightColor);
@@ -730,18 +721,24 @@
         window.renderHabitsUI = function() {
             const list = document.getElementById('habitsList');
             if(!list) return;
+            
+            // כשהרשימה ריקה נודיע למשתמש
+            if (state.userData.habits.length === 0) {
+                list.innerHTML = `<div class="text-white/50 text-sm py-4 px-2 text-center w-full">אין הרגלים עדיין. לחץ על ה '+' כדי להתחיל!</div>`;
+                return;
+            }
+            
             list.innerHTML = '';
 
             state.userData.habits.forEach(habit => {
-                if(state.filter !== 'all' && habit.type !== state.filter) return;
                 const btn = document.createElement('button');
                 btn.className = `flex-shrink-0 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl shadow-lg backdrop-blur-md border border-white/10 bg-white/10 transition-transform relative select-none`;
-                btn.oncontextmenu = () => false; // מניעת פתיחת תפריט קליק ימני/לחיצה ארוכה
+                btn.oncontextmenu = () => false; 
                 
                 const totalCount = (habit.count || 0) + (habit.breachCount || 0);
                 
                 btn.innerHTML = `
-                    <div class="relative w-5 h-5 flex items-center justify-center shrink-0">
+                    <div class="relative w-5 h-5 flex items-center justify-center shrink-0 pointer-events-none">
                         <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)" stroke-width="3" fill="none" />
                             <circle class="progress-ring" cx="12" cy="12" r="10" stroke="#EAB308" stroke-width="3" fill="none" stroke-dasharray="62.8" stroke-dashoffset="62.8" stroke-linecap="round" />
@@ -778,7 +775,6 @@
                     isBreachReady = false;
                     btn.style.transform = 'scale(0.95)';
                     
-                    // מתחיל אנימציית טעינה של העיגול הצהוב
                     requestAnimationFrame(() => {
                         requestAnimationFrame(() => {
                             progressRing.style.transition = 'stroke-dashoffset 500ms linear';
@@ -790,7 +786,7 @@
                         if(!isPressed) return;
                         isBreachReady = true;
                         centerDot.classList.replace('bg-blue-400', 'bg-yellow-400');
-                        if(navigator.vibrate) navigator.vibrate(50); // רטט כשהטעינה הושלמה
+                        if(navigator.vibrate) navigator.vibrate(50); 
                     }, LONG_PRESS_DURATION);
                 };
 
@@ -798,7 +794,6 @@
                     if(!isPressed) return;
                     clearTimeout(pressTimer);
                     
-                    // בדיקה אם הרימו את האצבע בתוך הכפתור או מחוץ לו
                     let clientX, clientY;
                     if (e.changedTouches && e.changedTouches.length > 0) {
                         clientX = e.changedTouches[0].clientX;
@@ -819,12 +814,10 @@
                     resetPress();
                 };
 
-                // Mouse Events
                 btn.addEventListener('mousedown', startPress);
                 btn.addEventListener('mouseup', endPress);
                 btn.addEventListener('mouseleave', cancelPress);
                 
-                // Touch Events
                 btn.addEventListener('touchstart', startPress, {passive: true});
                 btn.addEventListener('touchend', (e) => { e.preventDefault(); endPress(e); });
                 btn.addEventListener('touchcancel', cancelPress);
@@ -833,15 +826,65 @@
             });
         }
 
-        window.toggleSettings = () => document.getElementById('settingsModal').classList.toggle('opacity-0') || document.getElementById('settingsModal').classList.toggle('pointer-events-none');
-        window.toggleFilter = () => {
-            const ind = document.getElementById('filterIndicator');
-            if(state.filter === 'all') { state.filter = 'positive'; ind.className = "absolute top-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#1e293b]"; }
-            else if (state.filter === 'positive') { state.filter = 'negative'; ind.className = "absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-[#1e293b]"; }
-            else { state.filter = 'all'; ind.classList.add('hidden'); }
-            window.renderHabitsUI();
+        // --- Edit & Manage Habits Modal ---
+        window.openManageHabitsModal = () => {
+            window.toggleSettings();
+            document.getElementById('manageHabitsModal').classList.replace('hidden', 'flex');
+            window.renderManageHabitsList();
         }
-        window.changeView = (mode) => { state.view = mode; window.renderHabitsUI(); }
+
+        window.closeManageHabitsModal = () => {
+            document.getElementById('manageHabitsModal').classList.replace('flex', 'hidden');
+        }
+
+        window.renderManageHabitsList = () => {
+            const list = document.getElementById('manageHabitsList');
+            list.innerHTML = '';
+            
+            if (state.userData.habits.length === 0) {
+                list.innerHTML = `<p class="text-white/50 text-center py-4">אין הרגלים לעריכה.</p>`;
+                return;
+            }
+
+            state.userData.habits.forEach(habit => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-white/10 p-3 rounded-xl border border-white/5";
+                div.innerHTML = `
+                    <span class="text-white font-bold">${habit.name}</span>
+                    <div class="flex gap-2">
+                        <button onclick="window.renameHabit(${habit.id})" class="p-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="window.deleteHabit(${habit.id})" class="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        window.renameHabit = (id) => {
+            const habit = state.userData.habits.find(h => h.id === id);
+            if (!habit) return;
+            const newName = prompt("הכנס שם חדש להרגל:", habit.name);
+            if (newName && newName.trim() !== '') {
+                habit.name = newName.trim();
+                saveUserData();
+                window.renderManageHabitsList();
+                window.renderHabitsUI();
+            }
+        }
+
+        window.deleteHabit = (id) => {
+            if (confirm("האם אתה בטוח שברצונך למחוק הרגל זה?")) {
+                state.userData.habits = state.userData.habits.filter(h => h.id !== id);
+                saveUserData();
+                window.renderManageHabitsList();
+                window.renderHabitsUI();
+                rebuildAllBubbles();
+            }
+        }
+
+        window.toggleSettings = () => document.getElementById('settingsModal').classList.toggle('opacity-0') || document.getElementById('settingsModal').classList.toggle('pointer-events-none');
+        window.toggleFilter = () => { /* Filter UI is hidden now, but left intact for code stability */ }
 
         window.openAddHabitModal = () => {
             document.getElementById('addHabitModal').classList.replace('translate-y-full', 'translate-y-0');
@@ -850,6 +893,7 @@
         }
         window.closeAddHabitModal = () => {
             document.getElementById('addHabitModal').classList.replace('translate-y-0', 'translate-y-full');
+            document.getElementById('newHabitName').value = ''; // מתנקה אחרי סגירה!
             state.floorTargetY = state.canvasHeight - getDrawerHeight() + 50;
         }
         window.selectNewHabitType = (type) => state.newHabitType = type;
@@ -907,10 +951,17 @@
             const stageId = document.getElementById('adminStageSelect').value;
             document.getElementById('adminStageInfo').innerText = `עריכת שלב מספר ${stageId}`;
             try {
-                const { data, error } = await supabaseClient.from('user_data').select('app_data').eq('user_id', `stage_config_${stageId}`).maybeSingle();
-                if(data && data.app_data) {
-                    document.getElementById('adminBgOpacity').value = data.app_data.bgOpacity !== undefined ? data.app_data.bgOpacity : 80;
-                    document.getElementById('adminBubbleOpacity').value = data.app_data.bubbleOpacity !== undefined ? data.app_data.bubbleOpacity : 100;
+                // משיכת כלל המידע הגלובלי שעוקף בעיות אבטחה של RLS לכל יוזר נפרד
+                const { data, error } = await supabaseClient.from('user_data').select('app_data').eq('user_id', 'GLOBAL_ADMIN_DATA').maybeSingle();
+                
+                let stageData = null;
+                if(data && data.app_data && data.app_data.stages) {
+                    stageData = data.app_data.stages[stageId];
+                }
+
+                if(stageData) {
+                    document.getElementById('adminBgOpacity').value = stageData.bgOpacity !== undefined ? stageData.bgOpacity : 80;
+                    document.getElementById('adminBubbleOpacity').value = stageData.bubbleOpacity !== undefined ? stageData.bubbleOpacity : 100;
                 } else {
                     document.getElementById('adminBgOpacity').value = 80;
                     document.getElementById('adminBubbleOpacity').value = 100;
@@ -927,13 +978,33 @@
             
             document.getElementById('adminSaveBtn').innerText = "שומר...";
             
-            const payload = { bgOpacity: bgOp, bubbleOpacity: bubOp };
+            // משיכת הקובץ המלא קודם כדי לא למחוק שלבים אחרים
+            const { data } = await supabaseClient.from('user_data').select('app_data').eq('user_id', 'GLOBAL_ADMIN_DATA').maybeSingle();
+            let appData = data?.app_data || { stages: {} };
+            if (!appData.stages) appData.stages = {};
+            
+            let currentStageData = appData.stages[stageId] || {};
+            
+            const payload = { 
+                bgOpacity: bgOp, 
+                bubbleOpacity: bubOp,
+                bgImage: currentStageData.bgImage,     // שומר על התמונה הקיימת אם לא הועלתה חדשה
+                bubbleImage: currentStageData.bubbleImage
+            };
             
             const finalize = async () => {
-                await supabaseClient.from('user_data').upsert({ user_id: `stage_config_${stageId}`, app_data: payload });
+                appData.stages[stageId] = payload;
+                await supabaseClient.from('user_data').upsert({ user_id: 'GLOBAL_ADMIN_DATA', app_data: appData });
+                
                 document.getElementById('adminSaveBtn').innerText = "שמור הגדרות שלב";
                 document.getElementById('adminFeedback').classList.remove('hidden');
                 setTimeout(()=>document.getElementById('adminFeedback').classList.add('hidden'), 3000);
+                
+                // רענון חזותי מיידי אם אנו עורכים את השלב הנוכחי שלנו
+                if(parseInt(stageId) === state.currentStage) {
+                    state.stageConfig = payload;
+                    applyStageVisuals();
+                }
             }
 
             let uploadsRemaining = (bgFile ? 1 : 0) + (bubbleFile ? 1 : 0);
