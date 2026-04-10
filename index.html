@@ -1,472 +1,962 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>אפליקציית הרגלים</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  
-  <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "lucide-react": "https://esm.sh/lucide-react@0.292.0",
-        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.3",
-        "@formkit/auto-animate": "https://esm.sh/@formkit/auto-animate@0.8.2"
-      }
-    }
-  </script>
-  
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <style>
-    body { margin: 0; padding: 0; background-color: #F0F2F5; font-family: 'Rubik', system-ui, -apple-system, sans-serif; }
-    .btn-google { background: white; color: #1f2937; transition: all 0.2s; border: 1px solid #e5e7eb; }
-    .btn-google:hover { background: #f9fafb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>בועות הרגלים | Habit Bubbles</title>
     
-    @keyframes badge-float-scale {
-      0%, 100% { transform: translateY(0px) scale(1.25); }
-      50% { transform: translateY(-8px) scale(1.35); }
-    }
-    .animate-badge-current { animation: badge-float-scale 2.5s ease-in-out infinite; }
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    @keyframes halo-oppose-pulse {
-      0%, 100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0.15; }
-      50% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.6; }
-    }
-    .animate-halo-current { animation: halo-oppose-pulse 2.5s ease-in-out infinite; }
+    <!-- Matter.js for Physics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-    @keyframes pop-in {
-      0% { transform: scale(0.8); opacity: 0; }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .animate-pop { animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    
-    @keyframes spark {
-      0% { transform: scale(0) rotate(0deg); opacity: 1; }
-      100% { transform: scale(1.5) translateY(-20px) rotate(45deg); opacity: 0; }
-    }
-    .sparkle { position: absolute; width: 6px; height: 6px; border-radius: 50%; opacity: 0; z-index: 20; pointer-events: none; }
-    .sparkle-1 { background: #FFCC00; animation: spark 0.6s ease-out forwards; top: 10px; right: 10px; }
-    .sparkle-2 { background: #007AFF; animation: spark 0.6s ease-out forwards 0.1s; bottom: 10px; left: 10px; }
-    .sparkle-3 { background: #34C759; animation: spark 0.6s ease-out forwards 0.2s; top: 20px; left: 20px; }
-    .sparkle-4 { background: #FF9500; animation: spark 0.6s ease-out forwards 0.05s; bottom: 20px; right: 20px; }
-  </style>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: #0f172a;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-user-select: none; /* Disable selection for long press */
+            user-select: none;
+        }
+
+        /* Responsive Container */
+        .app-container {
+            position: relative;
+            background: linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%);
+            background-size: cover;
+            background-position: center;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(255,255,255,0.05);
+            transition: background 0.5s ease;
+        }
+
+        .bg-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15,23,42,0.8);
+            z-index: 1;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+            .app-container {
+                width: 390px;
+                height: 844px;
+                border-radius: 50px;
+                border: 12px solid #1e293b;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255,255,255,0.1), 0 0 0 2px #334155;
+            }
+            .app-container::before {
+                content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+                width: 120px; height: 30px; background: #1e293b; border-bottom-left-radius: 20px;
+                border-bottom-right-radius: 20px; z-index: 50; box-shadow: inset 0 -2px 5px rgba(255,255,255,0.1);
+            }
+        }
+
+        @media (max-width: 767px) {
+            .app-container { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; border: none; }
+        }
+
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+
+        .ui-layer { position: relative; z-index: 20; display: flex; flex-direction: column; height: 100%; pointer-events: none; }
+        .pointer-events-auto { pointer-events: auto; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .pulse-anim { animation: pulse-soft 2s infinite; }
+        @keyframes pulse-soft { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    </style>
 </head>
 <body>
-  <div id="root"></div>
 
-  <script type="text/babel" data-type="module">
-    import React, { useState, useMemo, useEffect, useRef } from 'react';
-    import { createRoot } from 'react-dom/client';
-    import { createClient } from '@supabase/supabase-js';
-    import autoAnimate from '@formkit/auto-animate';
-    import { 
-      Star, Check, Lightbulb, Trophy, Crown, Medal, Award, Users, ArrowLeft, TrendingUp, Menu, Plus, Clock, Trash2, GripVertical, ArrowUpToLine, ArrowDownAZ, Sun, Sunset, Moon, AlignLeft, ChevronDown, ChevronUp, Lock, Target, Send, Sparkles, PartyPopper, Search, AlertCircle, Move, Droplet, Zap, Edit3, Minus, Calendar, Camera, Settings, ArrowRight, User, Palette, CreditCard, Wrench, Share2, ChevronLeft, Flag, Loader2, Cloud, CloudOff, Shield, Flame, UserPlus, RefreshCw
-    } from 'lucide-react';
+    <div class="app-container" id="appContainer">
+        <div class="bg-overlay" id="bgOverlay"></div>
+        
+        <!-- Canvas for Matter.js & Custom Rendering -->
+        <canvas id="gameCanvas"></canvas>
 
-    const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    const MOCK_TEST_USERS = [
-      {
-        id: 'admin',
-        isAdmin: true,
-        user: { name: 'משה (אדמין)', level: 35, xp: 0, shields: 3, perfectDaysStreak: 120, lastLoginDate: new Date().toISOString().split('T')[0] },
-        habits: [{ id: 1, title: 'בדיקת המערכת', targetValue: 1, unit: 'פעם', bestTime: '08:00', streak: 120 }],
-        tasks: [{ id: 't1', text: 'להעלות תמונות חדשות', date: '', time: '', notes: '', isDone: false, color: 'bg-white' }],
-        visionBoard: { text: 'לנהל את האפליקציה בהצלחה!', imageUrl: null }
-      }
-    ];
-
-    const INITIAL_HABITS_DATA = [
-      { id: 1, title: 'שכיבות סמיכה', targetValue: 15, unit: 'חזרות', bestTime: '09:00', streak: 0 },
-      { id: 2, title: 'שתיית מים', targetValue: 8, unit: 'כוסות', bestTime: '12:00', streak: 0 }
-    ];
-
-    const getTodayDate = () => new Date().toISOString().split('T')[0];
-
-    const BADGE_NAMES = [
-      'יסוד', 'מומנטום', 'קצב', 'רצף', 'שגרה', 'משמעת',
-      'מיקוד', 'עקביות', 'החלטה', 'נחישות', 'רצון', 'חוסן',
-      'יציבות', 'כוח', 'סיבולת', 'התמדה', 'עיקשות', 'אחיזה',
-      'מסירות', 'מחויבות', 'שורשים', 'עוגן', 'אמונה', 'אופי',
-      'חציבה', 'ברזל', 'איתנות', 'זרימה', 'דרך', 'נוכחות',
-      'הגשמה', 'עוצמה', 'שליטה', 'מומחיות', 'פסגה'
-    ];
-    
-    const INITIAL_BADGES = BADGE_NAMES.map((name, idx) => ({
-      id: idx + 1, completed: idx === 0, label: name, imageUrl: null, characterImageUrl: null
-    }));
-
-    const NLP_QUESTIONS = ["אילו הרגלים תרצה לרכוש?", "איך ייראה יום אידיאלי?", "מהו הצעד הקטן ביותר היום?"];
-
-    const CURRENT_DAY = 10;
-    const TARGET_DAY = 17;
-
-    const ALL_DAYS = Array.from({ length: 35 }, (_, i) => {
-      const date = i + 1;
-      const labels = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-      const status = date < CURRENT_DAY ? 'past' : (date === CURRENT_DAY ? 'today' : 'future');
-      return { date, label: labels[(date - 1) % 7], status, isToday: date === CURRENT_DAY, isTarget: date === TARGET_DAY };
-    });
-
-    const LoginScreen = ({ onGuestLogin }) => {
-      const [isLoading, setIsLoading] = useState(false);
-      const handleLogin = async () => {
-        setIsLoading(true);
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin + window.location.pathname }
-            });
-            if (error) throw error;
-        } catch (error) {
-            console.error("Login error:", error);
-            setIsLoading(false);
-        }
-      };
-      return (
-        <div className="min-h-screen bg-[#F0F2F5] flex items-center justify-center font-sans" dir="rtl">
-          <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] shadow-2xl flex flex-col items-center justify-center p-8">
-            <Trophy className="w-20 h-20 text-[#007AFF] mb-6 drop-shadow-lg" />
-            <h1 className="text-3xl font-black mb-2 text-center text-gray-900">אפליקציית הרגלים</h1>
-            <p className="text-gray-500 text-center mb-10 px-4">התחבר כדי לסנכרן את ההתקדמות שלך מהדאטה-בייס.</p>
-            <button onClick={handleLogin} disabled={isLoading} className="btn-google w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg shadow-sm mb-4">
-              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="G" />}
-              התחברות עם Google
-            </button>
-            <button onClick={() => onGuestLogin(true)} className="w-full py-4 bg-blue-50 text-blue-600 rounded-2xl font-bold text-sm border border-blue-100 hover:bg-blue-100 transition-colors">
-              כניסת מנהל מערכת (Admin)
-            </button>
-          </div>
-        </div>
-      );
-    };
-
-    function App() {
-      const [session, setSession] = useState(null);
-      const [isAdmin, setIsAdmin] = useState(false);
-      const [isGuest, setIsGuest] = useState(false); 
-      const [isDataLoaded, setIsDataLoaded] = useState(false);
-      const [loadError, setLoadError] = useState(null);
-      const [isSaveAllowed, setIsSaveAllowed] = useState(false); 
-      const [syncStatus, setSyncStatus] = useState('synced');
-      
-      const [habitsStatus, setHabitsStatus] = useState({});
-      const [habits, setHabits] = useState(INITIAL_HABITS_DATA);
-      const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
-      const [tasks, setTasks] = useState([]);
-      const [user, setUser] = useState({ level: 1, xp: 0, shields: 0, perfectDaysStreak: 0, name: 'טוען...', lastLoginDate: getTodayDate() });
-      const [badges, setBadges] = useState(INITIAL_BADGES);
-      const [theme, setTheme] = useState({ primary: '#007AFF', gold: '#FFCC00', accent: '#FF9500', dark: '#1C1C1E', bgStart: '#F4F7F9', bgEnd: '#FFFFFF' });
-      const [avatars, setAvatars] = useState({ start: null });
-      const [visionBoard, setVisionBoard] = useState({ text: '', imageUrl: null });
-      
-      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-      const [settingsView, setSettingsView] = useState('main');
-      const [isMenuOpen, setIsMenuOpen] = useState(false);
-      const [isScrolled, setIsScrolled] = useState(false);
-      const [showVisionPopup, setShowVisionPopup] = useState(false);
-      const [animatingHabitId, setAnimatingHabitId] = useState(null);
-
-      const calendarRef = useRef(null);
-      const badgesRef = useRef(null); 
-
-      const checkIsAdmin = (email) => {
-          if (!email) return false;
-          const e = email.toLowerCase().trim();
-          return e.includes('mosheally') || e.includes('moshally') || e.includes('moshe.ally');
-      };
-
-      // פונקציית טעינה מרכזית - לא נכנסים לאפליקציה בלי תשובה מהשרת
-      const startup = async (currentSession, asAdminManual = false) => {
-          setIsDataLoaded(false);
-          setIsSaveAllowed(false);
-          setLoadError(null);
-
-          try {
-              // 1. קריאה לנתוני האדמין (חובה לכולם)
-              const { data: globalData, error: globalErr } = await supabase
-                .from('user_data')
-                .select('app_data')
-                .eq('user_id', 'GLOBAL_ADMIN_DATA')
-                .maybeSingle();
-
-              if (globalErr) throw new Error("לא ניתן להתחבר לשרת הנתונים הגלובליים.");
-
-              if (globalData?.app_data) {
-                  const g = globalData.app_data;
-                  if (g.theme) setTheme(prev => ({ ...prev, ...g.theme }));
-                  if (g.badges) {
-                      setBadges(INITIAL_BADGES.map(b => {
-                          const saved = g.badges.find(gb => gb.id === b.id);
-                          return saved ? { ...b, characterImageUrl: saved.characterImageUrl, badgeImageUrl: saved.badgeImageUrl, imageUrl: saved.imageUrl } : b;
-                      }));
-                  }
-              }
-
-              // 2. קריאה לנתוני המשתמש
-              if (currentSession || asAdminManual) {
-                  const uid = asAdminManual ? 'admin_test_id' : currentSession.user.id;
-                  const { data: userData, error: userErr } = await supabase
-                    .from('user_data')
-                    .select('app_data')
-                    .eq('user_id', uid)
-                    .maybeSingle();
-
-                  if (userErr) throw new Error("שגיאה במשיכת נתוני המשתמש מהענן.");
-
-                  if (userData?.app_data) {
-                      const d = userData.app_data;
-                      if (d.habits) setHabits(d.habits);
-                      if (d.habitsStatus) setHabitsStatus(d.habitsStatus);
-                      if (d.tasks) setTasks(d.tasks);
-                      if (d.user) setUser(prev => ({ ...prev, ...d.user }));
-                      if (d.avatars) setAvatars(prev => ({ ...prev, ...d.avatars }));
-                      if (d.visionBoard) setVisionBoard(d.visionBoard);
-                  } else {
-                      // משתמש חדש לגמרי
-                      const name = asAdminManual ? 'משה (אדמין)' : (currentSession?.user?.user_metadata?.full_name?.split(' ')[0] || 'משתמש');
-                      setUser({ level: 1, xp: 0, shields: 0, perfectDaysStreak: 0, name, lastLoginDate: getTodayDate() });
-                  }
-              }
-
-              setIsDataLoaded(true);
-              // פתיחת מנעול השמירה רק אחרי 3 שניות של יציבות
-              setTimeout(() => setIsSaveAllowed(true), 3000);
-
-          } catch (err) {
-              console.error(err);
-              setLoadError(err.message);
-          }
-      };
-
-      useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session: s } }) => {
-          if (s) {
-              setSession(s);
-              setIsAdmin(checkIsAdmin(s.user.email));
-              startup(s);
-          }
-        });
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-          if (s) {
-              setSession(s);
-              setIsAdmin(checkIsAdmin(s.user.email));
-              startup(s);
-          } else {
-              setSession(null);
-              setIsAdmin(false);
-          }
-        });
-        return () => subscription.unsubscribe();
-      }, []);
-
-      const handleGuestLogin = (asAdmin = false) => {
-          setIsGuest(true);
-          setIsAdmin(asAdmin);
-          startup(null, asAdmin);
-      };
-
-      // מנגנון שמירה אוטומטי - חסום עד שהמידע נטען במלואו
-      useEffect(() => {
-        if (!isDataLoaded || !isSaveAllowed) return;
-        if (!session && !isAdmin) return;
-
-        setSyncStatus('saving');
-        const timer = setTimeout(async () => {
-           try {
-               let hasError = false;
-               if (session) {
-                   const { error } = await supabase.from('user_data').upsert({ 
-                       user_id: session.user.id, 
-                       app_data: { habits, habitsStatus, tasks, user, avatars, visionBoard } 
-                   });
-                   if (error) hasError = true;
-               }
-               if (isAdmin) {
-                   const { error } = await supabase.from('user_data').upsert({ 
-                       user_id: 'GLOBAL_ADMIN_DATA', 
-                       app_data: { badges, theme } 
-                   });
-                   if (error) hasError = true;
-               }
-               setSyncStatus(hasError ? 'error' : 'synced');
-           } catch(e) { setSyncStatus('error'); }
-        }, 3000); 
-        return () => clearTimeout(timer);
-      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard]);
-
-      // רנדור מסכי טעינה ושגיאה
-      if (loadError) return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-white p-8 text-center">
-            <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-            <h2 className="text-2xl font-black mb-2">בעיית חיבור לענן</h2>
-            <p className="text-gray-500 mb-8">{loadError}</p>
-            <button onClick={() => window.location.reload()} className="bg-dark text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2">
-                <RefreshCw className="w-5 h-5" /> נסה להתחבר שוב
-            </button>
-        </div>
-      );
-
-      if (!session && !isGuest) return <LoginScreen onGuestLogin={handleGuestLogin} />;
-      
-      if (!isDataLoaded) return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#F0F2F5] text-gray-500 font-bold gap-4">
-           <Loader2 className="w-12 h-12 animate-spin text-blue-500"/>
-           <div className="text-center">
-              <p className="text-lg mb-1">יוצר קשר עם הענן...</p>
-              <p className="text-[10px] font-normal opacity-60">האפליקציה ממתינה לסנכרון נתונים מלא כדי למנוע כפילויות</p>
-           </div>
-        </div>
-      );
-
-      // משתני עזר לתצוגה
-      const currentLevel = user.level || 1;
-      const currentBadge = badges.find(b => b.id === currentLevel);
-      const activeCharacterImg = currentBadge?.characterImageUrl || avatars.start; 
-      const headerAvatar = currentBadge?.badgeImageUrl || activeCharacterImg; 
-      const activeTasks = tasks?.filter(t => !t.isDone) || [];
-
-      return (
-        <div className="min-h-screen bg-[#F0F2F5] flex items-center justify-center font-sans" dir="rtl">
-          <style>{`
-            .theme-bg-gradient { background: linear-gradient(180deg, ${theme.bgStart} 0%, ${theme.bgEnd} 100%) !important; }
-            .c-primary { color: ${theme.primary} !important; }
-            .bg-primary { background-color: ${theme.primary} !important; }
-            .c-dark { color: ${theme.dark} !important; }
-            .bg-dark { background-color: ${theme.dark} !important; }
-          `}</style>
-
-          <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] md:shadow-2xl md:border-[12px] md:border-[#1C1C1E] relative overflow-hidden flex flex-col transition-all">
+        <!-- UI Layer -->
+        <div class="ui-layer justify-between pt-10">
             
-            {/* Header */}
-            <div className={`absolute top-0 left-0 w-full z-[150] px-4 py-3 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm' : 'bg-transparent'}`}>
-              <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
-                  {headerAvatar ? <img src={headerAvatar} className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
+            <!-- Top Bar -->
+            <div class="flex justify-between items-center pointer-events-auto px-4 pb-6">
+                <button onclick="window.toggleSettings()" class="p-2 rounded-full glass-panel text-white hover:bg-white/10 transition">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+                
+                <div class="text-center">
+                    <h1 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-400 drop-shadow-md">
+                        בועות הרגלים
+                    </h1>
+                    <p id="viewSubtitle" class="text-xs text-slate-300 font-medium tracking-wider">טוען נתונים...</p>
                 </div>
-                <div className="flex flex-col text-right bg-white/40 px-2 py-0.5 rounded-lg backdrop-blur-sm">
-                  <span className="text-[13px] font-black c-dark leading-tight">{user.name}</span>
-                  <span className="text-[10px] font-bold text-gray-700 mt-0.5">רמה {currentLevel}</span>
-                </div>
-              </button>
-
-              <div className="flex items-center gap-1 bg-white/40 rounded-full backdrop-blur-sm px-1">
-                 {syncStatus === 'saving' ? (
-                   <div className="p-1.5"><Loader2 className="w-4 h-4 animate-spin text-blue-500"/></div>
-                 ) : syncStatus === 'error' ? (
-                   <div className="p-1.5"><AlertCircle className="w-4 h-4 text-red-500"/></div>
-                 ) : (
-                   <div className="p-1.5"><Cloud className="w-4 h-4 text-green-500"/></div>
-                 )}
-              </div>
+                
+                <button onclick="window.toggleFilter()" class="p-2 rounded-full glass-panel text-white hover:bg-white/10 transition relative">
+                    <i data-lucide="filter" class="w-5 h-5"></i>
+                    <span id="filterIndicator" class="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full hidden"></span>
+                </button>
             </div>
 
-            {/* Main Content */}
-            <div onScroll={(e) => setIsScrolled(e.target.scrollTop > 20)} className="flex-1 overflow-y-auto theme-bg-gradient c-dark no-scrollbar relative">
-              <div className="w-full px-4 pb-24 pt-20">
-                {activeCharacterImg && (
-                  <div className="relative w-full h-[300px] mb-2 flex items-center justify-center animate-in zoom-in-95 duration-700">
-                     <img src={activeCharacterImg} alt="Avatar" className="relative z-10 max-h-full object-contain drop-shadow-2xl" />
-                  </div>
-                )}
-
-                {/* Badge Row */}
-                <div className="relative w-full z-20 -mt-12 mb-4">
-                  <div className="flex flex-row-reverse w-full overflow-x-auto no-scrollbar snap-x snap-mandatory py-4">
-                    <div className="flex-shrink-0 w-[calc(50%-45px)]" />
-                    {badges.map((badge) => {
-                      const isCompleted = currentLevel >= badge.id;
-                      const isCurrent = currentLevel === badge.id;
-                      const displayBadgeImage = badge.badgeImageUrl || badge.imageUrl;
-                      return (
-                        <div key={badge.id} className="snap-center flex-shrink-0 w-[90px] flex flex-col items-center justify-center">
-                          <div className="relative w-16 h-16 flex items-center justify-center mb-2">
-                            {isCurrent && <div className="absolute w-20 h-20 rounded-full animate-halo-current" style={{ background: 'radial-gradient(circle, #FFCC00 20%, transparent 70%)' }}></div>}
-                            <div className={`relative z-10 w-full h-full transition-all duration-500 ${isCurrent ? 'animate-badge-current drop-shadow-xl' : isCompleted ? 'scale-100' : 'opacity-40 grayscale scale-90'}`}>
-                              {displayBadgeImage ? <img src={displayBadgeImage} className="w-full h-full object-contain" /> : <div className="w-[80%] h-[80%] rounded-full border-2 border-dashed border-gray-300 opacity-50 mx-auto mt-2"></div>}
-                            </div>
-                          </div>
-                          <span className={`text-[12px] font-black ${isCurrent ? 'c-primary scale-110' : 'text-gray-400'}`}>{badge.label}</span>
-                        </div>
-                      );
-                    })}
-                    <div className="flex-shrink-0 w-[calc(50%-45px)]" />
-                  </div>
+            <!-- Settings Modal -->
+            <div id="settingsModal" class="absolute top-24 left-4 right-4 glass-panel rounded-2xl p-4 pointer-events-auto transform transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none flex flex-col gap-4 shadow-2xl z-40 max-h-[70vh] overflow-y-auto no-scrollbar">
+                <h3 class="text-white font-bold text-lg mb-2">הגדרות תצוגה</h3>
+                
+                <div class="flex justify-between items-center text-white">
+                    <span class="text-sm text-slate-300">תקופה:</span>
+                    <div class="bg-black/30 rounded-lg p-1 flex gap-1">
+                        <button onclick="window.changeView('weekly')" id="btnWeekly" class="px-3 py-1 rounded-md bg-white/20 text-sm font-medium transition">שבועי</button>
+                        <button onclick="window.changeView('monthly')" id="btnMonthly" class="px-3 py-1 rounded-md text-slate-400 text-sm font-medium transition">חודשי</button>
+                    </div>
                 </div>
 
-                {/* Habit List */}
-                <section className="space-y-4 mt-6">
-                  <div className="flex justify-between items-center px-1">
-                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">הרגלים</h3>
-                  </div>
-                  {habits.map((habit) => (
-                    <div key={habit.id} className="bg-white border-gray-100 shadow-sm p-4 rounded-2xl flex flex-row-reverse items-center justify-between">
-                        <div className="text-right flex-1 pr-2">
-                            <h4 className="font-black text-sm c-dark">{habit.title}</h4>
+                <div class="mt-2 pt-3 border-t border-white/10 flex flex-col gap-2">
+                    <button onclick="window.advanceDebugDay()" class="w-full py-2 bg-purple-500/20 border border-purple-500/50 rounded-xl text-purple-300 text-sm font-medium transition">
+                        טסט: התקדם יום אחד קדימה
+                    </button>
+                    
+                    <div id="adminControlsContainer" class="hidden flex-col gap-2 mt-2 pt-2 border-t border-white/10">
+                        <button onclick="window.openAdminPanel()" class="w-full py-2 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl text-white text-sm font-bold shadow-lg">
+                            👑 ניהול שלבים (מנהל)
+                        </button>
+                    </div>
+
+                    <button onclick="window.openAuthModal()" id="btnAuth" class="w-full py-2 mt-2 bg-transparent border border-slate-600 rounded-xl text-slate-400 text-xs font-medium transition hover:bg-slate-800">
+                        התחברות לחשבון (למנהלים/שמירה)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Floating Add Button -->
+            <button onclick="window.openAddHabitModal()" class="absolute bottom-[170px] left-6 w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full text-white font-bold text-3xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-40 pointer-events-auto border-2 border-white/20">
+                +
+            </button>
+
+            <!-- Add Habit Modal -->
+            <div id="addHabitModal" class="absolute bottom-0 left-0 right-0 transform translate-y-full glass-panel md:rounded-b-[38px] rounded-t-[40px] p-8 pointer-events-auto transition-transform duration-300 shadow-[0_-15px_40px_rgba(0,0,0,0.5)] z-50 bg-slate-900/95 border-t border-slate-700">
+                <h3 class="text-white font-bold text-xl mb-4 text-center">הרגל חדש</h3>
+                <input type="text" id="newHabitName" placeholder="שם ההרגל (לדוג: קריאה)" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4 outline-none focus:border-blue-500">
+                
+                <div class="flex gap-2 mb-4">
+                    <button onclick="window.selectNewHabitType('positive')" id="btnTypePos" class="flex-1 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-400 font-medium">חיובי</button>
+                    <button onclick="window.selectNewHabitType('negative')" id="btnTypeNeg" class="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 font-medium">שלילי</button>
+                </div>
+
+                <div class="flex justify-between gap-3 mt-6">
+                    <button onclick="window.closeAddHabitModal()" class="flex-1 py-2 rounded-xl bg-white/10 text-white font-medium">ביטול</button>
+                    <button onclick="window.saveNewHabit()" class="flex-1 py-2 rounded-xl bg-blue-500 text-white font-medium shadow-lg shadow-blue-500/30">שמור</button>
+                </div>
+            </div>
+
+            <!-- Auth Modal (Google Login) -->
+            <div id="authModal" class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center px-6 pointer-events-auto">
+                <div class="w-full max-w-sm glass-panel rounded-3xl p-8 shadow-2xl relative text-center">
+                    <button onclick="window.closeAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 drop-shadow-lg">
+                        <i data-lucide="cloud" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">אפליקציית הרגלים</h2>
+                    <p class="text-slate-400 text-sm mb-8">התחבר כדי לשמור את ההתקדמות והשלבים שלך בענן</p>
+                    
+                    <button onclick="window.loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white text-gray-900 px-6 py-4 rounded-xl font-bold text-lg shadow-md mb-4 border border-gray-200 hover:bg-gray-50 transition active:scale-95">
+                        <img src="https://www.google.com/favicon.ico" class="w-6 h-6" alt="G" />
+                        התחברות עם Google
+                    </button>
+                    <button onclick="window.closeAuthModal()" class="text-slate-500 mt-2 text-sm underline hover:text-white transition">המשך ללא חשבון (מצב מקומי)</button>
+                    <p id="authError" class="text-red-400 text-xs text-center mt-4 hidden"></p>
+                </div>
+            </div>
+
+            <!-- Admin Panel Modal -->
+            <div id="adminModal" class="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-[60] hidden flex-col items-center pt-10 px-4 pb-4 pointer-events-auto overflow-y-auto">
+                <div class="w-full max-w-md">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-red-400">ניהול שלבים</h2>
+                        <button onclick="window.closeAdminPanel()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    </div>
+
+                    <div class="bg-black/30 p-4 rounded-2xl border border-white/10 mb-4">
+                        <label class="block text-slate-300 text-sm mb-2 font-bold">בחר שלב לעריכה:</label>
+                        <select id="adminStageSelect" onchange="window.loadAdminStageData()" class="w-full bg-slate-800 border border-slate-600 text-white rounded-lg p-2 mb-2">
+                            <!-- Options injected by JS -->
+                        </select>
+                        <p id="adminStageInfo" class="text-xs text-slate-400"></p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <h4 class="text-white font-bold mb-2">תמונת רקע לשלב</h4>
+                            <input type="file" id="adminBgImage" accept="image/*" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 w-full mb-3">
+                            <label class="block text-slate-300 text-xs mb-1">שקיפות רקע שחור באפליקציה:</label>
+                            <input type="range" id="adminBgOpacity" min="0" max="100" value="80" class="w-full">
                         </div>
-                        <div className="w-10 h-10 rounded-full border-2 border-gray-100 flex items-center justify-center">
-                            <Check className="w-5 h-5 text-gray-200" />
+
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <h4 class="text-white font-bold mb-2">תמונה אוניברסלית לכל העיגולים</h4>
+                            <p class="text-xs text-slate-400 mb-2">תחליף את העיגולים הרגילים.</p>
+                            <input type="file" id="adminBubbleImage" accept="image/*" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600 w-full mb-3">
+                            <label class="block text-slate-300 text-xs mb-1">שקיפות התמונה על העיגול:</label>
+                            <input type="range" id="adminBubbleOpacity" min="0" max="100" value="100" class="w-full">
                         </div>
                     </div>
-                  ))}
-                </section>
-              </div>
+
+                    <button onclick="window.saveAdminStageData()" id="adminSaveBtn" class="w-full py-4 mt-6 bg-red-500 hover:bg-red-600 rounded-xl text-white font-bold shadow-lg transition">
+                        שמור הגדרות שלב
+                    </button>
+                    <p id="adminFeedback" class="text-center text-emerald-400 text-sm mt-3 hidden">נשמר בהצלחה!</p>
+                </div>
             </div>
 
-            {/* Menu Buttons */}
-            <button onClick={() => setIsMenuOpen(true)} className="absolute bottom-6 left-6 z-[100] w-14 h-14 bg-dark text-white rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-all"><Menu className="w-6 h-6"/></button>
-
-            {/* Drawers & Modals (Simplified for stability) */}
-            <div className={`absolute inset-0 bg-black/40 z-[2000] transition-opacity ${isSettingsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSettingsOpen(false)} />
-            <div className={`absolute top-0 right-0 h-full w-[85%] max-w-[320px] bg-[#F8F9FB] z-[2100] shadow-2xl transition-transform flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                 <div className="p-5 bg-white border-b flex items-center justify-between"><h2 className="font-black text-lg c-dark">הגדרות</h2><button onClick={() => setIsSettingsOpen(false)} className="p-2 bg-gray-50 rounded-full"><ArrowRight className="w-4 h-4"/></button></div>
-                 <div className="flex-1 p-4 space-y-3 overflow-y-auto no-scrollbar pb-20">
-                     {isAdmin && (
-                       <button onClick={() => setSettingsView('design')} className="w-full bg-white p-4 rounded-xl border flex items-center gap-3">
-                         <Palette className="text-blue-500" /> <span className="font-bold">ניהול שלבים (אדמין)</span>
-                       </button>
-                     )}
-                     <div className="mt-8 pt-4 border-t">
-                        {session?.user?.email && <p className="text-[10px] text-gray-400 mb-2">מחובר כ: {session.user.email}</p>}
-                        <button onClick={() => window.location.reload()} className="w-full py-3 bg-red-50 text-red-500 rounded-xl font-bold">התנתק / רענן</button>
-                     </div>
-                 </div>
-                 
-                 {settingsView === 'design' && (
-                   <div className="absolute inset-0 bg-white z-[2200] flex flex-col p-5">
-                      <button onClick={() => setSettingsView('main')} className="mb-4 text-blue-500 font-bold">חזור</button>
-                      <h2 className="font-black text-xl mb-4">ניהול 35 שלבים</h2>
-                      <div className="flex-1 overflow-y-auto space-y-4">
-                        {badges.map(b => (
-                          <div key={b.id} className="p-3 bg-gray-50 rounded-xl border flex items-center justify-between">
-                            <span className="font-bold text-xs">רמה {b.id}: {b.label}</span>
-                            <div className="flex gap-2">
-                               <input type="file" className="hidden" id={`up-c-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'characterImageUrl', e)} />
-                               <label htmlFor={`up-c-${b.id}`} className="bg-white border p-2 rounded text-[10px] cursor-pointer">דמות</label>
-                               <input type="file" className="hidden" id={`up-b-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'badgeImageUrl', e)} />
-                               <label htmlFor={`up-b-${b.id}`} className="bg-white border p-2 rounded text-[10px] cursor-pointer">סמל</label>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                   </div>
-                 )}
+            <!-- Main Drawer (Habits List) - Always Open -->
+            <div id="habitsDrawer" class="mt-auto pointer-events-auto w-full glass-panel border-b-0 md:rounded-b-[38px] rounded-t-[40px] pt-4 pb-8 px-4 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] bg-gradient-to-t from-slate-900/95 to-slate-800/80 border-t border-white/20 z-30">
+                <div class="w-16 h-1.5 bg-white/30 rounded-full mx-auto mb-4 shadow-sm"></div>
+                <div class="text-center text-white/70 text-[11px] font-bold mb-3 tracking-wide">לחיצה קצרה = רגיל | ארוכה = פירצה</div>
+                
+                <div id="habitsList" class="flex overflow-x-auto gap-4 pb-2 no-scrollbar px-2 items-center">
+                    <!-- Habit buttons injected here -->
+                </div>
             </div>
-          </div>
+            
         </div>
-      );
-    }
+    </div>
 
-    const root = createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+    <script>
+        // --- Supabase Config & Setup ---
+        const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- Constants ---
+        const MAX_VISUAL_BUBBLES = 150; // מגבלת ביצועים כדי שהטלפון לא יקרוס
+        const BUBBLE_RADIUS = 18; // גודל אחיד לכל הכדורים
+        const LONG_PRESS_DURATION = 500; // חצי שנייה ללחיצה ארוכה
+
+        // --- State Management ---
+        const state = {
+            user: null,
+            userData: {
+                startDate: Date.now(),
+                debugDaysAdded: 0,
+                habits: [
+                    { id: 1, name: 'ריצה', type: 'positive', count: 0, breachCount: 0 },
+                    { id: 2, name: 'קריאה', type: 'positive', count: 0, breachCount: 0 }
+                ]
+            },
+            currentDay: 1,
+            currentStage: 1,
+            stageConfig: null,
+            
+            view: 'weekly',
+            filter: 'all',
+            floorTargetY: 0,
+            bubbles: [], // מערך של כל הכדורים הפיזיים במסך
+            particles: [], // מערך לחלקיקי הפיצוץ
+            newHabitType: 'positive',
+            canvasWidth: 0,
+            canvasHeight: 0,
+            isAdmin: false
+        };
+
+        let globalBubbleImgCache = null; // תמונה גלובלית מהאדמין
+
+        lucide.createIcons();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('appContainer');
+
+        // Matter.js Aliases
+        const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint, Events, Body, Sleeping } = Matter;
+        let engine, world, walls = [], mConstraint;
+
+        // --- Auth & Data Lifecycle ---
+        async function initAuth() {
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+            
+            if (session) {
+                handleUserLogin(session.user);
+            } else {
+                document.getElementById('authModal').classList.replace('hidden', 'flex');
+                startOfflineMode();
+            }
+
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (session) {
+                    handleUserLogin(session.user);
+                    document.getElementById('authModal').classList.replace('flex', 'hidden');
+                } else {
+                    state.user = null;
+                    state.isAdmin = false;
+                    updateAuthButtonUI();
+                }
+            });
+        }
+
+        function handleUserLogin(user) {
+            state.user = user;
+            state.isAdmin = (user.email === 'mosheally@gmail.com');
+            updateAuthButtonUI();
+            loadUserData();
+        }
+
+        function updateAuthButtonUI() {
+            const btnAuth = document.getElementById('btnAuth');
+            btnAuth.innerText = state.isAdmin ? "מחובר כמנהל (התנתק)" : (state.user ? "מחובר (התנתק)" : "התחבר לשמירת נתונים");
+            document.getElementById('adminControlsContainer').style.display = state.isAdmin ? 'flex' : 'none';
+        }
+
+        function startOfflineMode() {
+            calculateTimeAndStage();
+            initPhysics();
+            window.renderHabitsUI();
+        }
+
+        async function loadUserData() {
+            if (!state.user) return;
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('user_data')
+                    .select('app_data')
+                    .eq('user_id', state.user.id)
+                    .maybeSingle();
+
+                if (data && data.app_data) {
+                    const serverData = data.app_data;
+                    state.userData.startDate = serverData.startDate || Date.now();
+                    state.userData.debugDaysAdded = serverData.debugDaysAdded || 0;
+                    
+                    if (serverData.habits) {
+                        serverData.habits.forEach(serverHabit => {
+                            let localHabit = state.userData.habits.find(h => h.id === serverHabit.id);
+                            if (localHabit) {
+                                localHabit.count = serverHabit.count || 0;
+                                localHabit.breachCount = serverHabit.breachCount || 0;
+                                localHabit.name = serverHabit.name;
+                            } else {
+                                state.userData.habits.push({...serverHabit, count: serverHabit.count||0, breachCount: serverHabit.breachCount||0});
+                            }
+                        });
+                    }
+                } else {
+                    saveUserData();
+                }
+                
+                calculateTimeAndStage();
+                initPhysics(); 
+                window.renderHabitsUI();
+                rebuildAllBubbles(); 
+                
+            } catch (err) {
+                console.error("Error loading data:", err);
+            }
+        }
+
+        async function saveUserData() {
+            if (!state.user) return;
+            const habitsToSave = state.userData.habits.map(h => ({
+                id: h.id, name: h.name, type: h.type, count: h.count || 0, breachCount: h.breachCount || 0
+            }));
+            
+            const payload = {
+                startDate: state.userData.startDate,
+                debugDaysAdded: state.userData.debugDaysAdded,
+                habits: habitsToSave
+            };
+
+            try {
+                await supabaseClient.from('user_data').upsert({
+                    user_id: state.user.id,
+                    app_data: payload
+                });
+            } catch (e) { console.error("Save error:", e); }
+        }
+
+        function calculateTimeAndStage() {
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const daysElapsed = Math.floor((Date.now() - state.userData.startDate) / msPerDay) + 1;
+            state.currentDay = daysElapsed + state.userData.debugDaysAdded;
+
+            let newStage = 1;
+            if (state.currentDay >= 10 && state.currentDay < 21) newStage = 2;
+            else if (state.currentDay >= 21) {
+                newStage = 3 + Math.floor((state.currentDay - 21) / 21);
+            }
+            newStage = Math.min(newStage, 30);
+
+            document.getElementById('viewSubtitle').innerText = `שלב ${newStage} | יום ${state.currentDay}`;
+
+            if (state.currentStage !== newStage || !state.stageConfig) {
+                state.currentStage = newStage;
+                loadStageConfig();
+            }
+        }
+
+        async function loadStageConfig() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('user_data')
+                    .select('app_data')
+                    .eq('user_id', `stage_config_${state.currentStage}`)
+                    .maybeSingle();
+
+                if (data && data.app_data) {
+                    state.stageConfig = data.app_data;
+                } else {
+                    state.stageConfig = null;
+                }
+                applyStageVisuals();
+            } catch(e) { console.error("Stage fetch error", e); }
+        }
+
+        function applyStageVisuals() {
+            const overlay = document.getElementById('bgOverlay');
+            if (state.stageConfig) {
+                if (state.stageConfig.bgImage) {
+                    container.style.backgroundImage = `url(${state.stageConfig.bgImage})`;
+                } else {
+                    container.style.backgroundImage = `radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%)`;
+                }
+                overlay.style.background = `rgba(15,23,42, ${state.stageConfig.bgOpacity !== undefined ? state.stageConfig.bgOpacity / 100 : 0.8})`;
+
+                if (state.stageConfig.bubbleImage) {
+                    const img = new Image();
+                    img.onload = () => globalBubbleImgCache = img;
+                    img.src = state.stageConfig.bubbleImage;
+                } else {
+                    globalBubbleImgCache = null;
+                }
+            } else {
+                container.style.backgroundImage = `radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%)`;
+                overlay.style.background = `rgba(15,23,42, 0.8)`;
+                globalBubbleImgCache = null;
+            }
+        }
+
+        // --- Utility ---
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const cvs = document.createElement('canvas');
+                    const ctxC = cvs.getContext('2d');
+                    const MAX = 600;
+                    let w = img.width, h = img.height;
+                    if (w > h && w > MAX) { h *= MAX / w; w = MAX; } 
+                    else if (h > MAX) { w *= MAX / h; h = MAX; }
+                    cvs.width = w; cvs.height = h;
+                    ctxC.drawImage(img, 0, 0, w, h);
+                    callback(cvs.toDataURL('image/jpeg', 0.6));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- Physics Engine ---
+        function getDrawerHeight() {
+            const drawer = document.getElementById('habitsDrawer');
+            return drawer ? drawer.offsetHeight : 150;
+        }
+
+        function initPhysics() {
+            if(engine) return;
+            engine = Engine.create({ enableSleeping: true });
+            world = engine.world;
+            world.gravity.y = 1.0; // כבידה חזקה וטבעית יותר
+
+            setupWalls();
+
+            const mouse = Mouse.create(canvas);
+            mConstraint = MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
+            Composite.add(world, mConstraint);
+            
+            mouse.element.removeEventListener("mousewheel", mouse.mousewheel);
+            mouse.element.removeEventListener("DOMMouseScroll", mouse.mousewheel);
+
+            Events.on(engine, 'beforeUpdate', updateLogic);
+            Events.on(engine, 'collisionStart', handleCollisions);
+
+            Runner.run(Runner.create(), engine);
+            requestAnimationFrame(renderLoop);
+        }
+
+        function handleCollisions(event) {
+            event.pairs.forEach(pair => {
+                handleImpact(pair.bodyA);
+                handleImpact(pair.bodyB);
+            });
+        }
+
+        function handleImpact(body) {
+            const bubble = state.bubbles.find(b => b.body.id === body.id);
+            if (bubble && bubble.isBreach && !bubble.hasImpacted) {
+                bubble.hasImpacted = true; // מבטיח פיצוץ פעם אחת בלבד
+                spawnExplosion(body.position.x, body.position.y, '#EAB308'); // צבע צהוב זוהר
+            }
+        }
+
+        function spawnExplosion(x, y, color) {
+            const numParticles = 15 + Math.random() * 10;
+            for (let i = 0; i < numParticles; i++) {
+                const angle = Math.random() * Math.PI * 2, speed = Math.random() * 4 + 2;
+                state.particles.push({
+                    x: x, y: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    life: 1.0, decay: Math.random() * 0.02 + 0.02, color: color, radius: Math.random() * 4 + 2
+                });
+            }
+        }
+
+        function setupWalls() {
+            if (!engine) return;
+            Composite.remove(world, walls);
+            
+            const w = state.canvasWidth;
+            const h = state.canvasHeight;
+            const thickness = 100;
+            
+            const drawerHeight = getDrawerHeight();
+            const modal = document.getElementById('addHabitModal');
+            const isModalOpen = modal && !modal.classList.contains('translate-y-full');
+            const modalHeight = modal ? modal.offsetHeight : 350;
+            
+            const baseFloorY = h - drawerHeight + (thickness / 2);
+            state.floorTargetY = isModalOpen ? (h - modalHeight + thickness/2) : baseFloorY;
+            
+            walls = [
+                Bodies.rectangle(w/2, state.floorTargetY, w + 200, thickness, { isStatic: true, render: { visible: false } }),
+                Bodies.rectangle(-thickness/2, h/2, thickness, h * 3, { isStatic: true, render: { visible: false } }),
+                Bodies.rectangle(w + thickness/2, h/2, thickness, h * 3, { isStatic: true, render: { visible: false } }),
+                Bodies.rectangle(w/2, -thickness/2, w + 200, thickness, { isStatic: true, render: { visible: false } })
+            ];
+            Composite.add(world, walls);
+        }
+
+        function updateLogic() {
+            if (walls.length > 0) {
+                const floor = walls[0];
+                const diff = state.floorTargetY - floor.position.y;
+                if (Math.abs(diff) > 0.5) {
+                    Body.setPosition(floor, { x: floor.position.x, y: floor.position.y + diff * 0.15 });
+                    state.bubbles.forEach(b => Sleeping.set(b.body, false));
+                }
+            }
+
+            const margin = 150;
+            Composite.allBodies(world).forEach(body => {
+                if (body.position.x < -margin || body.position.x > state.canvasWidth + margin || 
+                    body.position.y < -margin || body.position.y > state.canvasHeight + margin) {
+                    Body.setPosition(body, { x: state.canvasWidth / 2, y: state.canvasHeight / 3 });
+                    Body.setVelocity(body, { x: 0, y: 0 });
+                }
+            });
+        }
+
+        function rebuildAllBubbles() {
+            // ניקוי הכדורים הקיימים
+            state.bubbles.forEach(b => Composite.remove(world, b.body));
+            state.bubbles = [];
+
+            let bubblesToCreate = [];
+            state.userData.habits.forEach(h => {
+                const stdCount = h.count || 0;
+                const brcCount = h.breachCount || 0;
+                for(let i=0; i<stdCount; i++) bubblesToCreate.push({ isBreach: false });
+                for(let i=0; i<brcCount; i++) bubblesToCreate.push({ isBreach: true });
+            });
+            
+            // מניעת קריסה: הצגה של מקסימום כדורים
+            let visualData = bubblesToCreate.slice(-MAX_VISUAL_BUBBLES);
+            
+            for(let i=0; i<visualData.length; i++) {
+                const startX = state.canvasWidth / 2 + (Math.random() * (state.canvasWidth - 100) - (state.canvasWidth/2 - 50));
+                const startY = state.canvasHeight - getDrawerHeight() - 50 - (Math.random() * 400); 
+                
+                const body = Bodies.circle(startX, startY, BUBBLE_RADIUS, {
+                    restitution: 0.7, friction: 0.01, frictionAir: 0.005, density: 0.05
+                });
+                state.bubbles.push({ id: Date.now() + i, body, radius: BUBBLE_RADIUS, isBreach: visualData[i].isBreach, hasImpacted: true });
+                Composite.add(world, body);
+            }
+        }
+
+        window.spawnFallingBubble = function(habitId, isBreach = false) {
+            const habit = state.userData.habits.find(h => h.id === habitId);
+            if (!habit) return;
+            
+            if (isBreach) {
+                habit.breachCount = (habit.breachCount || 0) + 1;
+            } else {
+                habit.count = (habit.count || 0) + 1;
+            }
+            
+            window.renderHabitsUI();
+            saveUserData();
+
+            if (state.bubbles.length >= MAX_VISUAL_BUBBLES) {
+                const oldest = state.bubbles.shift();
+                Composite.remove(world, oldest.body);
+            }
+
+            const startX = state.canvasWidth / 2 + (Math.random() * 40 - 20);
+            
+            // מעירים את כל הכדורים הנחים כדי שיגיבו למכה
+            state.bubbles.forEach(b => Sleeping.set(b.body, false));
+
+            // הגדרות פיזיקה לכדור רגיל (כמו כדור סנוקר רגיל)
+            let options = {
+                restitution: 0.7, friction: 0.01, frictionAir: 0.005, density: 0.05
+            };
+
+            if (isBreach) {
+                // הכדור הצהוב ("מכת פתיחה"): כבד פי 8 וקופצני יותר!
+                options.density = 0.4;
+                options.restitution = 0.85;
+            }
+
+            const body = Bodies.circle(startX, 60, BUBBLE_RADIUS, options);
+
+            if (isBreach) {
+                // משגרים את הכדור כלפי מטה במהירות אדירה ליצירת אפקט הפיצוץ/סנוקר
+                Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 8, y: 30 });
+            }
+
+            state.bubbles.push({ id: Date.now(), body, radius: BUBBLE_RADIUS, isBreach, hasImpacted: false });
+            Composite.add(world, body);
+            if(navigator.vibrate) navigator.vibrate(isBreach ? 50 : 20);
+        }
+
+        function renderLoop() {
+            ctx.clearRect(0, 0, state.canvasWidth, state.canvasHeight);
+
+            state.bubbles.forEach(b => {
+                drawBubble(ctx, b.body.position.x, b.body.position.y, b.radius, b.body.angle, b.isBreach);
+            });
+
+            // רינדור חלקיקי הפיצוץ
+            for (let i = state.particles.length - 1; i >= 0; i--) {
+                let p = state.particles[i];
+                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= p.decay;
+                if (p.life <= 0) state.particles.splice(i, 1);
+                else {
+                    ctx.save(); ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowColor = p.color; ctx.shadowBlur = 4; ctx.fill(); ctx.restore();
+                }
+            }
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        function drawBubble(ctx, x, y, radius, bodyAngle, isBreach) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(bodyAngle);
+
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+
+            if (globalBubbleImgCache && !isBreach) {
+                // If global image is set, use it (unless it's a breach, breaches always glow yellow to stand out)
+                ctx.save();
+                ctx.clip();
+                ctx.globalAlpha = state.stageConfig?.bubbleOpacity !== undefined ? state.stageConfig.bubbleOpacity / 100 : 1;
+                ctx.drawImage(globalBubbleImgCache, -radius, -radius, radius * 2, radius * 2);
+                ctx.restore();
+            } else {
+                let baseColor, highlightColor, shadowGlow;
+                
+                if (isBreach) {
+                    baseColor = '#EAB308'; // Yellow-500
+                    highlightColor = '#FEF08A'; // Yellow-200
+                    shadowGlow = 'rgba(234, 179, 8, 0.8)';
+                    ctx.shadowBlur = radius * 1.5; // Stronger glow for breach
+                } else {
+                    baseColor = '#3B82F6'; // Blue-500
+                    highlightColor = '#93C5FD'; // Blue-200
+                    shadowGlow = 'rgba(0,0,0,0.3)';
+                    ctx.shadowBlur = radius * 0.5;
+                }
+
+                ctx.shadowColor = shadowGlow;
+                ctx.shadowOffsetY = isBreach ? 0 : radius * 0.2; // Centered glow for breach
+
+                let grad = ctx.createRadialGradient(-radius*0.3, -radius*0.3, radius*0.1, 0, 0, radius);
+                grad.addColorStop(0, highlightColor);
+                grad.addColorStop(1, baseColor);
+                
+                ctx.fillStyle = grad;
+                ctx.fill();
+                
+                ctx.shadowColor = 'transparent';
+                ctx.beginPath(); ctx.arc(0, 0, radius - 1, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = radius * 0.05; ctx.stroke();
+                ctx.beginPath(); ctx.ellipse(0, -radius*0.5, radius*0.6, radius*0.25, 0, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // --- Interaction & UI Globals ---
+        window.renderHabitsUI = function() {
+            const list = document.getElementById('habitsList');
+            if(!list) return;
+            list.innerHTML = '';
+
+            state.userData.habits.forEach(habit => {
+                if(state.filter !== 'all' && habit.type !== state.filter) return;
+                const btn = document.createElement('button');
+                btn.className = `flex-shrink-0 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl shadow-lg backdrop-blur-md border border-white/10 bg-white/10 transition-transform relative select-none`;
+                btn.oncontextmenu = () => false; // מניעת פתיחת תפריט קליק ימני/לחיצה ארוכה
+                
+                const totalCount = (habit.count || 0) + (habit.breachCount || 0);
+                
+                btn.innerHTML = `
+                    <div class="relative w-5 h-5 flex items-center justify-center shrink-0">
+                        <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)" stroke-width="3" fill="none" />
+                            <circle class="progress-ring" cx="12" cy="12" r="10" stroke="#EAB308" stroke-width="3" fill="none" stroke-dasharray="62.8" stroke-dashoffset="62.8" stroke-linecap="round" />
+                        </svg>
+                        <div class="center-dot w-2 h-2 rounded-full shadow-inner bg-blue-400 z-10 transition-colors duration-300 pointer-events-none"></div>
+                    </div>
+                    <span class="text-white font-bold text-sm drop-shadow-md pointer-events-none">${habit.name}</span>
+                    <span class="text-white/60 text-xs ml-1 font-medium pointer-events-none">(${totalCount})</span>
+                `;
+                
+                let pressTimer;
+                let isPressed = false;
+                let isBreachReady = false;
+                
+                const progressRing = btn.querySelector('.progress-ring');
+                const centerDot = btn.querySelector('.center-dot');
+
+                const resetPress = () => {
+                    isPressed = false;
+                    isBreachReady = false;
+                    btn.style.transform = 'scale(1)';
+                    progressRing.style.transition = 'none';
+                    progressRing.style.strokeDashoffset = '62.8';
+                    centerDot.classList.replace('bg-yellow-400', 'bg-blue-400');
+                };
+
+                const cancelPress = () => {
+                    clearTimeout(pressTimer);
+                    resetPress();
+                };
+
+                const startPress = (e) => {
+                    isPressed = true;
+                    isBreachReady = false;
+                    btn.style.transform = 'scale(0.95)';
+                    
+                    // מתחיל אנימציית טעינה של העיגול הצהוב
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            progressRing.style.transition = 'stroke-dashoffset 500ms linear';
+                            progressRing.style.strokeDashoffset = '0';
+                        });
+                    });
+                    
+                    pressTimer = setTimeout(() => {
+                        if(!isPressed) return;
+                        isBreachReady = true;
+                        centerDot.classList.replace('bg-blue-400', 'bg-yellow-400');
+                        if(navigator.vibrate) navigator.vibrate(50); // רטט כשהטעינה הושלמה
+                    }, LONG_PRESS_DURATION);
+                };
+
+                const endPress = (e) => {
+                    if(!isPressed) return;
+                    clearTimeout(pressTimer);
+                    
+                    // בדיקה אם הרימו את האצבע בתוך הכפתור או מחוץ לו
+                    let clientX, clientY;
+                    if (e.changedTouches && e.changedTouches.length > 0) {
+                        clientX = e.changedTouches[0].clientX;
+                        clientY = e.changedTouches[0].clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+                    
+                    const rect = btn.getBoundingClientRect();
+                    const isInside = clientX >= rect.left && clientX <= rect.right &&
+                                     clientY >= rect.top && clientY <= rect.bottom;
+
+                    if (isInside) {
+                        window.spawnFallingBubble(habit.id, isBreachReady);
+                    }
+                    
+                    resetPress();
+                };
+
+                // Mouse Events
+                btn.addEventListener('mousedown', startPress);
+                btn.addEventListener('mouseup', endPress);
+                btn.addEventListener('mouseleave', cancelPress);
+                
+                // Touch Events
+                btn.addEventListener('touchstart', startPress, {passive: true});
+                btn.addEventListener('touchend', (e) => { e.preventDefault(); endPress(e); });
+                btn.addEventListener('touchcancel', cancelPress);
+
+                list.appendChild(btn);
+            });
+        }
+
+        window.toggleSettings = () => document.getElementById('settingsModal').classList.toggle('opacity-0') || document.getElementById('settingsModal').classList.toggle('pointer-events-none');
+        window.toggleFilter = () => {
+            const ind = document.getElementById('filterIndicator');
+            if(state.filter === 'all') { state.filter = 'positive'; ind.className = "absolute top-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#1e293b]"; }
+            else if (state.filter === 'positive') { state.filter = 'negative'; ind.className = "absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-[#1e293b]"; }
+            else { state.filter = 'all'; ind.classList.add('hidden'); }
+            window.renderHabitsUI();
+        }
+        window.changeView = (mode) => { state.view = mode; window.renderHabitsUI(); }
+
+        window.openAddHabitModal = () => {
+            document.getElementById('addHabitModal').classList.replace('translate-y-full', 'translate-y-0');
+            state.floorTargetY = state.canvasHeight - (document.getElementById('addHabitModal').offsetHeight || 350) + 50;
+            setTimeout(() => document.getElementById('newHabitName').focus(), 300);
+        }
+        window.closeAddHabitModal = () => {
+            document.getElementById('addHabitModal').classList.replace('translate-y-0', 'translate-y-full');
+            state.floorTargetY = state.canvasHeight - getDrawerHeight() + 50;
+        }
+        window.selectNewHabitType = (type) => state.newHabitType = type;
+        window.saveNewHabit = () => {
+            const name = document.getElementById('newHabitName').value.trim();
+            if(!name) return;
+            const newHabit = { id: Date.now(), name, type: state.newHabitType, count: 0, breachCount: 0 };
+            state.userData.habits.push(newHabit);
+            window.closeAddHabitModal();
+            saveUserData();
+            window.renderHabitsUI();
+        }
+
+        window.advanceDebugDay = () => {
+            state.userData.debugDaysAdded++;
+            saveUserData();
+            calculateTimeAndStage();
+        }
+
+        // --- Authentication Actions (Google / Supabase) ---
+        window.openAuthModal = () => {
+            if(state.user) { supabaseClient.auth.signOut(); return; }
+            document.getElementById('settingsModal').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('authModal').classList.replace('hidden', 'flex');
+        }
+        window.closeAuthModal = () => document.getElementById('authModal').classList.replace('flex', 'hidden');
+        
+        window.loginWithGoogle = async () => {
+            const err = document.getElementById('authError');
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.origin + window.location.pathname }
+                });
+                if (error) throw error;
+            } catch (error) {
+                err.innerText = "שגיאה: " + error.message;
+                err.classList.remove('hidden');
+            }
+        }
+
+        // --- Admin Panel ---
+        window.openAdminPanel = () => {
+            window.toggleSettings();
+            document.getElementById('adminModal').classList.replace('hidden', 'flex');
+            const select = document.getElementById('adminStageSelect');
+            select.innerHTML = '';
+            for(let i=1; i<=30; i++) select.innerHTML += `<option value="${i}">שלב ${i}</option>`;
+            select.value = state.currentStage;
+            window.loadAdminStageData();
+        }
+        window.closeAdminPanel = () => document.getElementById('adminModal').classList.replace('flex', 'hidden');
+        
+        window.loadAdminStageData = async () => {
+            const stageId = document.getElementById('adminStageSelect').value;
+            document.getElementById('adminStageInfo').innerText = `עריכת שלב מספר ${stageId}`;
+            try {
+                const { data, error } = await supabaseClient.from('user_data').select('app_data').eq('user_id', `stage_config_${stageId}`).maybeSingle();
+                if(data && data.app_data) {
+                    document.getElementById('adminBgOpacity').value = data.app_data.bgOpacity !== undefined ? data.app_data.bgOpacity : 80;
+                    document.getElementById('adminBubbleOpacity').value = data.app_data.bubbleOpacity !== undefined ? data.app_data.bubbleOpacity : 100;
+                } else {
+                    document.getElementById('adminBgOpacity').value = 80;
+                    document.getElementById('adminBubbleOpacity').value = 100;
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        window.saveAdminStageData = async () => {
+            const stageId = document.getElementById('adminStageSelect').value;
+            const bgFile = document.getElementById('adminBgImage').files[0];
+            const bubbleFile = document.getElementById('adminBubbleImage').files[0];
+            const bgOp = parseInt(document.getElementById('adminBgOpacity').value);
+            const bubOp = parseInt(document.getElementById('adminBubbleOpacity').value);
+            
+            document.getElementById('adminSaveBtn').innerText = "שומר...";
+            
+            const payload = { bgOpacity: bgOp, bubbleOpacity: bubOp };
+            
+            const finalize = async () => {
+                await supabaseClient.from('user_data').upsert({ user_id: `stage_config_${stageId}`, app_data: payload });
+                document.getElementById('adminSaveBtn').innerText = "שמור הגדרות שלב";
+                document.getElementById('adminFeedback').classList.remove('hidden');
+                setTimeout(()=>document.getElementById('adminFeedback').classList.add('hidden'), 3000);
+            }
+
+            let uploadsRemaining = (bgFile ? 1 : 0) + (bubbleFile ? 1 : 0);
+            if(uploadsRemaining === 0) return finalize();
+
+            if(bgFile) compressImage(bgFile, (base64) => { payload.bgImage = base64; uploadsRemaining--; if(uploadsRemaining===0) finalize(); });
+            if(bubbleFile) compressImage(bubbleFile, (base64) => { payload.bubbleImage = base64; uploadsRemaining--; if(uploadsRemaining===0) finalize(); });
+        }
+
+        // --- Boot ---
+        window.addEventListener('resize', () => {
+            state.canvasWidth = container.clientWidth; state.canvasHeight = container.clientHeight;
+            canvas.width = state.canvasWidth; canvas.height = state.canvasHeight;
+            setupWalls();
+        });
+
+        window.onload = () => {
+            state.canvasWidth = container.clientWidth; state.canvasHeight = container.clientHeight;
+            canvas.width = state.canvasWidth; canvas.height = state.canvasHeight;
+            initPhysics(); 
+            initAuth(); 
+        };
+
+    </script>
 </body>
 </html>
