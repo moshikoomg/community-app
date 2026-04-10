@@ -65,7 +65,7 @@
     import { createClient } from '@supabase/supabase-js';
     import autoAnimate from '@formkit/auto-animate';
     import { 
-      Star, Check, Lightbulb, Trophy, Crown, Medal, Award, Users, ArrowLeft, TrendingUp, Menu, Plus, Clock, Trash2, GripVertical, ArrowUpToLine, ArrowDownAZ, Sun, Sunset, Moon, AlignLeft, ChevronDown, ChevronUp, Lock, Target, Send, Sparkles, PartyPopper, Search, AlertCircle, Move, Droplet, Zap, Edit3, Minus, Calendar, Camera, Settings, ArrowRight, User, Palette, CreditCard, Wrench, Share2, ChevronLeft, Flag, Loader2, Cloud, CloudOff, Shield, Flame, UserPlus
+      Star, Check, Lightbulb, Trophy, Crown, Medal, Award, Users, ArrowLeft, TrendingUp, Menu, Plus, Clock, Trash2, GripVertical, ArrowUpToLine, ArrowDownAZ, Sun, Sunset, Moon, AlignLeft, ChevronDown, ChevronUp, Lock, Target, Send, Sparkles, PartyPopper, Search, AlertCircle, Move, Droplet, Zap, Edit3, Minus, Calendar, Camera, Settings, ArrowRight, User, Palette, CreditCard, Wrench, Share2, ChevronLeft, Flag, Loader2, Cloud, CloudOff, Shield, Flame, UserPlus, RefreshCw
     } from 'lucide-react';
 
     const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
@@ -80,23 +80,12 @@
         habits: [{ id: 1, title: 'בדיקת המערכת', targetValue: 1, unit: 'פעם', bestTime: '08:00', streak: 120 }],
         tasks: [{ id: 't1', text: 'להעלות תמונות חדשות', date: '', time: '', notes: '', isDone: false, color: 'bg-white' }],
         visionBoard: { text: 'לנהל את האפליקציה בהצלחה!', imageUrl: null }
-      },
-      {
-        id: 'u1',
-        user: { name: 'אביב כהן', level: 14, xp: 45, shields: 2, perfectDaysStreak: 12, lastLoginDate: new Date().toISOString().split('T')[0] },
-        habits: [
-          { id: 1, title: 'שכיבות סמיכה', targetValue: 30, unit: 'חזרות', bestTime: '08:00', streak: 12 },
-          { id: 2, title: 'קריאת ספר', targetValue: 20, unit: 'דקות', bestTime: '22:00', streak: 8 }
-        ],
-        tasks: [{ id: 't1', text: 'לסיים את הפרויקט', date: '', time: '', notes: '', isDone: false, color: 'bg-blue-50' }],
-        visionBoard: { text: 'החזון של אביב: להיות בכושר שיא ולסיים לקרוא 12 ספרים בשנה.', imageUrl: null }
       }
     ];
 
     const INITIAL_HABITS_DATA = [
-      { id: 1, title: 'שכיבות סמיכה', targetValue: 15, unit: 'חזרות', bestTime: '09:00', streak: 12 },
-      { id: 2, title: 'שתיית מים', targetValue: 8, unit: 'כוסות', bestTime: '12:00', streak: 5 },
-      { id: 3, title: 'מדיטציה', targetValue: 15, unit: 'דקות', bestTime: '18:00', streak: 0 }
+      { id: 1, title: 'שכיבות סמיכה', targetValue: 15, unit: 'חזרות', bestTime: '09:00', streak: 0 },
+      { id: 2, title: 'שתיית מים', targetValue: 8, unit: 'כוסות', bestTime: '12:00', streak: 0 }
     ];
 
     const getTodayDate = () => new Date().toISOString().split('T')[0];
@@ -114,56 +103,24 @@
       id: idx + 1, completed: idx === 0, label: name, imageUrl: null, characterImageUrl: null
     }));
 
-    const NLP_QUESTIONS = [
-      "אילו הרגלים ותכונות תרצה לרכוש כדי להגשים את החזון?",
-      "אילו אנשים תרצה לפגוש יותר בחייך שיקדמו אותך למטרה?",
-      "אילו אמונות מגבילות היית רוצה להטיל בהן ספק ולאמץ חדשות?",
-      "איך ייראה יום אידיאלי בחייך בעוד שנה מהיום?",
-      "מהו הצעד הקטן והפשוט ביותר שאתה יכול לעשות כבר היום?"
-    ];
+    const NLP_QUESTIONS = ["אילו הרגלים תרצה לרכוש?", "איך ייראה יום אידיאלי?", "מהו הצעד הקטן ביותר היום?"];
 
     const CURRENT_DAY = 10;
     const TARGET_DAY = 17;
-
-    const TASK_COLORS = [
-      { id: 'white', class: 'bg-white', border: 'border-gray-200' },
-      { id: 'blue', class: 'bg-blue-50', border: 'border-blue-200' },
-      { id: 'red', class: 'bg-red-50', border: 'border-red-200' },
-      { id: 'orange', class: 'bg-orange-50', border: 'border-orange-200' },
-      { id: 'green', class: 'bg-green-50', border: 'border-green-200' },
-      { id: 'purple', class: 'bg-purple-50', border: 'border-purple-200' }
-    ];
 
     const ALL_DAYS = Array.from({ length: 35 }, (_, i) => {
       const date = i + 1;
       const labels = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
       const status = date < CURRENT_DAY ? 'past' : (date === CURRENT_DAY ? 'today' : 'future');
-      let completionLevel = 'none';
-      if (status === 'past') {
-        if (date % 4 === 0) completionLevel = 'all_extra';
-        else if (date % 3 === 0) completionLevel = 'some_extra';
-        else if (date % 2 === 0) completionLevel = 'all_done';
-        else completionLevel = 'partial';
-      }
-      return { date, label: labels[(date - 1) % 7], status, isToday: date === CURRENT_DAY, isTarget: date === TARGET_DAY, completionLevel };
+      return { date, label: labels[(date - 1) % 7], status, isToday: date === CURRENT_DAY, isTarget: date === TARGET_DAY };
     });
 
-    const SettingsMenuItem = ({ icon, label, onClick }) => (
-      <button onClick={onClick} className="w-full bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:border-gray-200 active:scale-[0.98] transition-all">
-          <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500">{icon}</div>
-              <span className="font-bold text-sm c-dark">{label}</span>
-          </div>
-          <ChevronLeft className="w-4 h-4 text-gray-300" />
-      </button>
-    );
-
-    const LoginScreen = ({ onLogin, onGuestLogin }) => {
+    const LoginScreen = ({ onGuestLogin }) => {
       const [isLoading, setIsLoading] = useState(false);
       const handleLogin = async () => {
         setIsLoading(true);
         try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.origin + window.location.pathname }
             });
@@ -177,17 +134,14 @@
         <div className="min-h-screen bg-[#F0F2F5] flex items-center justify-center font-sans" dir="rtl">
           <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] shadow-2xl flex flex-col items-center justify-center p-8">
             <Trophy className="w-20 h-20 text-[#007AFF] mb-6 drop-shadow-lg" />
-            <h1 className="text-3xl font-black mb-2 text-center text-gray-900">ברוכים הבאים</h1>
-            <p className="text-gray-500 text-center mb-10 px-4">התחבר כדי לשמור את ההרגלים וההתקדמות שלך בענן, או המשך כאורח כדי לנסות את האפליקציה.</p>
-            <button onClick={handleLogin} disabled={isLoading} className="btn-google w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg shadow-sm">
+            <h1 className="text-3xl font-black mb-2 text-center text-gray-900">אפליקציית הרגלים</h1>
+            <p className="text-gray-500 text-center mb-10 px-4">התחבר כדי לסנכרן את ההתקדמות שלך מהדאטה-בייס.</p>
+            <button onClick={handleLogin} disabled={isLoading} className="btn-google w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg shadow-sm mb-4">
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="G" />}
               התחברות עם Google
             </button>
-            <button onClick={() => onGuestLogin(false)} className="mt-8 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">
-              המשך כאורח (ללא שמירה בענן)
-            </button>
-            <button onClick={() => onGuestLogin(true)} className="mt-4 text-xs font-bold text-blue-400 hover:text-blue-600 transition-colors bg-blue-50 px-4 py-2 rounded-xl">
-              המשך כמנהל מערכת (טסט מקומי)
+            <button onClick={() => onGuestLogin(true)} className="w-full py-4 bg-blue-50 text-blue-600 rounded-2xl font-bold text-sm border border-blue-100 hover:bg-blue-100 transition-colors">
+              כניסת מנהל מערכת (Admin)
             </button>
           </div>
         </div>
@@ -199,49 +153,29 @@
       const [isAdmin, setIsAdmin] = useState(false);
       const [isGuest, setIsGuest] = useState(false); 
       const [isDataLoaded, setIsDataLoaded] = useState(false);
-      const [isSaveAllowed, setIsSaveAllowed] = useState(false); // מנעול אבטחה לשמירה
+      const [loadError, setLoadError] = useState(null);
+      const [isSaveAllowed, setIsSaveAllowed] = useState(false); 
       const [syncStatus, setSyncStatus] = useState('synced');
       
       const [habitsStatus, setHabitsStatus] = useState({});
       const [habits, setHabits] = useState(INITIAL_HABITS_DATA);
       const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
-      const [editingTaskId, setEditingTaskId] = useState(null);
+      const [tasks, setTasks] = useState([]);
+      const [user, setUser] = useState({ level: 1, xp: 0, shields: 0, perfectDaysStreak: 0, name: 'טוען...', lastLoginDate: getTodayDate() });
+      const [badges, setBadges] = useState(INITIAL_BADGES);
+      const [theme, setTheme] = useState({ primary: '#007AFF', gold: '#FFCC00', accent: '#FF9500', dark: '#1C1C1E', bgStart: '#F4F7F9', bgEnd: '#FFFFFF' });
+      const [avatars, setAvatars] = useState({ start: null });
+      const [visionBoard, setVisionBoard] = useState({ text: '', imageUrl: null });
       
+      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+      const [settingsView, setSettingsView] = useState('main');
+      const [isMenuOpen, setIsMenuOpen] = useState(false);
+      const [isScrolled, setIsScrolled] = useState(false);
+      const [showVisionPopup, setShowVisionPopup] = useState(false);
       const [animatingHabitId, setAnimatingHabitId] = useState(null);
 
       const calendarRef = useRef(null);
       const badgesRef = useRef(null); 
-      const scrollRef = useRef(null);
-      
-      const [user, setUser] = useState({ level: 1, xp: 0, shields: 0, perfectDaysStreak: 0, name: 'אורח', lastLoginDate: getTodayDate() });
-      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-      const [settingsView, setSettingsView] = useState('main'); 
-      const [badges, setBadges] = useState(INITIAL_BADGES);
-      const [theme, setTheme] = useState({ primary: '#007AFF', gold: '#FFCC00', accent: '#FF9500', dark: '#1C1C1E', bgStart: '#F4F7F9', bgEnd: '#FFFFFF' });
-      const [avatars, setAvatars] = useState({ start: null, firstAction: null, day10: null, levelUp: null });
-      const [isHabitWizardOpen, setIsHabitWizardOpen] = useState(false);
-      const [wizardStep, setWizardStep] = useState(1);
-      const [newHabitData, setNewHabitData] = useState({ action: '', quantityValue: 1, quantityUnit: 'דקות', bestTime: '10:00' });
-      const [tasks, setTasks] = useState([]);
-      const [newTaskText, setNewTaskText] = useState('');
-      const [newTaskColor, setNewTaskColor] = useState('bg-white');
-      const [draggedIdx, setDraggedIdx] = useState(null);
-      const [dragOverIdx, setDragOverIdx] = useState(null);
-      const [visionAnswer, setVisionAnswer] = useState('');
-      const [nlpQuestionIdx, setNlpQuestionIdx] = useState(0);
-      const [showCommunityPopup, setShowCommunityPopup] = useState(false);
-      const [isMenuOpen, setIsMenuOpen] = useState(false);
-      const [isScrolled, setIsScrolled] = useState(false);
-      const [showVisionPopup, setShowVisionPopup] = useState(false);
-      const [visionBoard, setVisionBoard] = useState({ text: '', imageUrl: null });
-
-      const tasksListRef = useRef(null);
-      const completedTasksListRef = useRef(null);
-
-      useEffect(() => {
-          if (tasksListRef.current) autoAnimate(tasksListRef.current, { duration: 300, easing: 'ease-in-out' });
-          if (completedTasksListRef.current) autoAnimate(completedTasksListRef.current, { duration: 300, easing: 'ease-in-out' });
-      }, [tasksListRef, completedTasksListRef]);
 
       const checkIsAdmin = (email) => {
           if (!email) return false;
@@ -249,129 +183,100 @@
           return e.includes('mosheally') || e.includes('moshally') || e.includes('moshe.ally');
       };
 
-      useEffect(() => {
-        const initAuth = async () => {
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            if (currentSession) {
-                setSession(currentSession);
-                setIsAdmin(checkIsAdmin(currentSession.user.email));
-                await loadUserData(currentSession);
-            }
-        };
-        initAuth();
+      // פונקציית טעינה מרכזית - לא נכנסים לאפליקציה בלי תשובה מהשרת
+      const startup = async (currentSession, asAdminManual = false) => {
+          setIsDataLoaded(false);
+          setIsSaveAllowed(false);
+          setLoadError(null);
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-          setSession(session);
-          if (session) {
-              setIsAdmin(checkIsAdmin(session.user.email));
-              await loadUserData(session);
+          try {
+              // 1. קריאה לנתוני האדמין (חובה לכולם)
+              const { data: globalData, error: globalErr } = await supabase
+                .from('user_data')
+                .select('app_data')
+                .eq('user_id', 'GLOBAL_ADMIN_DATA')
+                .maybeSingle();
+
+              if (globalErr) throw new Error("לא ניתן להתחבר לשרת הנתונים הגלובליים.");
+
+              if (globalData?.app_data) {
+                  const g = globalData.app_data;
+                  if (g.theme) setTheme(prev => ({ ...prev, ...g.theme }));
+                  if (g.badges) {
+                      setBadges(INITIAL_BADGES.map(b => {
+                          const saved = g.badges.find(gb => gb.id === b.id);
+                          return saved ? { ...b, characterImageUrl: saved.characterImageUrl, badgeImageUrl: saved.badgeImageUrl, imageUrl: saved.imageUrl } : b;
+                      }));
+                  }
+              }
+
+              // 2. קריאה לנתוני המשתמש
+              if (currentSession || asAdminManual) {
+                  const uid = asAdminManual ? 'admin_test_id' : currentSession.user.id;
+                  const { data: userData, error: userErr } = await supabase
+                    .from('user_data')
+                    .select('app_data')
+                    .eq('user_id', uid)
+                    .maybeSingle();
+
+                  if (userErr) throw new Error("שגיאה במשיכת נתוני המשתמש מהענן.");
+
+                  if (userData?.app_data) {
+                      const d = userData.app_data;
+                      if (d.habits) setHabits(d.habits);
+                      if (d.habitsStatus) setHabitsStatus(d.habitsStatus);
+                      if (d.tasks) setTasks(d.tasks);
+                      if (d.user) setUser(prev => ({ ...prev, ...d.user }));
+                      if (d.avatars) setAvatars(prev => ({ ...prev, ...d.avatars }));
+                      if (d.visionBoard) setVisionBoard(d.visionBoard);
+                  } else {
+                      // משתמש חדש לגמרי
+                      const name = asAdminManual ? 'משה (אדמין)' : (currentSession?.user?.user_metadata?.full_name?.split(' ')[0] || 'משתמש');
+                      setUser({ level: 1, xp: 0, shields: 0, perfectDaysStreak: 0, name, lastLoginDate: getTodayDate() });
+                  }
+              }
+
+              setIsDataLoaded(true);
+              // פתיחת מנעול השמירה רק אחרי 3 שניות של יציבות
+              setTimeout(() => setIsSaveAllowed(true), 3000);
+
+          } catch (err) {
+              console.error(err);
+              setLoadError(err.message);
+          }
+      };
+
+      useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session: s } }) => {
+          if (s) {
+              setSession(s);
+              setIsAdmin(checkIsAdmin(s.user.email));
+              startup(s);
+          }
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+          if (s) {
+              setSession(s);
+              setIsAdmin(checkIsAdmin(s.user.email));
+              startup(s);
           } else {
+              setSession(null);
               setIsAdmin(false);
           }
         });
         return () => subscription.unsubscribe();
       }, []);
 
-      const loadGlobalAdminData = async () => {
-          try {
-              const { data, error } = await supabase.from('user_data').select('app_data').eq('user_id', 'GLOBAL_ADMIN_DATA').single();
-              if (data && data.app_data) return data.app_data;
-          } catch (e) {}
-          return null;
-      };
-
-      const handleGuestLogin = async (asAdmin = false) => { 
-          setIsDataLoaded(false);
-          setIsSaveAllowed(false);
-          setIsGuest(true); 
+      const handleGuestLogin = (asAdmin = false) => {
+          setIsGuest(true);
           setIsAdmin(asAdmin);
-          
-          if (asAdmin) {
-              const adminMock = MOCK_TEST_USERS.find(u => u.id === 'admin');
-              if (adminMock) {
-                  setUser(adminMock.user);
-                  setHabits(adminMock.habits);
-                  setTasks(adminMock.tasks);
-                  setVisionBoard(adminMock.visionBoard);
-              }
-          }
-
-          const globalData = await loadGlobalAdminData();
-          if (globalData) {
-              if (globalData.theme) setTheme(prev => ({ ...prev, ...globalData.theme }));
-              if (globalData.badges) {
-                  setBadges(INITIAL_BADGES.map(b => {
-                      const saved = globalData.badges.find(gb => gb.id === b.id);
-                      return saved ? { ...b, characterImageUrl: saved.characterImageUrl, badgeImageUrl: saved.badgeImageUrl, imageUrl: saved.imageUrl } : b;
-                  }));
-              }
-          }
-          setIsDataLoaded(true);
-          setTimeout(() => setIsSaveAllowed(true), 2000); 
-          checkNewDayAndShields(); 
+          startup(null, asAdmin);
       };
 
-      const loadUserData = async (currentSession) => {
-        try {
-            const [userRes, globalData] = await Promise.all([
-                supabase.from('user_data').select('app_data').eq('user_id', currentSession.user.id).maybeSingle(),
-                loadGlobalAdminData()
-            ]);
-            
-            // טעינת עיצוב אדמין (חובה לכולם)
-            if (globalData) {
-                if (globalData.theme) setTheme(prev => ({ ...prev, ...globalData.theme }));
-                if (globalData.badges) {
-                    setBadges(INITIAL_BADGES.map(b => {
-                        const saved = globalData.badges.find(gb => gb.id === b.id);
-                        return saved ? { ...b, characterImageUrl: saved.characterImageUrl, badgeImageUrl: saved.badgeImageUrl, imageUrl: saved.imageUrl } : b;
-                    }));
-                }
-            }
-
-            const d = userRes.data?.app_data;
-            if (d) {
-               if (d.habits) setHabits(d.habits);
-               if (d.habitsStatus) setHabitsStatus(d.habitsStatus);
-               if (d.tasks) setTasks(d.tasks);
-               if (d.user) setUser(prev => ({ ...prev, ...d.user }));
-               if (d.avatars) setAvatars(prev => ({ ...prev, ...d.avatars }));
-               if (d.visionBoard) setVisionBoard(d.visionBoard);
-            } else {
-               const fullName = currentSession?.user?.user_metadata?.full_name || 'משתמש';
-               setUser(prev => ({ ...prev, name: fullName.split(' ')[0], xp: 0, level: 1, shields: 0, perfectDaysStreak: 0, lastLoginDate: getTodayDate() }));
-               setTasks([]);
-            }
-        } catch (e) {
-            console.error("Error loading user data:", e);
-        } finally {
-            setIsDataLoaded(true);
-            setTimeout(() => setIsSaveAllowed(true), 2000); // אפשור שמירה רק אחרי שהמידע נפרס
-            checkNewDayAndShields();
-        }
-      };
-
-      const checkNewDayAndShields = () => {
-        const today = getTodayDate();
-        setUser(prevUser => {
-          if (prevUser.lastLoginDate !== today) {
-            let shieldsToUse = 0;
-            let currentShields = prevUser.shields || 0;
-            let missedHabits = false;
-            let allCompletedYesterday = true;
-            habits.forEach(h => { if (!habitsStatus[h.id] || habitsStatus[h.id] === 'none') { missedHabits = true; allCompletedYesterday = false; if (currentShields > shieldsToUse) shieldsToUse++; } });
-            let newShields = currentShields - shieldsToUse;
-            let newPerfectStreak = prevUser.perfectDaysStreak || 0;
-            if (allCompletedYesterday) { newPerfectStreak++; if (newPerfectStreak % 10 === 0 && newShields < 3) newShields++; } 
-            else { const missedCount = habits.filter(h => !habitsStatus[h.id] || habitsStatus[h.id] === 'none').length; if (missedCount > currentShields) newPerfectStreak = 0; }
-            return { ...prevUser, lastLoginDate: today, shields: newShields, perfectDaysStreak: newPerfectStreak };
-          }
-          return prevUser;
-        });
-      };
-
+      // מנגנון שמירה אוטומטי - חסום עד שהמידע נטען במלואו
       useEffect(() => {
-        if (!isDataLoaded || !isSaveAllowed) return; // לא שומרים עד שהכל נטען
+        if (!isDataLoaded || !isSaveAllowed) return;
         if (!session && !isAdmin) return;
 
         setSyncStatus('saving');
@@ -379,8 +284,10 @@
            try {
                let hasError = false;
                if (session) {
-                   const appDataToSave = { habits, habitsStatus, tasks, user, avatars, visionBoard };
-                   const { error } = await supabase.from('user_data').upsert({ user_id: session.user.id, app_data: appDataToSave });
+                   const { error } = await supabase.from('user_data').upsert({ 
+                       user_id: session.user.id, 
+                       app_data: { habits, habitsStatus, tasks, user, avatars, visionBoard } 
+                   });
                    if (error) hasError = true;
                }
                if (isAdmin) {
@@ -392,129 +299,40 @@
                }
                setSyncStatus(hasError ? 'error' : 'synced');
            } catch(e) { setSyncStatus('error'); }
-        }, 2000); 
+        }, 3000); 
         return () => clearTimeout(timer);
-      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard, isDataLoaded, isSaveAllowed, session, isAdmin]);
+      }, [habits, habitsStatus, tasks, user, theme, badges, avatars, visionBoard]);
 
-      const handleSwitchToMockUser = (mockUser) => {
-        setIsSaveAllowed(false);
-        setIsDataLoaded(false);
-        setTimeout(() => {
-          setUser(mockUser.user);
-          setHabits(mockUser.habits);
-          setTasks(mockUser.tasks);
-          setVisionBoard(mockUser.visionBoard);
-          setHabitsStatus({});
-          setIsAdmin(mockUser.isAdmin || false);
-          setIsDataLoaded(true);
-          setIsGuest(true);
-          setIsSettingsOpen(false);
-          setSettingsView('main');
-          setTimeout(() => setIsSaveAllowed(true), 1500);
-        }, 300);
-      };
-
-      const activeAvatar = useMemo(() => {
-        if (session && session?.user?.user_metadata?.avatar_url && !avatars.start) return session.user.user_metadata.avatar_url;
-        if (user.level > 1 && avatars.levelUp) return avatars.levelUp;
-        if (CURRENT_DAY >= 10 && avatars.day10) return avatars.day10;
-        const hasDoneSomething = Object.values(habitsStatus).some(s => s !== 'none') || tasks.some(t => t.isDone);
-        if (hasDoneSomething && avatars.firstAction) return avatars.firstAction;
-        return avatars.start;
-      }, [user.level, habitsStatus, tasks, avatars, session]);
-
-      const handleBadgeImageUpload = (badgeId, type, e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => setBadges(prev => prev.map(b => b.id === badgeId ? { ...b, [type]: event.target.result } : b));
-          reader.readAsDataURL(file);
-        }
-      };
-
-      const addXP = (amount) => {
-        setUser(prev => {
-          const currentXp = prev.xp || 0;
-          const currentLevel = prev.level || 1;
-          const xpNeeded = currentLevel * 100;
-          const totalXp = currentXp + amount;
-          if (totalXp >= xpNeeded) return { ...prev, level: currentLevel + 1, xp: totalXp - xpNeeded };
-          return { ...prev, xp: totalXp };
-        });
-      };
-
-      const activeTasks = tasks.filter(t => !t.isDone) || [];
-      const completedTasks = tasks.filter(t => t.isDone) || [];
-      const [isCardCompletedAnim, setIsCardCompletedAnim] = useState(false);
-      const [showTrophyReminder, setShowTrophyReminder] = useState(CURRENT_DAY < TARGET_DAY - 2);
-
-      const handleHabitClick = (habit) => {
-        let status = habitsStatus[habit.id] || 'none';
-        const aiData = getSimulatedAIBreakdown(habit);
-        if (status === 'none') {
-            const newState = aiData.level === 'standard' ? 'std_done' : 'min_done';
-            setHabitsStatus(prev => ({ ...prev, [habit.id]: newState }));
-            addXP(aiData.level === 'standard' ? 15 : 10); 
-            setAnimatingHabitId(habit.id);
-            setTimeout(() => setAnimatingHabitId(null), 1000); 
-            setHabits(prev => prev.map(h => h.id === habit.id ? { ...h, streak: (h.streak || 0) + 1 } : h));
-        } else if (status === 'min_done') {
-            setHabitsStatus(prev => ({ ...prev, [habit.id]: 'std_done' }));
-            addXP(5); 
-            setAnimatingHabitId(habit.id);
-            setTimeout(() => setAnimatingHabitId(null), 1000);
-        } else if (status === 'std_done') {
-            setHabitsStatus(prev => ({ ...prev, [habit.id]: 'extra' }));
-            addXP(10); 
-            setAnimatingHabitId(habit.id);
-            setTimeout(() => setAnimatingHabitId(null), 1000);
-        }
-      };
-
-      const getSimulatedAIBreakdown = (habit) => {
-        const now = new Date();
-        const [bestH, bestM] = habit.bestTime.split(':').map(Number);
-        const bestTimeDate = new Date();
-        bestTimeDate.setHours(bestH, bestM, 0);
-        const diffInHours = (now - bestTimeDate) / (1000 * 60 * 60);
-        if (diffInHours <= 0) return { title: habit.title, target: habit.targetValue, unit: habit.unit, level: 'standard' };
-        if (diffInHours <= 1) return { title: habit.title, target: 1, unit: habit.unit === 'חזרות' ? 'חזרה' : 'כוס', level: 'minimum' };
-        return { title: `קצת ${habit.title}`, target: '0.5', unit: habit.unit, level: 'micro' };
-      };
-
-      const handleVisionSend = () => {
-        if (!visionAnswer.trim()) return;
-        const ans = visionAnswer.trim();
-        setVisionAnswer('');
-        addXP(5);
-        let aiAddition = `\n\nאני מתחייב ל: "${ans}"`;
-        setVisionBoard(prev => ({ ...prev, text: (prev.text ? prev.text + aiAddition : aiAddition.trim()) }));
-        setNlpQuestionIdx((prev) => (prev + 1) % NLP_QUESTIONS.length);
-      };
-
-      const handleLogout = async () => {
-        setIsSaveAllowed(false);
-        if (!isGuest) await supabase.auth.signOut();
-        setIsGuest(false);
-        setIsAdmin(false);
-        setSession(null);
-        setIsDataLoaded(false);
-      };
-
-      const todayFormatted = useMemo(() => new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long' }).format(new Date()), []);
-      const handleMainScroll = (e) => setIsScrolled(e.target.scrollTop > 20);
-      const scrollToTargetDay = () => document.getElementById(`day-${TARGET_DAY}`)?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-      const cardClassName = "w-full flex-shrink-0 snap-center snap-always flex items-center justify-center px-1";
+      // רנדור מסכי טעינה ושגיאה
+      if (loadError) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-white p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+            <h2 className="text-2xl font-black mb-2">בעיית חיבור לענן</h2>
+            <p className="text-gray-500 mb-8">{loadError}</p>
+            <button onClick={() => window.location.reload()} className="bg-dark text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2">
+                <RefreshCw className="w-5 h-5" /> נסה להתחבר שוב
+            </button>
+        </div>
+      );
 
       if (!session && !isGuest) return <LoginScreen onGuestLogin={handleGuestLogin} />;
-      if (!isDataLoaded) return <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] text-gray-500 font-bold"><Loader2 className="w-8 h-8 animate-spin ml-2"/> מסנכרן נתונים...</div>;
+      
+      if (!isDataLoaded) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#F0F2F5] text-gray-500 font-bold gap-4">
+           <Loader2 className="w-12 h-12 animate-spin text-blue-500"/>
+           <div className="text-center">
+              <p className="text-lg mb-1">יוצר קשר עם הענן...</p>
+              <p className="text-[10px] font-normal opacity-60">האפליקציה ממתינה לסנכרון נתונים מלא כדי למנוע כפילויות</p>
+           </div>
+        </div>
+      );
 
+      // משתני עזר לתצוגה
       const currentLevel = user.level || 1;
       const currentBadge = badges.find(b => b.id === currentLevel);
-      const activeCharacterImg = currentBadge?.characterImageUrl || activeAvatar; 
-      const headerAvatar = currentBadge?.badgeImageUrl || currentBadge?.imageUrl || activeCharacterImg; 
-      const shieldsCount = user.shields || 0;
-      const stackTasks = activeTasks.slice(0, 3);
+      const activeCharacterImg = currentBadge?.characterImageUrl || avatars.start; 
+      const headerAvatar = currentBadge?.badgeImageUrl || activeCharacterImg; 
+      const activeTasks = tasks?.filter(t => !t.isDone) || [];
 
       return (
         <div className="min-h-screen bg-[#F0F2F5] flex items-center justify-center font-sans" dir="rtl">
@@ -524,15 +342,14 @@
             .bg-primary { background-color: ${theme.primary} !important; }
             .c-dark { color: ${theme.dark} !important; }
             .bg-dark { background-color: ${theme.dark} !important; }
-            .no-scrollbar::-webkit-scrollbar { display: none; }
-            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
           `}</style>
 
           <div className="w-full h-screen md:h-[844px] md:max-w-[390px] bg-white md:rounded-[3rem] md:shadow-2xl md:border-[12px] md:border-[#1C1C1E] relative overflow-hidden flex flex-col transition-all">
             
-            <div className={`absolute top-0 left-0 w-full z-[150] px-4 py-3 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm' : 'bg-transparent shadow-none'}`}>
-              <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+            {/* Header */}
+            <div className={`absolute top-0 left-0 w-full z-[150] px-4 py-3 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm' : 'bg-transparent'}`}>
+              <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
                   {headerAvatar ? <img src={headerAvatar} className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
                 </div>
                 <div className="flex flex-col text-right bg-white/40 px-2 py-0.5 rounded-lg backdrop-blur-sm">
@@ -541,21 +358,8 @@
                 </div>
               </button>
 
-              <div className="flex flex-col items-center bg-white/40 px-3 py-1 rounded-xl backdrop-blur-sm">
-                <span className="text-[11px] font-black text-gray-700">{todayFormatted}</span>
-                {shieldsCount > 0 && (
-                  <div className="flex items-center gap-1 mt-1">
-                    {[1, 2, 3].map((num) => (
-                      <Shield key={num} className={`w-3.5 h-3.5 ${num <= shieldsCount ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} />
-                    ))}
-                  </div>
-                )}
-              </div>
-
               <div className="flex items-center gap-1 bg-white/40 rounded-full backdrop-blur-sm px-1">
-                 {isGuest && !isAdmin ? (
-                   <div className="p-1.5"><CloudOff className="w-4 h-4 text-gray-400"/></div>
-                 ) : syncStatus === 'saving' ? (
+                 {syncStatus === 'saving' ? (
                    <div className="p-1.5"><Loader2 className="w-4 h-4 animate-spin text-blue-500"/></div>
                  ) : syncStatus === 'error' ? (
                    <div className="p-1.5"><AlertCircle className="w-4 h-4 text-red-500"/></div>
@@ -565,31 +369,32 @@
               </div>
             </div>
 
-            <div onScroll={handleMainScroll} className="flex-1 overflow-y-auto theme-bg-gradient c-dark no-scrollbar relative">
+            {/* Main Content */}
+            <div onScroll={(e) => setIsScrolled(e.target.scrollTop > 20)} className="flex-1 overflow-y-auto theme-bg-gradient c-dark no-scrollbar relative">
               <div className="w-full px-4 pb-24 pt-20">
                 {activeCharacterImg && (
                   <div className="relative w-full h-[300px] mb-2 flex items-center justify-center animate-in zoom-in-95 duration-700">
-                     <div className="absolute w-64 h-64 bg-gray-300/30 rounded-full blur-3xl"></div>
                      <img src={activeCharacterImg} alt="Avatar" className="relative z-10 max-h-full object-contain drop-shadow-2xl" />
                   </div>
                 )}
 
+                {/* Badge Row */}
                 <div className="relative w-full z-20 -mt-12 mb-4">
-                  <div ref={badgesRef} className="flex flex-row-reverse w-full overflow-x-auto no-scrollbar snap-x snap-mandatory py-4">
+                  <div className="flex flex-row-reverse w-full overflow-x-auto no-scrollbar snap-x snap-mandatory py-4">
                     <div className="flex-shrink-0 w-[calc(50%-45px)]" />
                     {badges.map((badge) => {
                       const isCompleted = currentLevel >= badge.id;
                       const isCurrent = currentLevel === badge.id;
                       const displayBadgeImage = badge.badgeImageUrl || badge.imageUrl;
                       return (
-                        <div key={badge.id} id={`badge-${badge.id}`} className="snap-center flex-shrink-0 w-[90px] flex flex-col items-center justify-center">
+                        <div key={badge.id} className="snap-center flex-shrink-0 w-[90px] flex flex-col items-center justify-center">
                           <div className="relative w-16 h-16 flex items-center justify-center mb-2">
                             {isCurrent && <div className="absolute w-20 h-20 rounded-full animate-halo-current" style={{ background: 'radial-gradient(circle, #FFCC00 20%, transparent 70%)' }}></div>}
                             <div className={`relative z-10 w-full h-full transition-all duration-500 ${isCurrent ? 'animate-badge-current drop-shadow-xl' : isCompleted ? 'scale-100' : 'opacity-40 grayscale scale-90'}`}>
                               {displayBadgeImage ? <img src={displayBadgeImage} className="w-full h-full object-contain" /> : <div className="w-[80%] h-[80%] rounded-full border-2 border-dashed border-gray-300 opacity-50 mx-auto mt-2"></div>}
                             </div>
                           </div>
-                          <span className={`text-[12px] font-black transition-all ${isCurrent ? 'c-primary scale-110' : 'text-gray-400'}`}>{badge.label}</span>
+                          <span className={`text-[12px] font-black ${isCurrent ? 'c-primary scale-110' : 'text-gray-400'}`}>{badge.label}</span>
                         </div>
                       );
                     })}
@@ -597,119 +402,63 @@
                   </div>
                 </div>
 
-                <section className="mb-2 relative w-full h-20">
-                  <div ref={calendarRef} className="flex flex-row-reverse w-full overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 pt-2">
-                    <div className="flex-shrink-0 w-[40%]" />
-                    {ALL_DAYS.map((day) => (
-                      <div key={day.date} id={`day-${day.date}`} className="day-item flex flex-col items-center flex-shrink-0 w-[20%] snap-center">
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border-2 ${day.isToday ? 'bg-dark text-white scale-110 shadow-xl' : day.status === 'past' ? (day.completionLevel === 'all_extra' ? 'bg-gold' : 'bg-gray-300') : 'bg-white text-gray-500 border-gray-50'}`}>
-                          <span className="text-sm font-black">{day.isTarget ? <Trophy className="w-5 h-5 fill-current" /> : day.status === 'past' ? <Check className="w-5 h-5 stroke-[4px]" /> : day.date}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex-shrink-0 w-[40%]" />
-                  </div>
-                </section>
-
+                {/* Habit List */}
                 <section className="space-y-4 mt-6">
                   <div className="flex justify-between items-center px-1">
                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">הרגלים</h3>
-                    <button onClick={() => setIsHabitWizardOpen(true)} className="text-xs font-bold c-primary flex items-center gap-1"><Plus className="w-3 h-3"/> חדש</button>
                   </div>
-                  {habits.map((habit, index) => {
-                    let status = habitsStatus[habit.id] || 'none';
-                    const aiData = getSimulatedAIBreakdown(habit);
-                    const isAnimating = animatingHabitId === habit.id;
-                    return (
-                      <div key={habit.id} className="relative flex flex-row-reverse items-stretch gap-3">
-                        <div className={`flex-1 p-4 rounded-2xl border flex flex-row-reverse items-center justify-between transition-all ${status === 'std_done' ? 'bg-gray-50/80 opacity-70' : 'bg-white border-gray-100 shadow-sm'}`}>
-                          <div className="text-right flex-1 pr-2">
-                            <h4 className={`font-black text-sm ${status === 'std_done' ? 'line-through text-gray-400' : 'c-dark'}`}>{status === 'none' ? aiData.title : habit.title}</h4>
-                            <div className="flex flex-row-reverse items-center gap-2 mt-1">
-                              {habit.streak > 0 && <div className="flex items-center gap-0.5 bg-orange-50 px-1.5 rounded-md"><Flame className="w-3 h-3 text-orange-500 fill-orange-500"/><span className="text-[9px] font-bold text-orange-600">{habit.streak} רצף</span></div>}
-                              <div className="flex items-center gap-1"><Clock className="w-3 h-3 text-gray-400"/><span className="text-[9px] text-gray-400">{habit.bestTime}</span></div>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-center min-w-[3.5rem]">
-                            <span className="text-3xl font-black c-dark">{status === 'none' ? aiData.target : habit.targetValue}</span>
-                            <span className="text-[8px] font-bold text-gray-400">{status === 'none' ? aiData.unit : habit.unit}</span>
-                          </div>
+                  {habits.map((habit) => (
+                    <div key={habit.id} className="bg-white border-gray-100 shadow-sm p-4 rounded-2xl flex flex-row-reverse items-center justify-between">
+                        <div className="text-right flex-1 pr-2">
+                            <h4 className="font-black text-sm c-dark">{habit.title}</h4>
                         </div>
-                        <div className="relative flex flex-col items-center w-10">
-                          <div onClick={() => handleHabitClick(habit)} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative border-2 ${isAnimating ? 'bg-gold border-gold scale-125' : status === 'none' ? 'bg-gray-100 border-gray-200' : 'bg-dark border-transparent shadow-lg'}`}>
-                            <Check className={`w-5 h-5 stroke-[4px] ${status === 'none' ? 'text-gray-400' : 'text-white'}`} />
-                            {isAnimating && <><div className="sparkle sparkle-1"></div><div className="sparkle sparkle-2"></div></>}
-                          </div>
+                        <div className="w-10 h-10 rounded-full border-2 border-gray-100 flex items-center justify-center">
+                            <Check className="w-5 h-5 text-gray-200" />
                         </div>
-                      </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </section>
               </div>
+            </div>
 
-              <button onClick={() => setIsMenuOpen(true)} className="absolute bottom-6 left-6 z-[100] w-14 h-14 bg-dark text-white rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-all"><Menu className="w-6 h-6"/></button>
+            {/* Menu Buttons */}
+            <button onClick={() => setIsMenuOpen(true)} className="absolute bottom-6 left-6 z-[100] w-14 h-14 bg-dark text-white rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-all"><Menu className="w-6 h-6"/></button>
 
-              <div className={`absolute inset-0 bg-black/40 z-[2000] transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)} />
-              <div className={`absolute top-0 left-0 h-full w-[75%] max-w-[280px] bg-[#F8F9FB] z-[2100] shadow-2xl transition-transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                  <div className="p-6 bg-white border-b flex items-center justify-between"><h2 className="font-black text-lg c-dark">תפריט כלים</h2><button onClick={() => setIsMenuOpen(false)} className="p-2 bg-gray-50 rounded-full"><ChevronLeft className="w-5 h-5"/></button></div>
-                  <div className="flex-1 p-4 space-y-4">
-                      <button onClick={() => { setIsMenuOpen(false); setIsTaskDrawerOpen(true); }} className="w-full bg-white p-4 rounded-2xl shadow-sm border flex items-center gap-4 hover:border-primary"><div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500"><Target className="w-6 h-6"/></div><div className="text-right"><span className="font-black text-sm block">משימות יומיות</span></div></button>
-                      <button onClick={() => { setIsMenuOpen(false); setShowVisionPopup(true); }} className="w-full bg-white p-4 rounded-2xl shadow-sm border flex items-center gap-4 hover:border-primary"><div className="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-500"><Star className="w-6 h-6"/></div><div className="text-right"><span className="font-black text-sm block">לוח חזון</span></div></button>
-                  </div>
-              </div>
-
-              <div className={`absolute inset-0 bg-black/40 z-[2000] transition-opacity ${isSettingsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSettingsOpen(false)} />
-              <div className={`absolute top-0 right-0 h-full w-[85%] max-w-[320px] bg-[#F8F9FB] z-[2100] shadow-2xl transition-transform flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                 <div className="p-5 bg-white border-b flex items-center justify-between"><h2 className="font-black text-lg c-dark">הגדרות כלליות</h2><button onClick={() => setIsSettingsOpen(false)} className="p-2 bg-gray-50 rounded-full"><ArrowRight className="w-4 h-4"/></button></div>
+            {/* Drawers & Modals (Simplified for stability) */}
+            <div className={`absolute inset-0 bg-black/40 z-[2000] transition-opacity ${isSettingsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSettingsOpen(false)} />
+            <div className={`absolute top-0 right-0 h-full w-[85%] max-w-[320px] bg-[#F8F9FB] z-[2100] shadow-2xl transition-transform flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                 <div className="p-5 bg-white border-b flex items-center justify-between"><h2 className="font-black text-lg c-dark">הגדרות</h2><button onClick={() => setIsSettingsOpen(false)} className="p-2 bg-gray-50 rounded-full"><ArrowRight className="w-4 h-4"/></button></div>
                  <div className="flex-1 p-4 space-y-3 overflow-y-auto no-scrollbar pb-20">
-                     {isAdmin && <SettingsMenuItem icon={<Palette />} label="הגדרות ועיצוב (אדמין)" onClick={() => setSettingsView('design')} />}
-                     <SettingsMenuItem icon={<UserPlus />} label="החלפת משתמש (טסט)" onClick={() => setSettingsView('test_users')} />
+                     {isAdmin && (
+                       <button onClick={() => setSettingsView('design')} className="w-full bg-white p-4 rounded-xl border flex items-center gap-3">
+                         <Palette className="text-blue-500" /> <span className="font-bold">ניהול שלבים (אדמין)</span>
+                       </button>
+                     )}
                      <div className="mt-8 pt-4 border-t">
-                       {session?.user?.email && <div className="text-center text-[10px] text-gray-400 mb-3 font-bold bg-gray-50 py-2 rounded-xl border" dir="ltr">Connected as: {session.user.email}</div>}
-                       <button onClick={handleLogout} className="w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm">התנתק מהחשבון</button>
+                        {session?.user?.email && <p className="text-[10px] text-gray-400 mb-2">מחובר כ: {session.user.email}</p>}
+                        <button onClick={() => window.location.reload()} className="w-full py-3 bg-red-50 text-red-500 rounded-xl font-bold">התנתק / רענן</button>
                      </div>
                  </div>
+                 
                  {settingsView === 'design' && (
-                   <div className="absolute inset-0 bg-[#F8F9FB] z-[2200] flex flex-col animate-in slide-in-from-right">
-                     <div className="p-5 bg-white border-b flex items-center gap-3"><button onClick={() => setSettingsView('main')} className="p-2 bg-gray-50 rounded-full"><ArrowRight className="w-4 h-4"/></button><h2 className="font-black text-lg">עיצוב תמונות (אדמין)</h2></div>
-                     <div className="flex-1 overflow-y-auto p-5 space-y-8 no-scrollbar pb-20">
-                         <section className="bg-white p-4 rounded-2xl shadow-sm border">
-                            <h3 className="font-black text-sm mb-4 border-b pb-2">ניהול דמויות וסמלים (35 שלבים)</h3>
-                            <div className="space-y-4">
-                                {badges.map((b) => (
-                                  <div key={b.id} className="bg-gray-50 p-3 rounded-xl border">
-                                     <h4 className="font-bold text-xs mb-3">רמה {b.id}: {b.label}</h4>
-                                     <div className="flex flex-col gap-3">
-                                        <div className="flex items-center justify-between"><span className="text-[10px] font-bold">דמות ראשית</span><div className="flex items-center gap-2">{b.characterImageUrl && <img src={b.characterImageUrl} className="w-7 h-7 rounded object-contain bg-white border" />}<input type="file" accept="image/*" className="hidden" id={`up-char-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'characterImageUrl', e)} /><label htmlFor={`up-char-${b.id}`} className="bg-white border px-3 py-1 rounded-md text-[9px] font-bold cursor-pointer">בחר</label></div></div>
-                                        <div className="flex items-center justify-between"><span className="text-[10px] font-bold">סמל הישג קטן</span><div className="flex items-center gap-2">{displayBadgeImage && <img src={displayBadgeImage} className="w-7 h-7 rounded object-contain bg-white border" />}<input type="file" accept="image/*" className="hidden" id={`up-badge-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'badgeImageUrl', e)} /><label htmlFor={`up-badge-${b.id}`} className="bg-white border px-3 py-1 rounded-md text-[9px] font-bold cursor-pointer">בחר</label></div></div>
-                                     </div>
-                                  </div>
-                                ))}
+                   <div className="absolute inset-0 bg-white z-[2200] flex flex-col p-5">
+                      <button onClick={() => setSettingsView('main')} className="mb-4 text-blue-500 font-bold">חזור</button>
+                      <h2 className="font-black text-xl mb-4">ניהול 35 שלבים</h2>
+                      <div className="flex-1 overflow-y-auto space-y-4">
+                        {badges.map(b => (
+                          <div key={b.id} className="p-3 bg-gray-50 rounded-xl border flex items-center justify-between">
+                            <span className="font-bold text-xs">רמה {b.id}: {b.label}</span>
+                            <div className="flex gap-2">
+                               <input type="file" className="hidden" id={`up-c-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'characterImageUrl', e)} />
+                               <label htmlFor={`up-c-${b.id}`} className="bg-white border p-2 rounded text-[10px] cursor-pointer">דמות</label>
+                               <input type="file" className="hidden" id={`up-b-${b.id}`} onChange={(e) => handleBadgeImageUpload(b.id, 'badgeImageUrl', e)} />
+                               <label htmlFor={`up-b-${b.id}`} className="bg-white border p-2 rounded text-[10px] cursor-pointer">סמל</label>
                             </div>
-                         </section>
-                     </div>
+                          </div>
+                        ))}
+                      </div>
                    </div>
                  )}
-              </div>
-
-              {showVisionPopup && (
-                <div className="absolute inset-0 z-[3100] flex items-center justify-center p-4">
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowVisionPopup(false)} />
-                  <div className="w-full max-h-[85vh] bg-white rounded-[2rem] shadow-2xl relative overflow-hidden flex flex-col animate-in zoom-in-95">
-                     <div className="relative w-full h-32 bg-gray-100 shrink-0">
-                        {visionBoard.imageUrl ? <img src={visionBoard.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-400 flex-col gap-2"><Camera className="w-8 h-8 opacity-50"/><span className="text-xs font-bold">תמונת השראה</span></div>}
-                        <label className="absolute inset-0 opacity-0 cursor-pointer"><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => setVisionBoard(prev => ({ ...prev, imageUrl: event.target.result })); reader.readAsDataURL(file); } }} /></label>
-                        <button onClick={() => setShowVisionPopup(false)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center"><ChevronDown className="w-5 h-5"/></button>
-                     </div>
-                     <div className="p-6 flex-1 flex flex-col bg-[#F8F9FB] overflow-hidden">
-                        <div className="flex items-center gap-2 mb-4 shrink-0"><Star className="w-6 h-6 text-gold fill-gold"/><h2 className="text-xl font-black">החזון הגדול שלי</h2></div>
-                        <div className="w-full flex-1 bg-white rounded-2xl p-5 shadow-sm border overflow-y-auto no-scrollbar">
-                           {visionBoard.text ? <p className="text-base font-medium leading-loose text-right whitespace-pre-wrap">{visionBoard.text}</p> : <span className="font-bold text-gray-400 opacity-60">החזון שלך מתגבש כאן...</span>}
-                        </div>
-                     </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
