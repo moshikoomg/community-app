@@ -284,37 +284,35 @@
       useEffect(() => {
           if (tasksListRef.current) autoAnimate(tasksListRef.current, { duration: 300, easing: 'ease-in-out' });
           if (completedTasksListRef.current) autoAnimate(completedTasksListRef.current, { duration: 300, easing: 'ease-in-out' });
-      }, [tasksListRef, completedTasksListRef]);
+  }, [tasksListRef, completedTasksListRef]);
 
-      const checkIsAdmin = (email) => {
-          if (!email) return false;
-          const e = email.toLowerCase();
-          return e === 'mosheally@gmail.com' || e === 'moshally@gmail.com';
-      };
+  const checkIsAdmin = (email) => {
+      if (!email) return false;
+      const e = email.toLowerCase().trim();
+      return e.includes('mosheally') || e.includes('moshally') || e.includes('moshe.ally');
+  };
 
-      useEffect(() => {
-        try {
-            supabase.auth.getSession().then(({ data: { session } }) => {
-              setSession(session);
-              if (session) {
-                  setIsAdmin(checkIsAdmin(session.user.email));
-                  loadUserData(session);
-              }
-            });
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-              setSession(session);
-              if (session) {
-                  setIsAdmin(checkIsAdmin(session.user.email));
-                  loadUserData(session);
-              } else {
-                  setIsAdmin(false);
-              }
-            });
-            return () => subscription.unsubscribe();
-        } catch (e) { console.error("Supabase init error:", e); }
-      }, []);
+  useEffect(() => {
+    try {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          setSession(session);
+          if (session) {
+              setIsAdmin(checkIsAdmin(session.user.email));
+              loadUserData(session);
+          }
+        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setSession(session);
+          if (session) {
+              setIsAdmin(checkIsAdmin(session.user.email));
+              loadUserData(session);
+          }
+        });
+        return () => subscription.unsubscribe();
+    } catch (e) { console.error("Supabase init error:", e); }
+  }, []);
 
-      const loadGlobalAdminData = async () => {
+  const loadGlobalAdminData = async () => {
           try {
               const { data } = await supabase.from('user_data').select('app_data').eq('user_id', 'GLOBAL_ADMIN_DATA').single();
               if (data && data.app_data) return data.app_data;
@@ -763,17 +761,19 @@
 
       const handleMainScroll = (e) => setIsScrolled(e.target.scrollTop > 20);
 
-      const scrollToTargetDay = () => document.getElementById(`day-${TARGET_DAY}`)?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-      const cardClassName = "w-full flex-shrink-0 snap-center snap-always flex items-center justify-center px-1";
+  const scrollToTargetDay = () => document.getElementById(`day-${TARGET_DAY}`)?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+  const cardClassName = "w-full flex-shrink-0 snap-center snap-always flex items-center justify-center px-1";
 
-      const handleLogout = async () => {
-        if (!isGuest) await supabase.auth.signOut();
-        setIsGuest(false);
-        setSession(null);
-      };
+  const handleLogout = async () => {
+    if (!isGuest) await supabase.auth.signOut();
+    setIsGuest(false);
+    setIsAdmin(false);
+    setSession(null);
+    setIsDataLoaded(false);
+  };
 
-      if (!session && !isGuest) return <LoginScreen onLogin={() => {}} onGuestLogin={handleGuestLogin} />;
-      if (!isDataLoaded) return <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] text-gray-500 font-bold"><Loader2 className="w-8 h-8 animate-spin ml-2"/> טוען נתונים...</div>;
+  if (!session && !isGuest) return <LoginScreen onLogin={() => {}} onGuestLogin={handleGuestLogin} />;
+  if (!isDataLoaded) return <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] text-gray-500 font-bold"><Loader2 className="w-8 h-8 animate-spin ml-2"/> טוען נתונים...</div>;
 
       const currentXp = user.xp || 0;
       const currentLevel = user.level || 1;
@@ -1050,19 +1050,20 @@
                      </div>
                      <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar pb-20">
                          {isAdmin && (
-                             <SettingsMenuItem icon={<Palette />} label="הגדרות ועיצוב (אדמין)" onClick={() => setSettingsView('design')} />
-                         )}
-                         
-                         <SettingsMenuItem icon={<UserPlus />} label="החלפת משתמש (טסט)" onClick={() => setSettingsView('test_users')} />
-                         
-                         <div className="mt-8 pt-4 border-t border-gray-100">
-                           <button onClick={handleLogout} className="w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm">התנתק מהחשבון</button>
-                         </div>
-                     </div>
-                   </div>
+                     <SettingsMenuItem icon={<Palette />} label="הגדרות ועיצוב (אדמין)" onClick={() => setSettingsView('design')} />
                  )}
+                 
+                 <SettingsMenuItem icon={<UserPlus />} label="החלפת משתמש (טסט)" onClick={() => setSettingsView('test_users')} />
+                 
+                 <div className="mt-8 pt-4 border-t border-gray-100">
+                   {session?.user?.email && <div className="text-center text-[10px] text-gray-400 mb-3 font-bold bg-gray-50 py-2 rounded-xl border border-gray-100" dir="ltr">Connected as: {session.user.email}</div>}
+                   <button onClick={handleLogout} className="w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm">התנתק מהחשבון</button>
+                 </div>
+             </div>
+           </div>
+         )}
 
-                 {settingsView === 'test_users' && (
+         {settingsView === 'test_users' && (
                    <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-300">
                      <div className="p-5 bg-white border-b border-gray-100 flex items-center gap-3">
                          <button onClick={() => setSettingsView('main')} className="p-2 text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><ArrowRight className="w-4 h-4"/></button>
