@@ -43,7 +43,7 @@ canvas{position:absolute;top:0;left:0;pointer-events:none;z-index:10;width:100%;
 <script type="text/babel">
 const {useState,useEffect,useRef}=React;
 const {createClient}=supabase;
-const sb=createClient('https://igpzawemolsajreiuxck.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTA2NzcyNzAsImV4cCI6MjAyNjI1MzI3MH0.UOl_AXKpEk-f5qiJiQX6XLR1JQlxCG2ZJQz1yH6Tf0M');
+const sb=createClient('https://igpzawemolsajreiuxck.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww');
 function App(){const[msg,setMsg]=useState('טוען...');useEffect(()=>{sb.from('userdata').select('*').limit(1).then(({data,error})=>{if(error)setMsg('שגיאת חיבור: '+error.message);else setMsg('מחובר לSupabase! נתונים: '+JSON.stringify(data))});},[]);return <div style={{padding:'20px',textAlign:'center',fontSize:'20px',fontFamily:'Heebo'}}>{msg}</div>;}
 ReactDOM.render(<App/>,document.getElementById('root'));
 </script>
