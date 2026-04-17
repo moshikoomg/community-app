@@ -31,8 +31,8 @@
     @keyframes buttonPump { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .animate-button-pop { animation: buttonPump 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     
-    .habit-list-container { position: absolute; top: 25%; bottom: 180px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
-    .habit-item { transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1); width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+    .habit-list-container { position: absolute; top: 25%; bottom: 180px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; z-index: 45; pointer-events: none; }
+    .habit-item { transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1); width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer; }
     .slide-in-right { animation: slideInRight 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
     @keyframes slideInRight { 0% { transform: translateX(100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
     .slide-out-right { animation: slideOutRight 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
@@ -100,11 +100,11 @@
     ];
 
     const emotions = [
-      { id: 1, label: "אנרגיית שיא", desc: "מצב שבו אתה מרגיש בשיא הכוח והתשוקה שלך. זמן לפעולות המורכבות ביותר." }, 
-      { id: 2, label: "סקרנות וגילוי", desc: "רגע של פתיחות ללמידה ודברים חדשים. מצוין להרגלי קריאה ומחקר." }, 
-      { id: 3, label: "שלווה ממוקדת", desc: "ריכוז שקט וחד. מתאים להרגלי עבודה עמוקה ומשימות מנטליות." }, 
-      { id: 4, label: "הנאה וסיפוק", desc: "הנאה מהדרך ומהניצחונות הקטנים. הרגע שבו ההרגל הופך לתענוג." }, 
-      { id: 5, label: "הרמוניה פנימית", desc: "חיבור פנימי עדין. זמן מעולה למדיטציה, יוגה או פשוט נשימה עמוקה." }, 
+      { id: 1, label: "אנרגיית שיא", subtext: "להציל את היום!", desc: "מצב שבו אתה מרגיש בשיא הכוח והתשוקה שלך. זמן לפעולות המורכבות ביותר." }, 
+      { id: 2, label: "סקרנות וגילוי", subtext: "בלי מלח!", desc: "רגע של פתיחות ללמידה ודברים חדשים. מצוין להרגלי קריאה ומחקר." }, 
+      { id: 3, label: "שלווה ממוקדת", subtext: "מעולה!", desc: "ריכוז שקט וחד. מתאים להרגלי עבודה עמוקה ומשימות מנטליות." }, 
+      { id: 4, label: "הנאה וסיפוק", subtext: "סבבה לי", desc: "הנאה מהדרך ומהניצחונות הקטנים. הרגע שבו ההרגל הופך לתענוג." }, 
+      { id: 5, label: "הרמוניה פנימית", subtext: "למרות הכל", desc: "חיבור פנימי עדין. זמן מעולה למדיטציה, יוגה או פשוט נשימה עמוקה." }, 
     ];
 
     // =====================================================================
@@ -125,7 +125,6 @@
       idleFloatSpeed: 0.002, excitedFlapSpeed: 0.02, hitSquash: 1.5, gazeSpeed: 2.0
     };
 
-    // User's perfectly crafted JSON Presets
     const PRESETS = {
       1: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#ff7070", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: -8, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 13, mouthCurve: 0.4, mouthStrokeWidth: 7, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
       2: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#c7b8a3", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 40, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 7, mouthYOffset: 6, mouthWidth: 12, mouthCurve: -0.3, mouthStrokeWidth: 7, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
@@ -303,11 +302,11 @@
       phys.faceSlide.x = Math.max(-maxSlide, Math.min(maxSlide, phys.faceSlide.x));
       phys.faceSlide.y = Math.max(-maxSlide, Math.min(maxSlide, phys.faceSlide.y));
 
-      // Recovery of Squash (Always gravitates back to 1.0 quickly to avoid perma-pancake)
+      // Recovery of Squash
       phys.squashX += (1.0 - phys.squashX) * 0.15;
       phys.squashY += (1.0 - phys.squashY) * 0.15;
 
-      // Arms Logic - Pure direction and velocity, rendering handles exact strict length.
+      // Arms Logic
       phys.arms.forEach((arm, idx) => {
         const side = idx === 0 ? -1 : 1;
         arm.vy += config.stringGravity;
@@ -321,7 +320,6 @@
 
         arm.x += arm.vx; arm.y += arm.vy;
         
-        // Exact length restriction applied mathematically to the physics point too
         const exactLen = config.handLength * config.bodyScale;
         const dist = Math.sqrt(arm.x * arm.x + arm.y * arm.y);
         if (dist > 0) {
@@ -344,6 +342,8 @@
     };
 
     // --- Component: Live Smiley (UI Rendering) ---
+    // Note: To eliminate the visual "flash" when transitioning, this component 
+    // expects to be rendered within a fixed `w-14 h-14` container that gets CSS `scale()` applied.
     const LiveSmiley = ({ config, mode = 'idle', className = "" }) => {
       const canvasRef = useRef(null);
       const requestRef = useRef();
@@ -372,6 +372,7 @@
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
+        // Use fixed logical size to prevent canvas clearing on CSS scale changes
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
         const dpr = window.devicePixelRatio || 1;
@@ -392,8 +393,8 @@
         }
         if (!p.initialized) { ctx.restore(); requestRef.current = requestAnimationFrame(draw); return; }
 
-        const floatOffset = Math.sin(t * (config.idleFloatSpeed || 0.002) + p.baseFloatOffset) * (mode === 'excited' ? 12 : 3);
-        const targetY = height / 2 + (mode === 'excited' ? -height * 0.08 : 0) + floatOffset;
+        const floatOffset = Math.sin(t * (config.idleFloatSpeed || 0.002) + p.baseFloatOffset) * (mode === 'excited' ? 6 : 2);
+        const targetY = height / 2 + floatOffset;
         const targetX = width / 2;
 
         p.vy += (targetY - p.worldY) * 0.15; p.vy *= 0.8; p.worldY += p.vy;
@@ -426,7 +427,7 @@
     const SmileyEditor = ({ emotion, initialConfig, onSave, onClose }) => {
       const [config, setConfig] = useState(initialConfig);
       const [activeTab, setActiveTab] = useState('behavior'); 
-      const [previewMode, setPreviewMode] = useState('idle'); // Specific state to preview
+      const [previewMode, setPreviewMode] = useState('idle');
       
       const canvasRef = useRef(null);
       const requestRef = useRef();
@@ -452,7 +453,7 @@
       const triggerHit = () => {
          physRef.current.squashX = config.hitSquash || 1.4;
          physRef.current.squashY = 1 / (config.hitSquash || 1.4);
-         physRef.current.vy = -15; // Bounce up
+         physRef.current.vy = -15; 
          physRef.current.isBlinking = true;
       };
 
@@ -477,13 +478,11 @@
         const renderScale = Math.min(width, height) / ((maxExpectedRadius * 2) + 80); 
         const scaledRadius = 110 * s.bodyScale * renderScale;
 
-        // Editor Physics (Respecting Preview Mode)
         if (p.isDragging) {
           p.vx = (p.lastMouseX - p.worldX) * 0.4; p.vy = (p.lastMouseY - p.worldY) * 0.4;
           p.worldX = p.lastMouseX; p.worldY = p.lastMouseY;
         } else {
           if (previewMode === 'falling') {
-              // Simulate falling permanently
               p.worldY = height * 0.3;
               p.vy = 8; p.vx = 0;
               p.worldX = width / 2;
@@ -493,7 +492,6 @@
               p.vy += (targetY - p.worldY) * 0.15; p.vy *= 0.8; p.worldY += p.vy;
               p.vx += (width/2 - p.worldX) * 0.15; p.vx *= 0.8; p.worldX += p.vx;
           } else {
-              // Normal gravity settling
               p.vy += s.gravity; p.vx *= 0.98; p.vy *= 0.98;
               if (Math.abs(p.vx) < 0.05) p.vx = 0;
               if (Math.abs(p.vy) < 0.05 && p.worldY + scaledRadius > floor - 2) p.vy = 0;
@@ -670,7 +668,6 @@
                   const my = ((e.clientY - rect.top) / rect.height) * canvasRef.current.height;
                   const p = physRef.current;
                   p.isDragging = true; p.lastMouseX = mx; p.lastMouseY = my;
-                  // Look at click
                   physRef.current.targetGaze = { x: ((e.clientX - rect.left) / rect.width) * 2 - 1, y: ((e.clientY - rect.top) / rect.height) * 2 - 1 };
                 }}
                 onDoubleClick={triggerHit}
@@ -686,7 +683,6 @@
                 onMouseLeave={() => physRef.current.isDragging = false}
               />
             </div>
-            {/* Overlay hint */}
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-[#AFAFAF] font-bold text-sm tracking-widest uppercase opacity-50 pointer-events-none">
                 {previewMode === 'idle' ? 'מצב: המתנה בבר' : previewMode === 'excited' ? 'מצב: ריחוף והתרגשות' : previewMode === 'falling' ? 'מצב: נפילה בצנצנת' : previewMode === 'follow' ? 'מצב: מעקב עכבר' : 'מצב חי'}
             </div>
@@ -749,10 +745,14 @@
       
       // Global Interaction Tracking (For "Look at Click")
       const interactionRef = useRef({ active: false, x: 0, y: 0, time: 0 });
+      const gameStateRef = useRef(gameState);
+
+      useEffect(() => {
+        gameStateRef.current = gameState;
+      }, [gameState]);
 
       const MAX_HABITS = 5;
       const currentShields = Math.min(3, Math.floor(settingsData.totalDays / 10));
-      const lockedHabitsCount = Math.max(0, MAX_HABITS - tasks.length);
       const isDrawerFullyClosed = lottoPhase === 'IDLE' || ['EXIT_STAGE_1', 'EXIT_STAGE_2', 'DROPPING'].includes(gameState);
       const isDrawerExpanded = ['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState);
 
@@ -760,7 +760,7 @@
       const sceneRef = useRef(null);
       const engineRef = useRef(null);
 
-      // --- Smart Component wrapper for UI Balls ---
+      // --- Smart Component wrapper for UI Balls (Smooth Scaling) ---
       const EmotionBallUI = ({ emo, isFloating }) => {
          const conf = settingsData.smileyConfigs[emo.id] || PRESETS[emo.id];
          let mode = 'idle';
@@ -770,7 +770,7 @@
              mode = 'follow';
          }
          return (
-            <div className="w-full h-full rounded-full flex items-center justify-center overflow-visible">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-visible pointer-events-none">
                 <LiveSmiley config={conf} mode={mode} />
             </div>
          );
@@ -800,7 +800,6 @@
         const mouse = Matter.Mouse.create(sceneRef.current);
         const mouseConstraint = Matter.MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
 
-        // Hit Reaction (Visual Squash on Collision)
         Matter.Events.on(engine, 'collisionStart', (event) => {
           event.pairs.forEach((pair) => {
             const current = pair.bodyA.label === 'currentDay' ? pair.bodyA : (pair.bodyB.label === 'currentDay' ? pair.bodyB : null);
@@ -809,7 +808,7 @@
               const config = current.customSmiley.config;
               phys.squashX = config.hitSquash || 1.4;
               phys.squashY = 1 / (config.hitSquash || 1.4);
-              phys.vy = -3; // small physical bump visually
+              phys.vy = -3; 
               current.label = 'settled';
               if (navigator.vibrate) navigator.vibrate(30);
             }
@@ -825,15 +824,17 @@
         engine.render = render; 
         
         const wallOptions = { isStatic: true, render: { visible: false }, friction: 0.1, restitution: 0.4 };
-        const floorY = height + 100;
-        const introFloor = Matter.Bodies.rectangle(width / 2, height - 10, width, 40, { isStatic: true, render: { visible: false } });
         
+        // Add robust boundaries (Walls, Floor, Ceiling)
+        const introFloor = Matter.Bodies.rectangle(width / 2, height - 10, width * 2, 40, { isStatic: true, render: { visible: false } });
         Matter.Composite.add(engine.world, [
-          introFloor, Matter.Bodies.rectangle(-20, height / 2, 40, height * 2, wallOptions),
-          Matter.Bodies.rectangle(width + 20, height / 2, 40, height * 2, wallOptions), mouseConstraint
+          introFloor, 
+          Matter.Bodies.rectangle(-50, height / 2, 100, height * 3, wallOptions), // Left Wall
+          Matter.Bodies.rectangle(width + 50, height / 2, 100, height * 3, wallOptions), // Right Wall
+          Matter.Bodies.rectangle(width / 2, -150, width * 3, 100, { isStatic: true, render: { visible: false } }), // Ceiling
+          mouseConstraint
         ]);
         
-        // --- CUSTOM LIVE RENDERER (Handling Upright Freeze) ---
         Matter.Events.on(render, 'afterRender', () => {
            const ctx = render.context;
            const bodies = Matter.Composite.allBodies(engine.world);
@@ -842,7 +843,14 @@
            
            const droppingBody = bodies.find(b => b.label === 'currentDay');
 
-           // Pre-calculate Color Reflections
+           // Anti-Escape Safety Net (Teleport back if somehow outside)
+           bodies.forEach(b => {
+               if (b.position.y > height + 400 || b.position.x < -200 || b.position.x > width + 200) {
+                   Matter.Body.setPosition(b, { x: width / 2, y: 100 });
+                   Matter.Body.setVelocity(b, { x: 0, y: 0 });
+               }
+           });
+
            customBodies.forEach(b => { b.customSmiley.reflections = []; });
            for (let i = 0; i < customBodies.length; i++) {
                for (let j = i + 1; j < customBodies.length; j++) {
@@ -851,7 +859,6 @@
                    const dx = b2.position.x - b1.position.x;
                    const dy = b2.position.y - b1.position.y;
                    const dist = Math.sqrt(dx*dx + dy*dy);
-                   // Exact visual radius calculation: 110 * bodyScale * matterScale
                    const r1 = 110 * b1.customSmiley.config.bodyScale * b1.customSmiley.scale;
                    const r2 = 110 * b2.customSmiley.config.bodyScale * b2.customSmiley.scale;
                    const minDist = r1 + r2;
@@ -864,7 +871,6 @@
                }
            }
 
-           // Draw Floor Shadows
            customBodies.forEach(b => {
                const { phys, scale, config } = b.customSmiley;
                const visualFloor = height - 5;
@@ -884,12 +890,10 @@
                }
            });
 
-           // Draw All Balls & Apply UPRIGHT FREEZE
            customBodies.forEach(b => {
                const { config, phys, scale, reflections } = b.customSmiley;
                if (!config) return;
                
-               // Upright Freeze Logic: If it slows down, gently upright it to 0 degrees!
                if (b.speed < 2.0 && b.position.y > height * 0.5) {
                    Matter.Body.setAngle(b, b.angle * 0.92);
                }
@@ -903,8 +907,15 @@
                const fallMode = Math.abs(b.velocity.y) > 0.5 ? 'falling' : 'idle';
                phys.targetGaze = null;
 
-               // Smart Gaze
-               if (droppingBody && b.label !== 'currentDay') {
+               // Intelligent Gaze
+               if (gameStateRef.current === 'SELECTING' || gameStateRef.current === 'BALL_HALO') {
+                   // Look at the floating UI ball (top center)
+                   const dx = (width / 2) - phys.worldX;
+                   const dy = 120 - phys.worldY; // Approximate height of the floating ball
+                   const dist = Math.sqrt(dx*dx + dy*dy);
+                   phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 };
+               }
+               else if (droppingBody && b.label !== 'currentDay') {
                    const dx = droppingBody.position.x - phys.worldX;
                    const dy = droppingBody.position.y - phys.worldY;
                    const dist = Math.sqrt(dx*dx + dy*dy);
@@ -934,7 +945,6 @@
           const emoId = Math.floor(Math.random() * 5) + 1;
           const config = settingsData.smileyConfigs[emoId] || PRESETS[emoId];
           const radius = Math.random() * 10 + 35; 
-          // Match physics boundary exactly to visual scale
           const physicsRadius = radius * config.bodyScale;
 
           const ball = Matter.Bodies.circle((Math.random() * (width - 40)) + 20, -Math.random() * 1500 - 100, physicsRadius, { 
@@ -942,7 +952,7 @@
               render: { visible: false } 
           });
           ball.customSmiley = {
-              config, scale: radius / 110, // Base scale multiplier
+              config, scale: radius / 110, 
               phys: { worldX:0, worldY:0, vx:0, vy:0, rotation:0, x:0, y:0, squashX:1, squashY:1, blink:1, faceSlide:{x:0,y:0}, arms:[{x:-20,y:0,vx:0,vy:0},{x:20,y:0,vx:0,vy:0}] }
           };
           introBalls.push(ball);
@@ -1116,16 +1126,29 @@
                 <>
                   <div id="physics-container" ref={sceneRef} />
                   
+                  {/* Click outside to cancel overlay */}
+                  {['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState) && (
+                     <div className="absolute inset-0 z-[40]" onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }}></div>
+                  )}
+
                   {activeEmotion && (
                     <div className="absolute right-0 top-0 bottom-0 pointer-events-none z-[100]" style={{ width: isDrawerExpanded ? '75%' : '110px', transition: 'width 500ms cubic-bezier(0.19, 1, 0.22, 1)' }}>
-                      <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] w-32 h-32 flex items-center justify-center rounded-full
-                          ${gameState === 'EMOTION_POP' ? 'scale-125' : ''}
-                          ${['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState) ? 'top-20 opacity-100 scale-100' : ''}
-                          ${gameState === 'EXIT_STAGE_1' ? 'animate-exit-up top-20' : ''}
-                          ${['EXIT_STAGE_2', 'DROPPING'].includes(gameState) ? 'opacity-0' : ''}`}
+                      {/* Floating UI Container (uses CSS Scale to avoid canvas reset flashes) */}
+                      <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] w-14 h-14 flex items-center justify-center
+                          ${gameState === 'EMOTION_POP' ? 'scale-110' : ''}
+                          ${['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState) ? 'top-[80px] opacity-100 scale-[2.2]' : ''}
+                          ${gameState === 'EXIT_STAGE_1' ? 'animate-exit-up top-[80px] scale-[2.2]' : ''}
+                          ${['EXIT_STAGE_2', 'DROPPING'].includes(gameState) ? 'opacity-0 scale-[2.2]' : ''}`}
                           style={{ top: (gameState === 'EMOTION' || gameState === 'EMOTION_POP') ? `${activeEmoStartPos}px` : undefined }}>
                           <EmotionBallUI emo={activeEmotion} isFloating={true} />
                       </div>
+                      
+                      {/* Dynamic Subtext */}
+                      {['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState) && (
+                         <div className="absolute top-[180px] left-1/2 -translate-x-1/2 text-center animate-in fade-in duration-500 w-full whitespace-nowrap">
+                             <span className="text-[17px] font-black text-slate-800 bg-white/90 px-5 py-1.5 rounded-full shadow-sm">{activeEmotion.subtext}</span>
+                         </div>
+                      )}
                     </div>
                   )}
 
@@ -1169,15 +1192,12 @@
                                 {(i === activeIndex) && <p className="font-black uppercase tracking-widest text-base mt-2 text-slate-500 font-heebo">{activeEmotion?.id >= 4 ? task.ridiculousAction : `${task.amount} ${task.minU}`}</p>}
                               </div>
                           ))}
-                          {Array.from({ length: lockedHabitsCount }).map((_, i) => (
-                              <div key={`lock-${i}`} className="habit-item absolute text-center px-6 pointer-events-none opacity-20" style={{ transform: `translateY(${(tasks.length + i - activeIndex) * 110}px) scale(${1.3 - Math.abs(tasks.length + i - activeIndex) * 0.3})`, zIndex: 1 }}><Lock className="w-8 h-8 text-slate-300" /></div>
-                          ))}
                         </div>
 
                         {gameState === 'SELECTING' && (
                           <div className="absolute bottom-12 inset-x-8 flex flex-col gap-4 items-center animate-button-pop z-[60]">
                             <button onMouseDown={(e) => { e.stopPropagation(); executeDrop(); }} onTouchStart={(e) => { e.stopPropagation(); executeDrop(); }} className="w-full py-5 rounded-full font-black shadow-2xl text-xl text-white active:scale-95 transition-transform" style={{ backgroundColor: settingsData.primaryBtnColor }}>בוצע</button>
-                            <button onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }} className="text-[11px] font-black text-slate-300 uppercase tracking-[4px] cursor-pointer active:text-slate-400 font-heebo">ביטול</button>
+                            <button onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }} className="text-[11px] font-black text-slate-400 uppercase tracking-[4px] cursor-pointer active:text-slate-500 font-heebo">ביטול</button>
                           </div>
                         )}
                       </div>
