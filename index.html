@@ -1,1059 +1,653 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>בועות הרגלים | Habit Bubbles</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Minimum Winner</title>
+  
+  <!-- CDN Libraries -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,700;1,300&display=swap');
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    body { font-family: 'Heebo', sans-serif; user-select: none; margin: 0; position: fixed; width: 100%; height: 100%; overflow: hidden; }
+    #physics-container { position: absolute; inset: 0; z-index: 10; pointer-events: auto; cursor: grab; }
+    #physics-container:active { cursor: grabbing; }
+
+    @keyframes clickBounce {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.4); }
+      70% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    .click-bounce-anim { animation: clickBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+    .sidebar { position: absolute; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; transition: width 500ms cubic-bezier(0.19, 1, 0.22, 1), transform 500ms cubic-bezier(0.19, 1, 0.22, 1); z-index: 50; overflow: hidden; background: white; pointer-events: auto; }
+    .sidebar-btn { width: 56px; height: 56px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); position: relative; border: none; flex-shrink: 0; transition: all 0.4s; overflow: hidden; cursor: pointer; }
     
-    <!-- Matter.js for Physics -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    @keyframes exitUp { 0% { transform: translate(-50%, 0) scale(1); opacity: 1; } 100% { transform: translate(-50%, -120vh) scale(1.1); opacity: 0; } }
+    .animate-exit-up { animation: exitUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+    @keyframes bouncePop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    .bounce-pop { animation: bouncePop 0.4s ease-out; }
+    @keyframes glowPulse { 0% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); } 50% { box-shadow: 0 0 60px rgba(251, 191, 36, 0.8); } 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); } }
+    .active-ball-glow { animation: glowPulse 2s infinite ease-in-out; }
+    @keyframes yellowPing { 0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.8); } 100% { box-shadow: 0 0 0 60px rgba(251, 191, 36, 0); } }
+    .yellow-halo-flash { animation: yellowPing 0.7s ease-out forwards; }
+    @keyframes buttonPump { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .animate-button-pop { animation: buttonPump 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Supabase JS SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
-
-    <style>
-        body {
-            font-family: 'Heebo', sans-serif;
-            background: #0f172a;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-            touch-action: none;
-            -webkit-user-select: none; /* Disable selection for long press */
-            user-select: none;
-        }
-
-        /* Responsive Container */
-        .app-container {
-            position: relative;
-            background: linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%);
-            background-size: cover;
-            background-position: center;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: inset 0 0 40px rgba(255,255,255,0.05);
-            transition: background 0.5s ease;
-        }
-
-        .bg-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15,23,42,0.8);
-            z-index: 1;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
-        }
-
-        @media (min-width: 768px) {
-            .app-container {
-                width: 390px;
-                height: 844px;
-                border-radius: 50px;
-                border: 12px solid #1e293b;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255,255,255,0.1), 0 0 0 2px #334155;
-            }
-            .app-container::before {
-                content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-                width: 120px; height: 30px; background: #1e293b; border-bottom-left-radius: 20px;
-                border-bottom-right-radius: 20px; z-index: 50; box-shadow: inset 0 -2px 5px rgba(255,255,255,0.1);
-            }
-        }
-
-        @media (max-width: 767px) {
-            .app-container { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; border: none; }
-        }
-
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
-
-        .ui-layer { position: relative; z-index: 20; display: flex; flex-direction: column; height: 100%; pointer-events: none; }
-        .pointer-events-auto { pointer-events: auto; }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .pulse-anim { animation: pulse-soft 2s infinite; }
-        @keyframes pulse-soft { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    </style>
+    .habit-list-container { position: absolute; top: 25%; bottom: 180px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+    .habit-item { transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1); width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+    .slide-in-right { animation: slideInRight 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+    @keyframes slideInRight { 0% { transform: translateX(100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+    .slide-out-right { animation: slideOutRight 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+    @keyframes slideOutRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(150%); opacity: 0; } }
+    
+    .explanation-sphere { position: absolute; width: 160px; height: 160px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); cursor: pointer; overflow: hidden; }
+    .explanation-sphere.center { transform: translate3d(0, 0, 100px); z-index: 50; opacity: 1; box-shadow: 0 30px 60px -10px rgba(0,0,0,0.2); }
+    .explanation-sphere.side { z-index: 10; opacity: 0.15; filter: blur(8px) grayscale(50%); }
+    .explanation-sphere.left { transform: translate3d(-140px, 20px, -150px) rotateY(20deg); }
+    .explanation-sphere.right { transform: translate3d(140px, 20px, -150px) rotateY(-20deg); }
+    .explanation-sphere.hidden { transform: translate3d(0, 50px, -300px); opacity: 0; }
+    .majest-card { width: 90%; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px); border-radius: 40px; padding: 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.08); transition: all 0.6s ease; }
+    .info-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-style: italic; color: #000; }
+    
+    /* סגנונות מותאמים אישית למסכים רחבים יותר */
+    @media (min-width: 640px) {
+      .majest-card { padding: 30px; }
+      .info-title { font-size: 38px; }
+    }
+    
+    .backlight-spot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%); pointer-events: none; z-index: -1; }
+  </style>
 </head>
 <body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    
+    // --- Inline Lucide Icons to prevent UMD loading errors ---
+    const Icon = ({ children, className = "", size = 24, ...rest }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...rest}>
+        {children}
+      </svg>
+    );
 
-    <div class="app-container" id="appContainer">
-        <div class="bg-overlay" id="bgOverlay"></div>
-        
-        <!-- Canvas for Matter.js & Custom Rendering -->
-        <canvas id="gameCanvas"></canvas>
+    const User = (props) => <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>;
+    const Check = (props) => <Icon {...props}><polyline points="20 6 9 17 4 12"/></Icon>;
+    const X = (props) => <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>;
+    const ChevronLeft = (props) => <Icon {...props}><polyline points="15 18 9 12 15 6"/></Icon>;
+    const Plus = (props) => <Icon {...props}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
+    const Minus = (props) => <Icon {...props}><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
+    const Lock = (props) => <Icon {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
+    const Shield = (props) => <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></Icon>;
+    const Flag = (props) => <Icon {...props}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></Icon>;
 
-        <!-- UI Layer -->
-        <div class="ui-layer justify-between pt-10">
-            
-            <!-- Top Bar -->
-            <div class="flex justify-between items-center pointer-events-auto px-4 pb-6">
-                <button onclick="window.toggleSettings()" class="p-2 rounded-full glass-panel text-white hover:bg-white/10 transition">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
-                </button>
-                
-                <div class="text-center">
-                    <h1 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-400 drop-shadow-md">
-                        בועות הרגלים
-                    </h1>
-                    <p id="viewSubtitle" class="text-xs text-slate-300 font-medium tracking-wider">טוען נתונים...</p>
-                </div>
-                
-                <button onclick="window.toggleFilter()" class="p-2 rounded-full glass-panel text-white hover:bg-white/10 transition relative opacity-0 pointer-events-none">
-                    <!-- Filter visually hidden since there's no UI for it now, kept for spacing -->
-                    <i data-lucide="filter" class="w-5 h-5"></i>
-                </button>
-            </div>
+    // --- נתוני פתיחה ---
+    const introCardsData = [
+      { title: 'כוח רצון הוא משאב זמני.', desc: 'אם נבנה על מוטיבציה בלבד כדי להתמיד, ההרגל פשוט לא יחזיק מעמד.' },
+      { title: 'הסוד הוא בפעולות מגוחכות.', desc: 'פעולה כל כך קטנה, שאין שום סיכוי או תירוץ לא לעשות אותה, גם ביום הכי קשה.' },
+      { title: 'הניצחון כבר מובטח.', desc: 'מתחייבים למינימום. כל יום. הבונוס הוא רק אם מתחשק לך, אבל הרצף נשמר.' }
+    ];
 
-            <!-- Settings Modal -->
-            <div id="settingsModal" class="absolute top-24 left-4 right-4 glass-panel rounded-2xl p-4 pointer-events-auto transform transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none flex flex-col gap-4 shadow-2xl z-40 max-h-[70vh] overflow-y-auto no-scrollbar">
-                <h3 class="text-white font-bold text-lg mb-2">הגדרות תצוגה</h3>
-                
-                <div class="mt-2 flex flex-col gap-2">
-                    <button onclick="window.openManageHabitsModal()" class="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-bold shadow-md transition flex items-center justify-center gap-2">
-                        <i data-lucide="list-edit" class="w-4 h-4"></i> ניהול הרגלים (עריכה/מחיקה)
-                    </button>
-                    
-                    <button onclick="window.advanceDebugDay()" class="w-full py-2 bg-purple-500/20 border border-purple-500/50 rounded-xl text-purple-300 text-sm font-medium transition">
-                        טסט: התקדם יום אחד קדימה
-                    </button>
-                    
-                    <div id="adminControlsContainer" class="hidden flex-col gap-2 mt-2 pt-2 border-t border-white/10">
-                        <button onclick="window.openAdminPanel()" class="w-full py-2 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl text-white text-sm font-bold shadow-lg">
-                            👑 ניהול שלבים (מנהל)
-                        </button>
-                    </div>
+    // --- לוגיקת יחידות מידה ---
+    const getUnits = (name) => {
+      const lowerName = name.toLowerCase();
+      if (lowerName.includes('ספר') || lowerName.includes('קריאה')) return { minU: 'עמוד', maxU: 'עמודים' };
+      if (lowerName.includes('ריצה') || lowerName.includes('הליכה')) return { minU: 'ק"מ', maxU: 'ק"מ' };
+      if (lowerName.includes('מים')) return { minU: 'כוס', maxU: 'כוסות' };
+      if (lowerName.includes('מדיטציה')) return { minU: 'דקה', maxU: 'דקות' };
+      return { minU: 'פעם', maxU: 'פעמים' }; 
+    };
 
-                    <button onclick="window.openAuthModal()" id="btnAuth" class="w-full py-2 mt-2 bg-transparent border border-slate-600 rounded-xl text-slate-400 text-xs font-medium transition hover:bg-slate-800">
-                        התחברות לחשבון (למנהלים/שמירה)
-                    </button>
-                </div>
-            </div>
-
-            <!-- Manage Habits Modal -->
-            <div id="manageHabitsModal" class="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-[60] hidden flex-col items-center pt-10 px-4 pb-4 pointer-events-auto overflow-y-auto">
-                <div class="w-full max-w-md">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-white">ניהול הרגלים</h2>
-                        <button onclick="window.closeManageHabitsModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
-                    </div>
-                    <p class="text-slate-400 text-sm mb-4">כאן תוכל לשנות את השמות של ההרגלים שלך או למחוק אותם לחלוטין.</p>
-                    <div id="manageHabitsList" class="space-y-3">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Floating Add Button -->
-            <button onclick="window.openAddHabitModal()" class="absolute bottom-[170px] left-6 w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full text-white font-bold text-3xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-40 pointer-events-auto border-2 border-white/20">
-                +
-            </button>
-
-            <!-- Add Habit Modal -->
-            <div id="addHabitModal" class="absolute bottom-0 left-0 right-0 transform translate-y-full glass-panel md:rounded-b-[38px] rounded-t-[40px] p-8 pointer-events-auto transition-transform duration-300 shadow-[0_-15px_40px_rgba(0,0,0,0.5)] z-50 bg-slate-900/95 border-t border-slate-700">
-                <h3 class="text-white font-bold text-xl mb-4 text-center">הרגל חדש</h3>
-                <input type="text" id="newHabitName" placeholder="שם ההרגל (לדוג: קריאה)" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4 outline-none focus:border-blue-500">
-                
-                <div class="flex justify-between gap-3 mt-6">
-                    <button onclick="window.closeAddHabitModal()" class="flex-1 py-2 rounded-xl bg-white/10 text-white font-medium">ביטול</button>
-                    <button onclick="window.saveNewHabit()" class="flex-1 py-3 rounded-xl bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/30">שמור והתחל</button>
-                </div>
-            </div>
-
-            <!-- Auth Modal (Google Login) -->
-            <div id="authModal" class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center px-6 pointer-events-auto">
-                <div class="w-full max-w-sm glass-panel rounded-3xl p-8 shadow-2xl relative text-center">
-                    <button onclick="window.closeAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-                    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 drop-shadow-lg">
-                        <i data-lucide="cloud" class="w-8 h-8 text-white"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white mb-2">אפליקציית הרגלים</h2>
-                    <p class="text-slate-400 text-sm mb-8">התחבר כדי לשמור את ההתקדמות והשלבים שלך בענן</p>
-                    
-                    <button onclick="window.loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white text-gray-900 px-6 py-4 rounded-xl font-bold text-lg shadow-md mb-4 border border-gray-200 hover:bg-gray-50 transition active:scale-95">
-                        <img src="https://www.google.com/favicon.ico" class="w-6 h-6" alt="G" />
-                        התחברות עם Google
-                    </button>
-                    <button onclick="window.closeAuthModal()" class="text-slate-500 mt-2 text-sm underline hover:text-white transition">המשך ללא חשבון (מצב מקומי)</button>
-                    <p id="authError" class="text-red-400 text-xs text-center mt-4 hidden"></p>
-                </div>
-            </div>
-
-            <!-- Admin Panel Modal -->
-            <div id="adminModal" class="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-[60] hidden flex-col items-center pt-10 px-4 pb-4 pointer-events-auto overflow-y-auto">
-                <div class="w-full max-w-md">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-red-400">ניהול שלבים</h2>
-                        <button onclick="window.closeAdminPanel()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
-                    </div>
-
-                    <div class="bg-black/30 p-4 rounded-2xl border border-white/10 mb-4">
-                        <label class="block text-slate-300 text-sm mb-2 font-bold">בחר שלב לעריכה:</label>
-                        <select id="adminStageSelect" onchange="window.loadAdminStageData()" class="w-full bg-slate-800 border border-slate-600 text-white rounded-lg p-2 mb-2">
-                            <!-- Options injected by JS -->
-                        </select>
-                        <p id="adminStageInfo" class="text-xs text-slate-400"></p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
-                            <h4 class="text-white font-bold mb-2">תמונת רקע לשלב</h4>
-                            <input type="file" id="adminBgImage" accept="image/*" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 w-full mb-3">
-                            <label class="block text-slate-300 text-xs mb-1">שקיפות רקע שחור באפליקציה:</label>
-                            <input type="range" id="adminBgOpacity" min="0" max="100" value="80" class="w-full">
-                        </div>
-
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
-                            <h4 class="text-white font-bold mb-2">תמונה אוניברסלית לכל העיגולים</h4>
-                            <p class="text-xs text-slate-400 mb-2">תחליף את העיגולים הרגילים.</p>
-                            <input type="file" id="adminBubbleImage" accept="image/*" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600 w-full mb-3">
-                            <label class="block text-slate-300 text-xs mb-1">שקיפות התמונה על העיגול:</label>
-                            <input type="range" id="adminBubbleOpacity" min="0" max="100" value="100" class="w-full">
-                        </div>
-                    </div>
-
-                    <button onclick="window.saveAdminStageData()" id="adminSaveBtn" class="w-full py-4 mt-6 bg-red-500 hover:bg-red-600 rounded-xl text-white font-bold shadow-lg transition">
-                        שמור הגדרות שלב
-                    </button>
-                    <p id="adminFeedback" class="text-center text-emerald-400 text-sm mt-3 hidden">נשמר בהצלחה!</p>
-                </div>
-            </div>
-
-            <!-- Main Drawer (Habits List) - Always Open -->
-            <div id="habitsDrawer" class="mt-auto pointer-events-auto w-full glass-panel border-b-0 md:rounded-b-[38px] rounded-t-[40px] pt-4 pb-8 px-4 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] bg-gradient-to-t from-slate-900/95 to-slate-800/80 border-t border-white/20 z-30">
-                <div class="w-16 h-1.5 bg-white/30 rounded-full mx-auto mb-4 shadow-sm"></div>
-                <div class="text-center text-white/70 text-[11px] font-bold mb-3 tracking-wide">לחיצה קצרה = רגיל | ארוכה = פירצה</div>
-                
-                <div id="habitsList" class="flex overflow-x-auto gap-4 pb-2 no-scrollbar px-2 items-center">
-                    <!-- Habit buttons injected here -->
-                </div>
-            </div>
-            
-        </div>
-    </div>
-
-    <script>
-        // --- Supabase Config & Setup ---
-        const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncHphd2Vtb2xzYWpyZWl1eGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NTE3MTIsImV4cCI6MjA5MTEyNzcxMn0.b3Q1nlHddqAgg8AJS4gV73USVvujno0-HRpLFPny7Ww';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // --- Constants ---
-        const MAX_VISUAL_BUBBLES = 150; // מגבלת ביצועים
-        const BUBBLE_RADIUS = 18;
-        const LONG_PRESS_DURATION = 500;
-
-        // --- State Management ---
-        const state = {
-            user: null,
-            userData: {
-                startDate: Date.now(),
-                debugDaysAdded: 0,
-                habits: [] // מתחילים מאפס! ללא הרגלי דמו
-            },
-            currentDay: 1,
-            currentStage: 1,
-            stageConfig: null,
-            
-            view: 'weekly',
-            filter: 'all',
-            floorTargetY: 0,
-            bubbles: [],
-            particles: [],
-            newHabitType: 'positive',
-            canvasWidth: 0,
-            canvasHeight: 0,
-            isAdmin: false
-        };
-
-        let globalBubbleImgCache = null;
-
-        lucide.createIcons();
-        const canvas = document.getElementById('gameCanvas');
+    // יצירת טקסטורה לכדורים בפיזיקה (אחידות מלאה בין תמונה לאייקון)
+    const createBallTexture = (emoji, colorStr, customImgUrl = null, size = 128) => {
+      return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
-        const container = document.getElementById('appContainer');
+        ctx.clearRect(0, 0, size, size);
+        ctx.save();
+        ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip();
 
-        // Matter.js Aliases
-        const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint, Events, Body, Sleeping } = Matter;
-        let engine, world, walls = [], mConstraint;
-
-        // --- Auth & Data Lifecycle ---
-        async function initAuth() {
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
-            
-            if (session) {
-                handleUserLogin(session.user);
-            } else {
-                document.getElementById('authModal').classList.replace('hidden', 'flex');
-                startOfflineMode();
-            }
-
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (session) {
-                    handleUserLogin(session.user);
-                    document.getElementById('authModal').classList.replace('flex', 'hidden');
-                } else {
-                    state.user = null;
-                    state.isAdmin = false;
-                    updateAuthButtonUI();
-                }
-            });
-        }
-
-        function handleUserLogin(user) {
-            state.user = user;
-            state.isAdmin = (user.email === 'mosheally@gmail.com');
-            updateAuthButtonUI();
-            loadUserData();
-        }
-
-        function updateAuthButtonUI() {
-            const btnAuth = document.getElementById('btnAuth');
-            btnAuth.innerText = state.isAdmin ? "מחובר כמנהל (התנתק)" : (state.user ? "מחובר (התנתק)" : "התחבר לשמירת נתונים");
-            document.getElementById('adminControlsContainer').style.display = state.isAdmin ? 'flex' : 'none';
-        }
-
-        function startOfflineMode() {
-            calculateTimeAndStage();
-            initPhysics();
-            window.renderHabitsUI();
-        }
-
-        async function loadUserData() {
-            if (!state.user) return;
-            
-            try {
-                const { data, error } = await supabaseClient
-                    .from('user_data')
-                    .select('app_data')
-                    .eq('user_id', state.user.id)
-                    .maybeSingle();
-
-                if (data && data.app_data) {
-                    const serverData = data.app_data;
-                    state.userData.startDate = serverData.startDate || Date.now();
-                    state.userData.debugDaysAdded = serverData.debugDaysAdded || 0;
-                    
-                    if (serverData.habits) {
-                        state.userData.habits = serverData.habits.map(serverHabit => ({
-                            ...serverHabit,
-                            count: serverHabit.count || 0,
-                            breachCount: serverHabit.breachCount || 0
-                        }));
-                    }
-                } else {
-                    saveUserData();
-                }
-                
-                calculateTimeAndStage();
-                initPhysics(); 
-                window.renderHabitsUI();
-                rebuildAllBubbles(); 
-                
-            } catch (err) {
-                console.error("Error loading data:", err);
-            }
-        }
-
-        async function saveUserData() {
-            if (!state.user) return;
-            const habitsToSave = state.userData.habits.map(h => ({
-                id: h.id, name: h.name, type: h.type, count: h.count || 0, breachCount: h.breachCount || 0
-            }));
-            
-            const payload = {
-                startDate: state.userData.startDate,
-                debugDaysAdded: state.userData.debugDaysAdded,
-                habits: habitsToSave
-            };
-
-            try {
-                await supabaseClient.from('user_data').upsert({
-                    user_id: state.user.id,
-                    app_data: payload
-                });
-            } catch (e) { console.error("Save error:", e); }
-        }
-
-        function calculateTimeAndStage() {
-            const msPerDay = 1000 * 60 * 60 * 24;
-            const daysElapsed = Math.floor((Date.now() - state.userData.startDate) / msPerDay) + 1;
-            state.currentDay = daysElapsed + state.userData.debugDaysAdded;
-
-            let newStage = 1;
-            if (state.currentDay >= 10 && state.currentDay < 21) newStage = 2;
-            else if (state.currentDay >= 21) {
-                newStage = 3 + Math.floor((state.currentDay - 21) / 21);
-            }
-            newStage = Math.min(newStage, 30);
-
-            document.getElementById('viewSubtitle').innerText = `שלב ${newStage} | יום ${state.currentDay}`;
-
-            if (state.currentStage !== newStage || !state.stageConfig) {
-                state.currentStage = newStage;
-                loadStageConfig();
-            }
-        }
-
-        async function loadStageConfig() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('user_data')
-                    .select('app_data')
-                    .eq('user_id', 'GLOBAL_ADMIN_DATA')
-                    .maybeSingle();
-
-                let stages = null;
-                if (data && data.app_data && data.app_data.stages) {
-                    stages = data.app_data.stages;
-                } else {
-                    // גיבוי מקומי במידה והשליפה נכשלה מהענן עקב RLS
-                    const localData = localStorage.getItem('admin_stages_fallback');
-                    if (localData) stages = JSON.parse(localData);
-                }
-
-                if (stages && stages[state.currentStage]) {
-                    state.stageConfig = stages[state.currentStage];
-                } else {
-                    state.stageConfig = null;
-                }
-                applyStageVisuals();
-            } catch(e) { console.error("Stage fetch error", e); }
-        }
-
-        function applyStageVisuals() {
-            const overlay = document.getElementById('bgOverlay');
-            if (state.stageConfig) {
-                if (state.stageConfig.bgImage) {
-                    container.style.background = `url("${state.stageConfig.bgImage}") center/cover no-repeat`;
-                } else {
-                    container.style.background = `linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%)`;
-                }
-                overlay.style.background = `rgba(15,23,42, ${state.stageConfig.bgOpacity !== undefined ? state.stageConfig.bgOpacity / 100 : 0.8})`;
-
-                if (state.stageConfig.bubbleImage) {
-                    const img = new Image();
-                    img.onload = () => globalBubbleImgCache = img;
-                    img.src = state.stageConfig.bubbleImage;
-                } else {
-                    globalBubbleImgCache = null;
-                }
-            } else {
-                container.style.background = `linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%)`;
-                overlay.style.background = `rgba(15,23,42, 0.8)`;
-                globalBubbleImgCache = null;
-            }
-        }
-
-        function compressImage(file, callback) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const cvs = document.createElement('canvas');
-                    const ctxC = cvs.getContext('2d');
-                    const MAX = 600;
-                    let w = img.width, h = img.height;
-                    if (w > h && w > MAX) { h *= MAX / w; w = MAX; } 
-                    else if (h > MAX) { w *= MAX / h; h = MAX; }
-                    cvs.width = w; cvs.height = h;
-                    ctxC.drawImage(img, 0, 0, w, h);
-                    callback(cvs.toDataURL('image/jpeg', 0.6));
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // --- Physics Engine ---
-        function getDrawerHeight() {
-            const drawer = document.getElementById('habitsDrawer');
-            return drawer ? drawer.offsetHeight : 150;
-        }
-
-        // פונקציה חדשה לעדכון דינמי של גובה הרצפה
-        window.recalculateFloor = function() {
-            if(state.canvasHeight === 0) return;
-            const thickness = 100;
-            const drawerHeight = getDrawerHeight();
-            const modal = document.getElementById('addHabitModal');
-            const isModalOpen = modal && !modal.classList.contains('translate-y-full');
-            const modalHeight = modal ? modal.offsetHeight : 350;
-            
-            const visualOffset = 15; 
-            
-            const baseFloorY = state.canvasHeight - drawerHeight + (thickness / 2) - visualOffset;
-            state.floorTargetY = isModalOpen ? (state.canvasHeight - modalHeight + (thickness/2) - visualOffset) : baseFloorY;
-        };
-
-        function initPhysics() {
-            if(engine) return;
-            engine = Engine.create({ enableSleeping: true });
-            world = engine.world;
-            world.gravity.y = 1.0; 
-
-            setupWalls();
-
-            const mouse = Mouse.create(canvas);
-            mConstraint = MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
-            Composite.add(world, mConstraint);
-            
-            mouse.element.removeEventListener("mousewheel", mouse.mousewheel);
-            mouse.element.removeEventListener("DOMMouseScroll", mouse.mousewheel);
-
-            Events.on(engine, 'beforeUpdate', updateLogic);
-            Events.on(engine, 'collisionStart', handleCollisions);
-
-            Runner.run(Runner.create(), engine);
-            requestAnimationFrame(renderLoop);
-        }
-
-        function handleCollisions(event) {
-            event.pairs.forEach(pair => {
-                handleImpact(pair.bodyA);
-                handleImpact(pair.bodyB);
-            });
-        }
-
-        function handleImpact(body) {
-            const bubble = state.bubbles.find(b => b.body.id === body.id);
-            if (bubble && bubble.isBreach && !bubble.hasImpacted) {
-                bubble.hasImpacted = true;
-                spawnExplosion(body.position.x, body.position.y, '#EAB308'); 
-            }
-        }
-
-        function spawnExplosion(x, y, color) {
-            const numParticles = 15 + Math.random() * 10;
-            for (let i = 0; i < numParticles; i++) {
-                const angle = Math.random() * Math.PI * 2, speed = Math.random() * 4 + 2;
-                state.particles.push({
-                    x: x, y: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-                    life: 1.0, decay: Math.random() * 0.02 + 0.02, color: color, radius: Math.random() * 4 + 2
-                });
-            }
-        }
-
-        function setupWalls() {
-            if (!engine) return;
-            Composite.remove(world, walls);
-            
-            const w = state.canvasWidth;
-            const h = state.canvasHeight;
-            const thickness = 100;
-            
-            window.recalculateFloor(); 
-            
-            walls = [
-                Bodies.rectangle(w/2, state.floorTargetY, w + 200, thickness, { isStatic: true, render: { visible: false } }),
-                Bodies.rectangle(-thickness/2, h/2, thickness, h * 3, { isStatic: true, render: { visible: false } }),
-                Bodies.rectangle(w + thickness/2, h/2, thickness, h * 3, { isStatic: true, render: { visible: false } }),
-                Bodies.rectangle(w/2, -thickness/2, w + 200, thickness, { isStatic: true, render: { visible: false } })
-            ];
-            Composite.add(world, walls);
-        }
-
-        function updateLogic() {
-            if (walls.length > 0) {
-                const floor = walls[0];
-                const diff = state.floorTargetY - floor.position.y;
-                if (Math.abs(diff) > 0.5) {
-                    Body.setPosition(floor, { x: floor.position.x, y: floor.position.y + diff * 0.15 });
-                    state.bubbles.forEach(b => Sleeping.set(b.body, false));
-                }
-            }
-
-            const margin = 150;
-            Composite.allBodies(world).forEach(body => {
-                if (body.position.x < -margin || body.position.x > state.canvasWidth + margin || 
-                    body.position.y < -margin || body.position.y > state.canvasHeight + margin) {
-                    Body.setPosition(body, { x: state.canvasWidth / 2, y: state.canvasHeight / 3 });
-                    Body.setVelocity(body, { x: 0, y: 0 });
-                }
-            });
-        }
-
-        function rebuildAllBubbles() {
-            state.bubbles.forEach(b => Composite.remove(world, b.body));
-            state.bubbles = [];
-
-            let bubblesToCreate = [];
-            state.userData.habits.forEach(h => {
-                const stdCount = h.count || 0;
-                const brcCount = h.breachCount || 0;
-                for(let i=0; i<stdCount; i++) bubblesToCreate.push({ isBreach: false });
-                for(let i=0; i<brcCount; i++) bubblesToCreate.push({ isBreach: true });
-            });
-            
-            let visualData = bubblesToCreate.slice(-MAX_VISUAL_BUBBLES);
-            
-            for(let i=0; i<visualData.length; i++) {
-                const startX = state.canvasWidth / 2 + (Math.random() * (state.canvasWidth - 100) - (state.canvasWidth/2 - 50));
-                const startY = state.canvasHeight - getDrawerHeight() - 50 - (Math.random() * 400); 
-                
-                const body = Bodies.circle(startX, startY, BUBBLE_RADIUS, {
-                    restitution: 0.7, friction: 0.01, frictionAir: 0.005, density: 0.05
-                });
-                state.bubbles.push({ id: Date.now() + i, body, radius: BUBBLE_RADIUS, isBreach: visualData[i].isBreach, hasImpacted: true });
-                Composite.add(world, body);
-            }
-        }
-
-        window.spawnFallingBubble = function(habitId, isBreach = false) {
-            const habit = state.userData.habits.find(h => h.id === habitId);
-            if (!habit) return;
-            
-            if (isBreach) {
-                habit.breachCount = (habit.breachCount || 0) + 1;
-            } else {
-                habit.count = (habit.count || 0) + 1;
-            }
-            
-            window.renderHabitsUI();
-            saveUserData();
-
-            if (state.bubbles.length >= MAX_VISUAL_BUBBLES) {
-                const oldest = state.bubbles.shift();
-                Composite.remove(world, oldest.body);
-            }
-
-            const startX = state.canvasWidth / 2 + (Math.random() * 40 - 20);
-            
-            state.bubbles.forEach(b => Sleeping.set(b.body, false));
-
-            let options = {
-                restitution: 0.7, friction: 0.01, frictionAir: 0.005, density: 0.05
-            };
-
-            if (isBreach) {
-                options.density = 0.4;
-                options.restitution = 0.85;
-            }
-
-            const body = Bodies.circle(startX, 60, BUBBLE_RADIUS, options);
-
-            if (isBreach) {
-                Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 8, y: 30 });
-            }
-
-            state.bubbles.push({ id: Date.now(), body, radius: BUBBLE_RADIUS, isBreach, hasImpacted: false });
-            Composite.add(world, body);
-            if(navigator.vibrate) navigator.vibrate(isBreach ? 50 : 20);
-        }
-
-        function renderLoop() {
-            ctx.clearRect(0, 0, state.canvasWidth, state.canvasHeight);
-
-            state.bubbles.forEach(b => {
-                drawBubble(ctx, b.body.position.x, b.body.position.y, b.radius, b.body.angle, b.isBreach);
-            });
-
-            for (let i = state.particles.length - 1; i >= 0; i--) {
-                let p = state.particles[i];
-                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= p.decay;
-                if (p.life <= 0) state.particles.splice(i, 1);
-                else {
-                    ctx.save(); ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
-                    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
-                    ctx.shadowColor = p.color; ctx.shadowBlur = 4; ctx.fill(); ctx.restore();
-                }
-            }
-
-            requestAnimationFrame(renderLoop);
-        }
-
-        function drawBubble(ctx, x, y, radius, bodyAngle, isBreach) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(bodyAngle);
-
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-
-            if (globalBubbleImgCache && !isBreach) {
-                ctx.save();
-                ctx.clip();
-                ctx.globalAlpha = state.stageConfig?.bubbleOpacity !== undefined ? state.stageConfig.bubbleOpacity / 100 : 1;
-                ctx.drawImage(globalBubbleImgCache, -radius, -radius, radius * 2, radius * 2);
-                ctx.restore();
-            } else {
-                let baseColor, highlightColor, shadowGlow;
-                
-                if (isBreach) {
-                    baseColor = '#EAB308'; 
-                    highlightColor = '#FEF08A'; 
-                    shadowGlow = 'rgba(234, 179, 8, 0.8)';
-                    ctx.shadowBlur = radius * 1.5; 
-                } else {
-                    baseColor = '#3B82F6'; 
-                    highlightColor = '#93C5FD'; 
-                    shadowGlow = 'rgba(0,0,0,0.3)';
-                    ctx.shadowBlur = radius * 0.5;
-                }
-
-                ctx.shadowColor = shadowGlow;
-                ctx.shadowOffsetY = isBreach ? 0 : radius * 0.2;
-
-                let grad = ctx.createRadialGradient(-radius*0.3, -radius*0.3, radius*0.1, 0, 0, radius);
-                grad.addColorStop(0, highlightColor);
-                grad.addColorStop(1, baseColor);
-                
-                ctx.fillStyle = grad;
-                ctx.fill();
-                
-                ctx.shadowColor = 'transparent';
-                ctx.beginPath(); ctx.arc(0, 0, radius - 1, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = radius * 0.05; ctx.stroke();
-                ctx.beginPath(); ctx.ellipse(0, -radius*0.5, radius*0.6, radius*0.25, 0, 0, Math.PI*2);
-                ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
-            }
-
+        if (customImgUrl) {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.onload = () => {
+            const aspect = img.width / img.height;
+            let drawW = size, drawH = size, drawX = 0, drawY = 0;
+            if (aspect > 1) { drawW = size * aspect; drawX = -(drawW - size) / 2; }
+            else { drawH = size / aspect; drawY = -(drawH - size) / 2; }
+            ctx.drawImage(img, drawX, drawY, drawW, drawH);
             ctx.restore();
+            const highlight = ctx.createRadialGradient(size * 0.28, size * 0.28, 0, size * 0.28, size * 0.28, size * 0.4);
+            highlight.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = highlight;
+            ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.fill();
+            resolve(canvas.toDataURL());
+          };
+          img.src = customImgUrl;
+        } else {
+          let c1 = '#a78bfa', c2 = '#8b5cf6';
+          const matches = colorStr.match(/#[a-fA-F0-9]{3,6}/g);
+          if (matches) { c1 = matches[0]; c2 = matches[1] || matches[0]; }
+          const mainGrad = ctx.createRadialGradient(size * 0.3, size * 0.3, size * 0.1, size / 2, size / 2, size / 2);
+          mainGrad.addColorStop(0, c1); mainGrad.addColorStop(1, c2);
+          ctx.fillStyle = mainGrad;
+          ctx.fill();
+          ctx.restore();
+          ctx.font = `${size * 0.55}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = 'white'; ctx.fillText(emoji, size / 2, size / 2 + size * 0.05);
+          resolve(canvas.toDataURL());
         }
+      });
+    };
 
-        // --- Interaction & UI Globals ---
-        window.renderHabitsUI = function() {
-            const list = document.getElementById('habitsList');
-            if(!list) return;
-            
-            if (state.userData.habits.length === 0) {
-                list.innerHTML = `<div class="text-white/50 text-sm py-4 px-2 text-center w-full">אין הרגלים עדיין. לחץ על ה '+' כדי להתחיל!</div>`;
-                return;
-            }
-            
-            list.innerHTML = '';
+    const emotions = [
+      { id: 1, colorFull: 'from-[#a78bfa] to-[#8b5cf6]', face: '🤩', hex: '#a78bfa', label: "אנרגיית שיא", desc: "מצב שבו אתה מרגיש בשיא הכוח והתשוקה שלך. זמן לפעולות המורכבות ביותר." }, 
+      { id: 2, colorFull: 'from-[#f472b6] to-[#ec4899]', face: '😮', hex: '#f472b6', label: "סקרנות וגילוי", desc: "רגע של פתיחות ללמידה ודברים חדשים. מצוין להרגלי קריאה ומחקר." }, 
+      { id: 3, colorFull: 'from-[#60a5fa] to-[#3b82f6]', face: '😉', hex: '#60a5fa', label: "שלווה ממוקדת", desc: "ריכוז שקט וחד. מתאים להרגלי עבודה עמוקה ומשימות מנטליות." }, 
+      { id: 4, colorFull: 'from-[#fbbf24] to-[#f59e0b]', face: '😋', hex: '#fbbf24', label: "הנאה וסיפוק", desc: "הנאה מהדרך ומהניצחונות הקטנים. הרגע שבו ההרגל הופך לתענוג." }, 
+      { id: 5, colorFull: 'from-[#4ade80] to-[#2dd4bf]', face: '😊', hex: '#4ade80', label: "הרמוניה פנימית", desc: "חיבור פנימי עדין. זמן מעולה למדיטציה, יוגה או פשוט נשימה עמוקה." }, 
+    ];
 
-            state.userData.habits.forEach(habit => {
-                const btn = document.createElement('button');
-                btn.className = `flex-shrink-0 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl shadow-lg backdrop-blur-md border border-white/10 bg-white/10 transition-transform relative select-none`;
-                btn.oncontextmenu = () => false; 
-                
-                const totalCount = (habit.count || 0) + (habit.breachCount || 0);
-                
-                btn.innerHTML = `
-                    <div class="relative w-5 h-5 flex items-center justify-center shrink-0 pointer-events-none">
-                        <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)" stroke-width="3" fill="none" />
-                            <circle class="progress-ring" cx="12" cy="12" r="10" stroke="#EAB308" stroke-width="3" fill="none" stroke-dasharray="62.8" stroke-dashoffset="62.8" stroke-linecap="round" />
-                        </svg>
-                        <div class="center-dot w-2 h-2 rounded-full shadow-inner bg-blue-400 z-10 transition-colors duration-300 pointer-events-none"></div>
-                    </div>
-                    <span class="text-white font-bold text-sm drop-shadow-md pointer-events-none">${habit.name}</span>
-                    <span class="text-white/60 text-xs ml-1 font-medium pointer-events-none">(${totalCount})</span>
-                `;
-                
-                let pressTimer;
-                let isPressed = false;
-                let isBreachReady = false;
-                
-                const progressRing = btn.querySelector('.progress-ring');
-                const centerDot = btn.querySelector('.center-dot');
+    const unitOptions = ['פעמים', 'כוסות', 'עמודים', 'דקות', 'ק״מ'];
+    const habitSuggestions = ['כוס מים', 'הליכה', 'שכיבות סמיכה', 'קריאה', 'מדיטציה'];
 
-                const resetPress = () => {
-                    isPressed = false;
-                    isBreachReady = false;
-                    btn.style.transform = 'scale(1)';
-                    progressRing.style.transition = 'none';
-                    progressRing.style.strokeDashoffset = '62.8';
-                    centerDot.classList.replace('bg-yellow-400', 'bg-blue-400');
-                };
+    function App() {
+      const [appFlow, setAppFlow] = useState('SCREEN_1_LOGIN'); 
+      const [introIndex, setIntroIndex] = useState(0);
+      const [explanationIndex, setExplanationIndex] = useState(0);
+      const [dragStartX, setDragStartX] = useState(null);
+      const [dragOffset, setDragOffset] = useState(0);
 
-                const cancelPress = () => {
-                    clearTimeout(pressTimer);
-                    resetPress();
-                };
+      const [showTopPopup, setShowTopPopup] = useState(false);
+      const [wizardStep, setWizardStep] = useState(1);
+      const [newHabit, setNewHabit] = useState({ name: '', amount: 1, unit: 'פעמים', ridiculousAction: '' });
+      
+      const [tasks, setTasks] = useState([]);
+      const [gameState, setGameState] = useState('EMOTION'); 
+      const [activeEmotion, setActiveEmotion] = useState(null);
+      const [activeEmoStartPos, setActiveEmoStartPos] = useState(0); 
+      const [activeIndex, setActiveIndex] = useState(0);
+      
+      const [pulseData, setPulseData] = useState({ active: false, x: 0, y: 0, power: 0 });
 
-                const startPress = (e) => {
-                    isPressed = true;
-                    isBreachReady = false;
-                    btn.style.transform = 'scale(0.95)';
-                    
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            progressRing.style.transition = 'stroke-dashoffset 500ms linear';
-                            progressRing.style.strokeDashoffset = '0';
-                        });
-                    });
-                    
-                    pressTimer = setTimeout(() => {
-                        if(!isPressed) return;
-                        isBreachReady = true;
-                        centerDot.classList.replace('bg-blue-400', 'bg-yellow-400');
-                        if(navigator.vibrate) navigator.vibrate(50); 
-                    }, LONG_PRESS_DURATION);
-                };
+      const [lottoPhase, setLottoPhase] = useState('IDLE');
+      const [poppingId, setPoppingId] = useState(null);
 
-                const endPress = (e) => {
-                    if(!isPressed) return;
-                    clearTimeout(pressTimer);
-                    
-                    let clientX, clientY;
-                    if (e.changedTouches && e.changedTouches.length > 0) {
-                        clientX = e.changedTouches[0].clientX;
-                        clientY = e.changedTouches[0].clientY;
-                    } else {
-                        clientX = e.clientX;
-                        clientY = e.clientY;
-                    }
-                    
-                    const rect = btn.getBoundingClientRect();
-                    const isInside = clientX >= rect.left && clientX <= rect.right &&
-                                     clientY >= rect.top && clientY <= rect.bottom;
+      const [settingsData, setSettingsData] = useState({ 
+        ballSprites: {}, stageImages: {}, profilePic: null, drawerBgColor: '#ffffff', drawerOpacity: 0.95, drawerBlur: 20, 
+        primaryBtnColor: '#0f172a', primaryBtnTextColor: '#ffffff', userName: 'משה אלי', totalDays: 0,
+      });
 
-                    if (isInside) {
-                        window.spawnFallingBubble(habit.id, isBreachReady);
-                    }
-                    
-                    resetPress();
-                };
+      const [workspace, setWorkspace] = useState({ isOpen: false, activeTab: 'profile' });
 
-                btn.addEventListener('mousedown', startPress);
-                btn.addEventListener('mouseup', endPress);
-                btn.addEventListener('mouseleave', cancelPress);
-                
-                btn.addEventListener('touchstart', startPress, {passive: true});
-                btn.addEventListener('touchend', (e) => { e.preventDefault(); endPress(e); });
-                btn.addEventListener('touchcancel', cancelPress);
+      // --- משתנים נגזרים ---
+      const MAX_HABITS = 5;
+      const currentShields = Math.min(3, Math.floor(settingsData.totalDays / 10));
+      const lockedHabitsCount = Math.max(0, MAX_HABITS - tasks.length);
+      const isDrawerFullyClosed = lottoPhase === 'IDLE' || ['EXIT_STAGE_1', 'EXIT_STAGE_2', 'DROPPING'].includes(gameState);
+      const isDrawerExpanded = ['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState);
 
-                list.appendChild(btn);
-            });
+      const appContainerRef = useRef(null);
+      const sceneRef = useRef(null);
+      const engineRef = useRef(null);
 
-            setTimeout(() => window.recalculateFloor(), 50);
+      const UnifiedBall = ({ emo, sizeClass = "w-14 h-14", fontClass = "text-3xl", isFloating = false }) => {
+        const customImg = settingsData.ballSprites[emo.id];
+        return (
+          <div className={`${sizeClass} rounded-full flex items-center justify-center overflow-hidden shadow-2xl transition-all duration-700
+              ${!customImg ? `bg-gradient-to-t ${emo.colorFull}` : ''}
+              ${isFloating && gameState === 'EMOTION_POP' ? 'click-bounce-anim' : ''}
+              ${isFloating && gameState === 'BALL_HALO' ? 'yellow-halo-flash' : ''}
+              ${isFloating && gameState === 'SELECTING' ? 'active-ball-glow animate-profile-hover' : ''}`}
+              style={{ backgroundImage: customImg ? `url(${customImg})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+              {!customImg && <span className={fontClass}>{emo.face}</span>}
+          </div>
+        );
+      };
+
+      const handleNextIntro = () => {
+        if (introIndex < 2) setIntroIndex(p => p + 1);
+        else setAppFlow('SCREEN_EXPLANATION');
+      };
+
+      const handleDragEnd = () => {
+        if (dragStartX === null) return;
+        if (Math.abs(dragOffset) > 100) handleNextIntro();
+        setDragStartX(null); setDragOffset(0);
+      };
+
+      useEffect(() => {
+        if (appFlow === 'MAIN') {
+          initMatter();
         }
+      }, [appFlow]);
 
-        // --- Edit & Manage Habits Modal ---
-        window.openManageHabitsModal = () => {
-            window.toggleSettings();
-            document.getElementById('manageHabitsModal').classList.replace('hidden', 'flex');
-            window.renderManageHabitsList();
-        }
+      const initMatter = async () => {
+        if (!sceneRef.current) return;
+        const Matter = window.Matter;
+        const engine = Matter.Engine.create();
+        engineRef.current = engine;
+        engine.world.gravity.y = 5.0; 
 
-        window.closeManageHabitsModal = () => {
-            document.getElementById('manageHabitsModal').classList.replace('flex', 'hidden');
-        }
-
-        window.renderManageHabitsList = () => {
-            const list = document.getElementById('manageHabitsList');
-            list.innerHTML = '';
-            
-            if (state.userData.habits.length === 0) {
-                list.innerHTML = `<p class="text-white/50 text-center py-4">אין הרגלים לעריכה.</p>`;
-                return;
-            }
-
-            state.userData.habits.forEach(habit => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-white/10 p-3 rounded-xl border border-white/5";
-                div.innerHTML = `
-                    <span class="text-white font-bold">${habit.name}</span>
-                    <div class="flex gap-2">
-                        <button onclick="window.renameHabit(${habit.id})" class="p-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button onclick="window.deleteHabit(${habit.id})" class="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-            lucide.createIcons();
-        }
-
-        window.renameHabit = (id) => {
-            const habit = state.userData.habits.find(h => h.id === id);
-            if (!habit) return;
-            const newName = prompt("הכנס שם חדש להרגל:", habit.name);
-            if (newName && newName.trim() !== '') {
-                habit.name = newName.trim();
-                saveUserData();
-                window.renderManageHabitsList();
-                window.renderHabitsUI();
-            }
-        }
-
-        window.deleteHabit = (id) => {
-            if (confirm("האם אתה בטוח שברצונך למחוק הרגל זה?")) {
-                state.userData.habits = state.userData.habits.filter(h => h.id !== id);
-                saveUserData();
-                window.renderManageHabitsList();
-                window.renderHabitsUI();
-                rebuildAllBubbles();
-            }
-        }
-
-        window.toggleSettings = () => document.getElementById('settingsModal').classList.toggle('opacity-0') || document.getElementById('settingsModal').classList.toggle('pointer-events-none');
-        window.toggleFilter = () => { /* Filter UI is hidden now, but left intact for code stability */ }
-
-        window.openAddHabitModal = () => {
-            document.getElementById('addHabitModal').classList.replace('translate-y-full', 'translate-y-0');
-            setTimeout(() => window.recalculateFloor(), 50); 
-            setTimeout(() => document.getElementById('newHabitName').focus(), 300);
-        }
-        window.closeAddHabitModal = () => {
-            document.getElementById('addHabitModal').classList.replace('translate-y-0', 'translate-y-full');
-            document.getElementById('newHabitName').value = ''; 
-            setTimeout(() => window.recalculateFloor(), 50); 
-        }
-        window.selectNewHabitType = (type) => state.newHabitType = type;
-        window.saveNewHabit = () => {
-            const name = document.getElementById('newHabitName').value.trim();
-            if(!name) return;
-            const newHabit = { id: Date.now(), name, type: state.newHabitType, count: 0, breachCount: 0 };
-            state.userData.habits.push(newHabit);
-            window.closeAddHabitModal();
-            saveUserData();
-            window.renderHabitsUI();
-        }
-
-        window.advanceDebugDay = () => {
-            state.userData.debugDaysAdded++;
-            saveUserData();
-            calculateTimeAndStage();
-        }
-
-        // --- Authentication Actions (Google / Supabase) ---
-        window.openAuthModal = () => {
-            if(state.user) { supabaseClient.auth.signOut(); return; }
-            document.getElementById('settingsModal').classList.add('opacity-0', 'pointer-events-none');
-            document.getElementById('authModal').classList.replace('hidden', 'flex');
-        }
-        window.closeAuthModal = () => document.getElementById('authModal').classList.replace('flex', 'hidden');
-        
-        window.loginWithGoogle = async () => {
-            const err = document.getElementById('authError');
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: { redirectTo: window.location.origin + window.location.pathname }
-                });
-                if (error) throw error;
-            } catch (error) {
-                err.innerText = "שגיאה: " + error.message;
-                err.classList.remove('hidden');
-            }
-        }
-
-        // --- Admin Panel ---
-        window.openAdminPanel = () => {
-            window.toggleSettings();
-            document.getElementById('adminModal').classList.replace('hidden', 'flex');
-            const select = document.getElementById('adminStageSelect');
-            select.innerHTML = '';
-            for(let i=1; i<=30; i++) select.innerHTML += `<option value="${i}">שלב ${i}</option>`;
-            select.value = state.currentStage;
-            window.loadAdminStageData();
-        }
-        window.closeAdminPanel = () => document.getElementById('adminModal').classList.replace('flex', 'hidden');
-        
-        window.loadAdminStageData = async () => {
-            const stageId = document.getElementById('adminStageSelect').value;
-            document.getElementById('adminStageInfo').innerText = `עריכת שלב מספר ${stageId}`;
-            try {
-                const { data, error } = await supabaseClient.from('user_data').select('app_data').eq('user_id', 'GLOBAL_ADMIN_DATA').maybeSingle();
-                
-                let stageData = null;
-                if(data && data.app_data && data.app_data.stages) {
-                    stageData = data.app_data.stages[stageId];
-                } else {
-                    const localData = localStorage.getItem('admin_stages_fallback');
-                    if (localData) {
-                        const parsed = JSON.parse(localData);
-                        stageData = parsed[stageId];
-                    }
-                }
-
-                if(stageData) {
-                    document.getElementById('adminBgOpacity').value = stageData.bgOpacity !== undefined ? stageData.bgOpacity : 80;
-                    document.getElementById('adminBubbleOpacity').value = stageData.bubbleOpacity !== undefined ? stageData.bubbleOpacity : 100;
-                } else {
-                    document.getElementById('adminBgOpacity').value = 80;
-                    document.getElementById('adminBubbleOpacity').value = 100;
-                }
-            } catch(e) { console.error(e); }
-        }
-
-        window.saveAdminStageData = async () => {
-            const stageId = document.getElementById('adminStageSelect').value;
-            const bgFile = document.getElementById('adminBgImage').files[0];
-            const bubbleFile = document.getElementById('adminBubbleImage').files[0];
-            const bgOp = parseInt(document.getElementById('adminBgOpacity').value);
-            const bubOp = parseInt(document.getElementById('adminBubbleOpacity').value);
-            
-            document.getElementById('adminSaveBtn').innerText = "שומר...";
-            
-            const { data } = await supabaseClient.from('user_data').select('app_data').eq('user_id', 'GLOBAL_ADMIN_DATA').maybeSingle();
-            let appData = data?.app_data || { stages: {} };
-            if (!appData.stages) appData.stages = {};
-            
-            let currentStageData = appData.stages[stageId] || {};
-            
-            const payload = { 
-                bgOpacity: bgOp, 
-                bubbleOpacity: bubOp,
-                bgImage: currentStageData.bgImage,
-                bubbleImage: currentStageData.bubbleImage
-            };
-            
-            const finalize = async () => {
-                appData.stages[stageId] = payload;
-                
-                const { error } = await supabaseClient.from('user_data').upsert({ user_id: 'GLOBAL_ADMIN_DATA', app_data: appData });
-                
-                if (error) {
-                    console.error("Supabase RLS Error:", error);
-                    alert("השמירה בענן נחסמה (כנראה בעיית הרשאות RLS ב-Supabase). הרקע יישמר זמנית במכשיר הזה בלבד.");
-                    localStorage.setItem('admin_stages_fallback', JSON.stringify(appData.stages));
-                }
-
-                document.getElementById('adminSaveBtn').innerText = "שמור הגדרות שלב";
-                document.getElementById('adminFeedback').classList.remove('hidden');
-                setTimeout(()=>document.getElementById('adminFeedback').classList.add('hidden'), 3000);
-                
-                if(parseInt(stageId) === state.currentStage) {
-                    state.stageConfig = payload;
-                    applyStageVisuals();
-                }
-            }
-
-            let uploadsRemaining = (bgFile ? 1 : 0) + (bubbleFile ? 1 : 0);
-            if(uploadsRemaining === 0) return finalize();
-
-            if(bgFile) compressImage(bgFile, (base64) => { payload.bgImage = base64; uploadsRemaining--; if(uploadsRemaining===0) finalize(); });
-            if(bubbleFile) compressImage(bubbleFile, (base64) => { payload.bubbleImage = base64; uploadsRemaining--; if(uploadsRemaining===0) finalize(); });
-        }
-
-        // --- Boot ---
-        window.addEventListener('resize', () => {
-            state.canvasWidth = container.clientWidth; state.canvasHeight = container.clientHeight;
-            canvas.width = state.canvasWidth; canvas.height = state.canvasHeight;
-            setupWalls();
+        // --- אינטראקציית "זריקה" וגרירה (Throw & Flick) ---
+        const mouse = Matter.Mouse.create(sceneRef.current);
+        const mouseConstraint = Matter.MouseConstraint.create(engine, {
+          mouse: mouse,
+          constraint: {
+            stiffness: 0.2, // גמישות לתפיסה וזריקה
+            render: { visible: false }
+          }
         });
 
-        window.onload = () => {
-            state.canvasWidth = container.clientWidth; state.canvasHeight = container.clientHeight;
-            canvas.width = state.canvasWidth; canvas.height = state.canvasHeight;
-            initPhysics(); 
-            initAuth(); 
-        };
+        // מאזין התנגשות להתכווצות
+        Matter.Events.on(engine, 'collisionStart', (event) => {
+          event.pairs.forEach((pair) => {
+            if (pair.bodyA.label === 'currentDay' || pair.bodyB.label === 'currentDay') {
+              const body = pair.bodyA.label === 'currentDay' ? pair.bodyA : pair.bodyB;
+              if (body.label === 'currentDay') {
+                smoothShrink(body);
+                body.label = 'settled';
+                if (navigator.vibrate) navigator.vibrate(30);
+              }
+            }
+          });
+        });
 
-    </script>
+        const width = sceneRef.current.clientWidth;
+        const height = sceneRef.current.clientHeight;
+        const render = Matter.Render.create({
+          element: sceneRef.current, engine: engine,
+          options: { width, height, wireframes: false, background: 'transparent', pixelRatio: window.devicePixelRatio || 1 }
+        });
+        
+        const wallOptions = { isStatic: true, render: { visible: false }, friction: 0.1, restitution: 0.4 };
+        const introFloor = Matter.Bodies.rectangle(width / 2, height - 10, width, 40, { isStatic: true, render: { visible: false } });
+        
+        Matter.Composite.add(engine.world, [
+          introFloor,
+          Matter.Bodies.rectangle(-20, height / 2, 40, height * 2, wallOptions),
+          Matter.Bodies.rectangle(width + 20, height / 2, 40, height * 2, wallOptions),
+          mouseConstraint // הוספת המנגנון שמאפשר העפה
+        ]);
+        
+        Matter.Render.run(render); 
+        Matter.Runner.run(Matter.Runner.create(), engine);
+        
+        const textures = await Promise.all(emotions.map(emo => createBallTexture(emo.face, emo.hex, settingsData.ballSprites[emo.id], 128)));
+        const introBalls = [];
+        for (let i = 0; i < 35; i++) {
+          const radius = Math.random() * 10 + 35; 
+          const texIndex = Math.floor(Math.random() * 5);
+          const ball = Matter.Bodies.circle((Math.random() * (width - 40)) + 20, -Math.random() * 1500 - 100, radius, { restitution: 0.7, friction: 0.05, render: { sprite: { texture: textures[texIndex], xScale: (radius * 2) / 128, yScale: (radius * 2) / 128 } } });
+          introBalls.push(ball);
+        }
+        Matter.Composite.add(engine.world, introBalls);
+        setShowTopPopup(true);
+        setTimeout(() => { if(introFloor) Matter.Body.setPosition(introFloor, { x: width / 2, y: height + 500 }); }, 4500);
+        setTimeout(() => {
+          Matter.Composite.remove(engine.world, introBalls);
+          Matter.Composite.remove(engine.world, introFloor);
+          Matter.Composite.add(engine.world, Matter.Bodies.rectangle(width / 2, height + 20, width, 40, wallOptions)); 
+        }, 7000);
+      };
+
+      const smoothShrink = (body) => {
+        const Matter = window.Matter;
+        const steps = 10;
+        const stepSize = (1.35 - 1.0) / steps;
+        let count = 0;
+        const interval = setInterval(() => {
+          if (count >= steps) clearInterval(interval);
+          else {
+            const scaleFactor = (1.35 - stepSize * (count + 1)) / (1.35 - stepSize * count);
+            Matter.Body.scale(body, scaleFactor, scaleFactor);
+            if (body.render.sprite) {
+               body.render.sprite.xScale *= scaleFactor;
+               body.render.sprite.yScale *= scaleFactor;
+            }
+            count++;
+          }
+        }, 15);
+      };
+
+      const startSidebarSequence = () => {
+        setLottoPhase('SIDEBAR_OPEN');
+        setTimeout(() => setLottoPhase('BALLS_DROP'), 250); 
+        setTimeout(() => setLottoPhase('PROFILE_APPEAR'), 700); 
+        setTimeout(() => { playPopSeq(); }, 1100); 
+      };
+
+      const playPopSeq = () => {
+        setLottoPhase('SEQUENCE_POP');
+        let idx = 0;
+        const interval = setInterval(() => {
+          if (idx < emotions.length) { setPoppingId(emotions[idx].id); idx++; }
+          else { clearInterval(interval); setPoppingId(null); setLottoPhase('READY'); }
+        }, 200);
+      };
+
+      const handleStartSelection = (e, emo) => {
+        if (gameState !== 'EMOTION' || workspace.isOpen || lottoPhase !== 'READY' || tasks.length === 0) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const containerRect = appContainerRef.current.getBoundingClientRect();
+        setActiveEmoStartPos(rect.top - containerRect.top);
+        setActiveEmotion(emo);
+        
+        setGameState('EMOTION_POP'); 
+        setTimeout(() => setGameState('PARALLEL_TRANSITION'), 100);
+        setTimeout(() => setGameState('BALL_HALO'), 300);
+        setTimeout(() => setGameState('SELECTING'), 450); 
+      };
+
+      const executeDrop = async () => {
+        if (!activeEmotion) return;
+        setGameState('EXIT_STAGE_1');
+        setTimeout(() => {
+          setGameState('EXIT_STAGE_2');
+          setTimeout(async () => {
+            setGameState('DROPPING');
+            const Matter = window.Matter;
+            const width = appContainerRef.current.clientWidth;
+            const radius = Math.min(width * 0.12, 38);
+            const texture = await createBallTexture(activeEmotion.face, activeEmotion.hex, settingsData.ballSprites[activeEmotion.id]);
+            const spawnRadius = radius * 1.35;
+            const ball = Matter.Bodies.circle(width / 2, -60, spawnRadius, { 
+              label: 'currentDay', restitution: 0.5, friction: 0.1, 
+              render: { sprite: { texture, xScale: (spawnRadius * 2) / 128, yScale: (spawnRadius * 2) / 128 } } 
+            });
+            Matter.Composite.add(engineRef.current.world, ball);
+            setTimeout(() => { setGameState('EMOTION'); setActiveEmotion(null); }, 2000);
+          }, 50); 
+        }, 300); 
+      };
+
+      const handleCreateHabitFinish = () => {
+        const habit = { id: Date.now(), name: newHabit.name, amount: newHabit.amount, ridiculousAction: newHabit.ridiculousAction, minU: newHabit.unit, maxU: newHabit.unit };
+        setTasks([habit, ...tasks]);
+        setShowTopPopup(false); setWizardStep(1); setGameState('EMOTION');
+        setTimeout(() => startSidebarSequence(), 200); 
+      };
+
+      return (
+        <div className="fixed inset-0 bg-[#0F172A] flex justify-center items-center font-sans overflow-hidden" 
+             onMouseDown={e => { if(appFlow==='SCREEN_2_CARDS') setDragStartX(e.clientX); }}
+             onMouseMove={e => { if(dragStartX!==null) setDragOffset(e.clientX - dragStartX); }}
+             onMouseUp={handleDragEnd} onTouchStart={e => { if(appFlow==='SCREEN_2_CARDS') setDragStartX(e.touches[0].clientX); }}
+             onTouchMove={e => { if(dragStartX!==null) setDragOffset(e.touches[0].clientX - dragStartX); }}
+             onTouchEnd={handleDragEnd} style={{ height: '100dvh', touchAction: 'none' }} >
+          
+          <div ref={appContainerRef} dir="rtl" className="relative w-full h-full sm:max-w-[480px] sm:max-h-[92vh] bg-white sm:rounded-[40px] shadow-2xl overflow-hidden transition-all duration-1000" 
+                style={{ backgroundImage: (appFlow === 'MAIN' && settingsData.stageImages[settingsData.totalDays + 1]) ? `url(${settingsData.stageImages[settingsData.totalDays + 1]})` : 'none', backgroundSize: 'cover' }}>
+
+            {/* --- מסכי פתיחה --- */}
+            {['SCREEN_1_LOGIN', 'SCREEN_2_CARDS', 'SCREEN_EXPLANATION', 'SCREEN_3_READY'].includes(appFlow) && (
+              <div className="absolute inset-0 flex flex-col overflow-hidden bg-white text-slate-900 text-center">
+                {appFlow !== 'SCREEN_1_LOGIN' && (
+                  <button onClick={() => setAppFlow('SCREEN_3_READY')} className="absolute top-10 left-10 z-[200] w-12 h-12 flex items-center justify-center rounded-full bg-slate-50 shadow-sm text-slate-400 active:scale-90 transition-all"><Flag className="w-5 h-5" /></button>
+                )}
+                <div className="flex-1 relative flex flex-col items-center justify-center p-8">
+                    {appFlow === 'SCREEN_1_LOGIN' && (
+                      <div className="text-center animate-in fade-in duration-700">
+                        <h1 className="text-6xl font-black mb-4">Minimum<br/>Winner</h1>
+                        <p className="text-slate-400 text-lg font-bold">הדרך הקלה ביותר להתמיד.</p>
+                      </div>
+                    )}
+                    {appFlow === 'SCREEN_2_CARDS' && (
+                      <div className="relative w-full max-w-[360px] flex-1 max-h-[450px] min-h-[300px] flex items-center justify-center mx-auto mt-4 perspective-1000">
+                        {introCardsData.map((card, i) => {
+                          const isCurrent = i === introIndex;
+                          return (
+                            <div key={i} style={isCurrent ? { transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.05}deg)` } : {}} 
+                                 className={`absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-10 bg-white rounded-[40px] shadow-2xl transition-all duration-500 ${isCurrent ? 'z-30 opacity-100' : (i < introIndex ? 'translate-x-[150%] opacity-0' : '-translate-y-8 scale-90 opacity-60')}`}>
+                               <h3 className="text-3xl sm:text-4xl font-black mb-4 sm:mb-6 text-purple-600 leading-tight">{card.title}</h3>
+                               <p className="text-lg sm:text-xl font-bold text-slate-500 font-heebo">{card.desc}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                    {appFlow === 'SCREEN_EXPLANATION' && (
+                      <div className="w-full flex flex-col items-center h-full pt-4 sm:pt-16 pb-2">
+                        <div className="text-[10px] font-black text-slate-400 tracking-[0.8em] mb-4 sm:mb-12 uppercase shrink-0">Mood Essence</div>
+                        <div className="relative w-full flex-1 max-h-[240px] min-h-[160px] flex items-center justify-center perspective-1000 shrink-0">
+                          {emotions.map((emo, i) => {
+                            const diff = i - explanationIndex;
+                            const customImg = settingsData.ballSprites[emo.id];
+                            let cls = (diff === 0) ? "center" : (diff === -1 || (explanationIndex === 0 && i === emotions.length-1)) ? "side left" : (diff === 1 || (explanationIndex === emotions.length-1 && i === 0)) ? "side right" : "hidden";
+                            return (
+                              <div key={emo.id} onClick={() => setExplanationIndex(i)} 
+                                   className={`explanation-sphere ${cls} transition-all duration-700 overflow-hidden ${!customImg ? `bg-gradient-to-br ${emo.colorFull}` : ''}`}
+                                   style={{ background: customImg ? `url(${customImg}) center/cover` : `radial-gradient(circle at 35% 35%, ${emo.hex}, #000000)` }}>
+                                 {!customImg && <span className="text-7xl drop-shadow-2xl">{emo.face}</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="majest-card mt-auto mb-2 sm:mb-8 animate-in fade-in shrink-0" key={explanationIndex}>
+                          <div className="text-[10px] font-black text-[#b8860b] tracking-[0.5em] mb-2 sm:mb-3 uppercase text-center">Private Selection</div>
+                          <h2 className="info-title mb-2 sm:mb-4 text-center">{emotions[explanationIndex].label}</h2>
+                          <p className="text-slate-500 font-medium leading-snug sm:leading-relaxed text-center font-heebo text-sm sm:text-base">{emotions[explanationIndex].desc}</p>
+                        </div>
+                      </div>
+                    )}
+                    {appFlow === 'SCREEN_3_READY' && (
+                       <div className="text-center animate-in zoom-in-95 duration-500">
+                         <div className="text-8xl mb-8 drop-shadow-xl text-[#0f172a]">🚀</div>
+                         <h2 className="text-4xl font-black mb-2">הכל מוכן!</h2>
+                         <p className="text-slate-400 text-xl font-bold font-heebo">בוא נתחיל לנצח.</p>
+                       </div>
+                    )}
+                </div>
+                <div className="p-8 pb-12 flex justify-center relative z-50 shrink-0">
+                   <button onClick={() => {
+                     if (appFlow === 'SCREEN_1_LOGIN') setAppFlow('SCREEN_2_CARDS');
+                     else if (appFlow === 'SCREEN_2_CARDS') handleNextIntro();
+                     else if (appFlow === 'SCREEN_EXPLANATION') { if (explanationIndex < 4) setExplanationIndex(prev => prev + 1); else setAppFlow('SCREEN_3_READY'); }
+                     else setAppFlow('MAIN');
+                   }} className="w-full h-16 rounded-full bg-[#0f172a] text-white font-black text-xl flex items-center justify-center active:scale-95 transition-transform">המשך</button>
+                </div>
+              </div>
+            )}
+
+            {/* --- אפליקציה ראשית --- */}
+            {appFlow === 'MAIN' && (
+              <>
+                <div id="physics-container" ref={sceneRef} />
+                
+                {activeEmotion && (
+                  <div className="absolute right-0 top-0 bottom-0 pointer-events-none z-[100]" style={{ width: isDrawerExpanded ? '75%' : '110px', transition: 'width 500ms cubic-bezier(0.19, 1, 0.22, 1)' }}>
+                    {['BALL_HALO', 'SELECTING'].includes(gameState) && <div className="backlight-spot animate-in fade-in" style={{ top: '64px' }} />}
+                    <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]
+                        ${gameState === 'EMOTION_POP' ? 'scale-125' : ''}
+                        ${['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState) ? 'top-8 opacity-100 scale-100' : ''}
+                        ${gameState === 'EXIT_STAGE_1' ? 'animate-exit-up top-8' : ''}
+                        ${['EXIT_STAGE_2', 'DROPPING'].includes(gameState) ? 'opacity-0' : ''}`}
+                        style={{ top: (gameState === 'EMOTION' || gameState === 'EMOTION_POP') ? `${activeEmoStartPos}px` : undefined }}>
+                        <UnifiedBall emo={activeEmotion} sizeClass="w-16 h-16" fontClass="text-3xl" isFloating={true} />
+                    </div>
+                  </div>
+                )}
+
+                <div className="sidebar" style={{ transform: isDrawerFullyClosed ? 'translateX(100%)' : 'translateX(0)', width: isDrawerExpanded ? '75%' : '110px', backgroundColor: `${settingsData.drawerBgColor}${Math.round(settingsData.drawerOpacity * 255).toString(16).padStart(2, '0')}`, backdropFilter: `blur(${settingsData.drawerBlur}px)` }}>
+                  
+                  <div className={`h-full flex flex-col p-5 overflow-hidden transition-all duration-500 ease-in-out ${(gameState !== 'EMOTION' && gameState !== 'EMOTION_POP') ? 'translate-x-[150%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
+                    
+                    {/* Header: Profile -> Name -> Shield */}
+                    <div onClick={() => setWorkspace({ isOpen: true, activeTab: 'profile' })} className="pt-8 flex flex-col items-center cursor-pointer shrink-0">
+                      <div className="w-16 h-16 rounded-full bg-white border-2 border-slate-100 shadow-md overflow-hidden mb-3 relative flex items-center justify-center text-slate-300">
+                         {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User size={32} />}
+                      </div>
+                      <div className="flex flex-col items-center text-slate-900">
+                        <span className="text-[11px] font-black uppercase tracking-widest leading-none mb-2 font-heebo">{settingsData.userName}</span>
+                        
+                        <div className="relative flex items-center justify-center">
+                           <Shield className={`w-9 h-9 transition-colors duration-500 ${currentShields > 0 ? 'text-blue-500 fill-blue-500' : 'text-slate-300 fill-slate-300'}`} />
+                           <span className="absolute text-[12px] font-black text-white">{currentShields}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 relative flex flex-col items-center justify-center space-y-4 overflow-visible">
+                      {emotions.map((emo) => (
+                        <div key={emo.id} onMouseDown={(e) => handleStartSelection(e, emo)} onTouchStart={(e) => handleStartSelection(e, emo)} 
+                             className={`sidebar-btn transition-all duration-300 ${activeEmotion?.id === emo.id ? 'opacity-0' : 'opacity-100'} ${poppingId === emo.id ? 'bounce-pop' : ''} ${lottoPhase === 'READY' ? 'pointer-events-auto shadow-lg' : 'pointer-events-none'}`}>
+                          <UnifiedBall emo={emo} sizeClass="w-14 h-14" fontClass="text-2xl" />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pb-8 mt-auto flex justify-center">
+                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest font-heebo">יום {settingsData.totalDays + 1}</span>
+                    </div>
+                  </div>
+
+                  {['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING', 'EXIT_STAGE_1'].includes(gameState) && (
+                    <div className="absolute inset-0 w-full h-full overflow-hidden flex flex-col">
+                      <div className={`habit-list-container flex-1 ${(['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState)) ? 'slide-in-right' : 'slide-out-right'}`}>
+                        {tasks.map((task, i) => (
+                            <div key={task.id} onClick={() => setActiveIndex(i)} className="habit-item absolute text-center px-6 text-slate-900" style={{ transform: `translateY(${(i - activeIndex) * 110}px) scale(${1.3 - Math.abs(i - activeIndex) * 0.3})`, opacity: Math.max(0, 1 - Math.abs(i - activeIndex) * 0.55), zIndex: 10 - Math.abs(i - activeIndex) }}>
+                              <h3 className="font-black text-3xl leading-tight">{task.name}</h3>
+                              {(i === activeIndex) && <p className="font-black uppercase tracking-widest text-base mt-2 text-slate-500 font-heebo">{activeEmotion?.id >= 4 ? task.ridiculousAction : `${task.amount} ${task.minU}`}</p>}
+                            </div>
+                        ))}
+                        {Array.from({ length: lockedHabitsCount }).map((_, i) => (
+                           <div key={`lock-${i}`} className="habit-item absolute text-center px-6 pointer-events-none opacity-20" style={{ transform: `translateY(${(tasks.length + i - activeIndex) * 110}px) scale(${1.3 - Math.abs(tasks.length + i - activeIndex) * 0.3})`, zIndex: 1 }}><Lock className="w-8 h-8 text-slate-300" /></div>
+                        ))}
+                      </div>
+
+                      {gameState === 'SELECTING' && (
+                        <div className="absolute bottom-12 inset-x-8 flex flex-col gap-4 items-center animate-button-pop z-[60]">
+                          <button onMouseDown={(e) => { e.stopPropagation(); executeDrop(); }} onTouchStart={(e) => { e.stopPropagation(); executeDrop(); }} className="w-full py-5 rounded-full font-black shadow-2xl text-xl text-white active:scale-95 transition-transform" style={{ backgroundColor: settingsData.primaryBtnColor }}>בוצע</button>
+                          <button onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }} className="text-[11px] font-black text-slate-300 uppercase tracking-[4px] cursor-pointer active:text-slate-400 font-heebo">ביטול</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Creator Drawer */}
+                <div className={`absolute top-0 left-0 right-0 bg-white/95 backdrop-blur-xl z-[200] rounded-b-[50px] shadow-2xl transition-transform duration-500 ${showTopPopup ? 'translate-y-0' : '-translate-y-[120%]'}`}>
+                    <div className="p-8 pt-12 flex flex-col min-h-[460px]">
+                        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center relative overflow-hidden text-slate-900 font-heebo">
+                            {wizardStep === 1 && (
+                                <div className="w-full animate-in fade-in duration-300">
+                                    <h2 className="text-3xl font-black mb-8 tracking-tight">איזה הרגל נוסיף?</h2>
+                                    <div className="flex flex-wrap justify-center gap-3 mb-6">{habitSuggestions.map(s => <button key={s} onClick={() => { setNewHabit({...newHabit, name: s}); setWizardStep(2); }} className="px-5 py-3 rounded-full bg-slate-100 text-slate-800 font-bold active:scale-95 transition-transform">{s}</button>)}</div>
+                                    <div className="relative text-slate-900"><input type="text" placeholder="הרגל אחר..." className="w-full text-center text-xl font-bold bg-slate-50 py-5 rounded-3xl border-2 border-transparent focus:border-purple-200 outline-none shadow-inner" value={newHabit.name} onChange={e => setNewHabit({...newHabit, name: e.target.value})} />{newHabit.name && <button onClick={() => setWizardStep(2)} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center active:scale-90"><ChevronLeft className="w-5 h-5" /></button>}</div>
+                                </div>
+                            )}
+                            {wizardStep === 2 && (
+                                <div className="w-full animate-in fade-in duration-300">
+                                    <h2 className="text-3xl font-black mb-6 tracking-tight">כמות ויחידה</h2>
+                                    <div className="flex items-center justify-center gap-6 mb-8 bg-slate-50 p-6 rounded-[35px] shadow-inner border border-slate-100 text-slate-900">
+                                        <button onClick={() => setNewHabit(h => ({...h, amount: Math.max(1, h.amount - 1)}))} className="w-12 h-12 rounded-full bg-white shadow-md text-3xl font-black flex items-center justify-center text-slate-400 active:scale-90"><Minus className="w-6 h-6" /></button>
+                                        <input type="number" className="bg-transparent text-5xl font-black w-24 text-center outline-none text-slate-900" value={newHabit.amount} onChange={e => setNewHabit({...newHabit, amount: Number(e.target.value)})} />
+                                        <button onClick={() => setNewHabit(h => ({...h, amount: h.amount + 1}))} className="w-12 h-12 rounded-full bg-[#0f172a] text-white shadow-lg text-3xl font-black flex items-center justify-center active:scale-90"><Plus className="w-6 h-6" /></button>
+                                    </div>
+                                    <div className="relative mb-6 font-heebo text-slate-900"><input type="text" placeholder="הקלד יחידה..." className="w-full text-center text-lg font-bold bg-white py-4 rounded-2xl border-2 border-purple-50 focus:border-purple-300 outline-none shadow-sm text-slate-900" value={newHabit.unit} onChange={e => setNewHabit({...newHabit, unit: e.target.value})} /></div>
+                                    <div className="flex flex-wrap justify-center gap-2 mb-6 font-heebo">{unitOptions.map(u => <button key={u} onClick={() => setNewHabit({...newHabit, unit: u})} className={`px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-all ${newHabit.unit === u ? 'bg-purple-600 text-white shadow-md scale-105' : 'bg-slate-100 text-slate-600'}`}>{u}</button>)}</div>
+                                    <button onClick={() => setWizardStep(3)} className="w-full py-4 bg-[#0f172a] text-white font-black rounded-2xl active:scale-95 shadow-xl flex items-center justify-center gap-2 text-white">המשך <ChevronLeft className="w-5 h-5 rotate-180" /></button>
+                                </div>
+                            )}
+                            {wizardStep === 3 && (
+                                <div className="w-full animate-in fade-in text-center text-slate-900">
+                                    <h2 className="text-3xl font-black mb-2 text-purple-600 tracking-tight text-slate-900">המינימום המגוחך</h2>
+                                    <p className="text-slate-500 font-bold mb-6 font-heebo">מה לא תוותר לעשות בחיים?</p>
+                                    <div className="relative text-slate-900">
+                                        <input type="text" placeholder="למשל: לגימה אחת..." className="w-full text-2xl font-black text-center border-b-4 border-purple-100 bg-transparent py-4 outline-none focus:border-purple-600 transition-colors mb-8 text-slate-900" value={newHabit.ridiculousAction} onChange={e => setNewHabit({...newHabit, ridiculousAction: e.target.value})} />
+                                        <button disabled={!newHabit.ridiculousAction} onClick={handleCreateHabitFinish} className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-all ${newHabit.ridiculousAction ? 'bg-purple-600 text-white shadow-2xl active:scale-90' : 'bg-slate-100 text-slate-300'}`}><Check className="w-10 h-10" /></button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* מרכז שליטה */}
+                {workspace.isOpen && (
+                  <div className="absolute inset-0 z-[300] bg-slate-900/80 backdrop-blur-xl flex justify-center items-end sm:items-center sm:p-10" onClick={() => setWorkspace({ ...workspace, isOpen: false })}>
+                    <div className="w-full sm:max-w-md bg-white h-[90vh] sm:h-auto rounded-t-[50px] sm:rounded-[60px] overflow-hidden flex flex-col shadow-2xl text-slate-900" onClick={e => e.stopPropagation()}>
+                        <div className="p-8 pb-4 flex justify-between items-center border-b border-slate-50"><h3 className="font-black text-2xl font-heebo text-slate-900">מרכז שליטה</h3><button onClick={() => setWorkspace({ ...workspace, isOpen: false })} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center active:scale-90"><X className="w-5 h-5 text-slate-500" /></button></div>
+                        <div className="flex px-6 gap-4 border-b border-slate-100 overflow-x-auto whitespace-nowrap scrollbar-hide text-slate-400 font-heebo">
+                          {['profile', 'design', 'stages', 'balls'].map(tab => (
+                            <button key={tab} onClick={() => setWorkspace({...workspace, activeTab: tab})} className={`pb-3 pt-4 px-2 font-black text-sm uppercase tracking-widest transition-all ${workspace.activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : ''}`}>{tab === 'profile' ? 'פרופיל' : tab === 'design' ? 'עיצוב' : tab === 'stages' ? 'שלבים' : 'כדורים'}</button>
+                          ))}
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/30 font-heebo text-slate-800">
+                           {workspace.activeTab === 'profile' && (
+                            <div className="space-y-6 animate-in fade-in">
+                              <div className="flex flex-col items-center gap-6 py-6 bg-white rounded-[40px] shadow-sm text-slate-900">
+                                 <div className="w-32 h-32 rounded-full bg-slate-100 border-4 border-white shadow-xl overflow-hidden relative group">
+                                   {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User className="w-12 h-12 text-slate-300 m-10" />}
+                                   <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, profilePic: URL.createObjectURL(f)})); }} />
+                                 </div>
+                                 <input type="text" value={settingsData.userName} onChange={e => setSettingsData(s => ({...s, userName: e.target.value}))} className="text-center font-black text-2xl w-full outline-none text-slate-900 bg-slate-50 py-3 rounded-2xl" />
+                                 <div className="flex flex-col items-center gap-2">
+                                    <label className="text-[10px] font-black uppercase opacity-40">נתוני התמדה</label>
+                                    <div className="flex items-center gap-3 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
+                                       <div className="flex flex-col items-center text-slate-900 font-heebo"><span className="text-2xl font-black text-purple-600">{settingsData.totalDays}</span><span className="text-[9px] font-bold opacity-40">ימים שנצברו</span></div>
+                                    </div>
+                                 </div>
+                              </div>
+                            </div>
+                          )}
+                          {workspace.activeTab === 'design' && (
+                            <div className="space-y-6 animate-in fade-in">
+                              <div className="p-6 bg-white rounded-[40px] shadow-sm space-y-6 text-slate-700 font-heebo">
+                                <label className="text-xs font-black uppercase tracking-widest block opacity-50 text-slate-900">מראה המגירה</label>
+                                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl"><span>צבע רקע</span><input type="color" value={settingsData.drawerBgColor} onChange={e => setSettingsData(s => ({...s, drawerBgColor: e.target.value}))} className="w-10 h-10 rounded-lg cursor-pointer shadow-sm border-0" /></div>
+                                <div className="space-y-4 bg-slate-50 p-4 rounded-2xl"><span>שקיפות</span><input type="range" min="0" max="1" step="0.01" value={settingsData.drawerOpacity} onChange={e => setSettingsData(s => ({...s, drawerOpacity: parseFloat(e.target.value)}))} className="w-full accent-slate-900" /></div>
+                                <div className="space-y-4 bg-slate-50 p-4 rounded-2xl"><span>טשטוש</span><input type="range" min="0" max="40" step="1" value={settingsData.drawerBlur} onChange={e => setSettingsData(s => ({...s, drawerBlur: parseInt(e.target.value)}))} className="w-full accent-slate-900" /></div>
+                              </div>
+                            </div>
+                          )}
+                          {workspace.activeTab === 'stages' && (
+                            <div className="grid grid-cols-4 gap-3 animate-in fade-in pb-10">
+                              {Array.from({ length: 32 }).map((_, i) => (
+                                <div key={i+1} className="aspect-square relative rounded-2xl overflow-hidden border-2 flex items-center justify-center group bg-white shadow-sm transition-all active:scale-90" style={{ borderColor: settingsData.stageImages[i+1] ? settingsData.primaryBtnColor : '#f1f5f9' }}>
+                                  {settingsData.stageImages[i+1] ? <img src={settingsData.stageImages[i+1]} className="w-full h-full object-cover" alt="stage" /> : <span className="text-[10px] font-black opacity-20 text-slate-900 font-heebo">{i+1}</span>}
+                                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, stageImages: {...s.stageImages, [i+1]: URL.createObjectURL(f)}})) }} />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {workspace.activeTab === 'balls' && (
+                            <div className="space-y-4 animate-in fade-in pb-10 text-slate-900 font-heebo">
+                              {emotions.map(emo => (
+                                <div key={emo.id} className="flex items-center gap-4 p-4 bg-white rounded-[30px] shadow-sm">
+                                   <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl overflow-hidden shadow-md flex-shrink-0 ${settingsData.ballSprites[emo.id] ? '' : `bg-gradient-to-t ${emo.colorFull}`}`}>
+                                     {settingsData.ballSprites[emo.id] ? <img src={settingsData.ballSprites[emo.id]} className="w-full h-full rounded-full object-cover" alt="emo" /> : emo.face}
+                                   </div>
+                                   <div className="flex-1 text-[11px] font-black text-slate-300">העלה אייקון {emo.face}<input type="file" accept="image/*" className="mt-1 w-full text-slate-400 font-heebo" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, ballSprites: {...s.ballSprites, [emo.id]: URL.createObjectURL(f)}})) }} /></div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ציור האפליקציה למסך (כפי שביקשת)
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
 </body>
 </html>
