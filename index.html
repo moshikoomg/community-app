@@ -1,9 +1,9 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Minimum Winner</title>
+  <title>Minimum Winner & Live Smiley Engine</title>
   
   <!-- CDN Libraries -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,29 +17,17 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,700;1,300&display=swap');
     
-    body { font-family: 'Heebo', sans-serif; user-select: none; margin: 0; position: fixed; width: 100%; height: 100%; overflow: hidden; }
+    body { font-family: 'Heebo', sans-serif; user-select: none; margin: 0; position: fixed; width: 100%; height: 100%; overflow: hidden; background: #0F172A; }
     #physics-container { position: absolute; inset: 0; z-index: 10; pointer-events: auto; cursor: grab; }
     #physics-container:active { cursor: grabbing; }
 
-    @keyframes clickBounce {
-      0% { transform: scale(1); }
-      40% { transform: scale(1.4); }
-      70% { transform: scale(0.9); }
-      100% { transform: scale(1); }
-    }
-    .click-bounce-anim { animation: clickBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
     .sidebar { position: absolute; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; transition: width 500ms cubic-bezier(0.19, 1, 0.22, 1), transform 500ms cubic-bezier(0.19, 1, 0.22, 1); z-index: 50; overflow: hidden; background: white; pointer-events: auto; }
-    .sidebar-btn { width: 56px; height: 56px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); position: relative; border: none; flex-shrink: 0; transition: all 0.4s; overflow: hidden; cursor: pointer; }
+    .sidebar-btn { width: 56px; height: 56px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; position: relative; border: none; flex-shrink: 0; transition: all 0.4s; overflow: visible; cursor: pointer; }
     
     @keyframes exitUp { 0% { transform: translate(-50%, 0) scale(1); opacity: 1; } 100% { transform: translate(-50%, -120vh) scale(1.1); opacity: 0; } }
     .animate-exit-up { animation: exitUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
     @keyframes bouncePop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
     .bounce-pop { animation: bouncePop 0.4s ease-out; }
-    @keyframes glowPulse { 0% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); } 50% { box-shadow: 0 0 60px rgba(251, 191, 36, 0.8); } 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); } }
-    .active-ball-glow { animation: glowPulse 2s infinite ease-in-out; }
-    @keyframes yellowPing { 0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.8); } 100% { box-shadow: 0 0 0 60px rgba(251, 191, 36, 0); } }
-    .yellow-halo-flash { animation: yellowPing 0.7s ease-out forwards; }
     @keyframes buttonPump { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .animate-button-pop { animation: buttonPump 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     
@@ -50,8 +38,8 @@
     .slide-out-right { animation: slideOutRight 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
     @keyframes slideOutRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(150%); opacity: 0; } }
     
-    .explanation-sphere { position: absolute; width: 160px; height: 160px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); cursor: pointer; overflow: hidden; }
-    .explanation-sphere.center { transform: translate3d(0, 0, 100px); z-index: 50; opacity: 1; box-shadow: 0 30px 60px -10px rgba(0,0,0,0.2); }
+    .explanation-sphere { position: absolute; width: 160px; height: 160px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); cursor: pointer; overflow: visible; }
+    .explanation-sphere.center { transform: translate3d(0, 0, 100px); z-index: 50; opacity: 1; }
     .explanation-sphere.side { z-index: 10; opacity: 0.15; filter: blur(8px) grayscale(50%); }
     .explanation-sphere.left { transform: translate3d(-140px, 20px, -150px) rotateY(20deg); }
     .explanation-sphere.right { transform: translate3d(140px, 20px, -150px) rotateY(-20deg); }
@@ -59,22 +47,29 @@
     .majest-card { width: 90%; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px); border-radius: 40px; padding: 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.08); transition: all 0.6s ease; }
     .info-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-style: italic; color: #000; }
     
-    /* סגנונות מותאמים אישית למסכים רחבים יותר */
     @media (min-width: 640px) {
       .majest-card { padding: 30px; }
       .info-title { font-size: 38px; }
     }
     
     .backlight-spot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%); pointer-events: none; z-index: -1; }
+
+    .editor-scrollbar::-webkit-scrollbar { width: 6px; }
+    .editor-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .editor-scrollbar::-webkit-scrollbar-thumb { background: #E5E5E5; border-radius: 10px; }
+
+    /* Container for Smart Fit */
+    .live-canvas-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+    .live-canvas-wrapper canvas { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
   </style>
 </head>
 <body>
   <div id="root"></div>
   
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, useCallback } = React;
     
-    // --- Inline Lucide Icons to prevent UMD loading errors ---
+    // --- Icons Setup ---
     const Icon = ({ children, className = "", size = 24, ...rest }) => (
       <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...rest}>
         {children}
@@ -90,75 +85,635 @@
     const Lock = (props) => <Icon {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
     const Shield = (props) => <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></Icon>;
     const Flag = (props) => <Icon {...props}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></Icon>;
+    const PaletteIcon = (props) => <Icon {...props}><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></Icon>;
+    const ActivityIcon = (props) => <Icon {...props}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Icon>;
+    const HandIcon = (props) => <Icon {...props}><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M6 14v-1a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M18 11a4 4 0 0 1 4 4v2a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.82-2.14l-5.17-5.17a2 2 0 0 1 2.83-2.82L7 15"/></Icon>;
+    const EyeIcon = (props) => <Icon {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></Icon>;
+    const SmileIcon = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></Icon>;
+    const ZapIcon = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
 
-    // --- נתוני פתיחה ---
+    // --- Data & Texts ---
     const introCardsData = [
       { title: 'כוח רצון הוא משאב זמני.', desc: 'אם נבנה על מוטיבציה בלבד כדי להתמיד, ההרגל פשוט לא יחזיק מעמד.' },
       { title: 'הסוד הוא בפעולות מגוחכות.', desc: 'פעולה כל כך קטנה, שאין שום סיכוי או תירוץ לא לעשות אותה, גם ביום הכי קשה.' },
       { title: 'הניצחון כבר מובטח.', desc: 'מתחייבים למינימום. כל יום. הבונוס הוא רק אם מתחשק לך, אבל הרצף נשמר.' }
     ];
 
-    // --- לוגיקת יחידות מידה ---
-    const getUnits = (name) => {
-      const lowerName = name.toLowerCase();
-      if (lowerName.includes('ספר') || lowerName.includes('קריאה')) return { minU: 'עמוד', maxU: 'עמודים' };
-      if (lowerName.includes('ריצה') || lowerName.includes('הליכה')) return { minU: 'ק"מ', maxU: 'ק"מ' };
-      if (lowerName.includes('מים')) return { minU: 'כוס', maxU: 'כוסות' };
-      if (lowerName.includes('מדיטציה')) return { minU: 'דקה', maxU: 'דקות' };
-      return { minU: 'פעם', maxU: 'פעמים' }; 
+    const emotions = [
+      { id: 1, label: "אנרגיית שיא", desc: "מצב שבו אתה מרגיש בשיא הכוח והתשוקה שלך. זמן לפעולות המורכבות ביותר." }, 
+      { id: 2, label: "סקרנות וגילוי", desc: "רגע של פתיחות ללמידה ודברים חדשים. מצוין להרגלי קריאה ומחקר." }, 
+      { id: 3, label: "שלווה ממוקדת", desc: "ריכוז שקט וחד. מתאים להרגלי עבודה עמוקה ומשימות מנטליות." }, 
+      { id: 4, label: "הנאה וסיפוק", desc: "הנאה מהדרך ומהניצחונות הקטנים. הרגע שבו ההרגל הופך לתענוג." }, 
+      { id: 5, label: "הרמוניה פנימית", desc: "חיבור פנימי עדין. זמן מעולה למדיטציה, יוגה או פשוט נשימה עמוקה." }, 
+    ];
+
+    // =====================================================================
+    // ======================= LIVE SMILEY ENGINE (CORE) ===================
+    // =====================================================================
+
+    const DEFAULT_SMILEY_CONFIG = {
+      bodyColor: '#58CC02', bodyOuterColor: '#2A5200', bodyStrokeColor: '#1a1a1a', bodyStrokeWidth: 4,
+      showBorder: true, bodyScale: 1.0, flatMode: false, glassEffect: false,
+      viscosity: 0.15, flexibility: 0.6, gravity: 0.5, bounciness: 0.6,
+      faceYOffset: 0, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 1.4, rotationIntensity: 1.2, linkEyes: true,
+      leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8,
+      rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 10,
+      mouthYOffset: 38, mouthWidth: 32, mouthCurve: 0.2, mouthStrokeWidth: 12,
+      hasHands: true, handLength: 85, handYOffset: 15, armCurvature: 1.8, armThickness: 5,
+      stringGravity: 0.5, stringDamping: 0.96, armRepulsion: 0.5,
+      shadowOpacity: 0.25, lightX: -0.3, lightY: -0.3, blinkRate: 0.006, blinkSpeed: 0.4,
+      idleFloatSpeed: 0.002, excitedFlapSpeed: 0.02, hitSquash: 1.5, gazeSpeed: 2.0
     };
 
-    // יצירת טקסטורה לכדורים בפיזיקה (אחידות מלאה בין תמונה לאייקון)
-    const createBallTexture = (emoji, colorStr, customImgUrl = null, size = 128) => {
-      return new Promise((resolve) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = size; canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, size, size);
-        ctx.save();
-        ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip();
+    // User's perfectly crafted JSON Presets
+    const PRESETS = {
+      1: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#ff7070", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: -8, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 13, mouthCurve: 0.4, mouthStrokeWidth: 7, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
+      2: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#c7b8a3", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 40, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 7, mouthYOffset: 6, mouthWidth: 12, mouthCurve: -0.3, mouthStrokeWidth: 7, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
+      3: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#ad8cde", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 8, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 13, mouthCurve: -0.2, mouthStrokeWidth: 7, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
+      4: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#ffbf75", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 8, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.1, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.1, eyeStrokeWidth: 7, mouthYOffset: 13, mouthWidth: 28, mouthCurve: 0, mouthStrokeWidth: 8, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.25 },
+      5: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#a1ce40", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 30, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.65, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: -0.1, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: -0.1, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 47, mouthCurve: 0.1, mouthStrokeWidth: 4, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
+    };
 
-        if (customImgUrl) {
-          const img = new Image();
-          img.crossOrigin = "Anonymous";
-          img.onload = () => {
-            const aspect = img.width / img.height;
-            let drawW = size, drawH = size, drawX = 0, drawY = 0;
-            if (aspect > 1) { drawW = size * aspect; drawX = -(drawW - size) / 2; }
-            else { drawH = size / aspect; drawY = -(drawH - size) / 2; }
-            ctx.drawImage(img, drawX, drawY, drawW, drawH);
-            ctx.restore();
-            const highlight = ctx.createRadialGradient(size * 0.28, size * 0.28, 0, size * 0.28, size * 0.28, size * 0.4);
-            highlight.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-            highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = highlight;
-            ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.fill();
-            resolve(canvas.toDataURL());
-          };
-          img.src = customImgUrl;
-        } else {
-          let c1 = '#a78bfa', c2 = '#8b5cf6';
-          const matches = colorStr.match(/#[a-fA-F0-9]{3,6}/g);
-          if (matches) { c1 = matches[0]; c2 = matches[1] || matches[0]; }
-          const mainGrad = ctx.createRadialGradient(size * 0.3, size * 0.3, size * 0.1, size / 2, size / 2, size / 2);
-          mainGrad.addColorStop(0, c1); mainGrad.addColorStop(1, c2);
-          ctx.fillStyle = mainGrad;
-          ctx.fill();
-          ctx.restore();
-          ctx.font = `${size * 0.55}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillStyle = 'white'; ctx.fillText(emoji, size / 2, size / 2 + size * 0.05);
-          resolve(canvas.toDataURL());
+    // --- Smart Rendering Function (With Exact Arm Length Clamping) ---
+    const drawSmileyCanvas = (ctx, conf, phys, time, renderScale = 1, isExport = false, reflections = []) => {
+      if (!conf || !phys) return; 
+      const isValidHex = (c) => typeof c === 'string' && /^#([A-Fa-f0-9]{3}){1,2}$/.test(c);
+      const bodyColor = isValidHex(conf.bodyColor) ? conf.bodyColor : '#58CC02';
+      const outerColor = isValidHex(conf.bodyOuterColor) ? conf.bodyOuterColor : '#222222';
+      const strokeColor = isValidHex(conf.bodyStrokeColor) ? conf.bodyStrokeColor : '#1a1a1a';
+      const radius = 110 * conf.bodyScale * renderScale;
+      
+      ctx.save();
+      ctx.translate(phys.worldX, phys.worldY);
+      ctx.rotate(phys.rotation || 0);
+      ctx.scale(phys.squashX, phys.squashY);
+
+      const project = (lx, ly) => {
+        const ax = isExport ? 0 : ((phys.x || 0) + (phys.faceSlide?.x || 0)) * (Math.PI / 2.2) * conf.projectionDepth * conf.rotationIntensity;
+        const ay = isExport ? 0 : ((phys.y || 0) + (phys.faceSlide?.y || 0)) * (Math.PI / 3.0) * conf.projectionDepth * conf.rotationIntensity;
+        const lon = (lx / 110) * (Math.PI / 2) + ax;
+        const lat = ((ly + conf.faceYOffset) / 110) * (Math.PI / 2) + ay;
+        const zS = Math.cos(lon) * Math.cos(lat);
+        return { x: radius * Math.sin(lon) * Math.cos(lat), y: radius * Math.sin(lat), z: zS, sX: Math.cos(lon), sY: Math.cos(lat), vis: zS > -0.45 };
+      };
+
+      const drawArms = (isBack) => {
+        if (!conf.hasHands || !phys.arms) return;
+        ctx.save(); ctx.lineWidth = conf.armThickness * renderScale * (radius / (110 * renderScale)); ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
+        
+        [-1, 1].forEach((side, i) => {
+          const start = project(side * 105, conf.handYOffset);
+          if ((start.z < 0) !== isBack) return;
+          const armP = phys.arms[i];
+          
+          // EXACT Arm length constraint visually
+          const exactLen = conf.handLength * conf.bodyScale * renderScale;
+          const armAngle = Math.atan2(armP.y, armP.x);
+          const endX = start.x + Math.cos(armAngle) * exactLen; 
+          const endY = start.y + Math.sin(armAngle) * exactLen;
+          
+          const dragX = isExport ? 0 : phys.vx * 2.5 * conf.armCurvature * renderScale;
+          const dragY = isExport ? 0 : phys.vy * 2.5 * conf.armCurvature * renderScale;
+          const cpX = start.x + (Math.cos(armAngle) * exactLen * 0.5) - dragX;
+          const cpY = start.y + (Math.sin(armAngle) * exactLen * 0.7) - dragY;
+          
+          ctx.beginPath(); ctx.moveTo(start.x, start.y);
+          ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+          ctx.stroke();
+        });
+        ctx.restore();
+      };
+
+      drawArms(true);
+
+      const body = new Path2D(); body.arc(0, 0, radius, 0, Math.PI * 2);
+      
+      // Draw Base Body
+      if (conf.flatMode) {
+        ctx.fillStyle = bodyColor;
+      } else {
+        try {
+          const grad = ctx.createRadialGradient(radius * conf.lightX, radius * conf.lightY, 0, 0, 0, radius * 1.3);
+          grad.addColorStop(0, bodyColor);
+          grad.addColorStop(1, outerColor);
+          ctx.fillStyle = grad;
+        } catch (e) { ctx.fillStyle = bodyColor; }
+      }
+      ctx.fill(body);
+      
+      if (conf.showBorder && conf.bodyStrokeWidth > 0) {
+        ctx.lineWidth = conf.bodyStrokeWidth * renderScale * (radius / (110 * renderScale));
+        ctx.strokeStyle = strokeColor;
+        ctx.stroke(body);
+      }
+
+      // Inside Body Clipping (Reflections & Glass)
+      ctx.save(); ctx.clip(body);
+
+      // --- Contact Shadows & Color Reflections ---
+      if (reflections && reflections.length > 0 && !conf.flatMode) {
+          reflections.forEach(ref => {
+              const angle = Math.atan2(ref.dy, ref.dx);
+              const cx = Math.cos(angle) * radius * 0.95;
+              const cy = Math.sin(angle) * radius * 0.95;
+
+              ctx.beginPath();
+              ctx.arc(cx, cy, radius * 0.8, 0, Math.PI * 2);
+              const shadowGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.8);
+              shadowGrad.addColorStop(0, `rgba(0,0,0,${0.6 * ref.intensity})`);
+              shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.fillStyle = shadowGrad;
+              ctx.fill();
+
+              if (ref.color) {
+                  ctx.beginPath();
+                  ctx.arc(cx, cy, radius * 0.9, 0, Math.PI * 2);
+                  const colorGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.9);
+                  ctx.globalAlpha = 0.5 * ref.intensity;
+                  colorGrad.addColorStop(0, ref.color);
+                  colorGrad.addColorStop(1, 'transparent');
+                  ctx.fillStyle = colorGrad;
+                  ctx.fill();
+                  ctx.globalAlpha = 1.0;
+              }
+          });
+      }
+
+      // Glass Highlight Effect
+      if (conf.glassEffect && !conf.flatMode) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(-radius * 0.25, -radius * 0.4, radius * 0.6, radius * 0.35, Math.PI / 8, 0, Math.PI * 2);
+        const glassGrad = ctx.createLinearGradient(-radius * 0.5, -radius * 0.8, radius * 0.2, 0);
+        glassGrad.addColorStop(0, 'rgba(255,255,255,0.7)');
+        glassGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glassGrad;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Draw Face
+      [-1, 1].forEach(side => {
+        const ep = project(side * conf.eyeSpacing, conf.eyeYOffset);
+        if (ep.vis) {
+          const size = side === -1 ? conf.leftEyeSize : conf.rightEyeSize;
+          const curve = side === -1 ? conf.leftEyeCurve : conf.rightEyeCurve;
+          const ew = conf.leftEyeWidth * Math.abs(ep.sX) * renderScale * size;
+          const eh = 24 * phys.blink * curve * renderScale;
+          ctx.beginPath(); ctx.lineWidth = conf.eyeStrokeWidth * renderScale; ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
+          ctx.moveTo(ep.x - ew, ep.y); ctx.quadraticCurveTo(ep.x, ep.y - eh, ep.x + ew, ep.y); ctx.stroke();
         }
       });
+
+      const mp = project(0, conf.mouthYOffset);
+      if (mp.vis) {
+        const mw = conf.mouthWidth * Math.abs(mp.sX) * renderScale;
+        const mh = (conf.mouthCurve || 0.2) * 50 * Math.abs(mp.sY) * renderScale;
+        ctx.beginPath(); ctx.lineWidth = conf.mouthStrokeWidth * renderScale; ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
+        ctx.moveTo(mp.x - mw, mp.y); ctx.bezierCurveTo(mp.x - mw/2, mp.y + mh, mp.x + mw/2, mp.y + mh, mp.x + mw, mp.y); ctx.stroke();
+      }
+      
+      ctx.restore(); // End of clipping
+      drawArms(false); // Draw front arms
+      ctx.restore();
     };
 
-    const emotions = [
-      { id: 1, colorFull: 'from-[#a78bfa] to-[#8b5cf6]', face: '🤩', hex: '#a78bfa', label: "אנרגיית שיא", desc: "מצב שבו אתה מרגיש בשיא הכוח והתשוקה שלך. זמן לפעולות המורכבות ביותר." }, 
-      { id: 2, colorFull: 'from-[#f472b6] to-[#ec4899]', face: '😮', hex: '#f472b6', label: "סקרנות וגילוי", desc: "רגע של פתיחות ללמידה ודברים חדשים. מצוין להרגלי קריאה ומחקר." }, 
-      { id: 3, colorFull: 'from-[#60a5fa] to-[#3b82f6]', face: '😉', hex: '#60a5fa', label: "שלווה ממוקדת", desc: "ריכוז שקט וחד. מתאים להרגלי עבודה עמוקה ומשימות מנטליות." }, 
-      { id: 4, colorFull: 'from-[#fbbf24] to-[#f59e0b]', face: '😋', hex: '#fbbf24', label: "הנאה וסיפוק", desc: "הנאה מהדרך ומהניצחונות הקטנים. הרגע שבו ההרגל הופך לתענוג." }, 
-      { id: 5, colorFull: 'from-[#4ade80] to-[#2dd4bf]', face: '😊', hex: '#4ade80', label: "הרמוניה פנימית", desc: "חיבור פנימי עדין. זמן מעולה למדיטציה, יוגה או פשוט נשימה עמוקה." }, 
-    ];
+    // --- Physics Logic (Strict Exact Arm Lengths & Limits) ---
+    const updateSmileyPhys = (phys, config, time, externalVx, externalVy, mode) => {
+      if (!config || !phys) return;
+      
+      if (Math.abs(externalVx) < 0.1) externalVx = 0;
+      if (Math.abs(externalVy) < 0.1) externalVy = 0;
+
+      // Blink
+      if (!phys.isBlinking && Math.random() < config.blinkRate && time - phys.lastBlink > 1000) phys.isBlinking = true;
+      if (phys.isBlinking) {
+        phys.blink -= config.blinkSpeed; if (phys.blink <= 0) { phys.blink = 0; phys.isBlinking = false; phys.lastBlink = time; }
+      } else { phys.blink += (1 - phys.blink) * config.blinkSpeed; }
+
+      // Face Inertia
+      const faceInertia = config.viscosity * 2.5;
+      const targetSlideX = -externalVx * 0.05;
+      const targetSlideY = -externalVy * 0.05;
+      
+      phys.faceSlide.x += (targetSlideX - phys.faceSlide.x) * faceInertia;
+      phys.faceSlide.y += (targetSlideY - phys.faceSlide.y) * faceInertia;
+      
+      const maxSlide = 0.5;
+      phys.faceSlide.x = Math.max(-maxSlide, Math.min(maxSlide, phys.faceSlide.x));
+      phys.faceSlide.y = Math.max(-maxSlide, Math.min(maxSlide, phys.faceSlide.y));
+
+      // Recovery of Squash (Always gravitates back to 1.0 quickly to avoid perma-pancake)
+      phys.squashX += (1.0 - phys.squashX) * 0.15;
+      phys.squashY += (1.0 - phys.squashY) * 0.15;
+
+      // Arms Logic - Pure direction and velocity, rendering handles exact strict length.
+      phys.arms.forEach((arm, idx) => {
+        const side = idx === 0 ? -1 : 1;
+        arm.vy += config.stringGravity;
+        arm.vx += side * (config.armRepulsion || 1.5);
+        arm.vx *= config.stringDamping;
+        arm.vy *= config.stringDamping;
+        arm.vx -= externalVx * 0.6; arm.vy -= externalVy * 0.6;
+        
+        if (mode === 'falling') arm.vy -= 4; 
+        if (mode === 'excited') { arm.vy -= 1.5; arm.vx += side * Math.sin(time * (config.excitedFlapSpeed || 0.02)) * 3; }
+
+        arm.x += arm.vx; arm.y += arm.vy;
+        
+        // Exact length restriction applied mathematically to the physics point too
+        const exactLen = config.handLength * config.bodyScale;
+        const dist = Math.sqrt(arm.x * arm.x + arm.y * arm.y);
+        if (dist > 0) {
+            const angle = Math.atan2(arm.y, arm.x);
+            arm.x = Math.cos(angle) * exactLen;
+            arm.y = Math.sin(angle) * exactLen;
+        } else {
+            arm.y = exactLen; 
+        }
+      });
+      
+      // Gaze Logic
+      if (mode === 'idle') {
+        phys.x += (Math.sin(time * (config.idleFloatSpeed || 0.002)) * 0.2 - phys.x) * config.viscosity;
+        phys.y += (Math.cos(time * ((config.idleFloatSpeed || 0.002) * 1.3)) * 0.2 - phys.y) * config.viscosity;
+      } else if (phys.targetGaze) {
+        phys.x += (phys.targetGaze.x - phys.x) * config.viscosity * (config.gazeSpeed || 2.0);
+        phys.y += (phys.targetGaze.y - phys.y) * config.viscosity * (config.gazeSpeed || 2.0);
+      }
+    };
+
+    // --- Component: Live Smiley (UI Rendering) ---
+    const LiveSmiley = ({ config, mode = 'idle', className = "" }) => {
+      const canvasRef = useRef(null);
+      const requestRef = useRef();
+      const physRef = useRef({
+        initialized: false,
+        worldX: 0, worldY: 0, vx: 0, vy: 0, rotation: 0, x: 0, y: 0, targetGaze: {x:0, y:0},
+        scale: 1, squashX: 1, squashY: 1, blink: 1, lastBlink: 0, isBlinking: false,
+        faceSlide: { x: 0, y: 0 }, baseFloatOffset: Math.random() * Math.PI * 2,
+        arms: [{ x: -20, y: 0, vx: 0, vy: 0 }, { x: 20, y: 0, vx: 0, vy: 0 }]
+      });
+
+      useEffect(() => {
+        const handleMouseMove = (e) => {
+           if (mode === 'follow' || mode === 'excited') {
+              physRef.current.targetGaze = {
+                x: (e.clientX / window.innerWidth) * 2 - 1,
+                y: (e.clientY / window.innerHeight) * 2 - 1
+              };
+           }
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+      }, [mode]);
+
+      const draw = useCallback((t) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        
+        if (canvas.width !== Math.floor(width * dpr)) canvas.width = Math.floor(width * dpr);
+        if (canvas.height !== Math.floor(height * dpr)) canvas.height = Math.floor(height * dpr);
+        
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0,0,width,height);
+        
+        const p = physRef.current;
+        const maxExpectedRadius = Math.max(110 * config.bodyScale, config.hasHands ? config.handLength * config.bodyScale : 0);
+        const renderScale = Math.min(width, height) / ((maxExpectedRadius * 2) + 40); 
+        
+        if (!p.initialized && width > 0 && height > 0) {
+            p.worldX = width / 2; p.worldY = height / 2; p.initialized = true;
+        }
+        if (!p.initialized) { ctx.restore(); requestRef.current = requestAnimationFrame(draw); return; }
+
+        const floatOffset = Math.sin(t * (config.idleFloatSpeed || 0.002) + p.baseFloatOffset) * (mode === 'excited' ? 12 : 3);
+        const targetY = height / 2 + (mode === 'excited' ? -height * 0.08 : 0) + floatOffset;
+        const targetX = width / 2;
+
+        p.vy += (targetY - p.worldY) * 0.15; p.vy *= 0.8; p.worldY += p.vy;
+        p.vx += (targetX - p.worldX) * 0.15; p.vx *= 0.8; p.worldX += p.vx;
+
+        updateSmileyPhys(p, config, t, p.vx, p.vy, mode);
+        drawSmileyCanvas(ctx, config, p, t, renderScale, false, []); 
+        ctx.restore();
+        requestRef.current = requestAnimationFrame(draw);
+      }, [config, mode]);
+
+      useEffect(() => {
+        requestRef.current = requestAnimationFrame(draw);
+        return () => cancelAnimationFrame(requestRef.current);
+      }, [draw]);
+
+      return (
+        <div className={`live-canvas-wrapper ${className}`} onClick={() => {
+            physRef.current.vy = -12; physRef.current.squashX = config.hitSquash || 1.4; physRef.current.squashY = 1 / (config.hitSquash || 1.4); physRef.current.isBlinking = true;
+        }}>
+          <canvas ref={canvasRef} />
+        </div>
+      );
+    };
+
+    // =====================================================================
+    // ======================= SMILEY EDITOR OVERLAY =======================
+    // =====================================================================
+
+    const SmileyEditor = ({ emotion, initialConfig, onSave, onClose }) => {
+      const [config, setConfig] = useState(initialConfig);
+      const [activeTab, setActiveTab] = useState('behavior'); 
+      const [previewMode, setPreviewMode] = useState('idle'); // Specific state to preview
+      
+      const canvasRef = useRef(null);
+      const requestRef = useRef();
+      const physRef = useRef({
+        worldX: 400, worldY: 400, vx: 0, vy: 0, rotation: 0, x: 0, y: 0, targetGaze: {x:0, y:0},
+        scale: 1, squashX: 1, squashY: 1, blink: 1, lastBlink: 0, isBlinking: false, isDragging: false,
+        faceSlide: { x: 0, y: 0 }, baseFloatOffset: 0,
+        arms: [{ x: -20, y: 0, vx: 0, vy: 0 }, { x: 20, y: 0, vx: 0, vy: 0 }]
+      });
+
+      const updateConfig = (k, v) => {
+        setConfig(prev => {
+          let next = { ...prev, [k]: v };
+          if (next.linkEyes) {
+            if (k === 'leftEyeSize') next.rightEyeSize = v;
+            if (k === 'leftEyeWidth') next.rightEyeWidth = v;
+            if (k === 'leftEyeCurve') next.rightEyeCurve = v;
+          }
+          return next;
+        });
+      };
+
+      const triggerHit = () => {
+         physRef.current.squashX = config.hitSquash || 1.4;
+         physRef.current.squashY = 1 / (config.hitSquash || 1.4);
+         physRef.current.vy = -15; // Bounce up
+         physRef.current.isBlinking = true;
+      };
+
+      const draw = useCallback((t) => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!ctx) return;
+        
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        if (canvas.width !== Math.floor(width * dpr)) canvas.width = Math.floor(width * dpr);
+        if (canvas.height !== Math.floor(height * dpr)) canvas.height = Math.floor(height * dpr);
+        
+        ctx.save(); ctx.scale(dpr, dpr); ctx.clearRect(0,0,width,height);
+
+        const p = physRef.current;
+        const s = config;
+        const floor = height * 0.85; 
+
+        const maxExpectedRadius = Math.max(110 * s.bodyScale, s.hasHands ? s.handLength * s.bodyScale : 0);
+        const renderScale = Math.min(width, height) / ((maxExpectedRadius * 2) + 80); 
+        const scaledRadius = 110 * s.bodyScale * renderScale;
+
+        // Editor Physics (Respecting Preview Mode)
+        if (p.isDragging) {
+          p.vx = (p.lastMouseX - p.worldX) * 0.4; p.vy = (p.lastMouseY - p.worldY) * 0.4;
+          p.worldX = p.lastMouseX; p.worldY = p.lastMouseY;
+        } else {
+          if (previewMode === 'falling') {
+              // Simulate falling permanently
+              p.worldY = height * 0.3;
+              p.vy = 8; p.vx = 0;
+              p.worldX = width / 2;
+          } else if (previewMode === 'excited') {
+              const floatOffset = Math.sin(t * (s.idleFloatSpeed || 0.002)) * 12;
+              const targetY = height / 2 - height * 0.08 + floatOffset;
+              p.vy += (targetY - p.worldY) * 0.15; p.vy *= 0.8; p.worldY += p.vy;
+              p.vx += (width/2 - p.worldX) * 0.15; p.vx *= 0.8; p.worldX += p.vx;
+          } else {
+              // Normal gravity settling
+              p.vy += s.gravity; p.vx *= 0.98; p.vy *= 0.98;
+              if (Math.abs(p.vx) < 0.05) p.vx = 0;
+              if (Math.abs(p.vy) < 0.05 && p.worldY + scaledRadius > floor - 2) p.vy = 0;
+              p.worldX += p.vx; p.worldY += p.vy;
+              if (p.worldY + scaledRadius > floor) { p.worldY = floor - scaledRadius; p.vy *= -s.bounciness; if (Math.abs(p.vy) < 0.5) p.vy = 0; }
+              const wallL = width * 0.15; const wallR = width * 0.85;
+              if (p.worldX - scaledRadius < wallL) { p.worldX = wallL + scaledRadius; p.vx *= -s.bounciness; }
+              if (p.worldX + scaledRadius > wallR) { p.worldX = wallR - scaledRadius; p.vx *= -s.bounciness; }
+              if (Math.abs(p.vy) < 1 && !p.isDragging && s.gravity < 0.8) {
+                p.worldY += Math.sin(t * (s.idleFloatSpeed || 0.002) + p.baseFloatOffset) * ((1 - s.gravity) * 2);
+              }
+          }
+        }
+
+        updateSmileyPhys(p, s, t, p.vx, p.vy, previewMode);
+
+        const distFromFloor = Math.max(0, floor - (p.worldY + scaledRadius * p.squashY));
+        if (distFromFloor < 150 && previewMode !== 'falling') {
+            const shadowOp = 0.4 * (1 - distFromFloor/150);
+            const shadowW = scaledRadius * 1.5 * p.squashX;
+            ctx.beginPath();
+            ctx.ellipse(p.worldX, floor, shadowW, 10, 0, 0, Math.PI*2);
+            const shadowGrad = ctx.createRadialGradient(p.worldX, floor, 0, p.worldX, floor, shadowW);
+            shadowGrad.addColorStop(0, `rgba(0,0,0,${shadowOp})`);
+            shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = shadowGrad;
+            ctx.fill();
+        }
+
+        drawSmileyCanvas(ctx, s, p, t, renderScale, false, []);
+        ctx.restore();
+        requestRef.current = requestAnimationFrame(draw);
+      }, [config, previewMode]);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (canvas) {
+           physRef.current.worldX = canvas.clientWidth / 2;
+           physRef.current.worldY = canvas.clientHeight / 2;
+        }
+        requestRef.current = requestAnimationFrame(draw);
+        return () => cancelAnimationFrame(requestRef.current);
+      }, [draw]);
+
+      return (
+        <div className="fixed inset-0 z-[400] bg-[#F7F7F7] flex text-[#3C3C3C] overflow-hidden" dir="rtl" onClick={e => e.stopPropagation()}>
+          <aside className="w-24 bg-white border-l-2 border-[#E5E5E5] flex flex-col items-center py-6 gap-4 z-30 flex-shrink-0">
+            <div className="p-3 bg-[#58CC02] rounded-2xl shadow-[0_4px_0_#46A302] text-white mb-2"><SmileIcon size={28} /></div>
+            {[
+              { id: 'behavior', icon: ZapIcon, color: '#FFC800', label: 'התנהגות' },
+              { id: 'style', icon: PaletteIcon, color: '#CE82FF', label: 'מראה' },
+              { id: 'eyes', icon: EyeIcon, color: '#1CB0F6', label: 'פנים' },
+              { id: 'mouth', icon: SmileIcon, color: '#FFC800', label: 'פה' },
+              { id: 'phys', icon: ActivityIcon, color: '#FF4B4B', label: 'פיזיקה' },
+              { id: 'arms', icon: HandIcon, color: '#58CC02', label: 'ידיים' }
+            ].map(item => (
+              <button key={item.id} onClick={() => setActiveTab(item.id)} className={`group flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'scale-110' : 'opacity-50 hover:opacity-100'}`}>
+                <div className={`p-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-[#DDF4FF] text-[#1CB0F6] border-2 border-[#1CB0F6]' : 'text-[#AFAFAF]'}`}><item.icon size={24} /></div>
+                <span className="text-[10px] font-black uppercase tracking-tighter text-center">{item.label}</span>
+              </button>
+            ))}
+          </aside>
+
+          <main className="w-[360px] bg-white border-l-2 border-[#E5E5E5] flex flex-col z-20 flex-shrink-0 shadow-2xl">
+            <header className="p-6 border-b border-[#E5E5E5] bg-white text-right">
+              <h2 className="text-2xl font-black text-[#3C3C3C]">עורך סמיילי אישי</h2>
+              <p className="text-sm font-bold text-[#AFAFAF]">מעצב עבור: {emotion.label}</p>
+            </header>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 editor-scrollbar text-right">
+              {/* --- EDITOR TABS --- */}
+              {activeTab === 'behavior' && (
+                <div className="space-y-6">
+                  <div className="bg-[#F7F7F7] p-4 rounded-2xl border border-[#E5E5E5] space-y-3">
+                     <span className="font-black text-sm text-[#3C3C3C] block mb-2">סימולציית מצבים בזמן אמת</span>
+                     <div className="grid grid-cols-2 gap-2">
+                        <button onClick={() => setPreviewMode('idle')} className={`py-2 text-xs font-bold rounded-lg ${previewMode === 'idle' ? 'bg-[#1CB0F6] text-white' : 'bg-white border text-slate-600'}`}>המתנה בבר</button>
+                        <button onClick={() => setPreviewMode('follow')} className={`py-2 text-xs font-bold rounded-lg ${previewMode === 'follow' ? 'bg-[#1CB0F6] text-white' : 'bg-white border text-slate-600'}`}>מעקב עכבר</button>
+                        <button onClick={() => setPreviewMode('excited')} className={`py-2 text-xs font-bold rounded-lg ${previewMode === 'excited' ? 'bg-[#1CB0F6] text-white' : 'bg-white border text-slate-600'}`}>ריחוף/שמחה</button>
+                        <button onClick={() => setPreviewMode('falling')} className={`py-2 text-xs font-bold rounded-lg ${previewMode === 'falling' ? 'bg-[#1CB0F6] text-white' : 'bg-white border text-slate-600'}`}>נפילה</button>
+                     </div>
+                     <button onClick={triggerHit} className="w-full mt-2 py-3 bg-[#FF4B4B] text-white font-black rounded-lg shadow-md hover:bg-red-600 active:scale-95 transition-all">הדמה מכה / התנגשות</button>
+                  </div>
+                  <DuoSlider label="מהירות ריחוף (המתנה)" val={config.idleFloatSpeed || 0.002} min={0.0005} max={0.01} step={0.0005} onChange={v => updateConfig('idleFloatSpeed', v)} />
+                  <DuoSlider label="התרגשות (נפנוף ידיים)" val={config.excitedFlapSpeed || 0.02} min={0.005} max={0.08} step={0.005} onChange={v => updateConfig('excitedFlapSpeed', v)} />
+                  <DuoSlider label="רגישות למכה (מעיכה)" val={config.hitSquash || 1.4} min={1.0} max={2.5} step={0.1} onChange={v => updateConfig('hitSquash', v)} />
+                  <DuoSlider label="מהירות מעקב עיניים" val={config.gazeSpeed || 2.0} min={0.5} max={5.0} step={0.1} onChange={v => updateConfig('gazeSpeed', v)} />
+                </div>
+              )}
+              {activeTab === 'eyes' && (
+                <div className="space-y-6">
+                  <DuoSlider label="גובה הפנים (Y)" val={config.faceYOffset} min={-40} max={40} onChange={v => updateConfig('faceYOffset', v)} />
+                  <DuoSlider label="עומק 3D" val={config.projectionDepth} min={0.5} max={2.5} step={0.05} onChange={v => updateConfig('projectionDepth', v)} />
+                  <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-2xl border border-[#E5E5E5]">
+                    <span className="font-black text-sm text-[#3C3C3C]">צימוד עיניים יחד</span><DuoToggle active={config.linkEyes} onClick={() => updateConfig('linkEyes', !config.linkEyes)} />
+                  </div>
+                  <DuoSlider label={config.linkEyes ? "עקמומיות עיניים" : "עקמומיות עין שמאל"} val={config.leftEyeCurve} min={-2.0} max={3.0} step={0.1} onChange={v => updateConfig('leftEyeCurve', v)} />
+                  <DuoSlider label="רווח בין עיניים" val={config.eyeSpacing} min={10} max={80} onChange={v => updateConfig('eyeSpacing', v)} />
+                  <DuoSlider label="עובי קו עין" val={config.eyeStrokeWidth} min={2} max={25} onChange={v => updateConfig('eyeStrokeWidth', v)} />
+                </div>
+              )}
+              {activeTab === 'mouth' && (
+                <div className="space-y-6">
+                  <DuoSlider label="גובה פה מהמרכז" val={config.mouthYOffset} min={0} max={80} onChange={v => updateConfig('mouthYOffset', v)} />
+                  <DuoSlider label="רוחב פה" val={config.mouthWidth} min={5} max={80} onChange={v => updateConfig('mouthWidth', v)} />
+                  <DuoSlider label="קימור חיוך / עצב" val={config.mouthCurve} min={-1.5} max={2.5} step={0.1} onChange={v => updateConfig('mouthCurve', v)} />
+                  <DuoSlider label="עובי קו פה" val={config.mouthStrokeWidth} min={1} max={30} onChange={v => updateConfig('mouthStrokeWidth', v)} />
+                </div>
+              )}
+              {activeTab === 'style' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-2xl border border-[#E5E5E5]">
+                    <span className="font-black text-sm text-[#3C3C3C]">אפקט זכוכית / כדור</span><DuoToggle active={config.glassEffect} onClick={() => updateConfig('glassEffect', !config.glassEffect)} />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-2xl border border-[#E5E5E5]">
+                    <span className="font-black text-sm text-[#3C3C3C]">הצג מסגרת גוף</span><DuoToggle active={config.showBorder} onClick={() => updateConfig('showBorder', !config.showBorder)} />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-2xl border border-[#E5E5E5]">
+                    <span className="font-black text-sm text-[#3C3C3C]">צבע שטוח לחלוטין (Flat)</span><DuoToggle active={config.flatMode} onClick={() => updateConfig('flatMode', !config.flatMode)} />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-[#F7F7F7] border border-[#E5E5E5] rounded-2xl">
+                    <span className="text-sm font-black text-[#3C3C3C]">צבע גוף מרכזי</span><input type="color" value={config.bodyColor} onChange={e => updateConfig('bodyColor', e.target.value)} className="w-10 h-10 border-none cursor-pointer rounded-full" />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-[#F7F7F7] border border-[#E5E5E5] rounded-2xl">
+                    <span className="text-sm font-black text-[#3C3C3C]">צבע מעטפת (Outer Color)</span><input type="color" value={config.bodyOuterColor} onChange={e => updateConfig('bodyOuterColor', e.target.value)} className="w-10 h-10 border-none cursor-pointer rounded-full" />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-[#F7F7F7] border border-[#E5E5E5] rounded-2xl">
+                    <span className="text-sm font-black text-[#3C3C3C]">צבע קווים (עיניים, מסגרת)</span><input type="color" value={config.bodyStrokeColor} onChange={e => updateConfig('bodyStrokeColor', e.target.value)} className="w-10 h-10 border-none cursor-pointer rounded-full" />
+                  </div>
+                  <DuoSlider label="גודל כולל" val={config.bodyScale} min={0.3} max={3.0} step={0.05} onChange={v => updateConfig('bodyScale', v)} />
+                </div>
+              )}
+              {activeTab === 'phys' && (
+                <div className="space-y-6">
+                  <DuoSlider label="צמיגות" val={config.viscosity} min={0.01} max={0.6} step={0.01} onChange={v => updateConfig('viscosity', v)} />
+                  <DuoSlider label="הגזמת מתיחה" val={config.flexibility} min={0} max={2.5} step={0.05} onChange={v => updateConfig('flexibility', v)} />
+                  <DuoSlider label="קפיציות ברצפה" val={config.bounciness} min={0} max={1.5} step={0.05} onChange={v => updateConfig('bounciness', v)} />
+                  <DuoSlider label="כוח משיכה" val={config.gravity} min={0.05} max={2.0} step={0.05} onChange={v => updateConfig('gravity', v)} />
+                </div>
+              )}
+              {activeTab === 'arms' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-2xl border border-[#E5E5E5]">
+                    <span className="font-black text-sm text-[#3C3C3C]">הצג ידיים</span><DuoToggle active={config.hasHands} onClick={() => updateConfig('hasHands', !config.hasHands)} />
+                  </div>
+                  {config.hasHands && (
+                    <>
+                      <DuoSlider label="אורך הידיים" val={config.handLength} min={20} max={250} onChange={v => updateConfig('handLength', v)} />
+                      <DuoSlider label="עובי קו היד" val={config.armThickness} min={2} max={30} onChange={v => updateConfig('armThickness', v)} />
+                      <DuoSlider label="משקל היד" val={config.stringGravity} min={0} max={2.0} step={0.05} onChange={v => updateConfig('stringGravity', v)} />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            <footer className="p-6 border-t border-[#E5E5E5] flex flex-col gap-3 text-right bg-white">
+              <button onClick={() => onSave(config)} className="w-full py-4 rounded-2xl font-black text-sm text-white bg-[#58CC02] shadow-[0_4px_0_#46A302] hover:bg-[#61E002] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center">
+                <Check className="ml-2 w-5 h-5" /> שמור דמות לאפליקציה
+              </button>
+              <button onClick={onClose} className="w-full py-3 rounded-2xl font-bold text-sm text-slate-500 hover:bg-slate-100 transition-all">
+                ביטול
+              </button>
+            </footer>
+          </main>
+
+          <section className="flex-1 relative flex items-center justify-center p-8 overflow-hidden bg-[#EDF2F7]">
+            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#AFAFAF 1.5px, transparent 1.5px)', backgroundSize: '40px 40px' }}></div>
+            <div className="live-canvas-wrapper" style={{ maxWidth: '600px', maxHeight: '600px' }}>
+              <canvas
+                ref={canvasRef}
+                className="cursor-grab active:cursor-grabbing drop-shadow-2xl"
+                onMouseDown={(e) => {
+                  const rect = canvasRef.current.getBoundingClientRect();
+                  const mx = ((e.clientX - rect.left) / rect.width) * canvasRef.current.width; 
+                  const my = ((e.clientY - rect.top) / rect.height) * canvasRef.current.height;
+                  const p = physRef.current;
+                  p.isDragging = true; p.lastMouseX = mx; p.lastMouseY = my;
+                  // Look at click
+                  physRef.current.targetGaze = { x: ((e.clientX - rect.left) / rect.width) * 2 - 1, y: ((e.clientY - rect.top) / rect.height) * 2 - 1 };
+                }}
+                onDoubleClick={triggerHit}
+                onMouseMove={(e) => {
+                  const rect = canvasRef.current.getBoundingClientRect();
+                  physRef.current.lastMouseX = ((e.clientX - rect.left) / rect.width) * canvasRef.current.width;
+                  physRef.current.lastMouseY = ((e.clientY - rect.top) / rect.height) * canvasRef.current.height;
+                  if(previewMode !== 'idle' && previewMode !== 'falling') {
+                    physRef.current.targetGaze = { x: ((e.clientX - rect.left) / rect.width) * 2 - 1, y: ((e.clientY - rect.top) / rect.height) * 2 - 1 };
+                  }
+                }}
+                onMouseUp={() => physRef.current.isDragging = false}
+                onMouseLeave={() => physRef.current.isDragging = false}
+              />
+            </div>
+            {/* Overlay hint */}
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-[#AFAFAF] font-bold text-sm tracking-widest uppercase opacity-50 pointer-events-none">
+                {previewMode === 'idle' ? 'מצב: המתנה בבר' : previewMode === 'excited' ? 'מצב: ריחוף והתרגשות' : previewMode === 'falling' ? 'מצב: נפילה בצנצנת' : previewMode === 'follow' ? 'מצב: מעקב עכבר' : 'מצב חי'}
+            </div>
+          </section>
+        </div>
+      );
+    };
+
+    const DuoSlider = ({ label, val, min, max, step = 1, onChange }) => (
+      <div className="space-y-4 text-right">
+        <div className="flex justify-between items-end">
+          <span className="text-sm font-black text-[#3C3C3C] uppercase">{label}</span>
+          <span className="text-xs font-mono font-bold text-[#1CB0F6] bg-[#DDF4FF] px-2 py-1 rounded-lg">{typeof val === 'number' ? val.toFixed(step >= 1 ? 0 : 2) : '0'}</span>
+        </div>
+        <input type="range" min={min} max={max} step={step} value={val} onChange={e => onChange(parseFloat(e.target.value))} className="w-full h-4 bg-[#E5E5E5] rounded-full appearance-none cursor-pointer accent-[#58CC02]" />
+      </div>
+    );
+
+    const DuoToggle = ({ active, onClick }) => (
+      <button onClick={onClick} className={`w-14 h-8 rounded-full transition-all flex items-center p-1 ${active ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
+        <div className={`bg-white rounded-full transition-all shadow-md w-6 h-6 ${active ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}></div>
+      </button>
+    );
+
+    // =====================================================================
+    // ======================= MAIN HABIT APP ==============================
+    // =====================================================================
 
     const unitOptions = ['פעמים', 'כוסות', 'עמודים', 'דקות', 'ק״מ'];
     const habitSuggestions = ['כוס מים', 'הליכה', 'שכיבות סמיכה', 'קריאה', 'מדיטציה'];
@@ -179,20 +734,22 @@
       const [activeEmotion, setActiveEmotion] = useState(null);
       const [activeEmoStartPos, setActiveEmoStartPos] = useState(0); 
       const [activeIndex, setActiveIndex] = useState(0);
-      
-      const [pulseData, setPulseData] = useState({ active: false, x: 0, y: 0, power: 0 });
 
       const [lottoPhase, setLottoPhase] = useState('IDLE');
       const [poppingId, setPoppingId] = useState(null);
 
       const [settingsData, setSettingsData] = useState({ 
-        ballSprites: {}, stageImages: {}, profilePic: null, drawerBgColor: '#ffffff', drawerOpacity: 0.95, drawerBlur: 20, 
+        smileyConfigs: { ...PRESETS },
+        stageImages: {}, profilePic: null, drawerBgColor: '#ffffff', drawerOpacity: 0.95, drawerBlur: 20, 
         primaryBtnColor: '#0f172a', primaryBtnTextColor: '#ffffff', userName: 'משה אלי', totalDays: 0,
       });
 
       const [workspace, setWorkspace] = useState({ isOpen: false, activeTab: 'profile' });
+      const [editingSmileyFor, setEditingSmileyFor] = useState(null); 
+      
+      // Global Interaction Tracking (For "Look at Click")
+      const interactionRef = useRef({ active: false, x: 0, y: 0, time: 0 });
 
-      // --- משתנים נגזרים ---
       const MAX_HABITS = 5;
       const currentShields = Math.min(3, Math.floor(settingsData.totalDays / 10));
       const lockedHabitsCount = Math.max(0, MAX_HABITS - tasks.length);
@@ -203,64 +760,58 @@
       const sceneRef = useRef(null);
       const engineRef = useRef(null);
 
-      const UnifiedBall = ({ emo, sizeClass = "w-14 h-14", fontClass = "text-3xl", isFloating = false }) => {
-        const customImg = settingsData.ballSprites[emo.id];
-        return (
-          <div className={`${sizeClass} rounded-full flex items-center justify-center overflow-hidden shadow-2xl transition-all duration-700
-              ${!customImg ? `bg-gradient-to-t ${emo.colorFull}` : ''}
-              ${isFloating && gameState === 'EMOTION_POP' ? 'click-bounce-anim' : ''}
-              ${isFloating && gameState === 'BALL_HALO' ? 'yellow-halo-flash' : ''}
-              ${isFloating && gameState === 'SELECTING' ? 'active-ball-glow animate-profile-hover' : ''}`}
-              style={{ backgroundImage: customImg ? `url(${customImg})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-              {!customImg && <span className={fontClass}>{emo.face}</span>}
-          </div>
-        );
+      // --- Smart Component wrapper for UI Balls ---
+      const EmotionBallUI = ({ emo, isFloating }) => {
+         const conf = settingsData.smileyConfigs[emo.id] || PRESETS[emo.id];
+         let mode = 'idle';
+         if (isFloating) {
+             mode = gameState === 'DROPPING' ? 'falling' : 'excited';
+         } else if (isDrawerExpanded) {
+             mode = 'follow';
+         }
+         return (
+            <div className="w-full h-full rounded-full flex items-center justify-center overflow-visible">
+                <LiveSmiley config={conf} mode={mode} />
+            </div>
+         );
       };
 
-      const handleNextIntro = () => {
-        if (introIndex < 2) setIntroIndex(p => p + 1);
-        else setAppFlow('SCREEN_EXPLANATION');
+      const handleNextIntro = () => { if (introIndex < 2) setIntroIndex(p => p + 1); else setAppFlow('SCREEN_EXPLANATION'); };
+      const handleDragEnd = () => { if (dragStartX === null) return; if (Math.abs(dragOffset) > 100) handleNextIntro(); setDragStartX(null); setDragOffset(0); };
+
+      const registerGlobalInteraction = (clientX, clientY) => {
+          if (sceneRef.current && appFlow === 'MAIN') {
+              const rect = sceneRef.current.getBoundingClientRect();
+              interactionRef.current = { active: true, x: clientX - rect.left, y: clientY - rect.top, time: performance.now() };
+          }
       };
 
-      const handleDragEnd = () => {
-        if (dragStartX === null) return;
-        if (Math.abs(dragOffset) > 100) handleNextIntro();
-        setDragStartX(null); setDragOffset(0);
-      };
+      useEffect(() => { if (appFlow === 'MAIN') initMatter(); }, [appFlow]);
 
-      useEffect(() => {
-        if (appFlow === 'MAIN') {
-          initMatter();
-        }
-      }, [appFlow]);
-
+      // --- MATTER.JS INITIALIZATION WITH CUSTOM LIVE RENDERER & REFLECTIONS ---
       const initMatter = async () => {
         if (!sceneRef.current) return;
         const Matter = window.Matter;
+        if (engineRef.current) { Matter.Render.stop(engineRef.current.render); Matter.Engine.clear(engineRef.current); }
         const engine = Matter.Engine.create();
         engineRef.current = engine;
         engine.world.gravity.y = 5.0; 
 
-        // --- אינטראקציית "זריקה" וגרירה (Throw & Flick) ---
         const mouse = Matter.Mouse.create(sceneRef.current);
-        const mouseConstraint = Matter.MouseConstraint.create(engine, {
-          mouse: mouse,
-          constraint: {
-            stiffness: 0.2, // גמישות לתפיסה וזריקה
-            render: { visible: false }
-          }
-        });
+        const mouseConstraint = Matter.MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
 
-        // מאזין התנגשות להתכווצות
+        // Hit Reaction (Visual Squash on Collision)
         Matter.Events.on(engine, 'collisionStart', (event) => {
           event.pairs.forEach((pair) => {
-            if (pair.bodyA.label === 'currentDay' || pair.bodyB.label === 'currentDay') {
-              const body = pair.bodyA.label === 'currentDay' ? pair.bodyA : pair.bodyB;
-              if (body.label === 'currentDay') {
-                smoothShrink(body);
-                body.label = 'settled';
-                if (navigator.vibrate) navigator.vibrate(30);
-              }
+            const current = pair.bodyA.label === 'currentDay' ? pair.bodyA : (pair.bodyB.label === 'currentDay' ? pair.bodyB : null);
+            if (current && current.customSmiley) {
+              const phys = current.customSmiley.phys;
+              const config = current.customSmiley.config;
+              phys.squashX = config.hitSquash || 1.4;
+              phys.squashY = 1 / (config.hitSquash || 1.4);
+              phys.vy = -3; // small physical bump visually
+              current.label = 'settled';
+              if (navigator.vibrate) navigator.vibrate(30);
             }
           });
         });
@@ -271,26 +822,129 @@
           element: sceneRef.current, engine: engine,
           options: { width, height, wireframes: false, background: 'transparent', pixelRatio: window.devicePixelRatio || 1 }
         });
+        engine.render = render; 
         
         const wallOptions = { isStatic: true, render: { visible: false }, friction: 0.1, restitution: 0.4 };
+        const floorY = height + 100;
         const introFloor = Matter.Bodies.rectangle(width / 2, height - 10, width, 40, { isStatic: true, render: { visible: false } });
         
         Matter.Composite.add(engine.world, [
-          introFloor,
-          Matter.Bodies.rectangle(-20, height / 2, 40, height * 2, wallOptions),
-          Matter.Bodies.rectangle(width + 20, height / 2, 40, height * 2, wallOptions),
-          mouseConstraint // הוספת המנגנון שמאפשר העפה
+          introFloor, Matter.Bodies.rectangle(-20, height / 2, 40, height * 2, wallOptions),
+          Matter.Bodies.rectangle(width + 20, height / 2, 40, height * 2, wallOptions), mouseConstraint
         ]);
+        
+        // --- CUSTOM LIVE RENDERER (Handling Upright Freeze) ---
+        Matter.Events.on(render, 'afterRender', () => {
+           const ctx = render.context;
+           const bodies = Matter.Composite.allBodies(engine.world);
+           const time = performance.now();
+           const customBodies = bodies.filter(b => b.customSmiley);
+           
+           const droppingBody = bodies.find(b => b.label === 'currentDay');
+
+           // Pre-calculate Color Reflections
+           customBodies.forEach(b => { b.customSmiley.reflections = []; });
+           for (let i = 0; i < customBodies.length; i++) {
+               for (let j = i + 1; j < customBodies.length; j++) {
+                   const b1 = customBodies[i];
+                   const b2 = customBodies[j];
+                   const dx = b2.position.x - b1.position.x;
+                   const dy = b2.position.y - b1.position.y;
+                   const dist = Math.sqrt(dx*dx + dy*dy);
+                   // Exact visual radius calculation: 110 * bodyScale * matterScale
+                   const r1 = 110 * b1.customSmiley.config.bodyScale * b1.customSmiley.scale;
+                   const r2 = 110 * b2.customSmiley.config.bodyScale * b2.customSmiley.scale;
+                   const minDist = r1 + r2;
+
+                   if (dist < minDist * 1.5) { 
+                       const intensity = Math.max(0, 1 - (dist / (minDist * 1.5)));
+                       b1.customSmiley.reflections.push({ dx, dy, dist, intensity, color: b2.customSmiley.config.bodyColor });
+                       b2.customSmiley.reflections.push({ dx: -dx, dy: -dy, dist, intensity, color: b1.customSmiley.config.bodyColor });
+                   }
+               }
+           }
+
+           // Draw Floor Shadows
+           customBodies.forEach(b => {
+               const { phys, scale, config } = b.customSmiley;
+               const visualFloor = height - 5;
+               const r = 110 * config.bodyScale * scale;
+               const distFromFloor = Math.max(0, visualFloor - (phys.worldY + r * phys.squashY));
+               
+               if (distFromFloor < 150) {
+                   const shadowOp = 0.4 * (1 - distFromFloor/150);
+                   const shadowW = r * 1.5 * phys.squashX;
+                   ctx.beginPath();
+                   ctx.ellipse(phys.worldX, visualFloor, shadowW, 12, 0, 0, Math.PI*2);
+                   const shadowGrad = ctx.createRadialGradient(phys.worldX, visualFloor, 0, phys.worldX, visualFloor, shadowW);
+                   shadowGrad.addColorStop(0, `rgba(0,0,0,${shadowOp})`);
+                   shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                   ctx.fillStyle = shadowGrad;
+                   ctx.fill();
+               }
+           });
+
+           // Draw All Balls & Apply UPRIGHT FREEZE
+           customBodies.forEach(b => {
+               const { config, phys, scale, reflections } = b.customSmiley;
+               if (!config) return;
+               
+               // Upright Freeze Logic: If it slows down, gently upright it to 0 degrees!
+               if (b.speed < 2.0 && b.position.y > height * 0.5) {
+                   Matter.Body.setAngle(b, b.angle * 0.92);
+               }
+
+               phys.worldX = b.position.x;
+               phys.worldY = b.position.y;
+               phys.vx = b.velocity.x;
+               phys.vy = b.velocity.y;
+               phys.rotation = b.angle;
+               
+               const fallMode = Math.abs(b.velocity.y) > 0.5 ? 'falling' : 'idle';
+               phys.targetGaze = null;
+
+               // Smart Gaze
+               if (droppingBody && b.label !== 'currentDay') {
+                   const dx = droppingBody.position.x - phys.worldX;
+                   const dy = droppingBody.position.y - phys.worldY;
+                   const dist = Math.sqrt(dx*dx + dy*dy);
+                   if (dist > 30) { phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 }; }
+               } else if (interactionRef.current.active) {
+                   const { x, y, time: clickTime } = interactionRef.current;
+                   if (time - clickTime < 2500) {
+                       const dx = x - phys.worldX;
+                       const dy = y - phys.worldY;
+                       const dist = Math.sqrt(dx*dx + dy*dy);
+                       if (dist < 300) { phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 }; }
+                   } else {
+                       interactionRef.current.active = false; 
+                   }
+               }
+
+               updateSmileyPhys(phys, config, time, phys.vx, phys.vy, fallMode);
+               drawSmileyCanvas(ctx, config, phys, time, scale, false, reflections);
+           });
+        });
         
         Matter.Render.run(render); 
         Matter.Runner.run(Matter.Runner.create(), engine);
         
-        const textures = await Promise.all(emotions.map(emo => createBallTexture(emo.face, emo.hex, settingsData.ballSprites[emo.id], 128)));
         const introBalls = [];
         for (let i = 0; i < 35; i++) {
+          const emoId = Math.floor(Math.random() * 5) + 1;
+          const config = settingsData.smileyConfigs[emoId] || PRESETS[emoId];
           const radius = Math.random() * 10 + 35; 
-          const texIndex = Math.floor(Math.random() * 5);
-          const ball = Matter.Bodies.circle((Math.random() * (width - 40)) + 20, -Math.random() * 1500 - 100, radius, { restitution: 0.7, friction: 0.05, render: { sprite: { texture: textures[texIndex], xScale: (radius * 2) / 128, yScale: (radius * 2) / 128 } } });
+          // Match physics boundary exactly to visual scale
+          const physicsRadius = radius * config.bodyScale;
+
+          const ball = Matter.Bodies.circle((Math.random() * (width - 40)) + 20, -Math.random() * 1500 - 100, physicsRadius, { 
+              restitution: 0.8, friction: 0.01, 
+              render: { visible: false } 
+          });
+          ball.customSmiley = {
+              config, scale: radius / 110, // Base scale multiplier
+              phys: { worldX:0, worldY:0, vx:0, vy:0, rotation:0, x:0, y:0, squashX:1, squashY:1, blink:1, faceSlide:{x:0,y:0}, arms:[{x:-20,y:0,vx:0,vy:0},{x:20,y:0,vx:0,vy:0}] }
+          };
           introBalls.push(ball);
         }
         Matter.Composite.add(engine.world, introBalls);
@@ -301,25 +955,6 @@
           Matter.Composite.remove(engine.world, introFloor);
           Matter.Composite.add(engine.world, Matter.Bodies.rectangle(width / 2, height + 20, width, 40, wallOptions)); 
         }, 7000);
-      };
-
-      const smoothShrink = (body) => {
-        const Matter = window.Matter;
-        const steps = 10;
-        const stepSize = (1.35 - 1.0) / steps;
-        let count = 0;
-        const interval = setInterval(() => {
-          if (count >= steps) clearInterval(interval);
-          else {
-            const scaleFactor = (1.35 - stepSize * (count + 1)) / (1.35 - stepSize * count);
-            Matter.Body.scale(body, scaleFactor, scaleFactor);
-            if (body.render.sprite) {
-               body.render.sprite.xScale *= scaleFactor;
-               body.render.sprite.yScale *= scaleFactor;
-            }
-            count++;
-          }
-        }, 15);
       };
 
       const startSidebarSequence = () => {
@@ -356,17 +991,24 @@
         setGameState('EXIT_STAGE_1');
         setTimeout(() => {
           setGameState('EXIT_STAGE_2');
-          setTimeout(async () => {
+          setTimeout(() => {
             setGameState('DROPPING');
             const Matter = window.Matter;
             const width = appContainerRef.current.clientWidth;
-            const radius = Math.min(width * 0.12, 38);
-            const texture = await createBallTexture(activeEmotion.face, activeEmotion.hex, settingsData.ballSprites[activeEmotion.id]);
-            const spawnRadius = radius * 1.35;
-            const ball = Matter.Bodies.circle(width / 2, -60, spawnRadius, { 
+            const config = settingsData.smileyConfigs[activeEmotion.id] || PRESETS[activeEmotion.id];
+            
+            const baseRadius = Math.min(width * 0.12, 38);
+            const spawnRadius = baseRadius * 1.35;
+            const physicsRadius = spawnRadius * config.bodyScale;
+            
+            const ball = Matter.Bodies.circle(width / 2, -60, physicsRadius, { 
               label: 'currentDay', restitution: 0.5, friction: 0.1, 
-              render: { sprite: { texture, xScale: (spawnRadius * 2) / 128, yScale: (spawnRadius * 2) / 128 } } 
+              render: { visible: false }
             });
+            ball.customSmiley = {
+              config, scale: spawnRadius / 110,
+              phys: { worldX:0, worldY:0, vx:0, vy:0, rotation:0, x:0, y:0, squashX:1, squashY:1, blink:1, faceSlide:{x:0,y:0}, arms:[{x:-20,y:0,vx:0,vy:0},{x:20,y:0,vx:0,vy:0}] }
+            };
             Matter.Composite.add(engineRef.current.world, ball);
             setTimeout(() => { setGameState('EMOTION'); setActiveEmotion(null); }, 2000);
           }, 50); 
@@ -381,272 +1023,299 @@
       };
 
       return (
-        <div className="fixed inset-0 bg-[#0F172A] flex justify-center items-center font-sans overflow-hidden" 
-             onMouseDown={e => { if(appFlow==='SCREEN_2_CARDS') setDragStartX(e.clientX); }}
-             onMouseMove={e => { if(dragStartX!==null) setDragOffset(e.clientX - dragStartX); }}
-             onMouseUp={handleDragEnd} onTouchStart={e => { if(appFlow==='SCREEN_2_CARDS') setDragStartX(e.touches[0].clientX); }}
-             onTouchMove={e => { if(dragStartX!==null) setDragOffset(e.touches[0].clientX - dragStartX); }}
-             onTouchEnd={handleDragEnd} style={{ height: '100dvh', touchAction: 'none' }} >
-          
-          <div ref={appContainerRef} dir="rtl" className="relative w-full h-full sm:max-w-[480px] sm:max-h-[92vh] bg-white sm:rounded-[40px] shadow-2xl overflow-hidden transition-all duration-1000" 
-                style={{ backgroundImage: (appFlow === 'MAIN' && settingsData.stageImages[settingsData.totalDays + 1]) ? `url(${settingsData.stageImages[settingsData.totalDays + 1]})` : 'none', backgroundSize: 'cover' }}>
+        <>
+          <div className="fixed inset-0 bg-[#0F172A] flex justify-center items-center font-sans overflow-hidden" 
+                onMouseDown={e => { 
+                    if(appFlow==='SCREEN_2_CARDS') setDragStartX(e.clientX); 
+                    registerGlobalInteraction(e.clientX, e.clientY);
+                }}
+                onMouseMove={e => { 
+                    if(dragStartX!==null) setDragOffset(e.clientX - dragStartX); 
+                }}
+                onMouseUp={handleDragEnd} 
+                onTouchStart={e => { 
+                    if(appFlow==='SCREEN_2_CARDS') setDragStartX(e.touches[0].clientX); 
+                    registerGlobalInteraction(e.touches[0].clientX, e.touches[0].clientY);
+                }}
+                onTouchMove={e => { if(dragStartX!==null) setDragOffset(e.touches[0].clientX - dragStartX); }}
+                onTouchEnd={handleDragEnd} style={{ height: '100dvh', touchAction: 'none' }} >
+            
+            <div ref={appContainerRef} dir="rtl" className="relative w-full h-full sm:max-w-[480px] sm:max-h-[92vh] bg-white sm:rounded-[40px] shadow-2xl overflow-hidden transition-all duration-1000" 
+                  style={{ backgroundImage: (appFlow === 'MAIN' && settingsData.stageImages[settingsData.totalDays + 1]) ? `url(${settingsData.stageImages[settingsData.totalDays + 1]})` : 'none', backgroundSize: 'cover' }}>
 
-            {/* --- מסכי פתיחה --- */}
-            {['SCREEN_1_LOGIN', 'SCREEN_2_CARDS', 'SCREEN_EXPLANATION', 'SCREEN_3_READY'].includes(appFlow) && (
-              <div className="absolute inset-0 flex flex-col overflow-hidden bg-white text-slate-900 text-center">
-                {appFlow !== 'SCREEN_1_LOGIN' && (
-                  <button onClick={() => setAppFlow('SCREEN_3_READY')} className="absolute top-10 left-10 z-[200] w-12 h-12 flex items-center justify-center rounded-full bg-slate-50 shadow-sm text-slate-400 active:scale-90 transition-all"><Flag className="w-5 h-5" /></button>
-                )}
-                <div className="flex-1 relative flex flex-col items-center justify-center p-8">
-                    {appFlow === 'SCREEN_1_LOGIN' && (
-                      <div className="text-center animate-in fade-in duration-700">
-                        <h1 className="text-6xl font-black mb-4">Minimum<br/>Winner</h1>
-                        <p className="text-slate-400 text-lg font-bold">הדרך הקלה ביותר להתמיד.</p>
-                      </div>
-                    )}
-                    {appFlow === 'SCREEN_2_CARDS' && (
-                      <div className="relative w-full max-w-[360px] flex-1 max-h-[450px] min-h-[300px] flex items-center justify-center mx-auto mt-4 perspective-1000">
-                        {introCardsData.map((card, i) => {
-                          const isCurrent = i === introIndex;
-                          return (
-                            <div key={i} style={isCurrent ? { transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.05}deg)` } : {}} 
-                                 className={`absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-10 bg-white rounded-[40px] shadow-2xl transition-all duration-500 ${isCurrent ? 'z-30 opacity-100' : (i < introIndex ? 'translate-x-[150%] opacity-0' : '-translate-y-8 scale-90 opacity-60')}`}>
-                               <h3 className="text-3xl sm:text-4xl font-black mb-4 sm:mb-6 text-purple-600 leading-tight">{card.title}</h3>
-                               <p className="text-lg sm:text-xl font-bold text-slate-500 font-heebo">{card.desc}</p>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                    {appFlow === 'SCREEN_EXPLANATION' && (
-                      <div className="w-full flex flex-col items-center h-full pt-4 sm:pt-16 pb-2">
-                        <div className="text-[10px] font-black text-slate-400 tracking-[0.8em] mb-4 sm:mb-12 uppercase shrink-0">Mood Essence</div>
-                        <div className="relative w-full flex-1 max-h-[240px] min-h-[160px] flex items-center justify-center perspective-1000 shrink-0">
-                          {emotions.map((emo, i) => {
-                            const diff = i - explanationIndex;
-                            const customImg = settingsData.ballSprites[emo.id];
-                            let cls = (diff === 0) ? "center" : (diff === -1 || (explanationIndex === 0 && i === emotions.length-1)) ? "side left" : (diff === 1 || (explanationIndex === emotions.length-1 && i === 0)) ? "side right" : "hidden";
-                            return (
-                              <div key={emo.id} onClick={() => setExplanationIndex(i)} 
-                                   className={`explanation-sphere ${cls} transition-all duration-700 overflow-hidden ${!customImg ? `bg-gradient-to-br ${emo.colorFull}` : ''}`}
-                                   style={{ background: customImg ? `url(${customImg}) center/cover` : `radial-gradient(circle at 35% 35%, ${emo.hex}, #000000)` }}>
-                                 {!customImg && <span className="text-7xl drop-shadow-2xl">{emo.face}</span>}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="majest-card mt-auto mb-2 sm:mb-8 animate-in fade-in shrink-0" key={explanationIndex}>
-                          <div className="text-[10px] font-black text-[#b8860b] tracking-[0.5em] mb-2 sm:mb-3 uppercase text-center">Private Selection</div>
-                          <h2 className="info-title mb-2 sm:mb-4 text-center">{emotions[explanationIndex].label}</h2>
-                          <p className="text-slate-500 font-medium leading-snug sm:leading-relaxed text-center font-heebo text-sm sm:text-base">{emotions[explanationIndex].desc}</p>
-                        </div>
-                      </div>
-                    )}
-                    {appFlow === 'SCREEN_3_READY' && (
-                       <div className="text-center animate-in zoom-in-95 duration-500">
-                         <div className="text-8xl mb-8 drop-shadow-xl text-[#0f172a]">🚀</div>
-                         <h2 className="text-4xl font-black mb-2">הכל מוכן!</h2>
-                         <p className="text-slate-400 text-xl font-bold font-heebo">בוא נתחיל לנצח.</p>
-                       </div>
-                    )}
-                </div>
-                <div className="p-8 pb-12 flex justify-center relative z-50 shrink-0">
-                   <button onClick={() => {
-                     if (appFlow === 'SCREEN_1_LOGIN') setAppFlow('SCREEN_2_CARDS');
-                     else if (appFlow === 'SCREEN_2_CARDS') handleNextIntro();
-                     else if (appFlow === 'SCREEN_EXPLANATION') { if (explanationIndex < 4) setExplanationIndex(prev => prev + 1); else setAppFlow('SCREEN_3_READY'); }
-                     else setAppFlow('MAIN');
-                   }} className="w-full h-16 rounded-full bg-[#0f172a] text-white font-black text-xl flex items-center justify-center active:scale-95 transition-transform">המשך</button>
-                </div>
-              </div>
-            )}
-
-            {/* --- אפליקציה ראשית --- */}
-            {appFlow === 'MAIN' && (
-              <>
-                <div id="physics-container" ref={sceneRef} />
-                
-                {activeEmotion && (
-                  <div className="absolute right-0 top-0 bottom-0 pointer-events-none z-[100]" style={{ width: isDrawerExpanded ? '75%' : '110px', transition: 'width 500ms cubic-bezier(0.19, 1, 0.22, 1)' }}>
-                    {['BALL_HALO', 'SELECTING'].includes(gameState) && <div className="backlight-spot animate-in fade-in" style={{ top: '64px' }} />}
-                    <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]
-                        ${gameState === 'EMOTION_POP' ? 'scale-125' : ''}
-                        ${['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState) ? 'top-8 opacity-100 scale-100' : ''}
-                        ${gameState === 'EXIT_STAGE_1' ? 'animate-exit-up top-8' : ''}
-                        ${['EXIT_STAGE_2', 'DROPPING'].includes(gameState) ? 'opacity-0' : ''}`}
-                        style={{ top: (gameState === 'EMOTION' || gameState === 'EMOTION_POP') ? `${activeEmoStartPos}px` : undefined }}>
-                        <UnifiedBall emo={activeEmotion} sizeClass="w-16 h-16" fontClass="text-3xl" isFloating={true} />
-                    </div>
-                  </div>
-                )}
-
-                <div className="sidebar" style={{ transform: isDrawerFullyClosed ? 'translateX(100%)' : 'translateX(0)', width: isDrawerExpanded ? '75%' : '110px', backgroundColor: `${settingsData.drawerBgColor}${Math.round(settingsData.drawerOpacity * 255).toString(16).padStart(2, '0')}`, backdropFilter: `blur(${settingsData.drawerBlur}px)` }}>
-                  
-                  <div className={`h-full flex flex-col p-5 overflow-hidden transition-all duration-500 ease-in-out ${(gameState !== 'EMOTION' && gameState !== 'EMOTION_POP') ? 'translate-x-[150%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
-                    
-                    {/* Header: Profile -> Name -> Shield */}
-                    <div onClick={() => setWorkspace({ isOpen: true, activeTab: 'profile' })} className="pt-8 flex flex-col items-center cursor-pointer shrink-0">
-                      <div className="w-16 h-16 rounded-full bg-white border-2 border-slate-100 shadow-md overflow-hidden mb-3 relative flex items-center justify-center text-slate-300">
-                         {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User size={32} />}
-                      </div>
-                      <div className="flex flex-col items-center text-slate-900">
-                        <span className="text-[11px] font-black uppercase tracking-widest leading-none mb-2 font-heebo">{settingsData.userName}</span>
-                        
-                        <div className="relative flex items-center justify-center">
-                           <Shield className={`w-9 h-9 transition-colors duration-500 ${currentShields > 0 ? 'text-blue-500 fill-blue-500' : 'text-slate-300 fill-slate-300'}`} />
-                           <span className="absolute text-[12px] font-black text-white">{currentShields}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 relative flex flex-col items-center justify-center space-y-4 overflow-visible">
-                      {emotions.map((emo) => (
-                        <div key={emo.id} onMouseDown={(e) => handleStartSelection(e, emo)} onTouchStart={(e) => handleStartSelection(e, emo)} 
-                             className={`sidebar-btn transition-all duration-300 ${activeEmotion?.id === emo.id ? 'opacity-0' : 'opacity-100'} ${poppingId === emo.id ? 'bounce-pop' : ''} ${lottoPhase === 'READY' ? 'pointer-events-auto shadow-lg' : 'pointer-events-none'}`}>
-                          <UnifiedBall emo={emo} sizeClass="w-14 h-14" fontClass="text-2xl" />
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="pb-8 mt-auto flex justify-center">
-                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest font-heebo">יום {settingsData.totalDays + 1}</span>
-                    </div>
-                  </div>
-
-                  {['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING', 'EXIT_STAGE_1'].includes(gameState) && (
-                    <div className="absolute inset-0 w-full h-full overflow-hidden flex flex-col">
-                      <div className={`habit-list-container flex-1 ${(['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState)) ? 'slide-in-right' : 'slide-out-right'}`}>
-                        {tasks.map((task, i) => (
-                            <div key={task.id} onClick={() => setActiveIndex(i)} className="habit-item absolute text-center px-6 text-slate-900" style={{ transform: `translateY(${(i - activeIndex) * 110}px) scale(${1.3 - Math.abs(i - activeIndex) * 0.3})`, opacity: Math.max(0, 1 - Math.abs(i - activeIndex) * 0.55), zIndex: 10 - Math.abs(i - activeIndex) }}>
-                              <h3 className="font-black text-3xl leading-tight">{task.name}</h3>
-                              {(i === activeIndex) && <p className="font-black uppercase tracking-widest text-base mt-2 text-slate-500 font-heebo">{activeEmotion?.id >= 4 ? task.ridiculousAction : `${task.amount} ${task.minU}`}</p>}
-                            </div>
-                        ))}
-                        {Array.from({ length: lockedHabitsCount }).map((_, i) => (
-                           <div key={`lock-${i}`} className="habit-item absolute text-center px-6 pointer-events-none opacity-20" style={{ transform: `translateY(${(tasks.length + i - activeIndex) * 110}px) scale(${1.3 - Math.abs(tasks.length + i - activeIndex) * 0.3})`, zIndex: 1 }}><Lock className="w-8 h-8 text-slate-300" /></div>
-                        ))}
-                      </div>
-
-                      {gameState === 'SELECTING' && (
-                        <div className="absolute bottom-12 inset-x-8 flex flex-col gap-4 items-center animate-button-pop z-[60]">
-                          <button onMouseDown={(e) => { e.stopPropagation(); executeDrop(); }} onTouchStart={(e) => { e.stopPropagation(); executeDrop(); }} className="w-full py-5 rounded-full font-black shadow-2xl text-xl text-white active:scale-95 transition-transform" style={{ backgroundColor: settingsData.primaryBtnColor }}>בוצע</button>
-                          <button onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }} className="text-[11px] font-black text-slate-300 uppercase tracking-[4px] cursor-pointer active:text-slate-400 font-heebo">ביטול</button>
+              {/* --- מסכי פתיחה --- */}
+              {['SCREEN_1_LOGIN', 'SCREEN_2_CARDS', 'SCREEN_EXPLANATION', 'SCREEN_3_READY'].includes(appFlow) && (
+                <div className="absolute inset-0 flex flex-col overflow-hidden bg-white text-slate-900 text-center">
+                  {appFlow !== 'SCREEN_1_LOGIN' && (
+                    <button onClick={() => setAppFlow('SCREEN_3_READY')} className="absolute top-10 left-10 z-[200] w-12 h-12 flex items-center justify-center rounded-full bg-slate-50 shadow-sm text-slate-400 active:scale-90 transition-all"><Flag className="w-5 h-5" /></button>
+                  )}
+                  <div className="flex-1 relative flex flex-col items-center justify-center p-8">
+                      {appFlow === 'SCREEN_1_LOGIN' && (
+                        <div className="text-center animate-in fade-in duration-700">
+                          <h1 className="text-6xl font-black mb-4">Minimum<br/>Winner</h1>
+                          <p className="text-slate-400 text-lg font-bold">הדרך הקלה ביותר להתמיד.</p>
                         </div>
                       )}
+                      {appFlow === 'SCREEN_2_CARDS' && (
+                        <div className="relative w-full max-w-[360px] flex-1 max-h-[450px] min-h-[300px] flex items-center justify-center mx-auto mt-4 perspective-1000">
+                          {introCardsData.map((card, i) => {
+                            const isCurrent = i === introIndex;
+                            return (
+                              <div key={i} style={isCurrent ? { transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.05}deg)` } : {}} 
+                                    className={`absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-10 bg-white rounded-[40px] shadow-2xl transition-all duration-500 ${isCurrent ? 'z-30 opacity-100' : (i < introIndex ? 'translate-x-[150%] opacity-0' : '-translate-y-8 scale-90 opacity-60')}`}>
+                                <h3 className="text-3xl sm:text-4xl font-black mb-4 sm:mb-6 text-purple-600 leading-tight">{card.title}</h3>
+                                <p className="text-lg sm:text-xl font-bold text-slate-500 font-heebo">{card.desc}</p>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                      {appFlow === 'SCREEN_EXPLANATION' && (
+                        <div className="w-full flex flex-col items-center h-full pt-4 sm:pt-16 pb-2">
+                          <div className="text-[10px] font-black text-slate-400 tracking-[0.8em] mb-4 sm:mb-12 uppercase shrink-0">Mood Essence</div>
+                          <div className="relative w-full flex-1 max-h-[240px] min-h-[160px] flex items-center justify-center perspective-1000 shrink-0">
+                            {emotions.map((emo, i) => {
+                              const diff = i - explanationIndex;
+                              const conf = settingsData.smileyConfigs[emo.id] || PRESETS[emo.id];
+                              let cls = (diff === 0) ? "center" : (diff === -1 || (explanationIndex === 0 && i === emotions.length-1)) ? "side left" : (diff === 1 || (explanationIndex === emotions.length-1 && i === 0)) ? "side right" : "hidden";
+                              return (
+                                <div key={emo.id} onClick={() => setExplanationIndex(i)} className={`explanation-sphere ${cls}`}>
+                                    <LiveSmiley config={conf} mode={diff === 0 ? 'follow' : 'idle'} />
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="majest-card mt-auto mb-2 sm:mb-8 animate-in fade-in shrink-0" key={explanationIndex}>
+                            <div className="text-[10px] font-black text-[#b8860b] tracking-[0.5em] mb-2 sm:mb-3 uppercase text-center">Private Selection</div>
+                            <h2 className="info-title mb-2 sm:mb-4 text-center">{emotions[explanationIndex].label}</h2>
+                            <p className="text-slate-500 font-medium leading-snug sm:leading-relaxed text-center font-heebo text-sm sm:text-base">{emotions[explanationIndex].desc}</p>
+                          </div>
+                        </div>
+                      )}
+                      {appFlow === 'SCREEN_3_READY' && (
+                          <div className="text-center animate-in zoom-in-95 duration-500">
+                            <div className="text-8xl mb-8 drop-shadow-xl text-[#0f172a]">🚀</div>
+                            <h2 className="text-4xl font-black mb-2">הכל מוכן!</h2>
+                            <p className="text-slate-400 text-xl font-bold font-heebo">בוא נתחיל לנצח.</p>
+                          </div>
+                      )}
+                  </div>
+                  <div className="p-8 pb-12 flex justify-center relative z-50 shrink-0">
+                      <button onClick={() => {
+                        if (appFlow === 'SCREEN_1_LOGIN') setAppFlow('SCREEN_2_CARDS');
+                        else if (appFlow === 'SCREEN_2_CARDS') handleNextIntro();
+                        else if (appFlow === 'SCREEN_EXPLANATION') { if (explanationIndex < 4) setExplanationIndex(prev => prev + 1); else setAppFlow('SCREEN_3_READY'); }
+                        else setAppFlow('MAIN');
+                      }} className="w-full h-16 rounded-full bg-[#0f172a] text-white font-black text-xl flex items-center justify-center active:scale-95 transition-transform">המשך</button>
+                  </div>
+                </div>
+              )}
+
+              {/* --- אפליקציה ראשית --- */}
+              {appFlow === 'MAIN' && (
+                <>
+                  <div id="physics-container" ref={sceneRef} />
+                  
+                  {activeEmotion && (
+                    <div className="absolute right-0 top-0 bottom-0 pointer-events-none z-[100]" style={{ width: isDrawerExpanded ? '75%' : '110px', transition: 'width 500ms cubic-bezier(0.19, 1, 0.22, 1)' }}>
+                      <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] w-32 h-32 flex items-center justify-center rounded-full
+                          ${gameState === 'EMOTION_POP' ? 'scale-125' : ''}
+                          ${['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState) ? 'top-20 opacity-100 scale-100' : ''}
+                          ${gameState === 'EXIT_STAGE_1' ? 'animate-exit-up top-20' : ''}
+                          ${['EXIT_STAGE_2', 'DROPPING'].includes(gameState) ? 'opacity-0' : ''}`}
+                          style={{ top: (gameState === 'EMOTION' || gameState === 'EMOTION_POP') ? `${activeEmoStartPos}px` : undefined }}>
+                          <EmotionBallUI emo={activeEmotion} isFloating={true} />
+                      </div>
                     </div>
                   )}
-                </div>
 
-                {/* Creator Drawer */}
-                <div className={`absolute top-0 left-0 right-0 bg-white/95 backdrop-blur-xl z-[200] rounded-b-[50px] shadow-2xl transition-transform duration-500 ${showTopPopup ? 'translate-y-0' : '-translate-y-[120%]'}`}>
-                    <div className="p-8 pt-12 flex flex-col min-h-[460px]">
-                        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center relative overflow-hidden text-slate-900 font-heebo">
-                            {wizardStep === 1 && (
-                                <div className="w-full animate-in fade-in duration-300">
-                                    <h2 className="text-3xl font-black mb-8 tracking-tight">איזה הרגל נוסיף?</h2>
-                                    <div className="flex flex-wrap justify-center gap-3 mb-6">{habitSuggestions.map(s => <button key={s} onClick={() => { setNewHabit({...newHabit, name: s}); setWizardStep(2); }} className="px-5 py-3 rounded-full bg-slate-100 text-slate-800 font-bold active:scale-95 transition-transform">{s}</button>)}</div>
-                                    <div className="relative text-slate-900"><input type="text" placeholder="הרגל אחר..." className="w-full text-center text-xl font-bold bg-slate-50 py-5 rounded-3xl border-2 border-transparent focus:border-purple-200 outline-none shadow-inner" value={newHabit.name} onChange={e => setNewHabit({...newHabit, name: e.target.value})} />{newHabit.name && <button onClick={() => setWizardStep(2)} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center active:scale-90"><ChevronLeft className="w-5 h-5" /></button>}</div>
-                                </div>
-                            )}
-                            {wizardStep === 2 && (
-                                <div className="w-full animate-in fade-in duration-300">
-                                    <h2 className="text-3xl font-black mb-6 tracking-tight">כמות ויחידה</h2>
-                                    <div className="flex items-center justify-center gap-6 mb-8 bg-slate-50 p-6 rounded-[35px] shadow-inner border border-slate-100 text-slate-900">
-                                        <button onClick={() => setNewHabit(h => ({...h, amount: Math.max(1, h.amount - 1)}))} className="w-12 h-12 rounded-full bg-white shadow-md text-3xl font-black flex items-center justify-center text-slate-400 active:scale-90"><Minus className="w-6 h-6" /></button>
-                                        <input type="number" className="bg-transparent text-5xl font-black w-24 text-center outline-none text-slate-900" value={newHabit.amount} onChange={e => setNewHabit({...newHabit, amount: Number(e.target.value)})} />
-                                        <button onClick={() => setNewHabit(h => ({...h, amount: h.amount + 1}))} className="w-12 h-12 rounded-full bg-[#0f172a] text-white shadow-lg text-3xl font-black flex items-center justify-center active:scale-90"><Plus className="w-6 h-6" /></button>
-                                    </div>
-                                    <div className="relative mb-6 font-heebo text-slate-900"><input type="text" placeholder="הקלד יחידה..." className="w-full text-center text-lg font-bold bg-white py-4 rounded-2xl border-2 border-purple-50 focus:border-purple-300 outline-none shadow-sm text-slate-900" value={newHabit.unit} onChange={e => setNewHabit({...newHabit, unit: e.target.value})} /></div>
-                                    <div className="flex flex-wrap justify-center gap-2 mb-6 font-heebo">{unitOptions.map(u => <button key={u} onClick={() => setNewHabit({...newHabit, unit: u})} className={`px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-all ${newHabit.unit === u ? 'bg-purple-600 text-white shadow-md scale-105' : 'bg-slate-100 text-slate-600'}`}>{u}</button>)}</div>
-                                    <button onClick={() => setWizardStep(3)} className="w-full py-4 bg-[#0f172a] text-white font-black rounded-2xl active:scale-95 shadow-xl flex items-center justify-center gap-2 text-white">המשך <ChevronLeft className="w-5 h-5 rotate-180" /></button>
-                                </div>
-                            )}
-                            {wizardStep === 3 && (
-                                <div className="w-full animate-in fade-in text-center text-slate-900">
-                                    <h2 className="text-3xl font-black mb-2 text-purple-600 tracking-tight text-slate-900">המינימום המגוחך</h2>
-                                    <p className="text-slate-500 font-bold mb-6 font-heebo">מה לא תוותר לעשות בחיים?</p>
-                                    <div className="relative text-slate-900">
-                                        <input type="text" placeholder="למשל: לגימה אחת..." className="w-full text-2xl font-black text-center border-b-4 border-purple-100 bg-transparent py-4 outline-none focus:border-purple-600 transition-colors mb-8 text-slate-900" value={newHabit.ridiculousAction} onChange={e => setNewHabit({...newHabit, ridiculousAction: e.target.value})} />
-                                        <button disabled={!newHabit.ridiculousAction} onClick={handleCreateHabitFinish} className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-all ${newHabit.ridiculousAction ? 'bg-purple-600 text-white shadow-2xl active:scale-90' : 'bg-slate-100 text-slate-300'}`}><Check className="w-10 h-10" /></button>
-                                    </div>
-                                </div>
-                            )}
+                  <div className="sidebar" style={{ transform: isDrawerFullyClosed ? 'translateX(100%)' : 'translateX(0)', width: isDrawerExpanded ? '75%' : '110px', backgroundColor: `${settingsData.drawerBgColor}${Math.round(settingsData.drawerOpacity * 255).toString(16).padStart(2, '0')}`, backdropFilter: `blur(${settingsData.drawerBlur}px)` }}>
+                    
+                    <div className={`h-full flex flex-col p-5 overflow-hidden transition-all duration-500 ease-in-out ${(gameState !== 'EMOTION' && gameState !== 'EMOTION_POP') ? 'translate-x-[150%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
+                      
+                      <div onClick={() => setWorkspace({ isOpen: true, activeTab: 'profile' })} className="pt-8 flex flex-col items-center cursor-pointer shrink-0">
+                        <div className="w-16 h-16 rounded-full bg-white border-2 border-slate-100 shadow-md overflow-hidden mb-3 relative flex items-center justify-center text-slate-300">
+                            {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User size={32} />}
                         </div>
-                    </div>
-                </div>
+                        <div className="flex flex-col items-center text-slate-900">
+                          <span className="text-[11px] font-black uppercase tracking-widest leading-none mb-2 font-heebo">{settingsData.userName}</span>
+                          <div className="relative flex items-center justify-center">
+                              <Shield className={`w-9 h-9 transition-colors duration-500 ${currentShields > 0 ? 'text-blue-500 fill-blue-500' : 'text-slate-300 fill-slate-300'}`} />
+                              <span className="absolute text-[12px] font-black text-white">{currentShields}</span>
+                          </div>
+                        </div>
+                      </div>
 
-                {/* מרכז שליטה */}
-                {workspace.isOpen && (
-                  <div className="absolute inset-0 z-[300] bg-slate-900/80 backdrop-blur-xl flex justify-center items-end sm:items-center sm:p-10" onClick={() => setWorkspace({ ...workspace, isOpen: false })}>
-                    <div className="w-full sm:max-w-md bg-white h-[90vh] sm:h-auto rounded-t-[50px] sm:rounded-[60px] overflow-hidden flex flex-col shadow-2xl text-slate-900" onClick={e => e.stopPropagation()}>
-                        <div className="p-8 pb-4 flex justify-between items-center border-b border-slate-50"><h3 className="font-black text-2xl font-heebo text-slate-900">מרכז שליטה</h3><button onClick={() => setWorkspace({ ...workspace, isOpen: false })} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center active:scale-90"><X className="w-5 h-5 text-slate-500" /></button></div>
-                        <div className="flex px-6 gap-4 border-b border-slate-100 overflow-x-auto whitespace-nowrap scrollbar-hide text-slate-400 font-heebo">
-                          {['profile', 'design', 'stages', 'balls'].map(tab => (
-                            <button key={tab} onClick={() => setWorkspace({...workspace, activeTab: tab})} className={`pb-3 pt-4 px-2 font-black text-sm uppercase tracking-widest transition-all ${workspace.activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : ''}`}>{tab === 'profile' ? 'פרופיל' : tab === 'design' ? 'עיצוב' : tab === 'stages' ? 'שלבים' : 'כדורים'}</button>
+                      <div className="flex-1 relative flex flex-col items-center justify-center space-y-4 overflow-visible">
+                        {emotions.map((emo) => (
+                          <div key={emo.id} onMouseDown={(e) => handleStartSelection(e, emo)} onTouchStart={(e) => handleStartSelection(e, emo)} 
+                                className={`sidebar-btn transition-all duration-300 w-14 h-14 ${activeEmotion?.id === emo.id ? 'opacity-0' : 'opacity-100'} ${poppingId === emo.id ? 'bounce-pop' : ''} ${lottoPhase === 'READY' ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+                            <EmotionBallUI emo={emo} isFloating={false} />
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="pb-8 mt-auto flex justify-center">
+                          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest font-heebo">יום {settingsData.totalDays + 1}</span>
+                      </div>
+                    </div>
+
+                    {['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING', 'EXIT_STAGE_1'].includes(gameState) && (
+                      <div className="absolute inset-0 w-full h-full overflow-hidden flex flex-col">
+                        <div className={`habit-list-container flex-1 ${(['PARALLEL_TRANSITION', 'BALL_HALO', 'SELECTING'].includes(gameState)) ? 'slide-in-right' : 'slide-out-right'}`}>
+                          {tasks.map((task, i) => (
+                              <div key={task.id} onClick={() => setActiveIndex(i)} className="habit-item absolute text-center px-6 text-slate-900" style={{ transform: `translateY(${(i - activeIndex) * 110}px) scale(${1.3 - Math.abs(i - activeIndex) * 0.3})`, opacity: Math.max(0, 1 - Math.abs(i - activeIndex) * 0.55), zIndex: 10 - Math.abs(i - activeIndex) }}>
+                                <h3 className="font-black text-3xl leading-tight">{task.name}</h3>
+                                {(i === activeIndex) && <p className="font-black uppercase tracking-widest text-base mt-2 text-slate-500 font-heebo">{activeEmotion?.id >= 4 ? task.ridiculousAction : `${task.amount} ${task.minU}`}</p>}
+                              </div>
+                          ))}
+                          {Array.from({ length: lockedHabitsCount }).map((_, i) => (
+                              <div key={`lock-${i}`} className="habit-item absolute text-center px-6 pointer-events-none opacity-20" style={{ transform: `translateY(${(tasks.length + i - activeIndex) * 110}px) scale(${1.3 - Math.abs(tasks.length + i - activeIndex) * 0.3})`, zIndex: 1 }}><Lock className="w-8 h-8 text-slate-300" /></div>
                           ))}
                         </div>
-                        <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/30 font-heebo text-slate-800">
-                           {workspace.activeTab === 'profile' && (
-                            <div className="space-y-6 animate-in fade-in">
-                              <div className="flex flex-col items-center gap-6 py-6 bg-white rounded-[40px] shadow-sm text-slate-900">
-                                 <div className="w-32 h-32 rounded-full bg-slate-100 border-4 border-white shadow-xl overflow-hidden relative group">
-                                   {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User className="w-12 h-12 text-slate-300 m-10" />}
-                                   <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, profilePic: URL.createObjectURL(f)})); }} />
-                                 </div>
-                                 <input type="text" value={settingsData.userName} onChange={e => setSettingsData(s => ({...s, userName: e.target.value}))} className="text-center font-black text-2xl w-full outline-none text-slate-900 bg-slate-50 py-3 rounded-2xl" />
-                                 <div className="flex flex-col items-center gap-2">
-                                    <label className="text-[10px] font-black uppercase opacity-40">נתוני התמדה</label>
-                                    <div className="flex items-center gap-3 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
-                                       <div className="flex flex-col items-center text-slate-900 font-heebo"><span className="text-2xl font-black text-purple-600">{settingsData.totalDays}</span><span className="text-[9px] font-bold opacity-40">ימים שנצברו</span></div>
-                                    </div>
-                                 </div>
-                              </div>
-                            </div>
-                          )}
-                          {workspace.activeTab === 'design' && (
-                            <div className="space-y-6 animate-in fade-in">
-                              <div className="p-6 bg-white rounded-[40px] shadow-sm space-y-6 text-slate-700 font-heebo">
-                                <label className="text-xs font-black uppercase tracking-widest block opacity-50 text-slate-900">מראה המגירה</label>
-                                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl"><span>צבע רקע</span><input type="color" value={settingsData.drawerBgColor} onChange={e => setSettingsData(s => ({...s, drawerBgColor: e.target.value}))} className="w-10 h-10 rounded-lg cursor-pointer shadow-sm border-0" /></div>
-                                <div className="space-y-4 bg-slate-50 p-4 rounded-2xl"><span>שקיפות</span><input type="range" min="0" max="1" step="0.01" value={settingsData.drawerOpacity} onChange={e => setSettingsData(s => ({...s, drawerOpacity: parseFloat(e.target.value)}))} className="w-full accent-slate-900" /></div>
-                                <div className="space-y-4 bg-slate-50 p-4 rounded-2xl"><span>טשטוש</span><input type="range" min="0" max="40" step="1" value={settingsData.drawerBlur} onChange={e => setSettingsData(s => ({...s, drawerBlur: parseInt(e.target.value)}))} className="w-full accent-slate-900" /></div>
-                              </div>
-                            </div>
-                          )}
-                          {workspace.activeTab === 'stages' && (
-                            <div className="grid grid-cols-4 gap-3 animate-in fade-in pb-10">
-                              {Array.from({ length: 32 }).map((_, i) => (
-                                <div key={i+1} className="aspect-square relative rounded-2xl overflow-hidden border-2 flex items-center justify-center group bg-white shadow-sm transition-all active:scale-90" style={{ borderColor: settingsData.stageImages[i+1] ? settingsData.primaryBtnColor : '#f1f5f9' }}>
-                                  {settingsData.stageImages[i+1] ? <img src={settingsData.stageImages[i+1]} className="w-full h-full object-cover" alt="stage" /> : <span className="text-[10px] font-black opacity-20 text-slate-900 font-heebo">{i+1}</span>}
-                                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, stageImages: {...s.stageImages, [i+1]: URL.createObjectURL(f)}})) }} />
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {workspace.activeTab === 'balls' && (
-                            <div className="space-y-4 animate-in fade-in pb-10 text-slate-900 font-heebo">
-                              {emotions.map(emo => (
-                                <div key={emo.id} className="flex items-center gap-4 p-4 bg-white rounded-[30px] shadow-sm">
-                                   <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl overflow-hidden shadow-md flex-shrink-0 ${settingsData.ballSprites[emo.id] ? '' : `bg-gradient-to-t ${emo.colorFull}`}`}>
-                                     {settingsData.ballSprites[emo.id] ? <img src={settingsData.ballSprites[emo.id]} className="w-full h-full rounded-full object-cover" alt="emo" /> : emo.face}
-                                   </div>
-                                   <div className="flex-1 text-[11px] font-black text-slate-300">העלה אייקון {emo.face}<input type="file" accept="image/*" className="mt-1 w-full text-slate-400 font-heebo" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, ballSprites: {...s.ballSprites, [emo.id]: URL.createObjectURL(f)}})) }} /></div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                    </div>
+
+                        {gameState === 'SELECTING' && (
+                          <div className="absolute bottom-12 inset-x-8 flex flex-col gap-4 items-center animate-button-pop z-[60]">
+                            <button onMouseDown={(e) => { e.stopPropagation(); executeDrop(); }} onTouchStart={(e) => { e.stopPropagation(); executeDrop(); }} className="w-full py-5 rounded-full font-black shadow-2xl text-xl text-white active:scale-95 transition-transform" style={{ backgroundColor: settingsData.primaryBtnColor }}>בוצע</button>
+                            <button onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }} className="text-[11px] font-black text-slate-300 uppercase tracking-[4px] cursor-pointer active:text-slate-400 font-heebo">ביטול</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-              </>
-            )}
+
+                  {/* Creator Drawer */}
+                  <div className={`absolute top-0 left-0 right-0 bg-white/95 backdrop-blur-xl z-[200] rounded-b-[50px] shadow-2xl transition-transform duration-500 ${showTopPopup ? 'translate-y-0' : '-translate-y-[120%]'}`}>
+                      <div className="p-8 pt-12 flex flex-col min-h-[460px]">
+                          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center relative overflow-hidden text-slate-900 font-heebo">
+                              {wizardStep === 1 && (
+                                  <div className="w-full animate-in fade-in duration-300">
+                                      <h2 className="text-3xl font-black mb-8 tracking-tight">איזה הרגל נוסיף?</h2>
+                                      <div className="flex flex-wrap justify-center gap-3 mb-6">{habitSuggestions.map(s => <button key={s} onClick={() => { setNewHabit({...newHabit, name: s}); setWizardStep(2); }} className="px-5 py-3 rounded-full bg-slate-100 text-slate-800 font-bold active:scale-95 transition-transform">{s}</button>)}</div>
+                                      <div className="relative text-slate-900"><input type="text" placeholder="הרגל אחר..." className="w-full text-center text-xl font-bold bg-slate-50 py-5 rounded-3xl border-2 border-transparent focus:border-purple-200 outline-none shadow-inner" value={newHabit.name} onChange={e => setNewHabit({...newHabit, name: e.target.value})} />{newHabit.name && <button onClick={() => setWizardStep(2)} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center active:scale-90"><ChevronLeft className="w-5 h-5" /></button>}</div>
+                                  </div>
+                              )}
+                              {wizardStep === 2 && (
+                                  <div className="w-full animate-in fade-in duration-300">
+                                      <h2 className="text-3xl font-black mb-6 tracking-tight">כמות ויחידה</h2>
+                                      <div className="flex items-center justify-center gap-6 mb-8 bg-slate-50 p-6 rounded-[35px] shadow-inner border border-slate-100 text-slate-900">
+                                          <button onClick={() => setNewHabit(h => ({...h, amount: Math.max(1, h.amount - 1)}))} className="w-12 h-12 rounded-full bg-white shadow-md text-3xl font-black flex items-center justify-center text-slate-400 active:scale-90"><Minus className="w-6 h-6" /></button>
+                                          <input type="number" className="bg-transparent text-5xl font-black w-24 text-center outline-none text-slate-900" value={newHabit.amount} onChange={e => setNewHabit({...newHabit, amount: Number(e.target.value)})} />
+                                          <button onClick={() => setNewHabit(h => ({...h, amount: h.amount + 1}))} className="w-12 h-12 rounded-full bg-[#0f172a] text-white shadow-lg text-3xl font-black flex items-center justify-center active:scale-90"><Plus className="w-6 h-6" /></button>
+                                      </div>
+                                      <div className="relative mb-6 font-heebo text-slate-900"><input type="text" placeholder="הקלד יחידה..." className="w-full text-center text-lg font-bold bg-white py-4 rounded-2xl border-2 border-purple-50 focus:border-purple-300 outline-none shadow-sm text-slate-900" value={newHabit.unit} onChange={e => setNewHabit({...newHabit, unit: e.target.value})} /></div>
+                                      <div className="flex flex-wrap justify-center gap-2 mb-6 font-heebo">{unitOptions.map(u => <button key={u} onClick={() => setNewHabit({...newHabit, unit: u})} className={`px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-all ${newHabit.unit === u ? 'bg-purple-600 text-white shadow-md scale-105' : 'bg-slate-100 text-slate-600'}`}>{u}</button>)}</div>
+                                      <button onClick={() => setWizardStep(3)} className="w-full py-4 bg-[#0f172a] text-white font-black rounded-2xl active:scale-95 shadow-xl flex items-center justify-center gap-2 text-white">המשך <ChevronLeft className="w-5 h-5 rotate-180" /></button>
+                                  </div>
+                              )}
+                              {wizardStep === 3 && (
+                                  <div className="w-full animate-in fade-in text-center text-slate-900">
+                                      <h2 className="text-3xl font-black mb-2 text-purple-600 tracking-tight text-slate-900">המינימום המגוחך</h2>
+                                      <p className="text-slate-500 font-bold mb-6 font-heebo">מה לא תוותר לעשות בחיים?</p>
+                                      <div className="relative text-slate-900">
+                                          <input type="text" placeholder="למשל: לגימה אחת..." className="w-full text-2xl font-black text-center border-b-4 border-purple-100 bg-transparent py-4 outline-none focus:border-purple-600 transition-colors mb-8 text-slate-900" value={newHabit.ridiculousAction} onChange={e => setNewHabit({...newHabit, ridiculousAction: e.target.value})} />
+                                          <button disabled={!newHabit.ridiculousAction} onClick={handleCreateHabitFinish} className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-all ${newHabit.ridiculousAction ? 'bg-purple-600 text-white shadow-2xl active:scale-90' : 'bg-slate-100 text-slate-300'}`}><Check className="w-10 h-10" /></button>
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* מרכז שליטה */}
+                  {workspace.isOpen && (
+                    <div className="absolute inset-0 z-[300] bg-slate-900/80 backdrop-blur-xl flex justify-center items-end sm:items-center sm:p-10" onClick={() => setWorkspace({ ...workspace, isOpen: false })}>
+                      <div className="w-full sm:max-w-xl bg-white h-[90vh] sm:h-auto rounded-t-[50px] sm:rounded-[60px] overflow-hidden flex flex-col shadow-2xl text-slate-900" onClick={e => e.stopPropagation()}>
+                          <div className="p-8 pb-4 flex justify-between items-center border-b border-slate-50"><h3 className="font-black text-2xl font-heebo text-slate-900">מרכז שליטה</h3><button onClick={() => setWorkspace({ ...workspace, isOpen: false })} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center active:scale-90"><X className="w-5 h-5 text-slate-500" /></button></div>
+                          <div className="flex px-6 gap-4 border-b border-slate-100 overflow-x-auto whitespace-nowrap scrollbar-hide text-slate-400 font-heebo">
+                            {['profile', 'design', 'stages', 'balls'].map(tab => (
+                              <button key={tab} onClick={() => setWorkspace({...workspace, activeTab: tab})} className={`pb-3 pt-4 px-2 font-black text-sm uppercase tracking-widest transition-all ${workspace.activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : ''}`}>{tab === 'profile' ? 'פרופיל' : tab === 'design' ? 'עיצוב' : tab === 'stages' ? 'שלבים' : 'כדורים'}</button>
+                            ))}
+                          </div>
+                          <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/30 font-heebo text-slate-800">
+                             {workspace.activeTab === 'profile' && (
+                              <div className="space-y-6 animate-in fade-in">
+                                <div className="flex flex-col items-center gap-6 py-6 bg-white rounded-[40px] shadow-sm text-slate-900">
+                                   <div className="w-32 h-32 rounded-full bg-slate-100 border-4 border-white shadow-xl overflow-hidden relative group">
+                                     {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User className="w-12 h-12 text-slate-300 m-10" />}
+                                     <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, profilePic: URL.createObjectURL(f)})); }} />
+                                   </div>
+                                   <input type="text" value={settingsData.userName} onChange={e => setSettingsData(s => ({...s, userName: e.target.value}))} className="text-center font-black text-2xl w-full outline-none text-slate-900 bg-slate-50 py-3 rounded-2xl" />
+                                   <div className="flex flex-col items-center gap-2">
+                                      <label className="text-[10px] font-black uppercase opacity-40">נתוני התמדה</label>
+                                      <div className="flex items-center gap-3 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
+                                         <div className="flex flex-col items-center text-slate-900 font-heebo"><span className="text-2xl font-black text-purple-600">{settingsData.totalDays}</span><span className="text-[9px] font-bold opacity-40">ימים שנצברו</span></div>
+                                      </div>
+                                   </div>
+                                </div>
+                              </div>
+                            )}
+                            {workspace.activeTab === 'design' && (
+                              <div className="space-y-6 animate-in fade-in">
+                                <div className="p-6 bg-white rounded-[40px] shadow-sm space-y-6 text-slate-700 font-heebo">
+                                  <label className="text-xs font-black uppercase tracking-widest block opacity-50 text-slate-900">מראה המגירה</label>
+                                  <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl"><span>צבע רקע</span><input type="color" value={settingsData.drawerBgColor} onChange={e => setSettingsData(s => ({...s, drawerBgColor: e.target.value}))} className="w-10 h-10 rounded-lg cursor-pointer shadow-sm border-0" /></div>
+                                  <div className="space-y-4 bg-slate-50 p-4 rounded-2xl"><span>שקיפות</span><input type="range" min="0" max="1" step="0.01" value={settingsData.drawerOpacity} onChange={e => setSettingsData(s => ({...s, drawerOpacity: parseFloat(e.target.value)}))} className="w-full accent-slate-900" /></div>
+                                  <div className="space-y-4 bg-slate-50 p-4 rounded-2xl"><span>טשטוש</span><input type="range" min="0" max="40" step="1" value={settingsData.drawerBlur} onChange={e => setSettingsData(s => ({...s, drawerBlur: parseInt(e.target.value)}))} className="w-full accent-slate-900" /></div>
+                                </div>
+                              </div>
+                            )}
+                            {workspace.activeTab === 'stages' && (
+                              <div className="grid grid-cols-4 gap-3 animate-in fade-in pb-10">
+                                {Array.from({ length: 32 }).map((_, i) => (
+                                  <div key={i+1} className="aspect-square relative rounded-2xl overflow-hidden border-2 flex items-center justify-center group bg-white shadow-sm transition-all active:scale-90" style={{ borderColor: settingsData.stageImages[i+1] ? settingsData.primaryBtnColor : '#f1f5f9' }}>
+                                    {settingsData.stageImages[i+1] ? <img src={settingsData.stageImages[i+1]} className="w-full h-full object-cover" alt="stage" /> : <span className="text-[10px] font-black opacity-20 text-slate-900 font-heebo">{i+1}</span>}
+                                    <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, stageImages: {...s.stageImages, [i+1]: URL.createObjectURL(f)}})) }} />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {/* --- THE INTEGRATION TAB --- */}
+                            {workspace.activeTab === 'balls' && (
+                              <div className="space-y-4 animate-in fade-in pb-10 text-slate-900 font-heebo">
+                                {emotions.map(emo => (
+                                  <div key={emo.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white rounded-[30px] shadow-sm relative">
+                                     <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shadow-inner bg-slate-100/50 border border-slate-200 flex-shrink-0`}>
+                                        <LiveSmiley config={settingsData.smileyConfigs[emo.id] || PRESETS[emo.id]} mode="idle" />
+                                     </div>
+                                     <div className="flex-1 text-[11px] font-black text-slate-500 w-full">
+                                        <div className="flex justify-between items-center mb-1">
+                                          <span>דמות חיה פעילה ({emo.label})</span>
+                                          <button onClick={() => setEditingSmileyFor(emo.id)} className="hidden md:inline-flex items-center gap-1 bg-[#DDF4FF] text-[#1CB0F6] px-3 py-1.5 rounded-lg hover:bg-[#1CB0F6] hover:text-white transition-colors">
+                                            <PaletteIcon size={14} /> עיצוב אישי ופיזיקה
+                                          </button>
+                                        </div>
+                                     </div>
+                                  </div>
+                                ))}
+                                <div className="text-center text-xs text-slate-400 mt-4 md:hidden">עורך הסמיילים המתקדם זמין במסכים רחבים בלבד</div>
+                              </div>
+                            )}
+                          </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* --- THE FULL SCREEN SMILEY ENGINE OVERLAY --- */}
+          {editingSmileyFor && (
+            <SmileyEditor 
+              emotion={emotions.find(e => e.id === editingSmileyFor)} 
+              initialConfig={settingsData.smileyConfigs[editingSmileyFor] || PRESETS[editingSmileyFor]}
+              onSave={(newConfig) => {
+                 setSettingsData(s => ({ ...s, smileyConfigs: { ...s.smileyConfigs, [editingSmileyFor]: newConfig } }));
+                 setEditingSmileyFor(null);
+              }}
+              onClose={() => setEditingSmileyFor(null)} 
+            />
+          )}
+        </>
       );
     }
 
-    // ציור האפליקציה למסך (כפי שביקשת)
     ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
