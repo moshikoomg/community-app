@@ -15,9 +15,9 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap');
     
-    body { font-family: 'Rubik', sans-serif; user-select: none; margin: 0; position: fixed; width: 100%; height: 100%; overflow: hidden; background: #0F172A; }
+    body { font-family: 'Heebo', sans-serif; user-select: none; margin: 0; position: fixed; width: 100%; height: 100%; overflow: hidden; background: #0F172A; }
     #physics-container { position: absolute; inset: 0; z-index: 10; pointer-events: auto; cursor: grab; }
     #physics-container:active { cursor: grabbing; }
 
@@ -125,7 +125,7 @@
       5: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#a1ce40", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 30, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.65, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: -0.1, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: -0.1, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 47, mouthCurve: 0.1, mouthStrokeWidth: 4, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
     };
 
-    // --- Smart Rendering Function (Perfect Shadows & Static Lighting) ---
+    // --- Rendering Function ---
     const drawSmileyCanvas = (ctx, conf, phys, time, renderScale = 1, isExport = false, reflections = []) => {
       if (!conf || !phys) return; 
       const isValidHex = (c) => typeof c === 'string' && /^#([A-Fa-f0-9]{3}){1,2}$/.test(c);
@@ -133,29 +133,53 @@
       const outerColor = isValidHex(conf.bodyOuterColor) ? conf.bodyOuterColor : '#222222';
       const strokeColor = isValidHex(conf.bodyStrokeColor) ? conf.bodyStrokeColor : '#1a1a1a';
       const radius = 110 * conf.bodyScale * renderScale;
-      const rot = phys.rotation || 0;
       
       ctx.save();
       ctx.translate(phys.worldX, phys.worldY);
+      ctx.rotate(phys.rotation || 0);
       ctx.scale(phys.squashX, phys.squashY);
 
-      // --- 1. Draw Body & Static Lighting (Un-Rotated) ---
+      const project = (lx, ly) => {
+        const ax = isExport ? 0 : ((phys.x || 0) + (phys.faceSlide?.x || 0)) * (Math.PI / 2.2) * conf.projectionDepth * conf.rotationIntensity;
+        const ay = isExport ? 0 : ((phys.y || 0) + (phys.faceSlide?.y || 0)) * (Math.PI / 3.0) * conf.projectionDepth * conf.rotationIntensity;
+        const lon = (lx / 110) * (Math.PI / 2) + ax;
+        const lat = ((ly + conf.faceYOffset) / 110) * (Math.PI / 2) + ay;
+        const zS = Math.cos(lon) * Math.cos(lat);
+        return { x: radius * Math.sin(lon) * Math.cos(lat), y: radius * Math.sin(lat), z: zS, sX: Math.cos(lon), sY: Math.cos(lat), vis: zS > -0.45 };
+      };
+
+      const drawArms = (isBack) => {
+        if (!conf.hasHands || !phys.arms) return;
+        ctx.save(); ctx.lineWidth = conf.armThickness * renderScale * (radius / (110 * renderScale)); ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
+        
+        [-1, 1].forEach((side, i) => {
+          const start = project(side * 105, conf.handYOffset);
+          if ((start.z < 0) !== isBack) return;
+          const armP = phys.arms[i];
+          
+          const exactLen = conf.handLength * conf.bodyScale * renderScale;
+          const armAngle = Math.atan2(armP.y, armP.x);
+          const endX = start.x + Math.cos(armAngle) * exactLen; 
+          const endY = start.y + Math.sin(armAngle) * exactLen;
+          
+          const dragX = isExport ? 0 : phys.vx * 2.5 * conf.armCurvature * renderScale;
+          const dragY = isExport ? 0 : phys.vy * 2.5 * conf.armCurvature * renderScale;
+          const cpX = start.x + (Math.cos(armAngle) * exactLen * 0.5) - dragX;
+          const cpY = start.y + (Math.sin(armAngle) * exactLen * 0.7) - dragY;
+          
+          ctx.beginPath(); ctx.moveTo(start.x, start.y);
+          ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+          ctx.stroke();
+        });
+        ctx.restore();
+      };
+
+      drawArms(true);
+
       const body = new Path2D(); body.arc(0, 0, radius, 0, Math.PI * 2);
       
       if (conf.flatMode) {
         ctx.fillStyle = bodyColor;
-        ctx.fill(body);
-        
-        // 2D Crescent Moon Shadow (aligned to world light)
-        ctx.save();
-        ctx.clip(body);
-        ctx.fillStyle = 'rgba(0,0,0,0.12)'; 
-        ctx.fill(body);
-        ctx.beginPath();
-        ctx.arc(radius * conf.lightX * 1.5, radius * conf.lightY * 1.5, radius * 1.05, 0, Math.PI * 2);
-        ctx.fillStyle = bodyColor;
-        ctx.fill();
-        ctx.restore();
       } else {
         try {
           const grad = ctx.createRadialGradient(radius * conf.lightX, radius * conf.lightY, 0, 0, 0, radius * 1.3);
@@ -163,8 +187,8 @@
           grad.addColorStop(1, outerColor);
           ctx.fillStyle = grad;
         } catch (e) { ctx.fillStyle = bodyColor; }
-        ctx.fill(body);
       }
+      ctx.fill(body);
       
       if (conf.showBorder && conf.bodyStrokeWidth > 0) {
         ctx.lineWidth = conf.bodyStrokeWidth * renderScale * (radius / (110 * renderScale));
@@ -174,7 +198,7 @@
 
       ctx.save(); ctx.clip(body);
 
-      // Shadows & Color Reflections (World Space)
+      // Shadows & Reflections
       if (reflections && reflections.length > 0 && !conf.flatMode) {
           reflections.forEach(ref => {
               const angle = Math.atan2(ref.dy, ref.dx);
@@ -203,7 +227,6 @@
           });
       }
 
-      // Static Glass Effect
       if (conf.glassEffect && !conf.flatMode) {
         ctx.save();
         ctx.beginPath();
@@ -215,57 +238,6 @@
         ctx.fill();
         ctx.restore();
       }
-      ctx.restore(); // End Body Clip
-
-      // --- 2. Draw Face & Arms (Rotated) ---
-      ctx.rotate(rot);
-
-      const project = (lx, ly) => {
-        // Inverse rotate the gaze slide to keep it aligned with the rotating face!
-        const totalFaceX = (phys.x || 0) + (phys.faceSlide?.x || 0);
-        const totalFaceY = (phys.y || 0) + (phys.faceSlide?.y || 0);
-        const localFaceX = Math.cos(-rot) * totalFaceX - Math.sin(-rot) * totalFaceY;
-        const localFaceY = Math.sin(-rot) * totalFaceX + Math.cos(-rot) * totalFaceY;
-
-        const ax = isExport ? 0 : localFaceX * (Math.PI / 2.2) * conf.projectionDepth * conf.rotationIntensity;
-        const ay = isExport ? 0 : localFaceY * (Math.PI / 3.0) * conf.projectionDepth * conf.rotationIntensity;
-        const lon = (lx / 110) * (Math.PI / 2) + ax;
-        const lat = ((ly + conf.faceYOffset) / 110) * (Math.PI / 2) + ay;
-        const zS = Math.cos(lon) * Math.cos(lat);
-        return { x: radius * Math.sin(lon) * Math.cos(lat), y: radius * Math.sin(lat), z: zS, sX: Math.cos(lon), sY: Math.cos(lat), vis: zS > -0.45 };
-      };
-
-      const drawArms = (isBack) => {
-        if (!conf.hasHands || !phys.arms) return;
-        ctx.save(); ctx.lineWidth = conf.armThickness * renderScale * (radius / (110 * renderScale)); ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
-        
-        [-1, 1].forEach((side, i) => {
-          const start = project(side * 105, conf.handYOffset);
-          if ((start.z < 0) !== isBack) return;
-          const armP = phys.arms[i];
-          
-          const exactLen = conf.handLength * conf.bodyScale * renderScale;
-          const armAngle = Math.atan2(armP.y, armP.x);
-          const endX = start.x + Math.cos(armAngle) * exactLen; 
-          const endY = start.y + Math.sin(armAngle) * exactLen;
-          
-          // Drag applies locally now, map world velocity to local
-          const localVx = Math.cos(-rot) * phys.vx - Math.sin(-rot) * phys.vy;
-          const localVy = Math.sin(-rot) * phys.vx + Math.cos(-rot) * phys.vy;
-          const dragX = isExport ? 0 : localVx * 2.5 * conf.armCurvature * renderScale;
-          const dragY = isExport ? 0 : localVy * 2.5 * conf.armCurvature * renderScale;
-          
-          const cpX = start.x + (Math.cos(armAngle) * exactLen * 0.5) - dragX;
-          const cpY = start.y + (Math.sin(armAngle) * exactLen * 0.7) - dragY;
-          
-          ctx.beginPath(); ctx.moveTo(start.x, start.y);
-          ctx.quadraticCurveTo(cpX, cpY, endX, endY);
-          ctx.stroke();
-        });
-        ctx.restore();
-      };
-
-      drawArms(true);
 
       [-1, 1].forEach(side => {
         const ep = project(side * conf.eyeSpacing, conf.eyeYOffset);
@@ -287,9 +259,9 @@
         ctx.moveTo(mp.x - mw, mp.y); ctx.bezierCurveTo(mp.x - mw/2, mp.y + mh, mp.x + mw/2, mp.y + mh, mp.x + mw, mp.y); ctx.stroke();
       }
       
-      ctx.restore(); // End Rotation
-      drawArms(false); // Front arms
-      ctx.restore(); // End Translate/Scale
+      ctx.restore();
+      drawArms(false);
+      ctx.restore();
     };
 
     // --- Physics Logic ---
@@ -574,16 +546,6 @@
         return () => cancelAnimationFrame(reqRef.current);
       }, []);
 
-      useEffect(() => {
-        const canvas = canvasRef.current;
-        if (canvas) {
-           physRef.current.worldX = canvas.clientWidth / 2;
-           physRef.current.worldY = canvas.clientHeight / 2;
-        }
-        requestRef.current = requestAnimationFrame(draw); // Changed from loop to draw
-        return () => cancelAnimationFrame(requestRef.current);
-      }, [draw]); // Added dependency
-
       return (
         <div className="fixed inset-0 z-[400] bg-[#F7F7F7] flex flex-col md:flex-row text-[#3C3C3C] overflow-hidden" dir="rtl" onClick={e => e.stopPropagation()}>
           
@@ -660,7 +622,7 @@
                     <span className="font-bold text-xs text-[#3C3C3C]">הצג קו מתאר (Border)</span><DuoToggle active={config.showBorder} onClick={() => updateConfig('showBorder', !config.showBorder)} />
                   </div>
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-[#E5E5E5]">
-                    <span className="font-bold text-xs text-[#3C3C3C]">צבע שטוח (Flat)</span><DuoToggle active={config.flatMode} onClick={() => updateConfig('flatMode', !config.flatMode)} />
+                    <span className="font-bold text-xs text-[#3C3C3C]">צבע שטוח לחלוטין (Flat)</span><DuoToggle active={config.flatMode} onClick={() => updateConfig('flatMode', !config.flatMode)} />
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                       <div className="flex flex-col items-center gap-1.5 p-2 bg-slate-50 border border-[#E5E5E5] rounded-xl">
