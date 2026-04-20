@@ -27,7 +27,8 @@
     @keyframes bouncePop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
     .bounce-pop { animation: bouncePop 0.4s ease-out; }
     
-    .habit-list-container { position: absolute; top: 25%; bottom: 180px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; z-index: 45; pointer-events: none; }
+    /* Adjusted habit container to perfectly center and prevent overlaps */
+    .habit-list-container { position: absolute; top: 310px; bottom: 150px; left: 0; right: 0; overflow: hidden; z-index: 45; pointer-events: none; }
     .habit-item { transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer; }
     
     .explanation-sphere { position: absolute; width: 160px; height: 160px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); cursor: pointer; overflow: visible; }
@@ -44,9 +45,25 @@
     .live-canvas-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
     .live-canvas-wrapper canvas { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
     
-    /* Scrollbar hide utility */
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom styles for horizontal stage scroll */
+    .stages-scroll-container {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1rem 2rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        align-items: center;
+    }
+    .stage-card {
+        flex: 0 0 110px;
+        aspect-ratio: 3/4;
+        scroll-snap-align: center;
+        transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    }
   </style>
 </head>
 <body>
@@ -55,13 +72,11 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
     
-    // --- Global Helper for Color Bleeding Shadows ---
     const hexToRgb = (hex) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '88,204,2';
     };
 
-    // --- Icons Setup ---
     const Icon = ({ children, className = "", size = 24, ...rest }) => (
       <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...rest}>
         {children}
@@ -77,19 +92,13 @@
     const Minus = (props) => <Icon {...props}><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
     const Shield = (props) => <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></Icon>;
     const Flag = (props) => <Icon {...props}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></Icon>;
+    const Lock = (props) => <Icon {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
     const PaletteIcon = (props) => <Icon {...props}><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></Icon>;
     const ActivityIcon = (props) => <Icon {...props}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Icon>;
     const HandIcon = (props) => <Icon {...props}><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M6 14v-1a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M18 11a4 4 0 0 1 4 4v2a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.82-2.14l-5.17-5.17a2 2 0 0 1 2.83-2.82L7 15"/></Icon>;
     const EyeIcon = (props) => <Icon {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></Icon>;
     const SmileIcon = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></Icon>;
     const ZapIcon = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
-
-    // --- Data & Texts ---
-    const introCardsData = [
-      { title: 'כוח רצון הוא משאב זמני.', desc: 'אם נבנה על מוטיבציה בלבד כדי להתמיד, ההרגל פשוט לא יחזיק מעמד.' },
-      { title: 'הסוד הוא בפעולות מגוחכות.', desc: 'פעולה כל כך קטנה, שאין שום סיכוי או תירוץ לא לעשות אותה, גם ביום הכי קשה.' },
-      { title: 'הניצחון כבר מובטח.', desc: 'מתחייבים למינימום. כל יום. הבונוס הוא רק אם מתחשק לך, אבל הרצף נשמר.' }
-    ];
 
     const emotions = [
       { id: 1, label: "אנרגיית שיא", subtext: "להציל את היום!", desc: "מצב שבו אתה מרגיש בשיא הכוח והתשוקה שלך. זמן לפעולות המורכבות ביותר." }, 
@@ -98,10 +107,6 @@
       { id: 4, label: "הנאה וסיפוק", subtext: "סבבה לי", desc: "הנאה מהדרך ומהניצחונות הקטנים. הרגע שבו ההרגל הופך לתענוג." }, 
       { id: 5, label: "הרמוניה פנימית", subtext: "למרות הכל", desc: "חיבור פנימי עדין. זמן מעולה למדיטציה, יוגה או פשוט נשימה עמוקה." }, 
     ];
-
-    // =====================================================================
-    // ======================= LIVE SMILEY ENGINE (CORE) ===================
-    // =====================================================================
 
     const DEFAULT_SMILEY_CONFIG = {
       bodyColor: '#58CC02', bodyOuterColor: '#2A5200', bodyStrokeColor: '#1a1a1a', bodyStrokeWidth: 4,
@@ -125,7 +130,6 @@
       5: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#a1ce40", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 30, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.65, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: -0.1, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: -0.1, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 47, mouthCurve: 0.1, mouthStrokeWidth: 4, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
     };
 
-    // --- Rendering Function ---
     const drawSmileyCanvas = (ctx, conf, phys, time, renderScale = 1, isExport = false, reflections = []) => {
       if (!conf || !phys) return; 
       const isValidHex = (c) => typeof c === 'string' && /^#([A-Fa-f0-9]{3}){1,2}$/.test(c);
@@ -175,12 +179,8 @@
       };
 
       drawArms(true);
-
       const body = new Path2D(); body.arc(0, 0, radius, 0, Math.PI * 2);
-      
-      if (conf.flatMode) {
-        ctx.fillStyle = bodyColor;
-      } else {
+      if (conf.flatMode) { ctx.fillStyle = bodyColor; } else {
         try {
           const grad = ctx.createRadialGradient(radius * conf.lightX, radius * conf.lightY, 0, 0, 0, radius * 1.3);
           grad.addColorStop(0, bodyColor);
@@ -189,56 +189,38 @@
         } catch (e) { ctx.fillStyle = bodyColor; }
       }
       ctx.fill(body);
-      
       if (conf.showBorder && conf.bodyStrokeWidth > 0) {
         ctx.lineWidth = conf.bodyStrokeWidth * renderScale * (radius / (110 * renderScale));
         ctx.strokeStyle = strokeColor;
         ctx.stroke(body);
       }
-
       ctx.save(); ctx.clip(body);
-
-      // Shadows & Reflections
       if (reflections && reflections.length > 0 && !conf.flatMode) {
           reflections.forEach(ref => {
               const angle = Math.atan2(ref.dy, ref.dx);
               const cx = Math.cos(angle) * radius * 0.95;
               const cy = Math.sin(angle) * radius * 0.95;
-
-              ctx.beginPath();
-              ctx.arc(cx, cy, radius * 0.8, 0, Math.PI * 2);
+              ctx.beginPath(); ctx.arc(cx, cy, radius * 0.8, 0, Math.PI * 2);
               const shadowGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.8);
               shadowGrad.addColorStop(0, `rgba(0,0,0,${0.6 * ref.intensity})`);
               shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
-              ctx.fillStyle = shadowGrad;
-              ctx.fill();
-
+              ctx.fillStyle = shadowGrad; ctx.fill();
               if (ref.color) {
-                  ctx.beginPath();
-                  ctx.arc(cx, cy, radius * 0.9, 0, Math.PI * 2);
+                  ctx.beginPath(); ctx.arc(cx, cy, radius * 0.9, 0, Math.PI * 2);
                   const colorGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.9);
                   ctx.globalAlpha = 0.5 * ref.intensity;
-                  colorGrad.addColorStop(0, ref.color);
-                  colorGrad.addColorStop(1, 'transparent');
-                  ctx.fillStyle = colorGrad;
-                  ctx.fill();
-                  ctx.globalAlpha = 1.0;
+                  colorGrad.addColorStop(0, ref.color); colorGrad.addColorStop(1, 'transparent');
+                  ctx.fillStyle = colorGrad; ctx.fill(); ctx.globalAlpha = 1.0;
               }
           });
       }
-
       if (conf.glassEffect && !conf.flatMode) {
-        ctx.save();
-        ctx.beginPath();
+        ctx.save(); ctx.beginPath();
         ctx.ellipse(-radius * 0.25, -radius * 0.4, radius * 0.6, radius * 0.35, Math.PI / 8, 0, Math.PI * 2);
         const glassGrad = ctx.createLinearGradient(-radius * 0.5, -radius * 0.8, radius * 0.2, 0);
-        glassGrad.addColorStop(0, 'rgba(255,255,255,0.7)');
-        glassGrad.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = glassGrad;
-        ctx.fill();
-        ctx.restore();
+        glassGrad.addColorStop(0, 'rgba(255,255,255,0.7)'); glassGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glassGrad; ctx.fill(); ctx.restore();
       }
-
       [-1, 1].forEach(side => {
         const ep = project(side * conf.eyeSpacing, conf.eyeYOffset);
         if (ep.vis) {
@@ -250,7 +232,6 @@
           ctx.moveTo(ep.x - ew, ep.y); ctx.quadraticCurveTo(ep.x, ep.y - eh, ep.x + ew, ep.y); ctx.stroke();
         }
       });
-
       const mp = project(0, conf.mouthYOffset);
       if (mp.vis) {
         const mw = conf.mouthWidth * Math.abs(mp.sX) * renderScale;
@@ -258,62 +239,42 @@
         ctx.beginPath(); ctx.lineWidth = conf.mouthStrokeWidth * renderScale; ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
         ctx.moveTo(mp.x - mw, mp.y); ctx.bezierCurveTo(mp.x - mw/2, mp.y + mh, mp.x + mw/2, mp.y + mh, mp.x + mw, mp.y); ctx.stroke();
       }
-      
-      ctx.restore();
-      drawArms(false);
-      ctx.restore();
+      ctx.restore(); drawArms(false); ctx.restore();
     };
 
-    // --- Physics Logic ---
     const updateSmileyPhys = (phys, config, time, externalVx, externalVy, mode) => {
       if (!config || !phys) return;
-      
       if (Math.abs(externalVx) < 0.1) externalVx = 0;
       if (Math.abs(externalVy) < 0.1) externalVy = 0;
-
       if (!phys.isBlinking && Math.random() < config.blinkRate && time - phys.lastBlink > 1000) phys.isBlinking = true;
       if (phys.isBlinking) {
         phys.blink -= config.blinkSpeed; if (phys.blink <= 0) { phys.blink = 0; phys.isBlinking = false; phys.lastBlink = time; }
       } else { phys.blink += (1 - phys.blink) * config.blinkSpeed; }
-
       const faceInertia = config.viscosity * 2.5;
       const targetSlideX = -externalVx * 0.05;
       const targetSlideY = -externalVy * 0.05;
-      
       phys.faceSlide.x += (targetSlideX - phys.faceSlide.x) * faceInertia;
       phys.faceSlide.y += (targetSlideY - phys.faceSlide.y) * faceInertia;
-      
       const maxSlide = 0.5;
       phys.faceSlide.x = Math.max(-maxSlide, Math.min(maxSlide, phys.faceSlide.x));
       phys.faceSlide.y = Math.max(-maxSlide, Math.min(maxSlide, phys.faceSlide.y));
-
       phys.squashX += (1.0 - phys.squashX) * 0.15;
       phys.squashY += (1.0 - phys.squashY) * 0.15;
-
       phys.arms.forEach((arm, idx) => {
         const side = idx === 0 ? -1 : 1;
-        arm.vy += config.stringGravity;
-        arm.vx += side * (config.armRepulsion || 1.5);
-        arm.vx *= config.stringDamping;
-        arm.vy *= config.stringDamping;
+        arm.vy += config.stringGravity; arm.vx += side * (config.armRepulsion || 1.5);
+        arm.vx *= config.stringDamping; arm.vy *= config.stringDamping;
         arm.vx -= externalVx * 0.6; arm.vy -= externalVy * 0.6;
-        
         if (mode === 'falling') arm.vy -= 4; 
         if (mode === 'excited') { arm.vy -= 1.5; arm.vx += side * Math.sin(time * (config.excitedFlapSpeed || 0.02)) * 3; }
-
         arm.x += arm.vx; arm.y += arm.vy;
-        
         const exactLen = config.handLength * config.bodyScale;
         const dist = Math.sqrt(arm.x * arm.x + arm.y * arm.y);
         if (dist > 0) {
             const angle = Math.atan2(arm.y, arm.x);
-            arm.x = Math.cos(angle) * exactLen;
-            arm.y = Math.sin(angle) * exactLen;
-        } else {
-            arm.y = exactLen; 
-        }
+            arm.x = Math.cos(angle) * exactLen; arm.y = Math.sin(angle) * exactLen;
+        } else { arm.y = exactLen; }
       });
-      
       if (mode === 'idle') {
         phys.x += (Math.sin(time * (config.idleFloatSpeed || 0.002)) * 0.2 - phys.x) * config.viscosity;
         phys.y += (Math.cos(time * ((config.idleFloatSpeed || 0.002) * 1.3)) * 0.2 - phys.y) * config.viscosity;
@@ -323,24 +284,19 @@
       }
     };
 
-    // --- Component: Live Smiley ---
     const LiveSmiley = ({ config, mode = 'idle', className = "", onClick }) => {
       const canvasRef = useRef(null);
       const reqRef = useRef();
       const configRef = useRef(config);
       const modeRef = useRef(mode);
-
       useEffect(() => { configRef.current = config; }, [config]);
       useEffect(() => { modeRef.current = mode; }, [mode]);
-
       const physRef = useRef({
-        initialized: false,
-        worldX: 0, worldY: 0, vx: 0, vy: 0, rotation: 0, x: 0, y: 0, targetGaze: {x:0, y:0},
+        initialized: false, worldX: 0, worldY: 0, vx: 0, vy: 0, rotation: 0, x: 0, y: 0, targetGaze: {x:0, y:0},
         scale: 1, squashX: 1, squashY: 1, blink: 1, lastBlink: 0, isBlinking: false,
         faceSlide: { x: 0, y: 0 }, baseFloatOffset: Math.random() * Math.PI * 2,
         arms: [{ x: -20, y: 0, vx: 0, vy: 0 }, { x: 20, y: 0, vx: 0, vy: 0 }]
       });
-
       useEffect(() => {
         const handleMouseMove = (e) => {
            if (modeRef.current === 'follow' || modeRef.current === 'excited') {
@@ -353,53 +309,33 @@
         window.addEventListener('mousemove', handleMouseMove);
         return () => window.removeEventListener('mousemove', handleMouseMove);
       }, []);
-
       useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+        const canvas = canvasRef.current; if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        
         const RESOLUTION = 300; 
         if (canvas.width !== RESOLUTION) canvas.width = RESOLUTION;
         if (canvas.height !== RESOLUTION) canvas.height = RESOLUTION;
-        
         const loop = (t) => {
           ctx.clearRect(0,0,RESOLUTION,RESOLUTION);
-          
           const p = physRef.current;
           const currentConfig = configRef.current;
           const currentMode = modeRef.current;
-
-          if (!currentConfig) {
-             reqRef.current = requestAnimationFrame(loop);
-             return;
-          }
-          
+          if (!currentConfig) { reqRef.current = requestAnimationFrame(loop); return; }
           const padding = 100;
           const maxExpectedRadius = Math.max(110 * currentConfig.bodyScale, currentConfig.hasHands ? currentConfig.handLength * currentConfig.bodyScale : 0);
           const renderScale = RESOLUTION / ((maxExpectedRadius * 2) + padding); 
-          
-          if (!p.initialized) {
-              p.worldX = RESOLUTION / 2; p.worldY = RESOLUTION / 2; p.initialized = true;
-          }
-
+          if (!p.initialized) { p.worldX = RESOLUTION / 2; p.worldY = RESOLUTION / 2; p.initialized = true; }
           const floatOffset = Math.sin(t * (currentConfig.idleFloatSpeed || 0.002) + p.baseFloatOffset) * (currentMode === 'excited' ? 12 : 3);
-          const targetY = RESOLUTION / 2 + floatOffset;
-          const targetX = RESOLUTION / 2;
-
+          const targetY = RESOLUTION / 2 + floatOffset; const targetX = RESOLUTION / 2;
           p.vy += (targetY - p.worldY) * 0.15; p.vy *= 0.8; p.worldY += p.vy;
           p.vx += (targetX - p.worldX) * 0.15; p.vx *= 0.8; p.worldX += p.vx;
-
           updateSmileyPhys(p, currentConfig, t, p.vx, p.vy, currentMode);
           drawSmileyCanvas(ctx, currentConfig, p, t, renderScale, false, []); 
-          
           reqRef.current = requestAnimationFrame(loop);
         };
-        
         reqRef.current = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(reqRef.current);
       }, []);
-
       return (
         <div className={`w-full h-full flex items-center justify-center relative ${className}`} onClick={onClick}>
           <canvas ref={canvasRef} style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
@@ -407,474 +343,105 @@
       );
     };
 
-    // =====================================================================
-    // ======================= SMILEY EDITOR OVERLAY =======================
-    // =====================================================================
-
-    const Accordion = ({ title, icon: IconCmp, isOpen, onClick, children }) => (
-      <div className="border border-slate-200 rounded-2xl mb-3 overflow-hidden bg-white shadow-sm transition-all duration-300">
-        <button onClick={onClick} className="w-full p-4 flex items-center justify-between bg-slate-50/50 hover:bg-slate-50 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-xl shadow-sm text-blue-500"><IconCmp size={18}/></div>
-            <span className="font-black text-slate-700">{title}</span>
-          </div>
-          <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
-        </button>
-        <div className={`transition-all duration-300 ease-in-out origin-top ${isOpen ? 'opacity-100 max-h-[1000px]' : 'opacity-0 max-h-0'}`}>
-          <div className="p-5 border-t border-slate-100 space-y-6 bg-white">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-
-    const SmileyEditor = ({ emotion, initialConfig, onSave, onClose }) => {
-      const [config, setConfig] = useState(initialConfig);
-      const [openFolder, setOpenFolder] = useState('behavior'); 
-      const [previewMode, setPreviewMode] = useState('idle');
-      
-      const canvasRef = useRef(null);
-      const reqRef = useRef();
-      const configRef = useRef(config);
-      const modeRef = useRef(previewMode);
-
-      useEffect(() => { configRef.current = config; }, [config]);
-      useEffect(() => { modeRef.current = previewMode; }, [previewMode]);
-
-      const physRef = useRef({
-        initialized: false,
-        worldX: 400, worldY: 400, vx: 0, vy: 0, rotation: 0, x: 0, y: 0, targetGaze: {x:0, y:0},
-        scale: 1, squashX: 1, squashY: 1, blink: 1, lastBlink: 0, isBlinking: false, isDragging: false,
-        faceSlide: { x: 0, y: 0 }, baseFloatOffset: 0,
-        arms: [{ x: -20, y: 0, vx: 0, vy: 0 }, { x: 20, y: 0, vx: 0, vy: 0 }]
-      });
-
-      const updateConfig = (k, v) => {
-        setConfig(prev => {
-          let next = { ...prev, [k]: v };
-          if (next.linkEyes) {
-            if (k === 'leftEyeSize') next.rightEyeSize = v;
-            if (k === 'leftEyeWidth') next.rightEyeWidth = v;
-            if (k === 'leftEyeCurve') next.rightEyeCurve = v;
-          }
-          return next;
-        });
-      };
-
-      const triggerHit = () => {
-         physRef.current.squashX = configRef.current.hitSquash || 1.4;
-         physRef.current.squashY = 1 / (configRef.current.hitSquash || 1.4);
-         physRef.current.vy = -15; 
-         physRef.current.isBlinking = true;
-      };
-
-      useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        
-        const RESOLUTION = 800; 
-        if (canvas.width !== RESOLUTION) canvas.width = RESOLUTION;
-        if (canvas.height !== RESOLUTION) canvas.height = RESOLUTION;
-
-        const loop = (t) => {
-          ctx.clearRect(0,0,RESOLUTION,RESOLUTION);
-
-          const p = physRef.current;
-          const s = configRef.current;
-          const currentMode = modeRef.current;
-          const floor = RESOLUTION * 0.85; 
-
-          const padding = 250; 
-          const maxExpectedRadius = Math.max(110 * s.bodyScale, s.hasHands ? s.handLength * s.bodyScale : 0);
-          const renderScale = RESOLUTION / ((maxExpectedRadius * 2) + padding); 
-          const scaledRadius = 110 * s.bodyScale * renderScale;
-
-          if (!p.initialized) { p.worldX = RESOLUTION/2; p.worldY = RESOLUTION/2; p.initialized = true; }
-
-          if (p.isDragging) {
-            p.vx = (p.lastMouseX - p.worldX) * 0.4; p.vy = (p.lastMouseY - p.worldY) * 0.4;
-            p.worldX = p.lastMouseX; p.worldY = p.lastMouseY;
-          } else {
-            if (currentMode === 'falling') {
-                p.worldY = RESOLUTION * 0.3;
-                p.vy = 8; p.vx = 0;
-                p.worldX = RESOLUTION / 2;
-            } else if (currentMode === 'excited') {
-                const floatOffset = Math.sin(t * (s.idleFloatSpeed || 0.002)) * 20;
-                const targetY = RESOLUTION / 2 - RESOLUTION * 0.08 + floatOffset;
-                p.vy += (targetY - p.worldY) * 0.15; p.vy *= 0.8; p.worldY += p.vy;
-                p.vx += (RESOLUTION/2 - p.worldX) * 0.15; p.vx *= 0.8; p.worldX += p.vx;
-            } else {
-                p.vy += s.gravity; p.vx *= 0.98; p.vy *= 0.98;
-                if (Math.abs(p.vx) < 0.05) p.vx = 0;
-                if (Math.abs(p.vy) < 0.05 && p.worldY + scaledRadius > floor - 2) p.vy = 0;
-                p.worldX += p.vx; p.worldY += p.vy;
-                if (p.worldY + scaledRadius > floor) { p.worldY = floor - scaledRadius; p.vy *= -s.bounciness; if (Math.abs(p.vy) < 0.5) p.vy = 0; }
-                const wallL = RESOLUTION * 0.15; const wallR = RESOLUTION * 0.85;
-                if (p.worldX - scaledRadius < wallL) { p.worldX = wallL + scaledRadius; p.vx *= -s.bounciness; }
-                if (p.worldX + scaledRadius > wallR) { p.worldX = wallR - scaledRadius; p.vx *= -s.bounciness; }
-                if (Math.abs(p.vy) < 1 && !p.isDragging && s.gravity < 0.8) {
-                  p.worldY += Math.sin(t * (s.idleFloatSpeed || 0.002) + p.baseFloatOffset) * ((1 - s.gravity) * 4);
-                }
-            }
-          }
-
-          updateSmileyPhys(p, s, t, p.vx, p.vy, currentMode);
-
-          // Color Bleeding Floor Shadow
-          const distFromFloor = Math.max(0, floor - (p.worldY + scaledRadius * p.squashY));
-          if (distFromFloor < 150 && currentMode !== 'falling') {
-              const shadowOp = 0.4 * (1 - distFromFloor/150);
-              const shadowW = scaledRadius * 1.5 * p.squashX;
-              const rgb = hexToRgb(s.bodyColor);
-              ctx.beginPath();
-              ctx.ellipse(p.worldX, floor, shadowW, 10, 0, 0, Math.PI*2);
-              const shadowGrad = ctx.createRadialGradient(p.worldX, floor, 0, p.worldX, floor, shadowW);
-              shadowGrad.addColorStop(0, `rgba(${rgb},${shadowOp * 1.2})`);
-              shadowGrad.addColorStop(0.3, `rgba(0,0,0,${shadowOp * 0.8})`);
-              shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
-              ctx.fillStyle = shadowGrad;
-              ctx.fill();
-          }
-
-          drawSmileyCanvas(ctx, s, p, t, renderScale, false, []);
-          reqRef.current = requestAnimationFrame(loop);
-        };
-        
-        reqRef.current = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(reqRef.current);
-      }, []);
-
-      return (
-        <div className="fixed inset-0 z-[400] bg-[#F7F7F7] flex flex-col md:flex-row text-[#3C3C3C] overflow-hidden" dir="rtl" onClick={e => e.stopPropagation()}>
-          
-          <section className="w-full md:flex-1 relative flex flex-col items-center justify-center p-2 sm:p-8 overflow-hidden bg-[#EDF2F7] md:order-2 h-[35vh] md:h-full shrink-0 shadow-inner md:shadow-none z-10">
-            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#AFAFAF 1.5px, transparent 1.5px)', backgroundSize: '40px 40px' }}></div>
-            
-            <div className="absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 sm:p-2 rounded-xl sm:rounded-2xl shadow-sm z-20 w-11/12 max-w-sm justify-center">
-                <button onClick={() => setPreviewMode('idle')} className={`flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-lg sm:rounded-xl transition-all ${previewMode === 'idle' ? 'bg-[#1CB0F6] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>המתנה</button>
-                <button onClick={() => setPreviewMode('follow')} className={`flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-lg sm:rounded-xl transition-all ${previewMode === 'follow' ? 'bg-[#1CB0F6] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>מעקב</button>
-                <button onClick={() => setPreviewMode('excited')} className={`flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-lg sm:rounded-xl transition-all ${previewMode === 'excited' ? 'bg-[#1CB0F6] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>ריחוף</button>
-                <button onClick={() => setPreviewMode('falling')} className={`flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-lg sm:rounded-xl transition-all ${previewMode === 'falling' ? 'bg-[#1CB0F6] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>נפילה</button>
-            </div>
-
-            <div className="w-full h-full relative z-10" style={{ maxWidth: '600px', maxHeight: '600px' }}>
-              <canvas
-                ref={canvasRef}
-                className="cursor-grab active:cursor-grabbing drop-shadow-2xl absolute inset-0 w-full h-full object-contain"
-                onMouseDown={(e) => {
-                  const rect = canvasRef.current.getBoundingClientRect();
-                  const mx = ((e.clientX - rect.left) / rect.width) * canvasRef.current.width; 
-                  const my = ((e.clientY - rect.top) / rect.height) * canvasRef.current.height;
-                  const p = physRef.current;
-                  p.isDragging = true; p.lastMouseX = mx; p.lastMouseY = my;
-                  physRef.current.targetGaze = { x: ((e.clientX - rect.left) / rect.width) * 2 - 1, y: ((e.clientY - rect.top) / rect.height) * 2 - 1 };
-                }}
-                onDoubleClick={triggerHit}
-                onMouseMove={(e) => {
-                  const rect = canvasRef.current.getBoundingClientRect();
-                  physRef.current.lastMouseX = ((e.clientX - rect.left) / rect.width) * canvasRef.current.width;
-                  physRef.current.lastMouseY = ((e.clientY - rect.top) / rect.height) * canvasRef.current.height;
-                  if(previewMode !== 'idle' && previewMode !== 'falling') {
-                    physRef.current.targetGaze = { x: ((e.clientX - rect.left) / rect.width) * 2 - 1, y: ((e.clientY - rect.top) / rect.height) * 2 - 1 };
-                  }
-                }}
-                onMouseUp={() => physRef.current.isDragging = false}
-                onMouseLeave={() => physRef.current.isDragging = false}
-              />
-            </div>
-            <button onClick={triggerHit} className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 bg-[#FF4B4B] text-white font-black text-[10px] sm:text-sm rounded-xl sm:rounded-2xl shadow-lg hover:bg-red-600 active:translate-y-1 transition-all z-20">
-                הדמה מכה 💥
-            </button>
-          </section>
-
-          <main className="w-full md:w-[360px] lg:w-[400px] bg-white border-t-2 md:border-t-0 md:border-l-2 border-[#E5E5E5] flex flex-col z-20 flex-shrink-0 shadow-2xl md:order-1 flex-1 overflow-hidden">
-            <header className="p-4 sm:p-5 border-b border-[#E5E5E5] bg-white flex items-center justify-between z-10 shadow-sm shrink-0">
-              <div>
-                <h2 className="text-lg sm:text-xl font-black text-[#3C3C3C]">עורך סמיילי אישי</h2>
-                <p className="text-[10px] sm:text-xs font-bold text-[#AFAFAF]">{emotion.label}</p>
-              </div>
-              <button onClick={onClose} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
-                <X size={18} />
-              </button>
-            </header>
-            
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5 editor-scrollbar bg-slate-50/50 space-y-4">
-              
-              <Accordion title="התנהגות ופיזיקה" icon={ZapIcon} isOpen={openFolder === 'behavior'} onClick={() => setOpenFolder(openFolder === 'behavior' ? null : 'behavior')}>
-                  <DuoSlider label="מהירות ריחוף (המתנה)" val={config.idleFloatSpeed || 0.002} min={0.0005} max={0.01} step={0.0005} onChange={v => updateConfig('idleFloatSpeed', v)} />
-                  <DuoSlider label="התרגשות (נפנוף ידיים)" val={config.excitedFlapSpeed || 0.02} min={0.005} max={0.08} step={0.005} onChange={v => updateConfig('excitedFlapSpeed', v)} />
-                  <DuoSlider label="רגישות למכה (מעיכה)" val={config.hitSquash || 1.4} min={1.0} max={2.5} step={0.1} onChange={v => updateConfig('hitSquash', v)} />
-                  <DuoSlider label="מהירות מעקב עיניים" val={config.gazeSpeed || 2.0} min={0.5} max={5.0} step={0.1} onChange={v => updateConfig('gazeSpeed', v)} />
-                  <div className="border-t border-slate-100 my-2 pt-2"></div>
-                  <DuoSlider label="צמיגות מנוע" val={config.viscosity} min={0.01} max={0.6} step={0.01} onChange={v => updateConfig('viscosity', v)} />
-                  <DuoSlider label="גמישות פנימית (מתיחה)" val={config.flexibility} min={0} max={2.5} step={0.05} onChange={v => updateConfig('flexibility', v)} />
-                  <DuoSlider label="קפיציות ברצפה" val={config.bounciness} min={0} max={1.5} step={0.05} onChange={v => updateConfig('bounciness', v)} />
-                  <DuoSlider label="כוח משיכה" val={config.gravity} min={0.05} max={2.0} step={0.05} onChange={v => updateConfig('gravity', v)} />
-              </Accordion>
-
-              <Accordion title="מראה וצבעים" icon={PaletteIcon} isOpen={openFolder === 'style'} onClick={() => setOpenFolder(openFolder === 'style' ? null : 'style')}>
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-[#E5E5E5]">
-                    <span className="font-bold text-xs text-[#3C3C3C]">אפקט זכוכית מבריק</span><DuoToggle active={config.glassEffect} onClick={() => updateConfig('glassEffect', !config.glassEffect)} />
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-[#E5E5E5]">
-                    <span className="font-bold text-xs text-[#3C3C3C]">הצג קו מתאר (Border)</span><DuoToggle active={config.showBorder} onClick={() => updateConfig('showBorder', !config.showBorder)} />
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-[#E5E5E5]">
-                    <span className="font-bold text-xs text-[#3C3C3C]">צבע שטוח לחלוטין (Flat)</span><DuoToggle active={config.flatMode} onClick={() => updateConfig('flatMode', !config.flatMode)} />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                      <div className="flex flex-col items-center gap-1.5 p-2 bg-slate-50 border border-[#E5E5E5] rounded-xl">
-                        <span className="text-[9px] font-bold text-slate-500 text-center">גוף</span>
-                        <input type="color" value={config.bodyColor} onChange={e => updateConfig('bodyColor', e.target.value)} className="w-8 h-8 border-none cursor-pointer rounded-full" />
-                      </div>
-                      <div className="flex flex-col items-center gap-1.5 p-2 bg-slate-50 border border-[#E5E5E5] rounded-xl">
-                        <span className="text-[9px] font-bold text-slate-500 text-center">מעטפת/הצללה</span>
-                        <input type="color" value={config.bodyOuterColor} onChange={e => updateConfig('bodyOuterColor', e.target.value)} className="w-8 h-8 border-none cursor-pointer rounded-full" />
-                      </div>
-                      <div className="flex flex-col items-center gap-1.5 p-2 bg-slate-50 border border-[#E5E5E5] rounded-xl">
-                        <span className="text-[9px] font-bold text-slate-500 text-center">קווים ופנים</span>
-                        <input type="color" value={config.bodyStrokeColor} onChange={e => updateConfig('bodyStrokeColor', e.target.value)} className="w-8 h-8 border-none cursor-pointer rounded-full" />
-                      </div>
-                  </div>
-                  <DuoSlider label="גודל כולל" val={config.bodyScale} min={0.3} max={3.0} step={0.05} onChange={v => updateConfig('bodyScale', v)} />
-              </Accordion>
-
-              <Accordion title="עיניים ומבט" icon={EyeIcon} isOpen={openFolder === 'eyes'} onClick={() => setOpenFolder(openFolder === 'eyes' ? null : 'eyes')}>
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-[#E5E5E5]">
-                    <span className="font-bold text-xs text-[#3C3C3C]">צימוד עיניים יחד</span><DuoToggle active={config.linkEyes} onClick={() => updateConfig('linkEyes', !config.linkEyes)} />
-                  </div>
-                  <DuoSlider label="גובה הפנים (Y)" val={config.faceYOffset} min={-40} max={40} onChange={v => updateConfig('faceYOffset', v)} />
-                  <DuoSlider label="עומק 3D" val={config.projectionDepth} min={0.5} max={2.5} step={0.05} onChange={v => updateConfig('projectionDepth', v)} />
-                  <DuoSlider label={config.linkEyes ? "עקמומיות עיניים" : "עקמומיות עין שמאל"} val={config.leftEyeCurve} min={-2.0} max={3.0} step={0.1} onChange={v => updateConfig('leftEyeCurve', v)} />
-                  <DuoSlider label="רווח בין עיניים" val={config.eyeSpacing} min={10} max={80} onChange={v => updateConfig('eyeSpacing', v)} />
-                  <DuoSlider label="עובי קו עין" val={config.eyeStrokeWidth} min={2} max={25} onChange={v => updateConfig('eyeStrokeWidth', v)} />
-              </Accordion>
-
-              <Accordion title="חיוך והבעה" icon={SmileIcon} isOpen={openFolder === 'mouth'} onClick={() => setOpenFolder(openFolder === 'mouth' ? null : 'mouth')}>
-                  <DuoSlider label="גובה פה מהמרכז" val={config.mouthYOffset} min={0} max={80} onChange={v => updateConfig('mouthYOffset', v)} />
-                  <DuoSlider label="רוחב פה" val={config.mouthWidth} min={5} max={80} onChange={v => updateConfig('mouthWidth', v)} />
-                  <DuoSlider label="קימור חיוך / עצב" val={config.mouthCurve} min={-1.5} max={2.5} step={0.1} onChange={v => updateConfig('mouthCurve', v)} />
-                  <DuoSlider label="עובי קו פה" val={config.mouthStrokeWidth} min={1} max={30} onChange={v => updateConfig('mouthStrokeWidth', v)} />
-              </Accordion>
-
-              <Accordion title="ידיים ותנועה" icon={HandIcon} isOpen={openFolder === 'arms'} onClick={() => setOpenFolder(openFolder === 'arms' ? null : 'arms')}>
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-[#E5E5E5]">
-                    <span className="font-bold text-xs text-[#3C3C3C]">הצג ידיים</span><DuoToggle active={config.hasHands} onClick={() => updateConfig('hasHands', !config.hasHands)} />
-                  </div>
-                  {config.hasHands && (
-                    <>
-                      <DuoSlider label="אורך הידיים" val={config.handLength} min={20} max={250} onChange={v => updateConfig('handLength', v)} />
-                      <DuoSlider label="עובי קו היד" val={config.armThickness} min={2} max={30} onChange={v => updateConfig('armThickness', v)} />
-                      <DuoSlider label="משקל היד" val={config.stringGravity} min={0} max={2.0} step={0.05} onChange={v => updateConfig('stringGravity', v)} />
-                    </>
-                  )}
-              </Accordion>
-
-            </div>
-            
-            <footer className="p-4 sm:p-5 border-t border-[#E5E5E5] bg-white shrink-0 z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-              <button onClick={() => onSave(config)} className="w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-black text-sm sm:text-lg text-white bg-[#58CC02] shadow-[0_4px_0_#46A302] hover:bg-[#61E002] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center">
-                <Check className="ml-2 w-5 h-5 sm:w-6 sm:h-6" /> שמור דמות
-              </button>
-            </footer>
-          </main>
-        </div>
-      );
-    };
-
-    const DuoSlider = ({ label, val, min, max, step = 1, onChange }) => (
-      <div className="space-y-2.5 text-right">
-        <div className="flex justify-between items-end">
-          <span className="text-[11px] font-bold text-slate-600">{label}</span>
-          <span className="text-[10px] font-mono font-bold text-[#1CB0F6] bg-[#DDF4FF] px-2 py-0.5 rounded-lg">{typeof val === 'number' ? val.toFixed(step >= 1 ? 0 : 2) : '0'}</span>
-        </div>
-        <input type="range" min={min} max={max} step={step} value={val} onChange={e => onChange(parseFloat(e.target.value))} className="w-full h-2.5 sm:h-3 bg-[#E5E5E5] rounded-full appearance-none cursor-pointer accent-[#58CC02]" />
-      </div>
-    );
-
-    const DuoToggle = ({ active, onClick }) => (
-      <button onClick={onClick} className={`w-10 sm:w-12 h-5 sm:h-6 rounded-full transition-all flex items-center p-1 ${active ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
-        <div className={`bg-white rounded-full transition-all shadow-md w-3.5 sm:w-4 h-3.5 sm:h-4 ${active ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}></div>
-      </button>
-    );
-
-    // =====================================================================
-    // ======================= MAIN HABIT APP ==============================
-    // =====================================================================
-
     const unitOptions = ['פעמים', 'כוסות', 'עמודים', 'דקות', 'ק״מ'];
     const habitSuggestions = ['כוס מים', 'הליכה', 'שכיבות סמיכה', 'קריאה', 'מדיטציה'];
 
     function App() {
-      const [appFlow, setAppFlow] = useState('SCREEN_1_LOGIN'); 
-      const [introIndex, setIntroIndex] = useState(0);
-      const [explanationIndex, setExplanationIndex] = useState(0);
-      const [dragStartX, setDragStartX] = useState(null);
-      const [dragOffset, setDragOffset] = useState(0);
-
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
       const [showTopPopup, setShowTopPopup] = useState(false);
       const [wizardStep, setWizardStep] = useState(1);
       const [newHabit, setNewHabit] = useState({ name: '', amount: 1, unit: 'פעמים', ridiculousAction: '' });
-      
       const [tasks, setTasks] = useState([
         { id: 1, name: 'כוס מים בבוקר', amount: 1, minU: 'כוסות', maxU: 'כוסות', ridiculousAction: 'לגימה אחת' },
         { id: 2, name: 'קריאת ספר', amount: 10, minU: 'עמודים', maxU: 'עמודים', ridiculousAction: 'פסקה אחת' },
         { id: 3, name: 'מדיטציה', amount: 5, minU: 'דקות', maxU: 'דקות', ridiculousAction: 'נשימה עמוקה' }
       ]);
       const [gameState, setGameState] = useState('EMOTION'); 
+      const [viewMode, setViewMode] = useState('EMOTIONS'); // New State for viewing Emotions vs Stages
       const [activeEmotion, setActiveEmotion] = useState(null);
       const [activeEmoStartPos, setActiveEmoStartPos] = useState(0); 
       const [activeIndex, setActiveIndex] = useState(0);
-
       const [lottoPhase, setLottoPhase] = useState('IDLE');
-      
       const [settingsData, setSettingsData] = useState({ 
-        smileyConfigs: { ...PRESETS },
-        stageImages: {}, profilePic: null, drawerBgColor: '#ffffff', drawerOpacity: 0.95, drawerBlur: 20, 
+        smileyConfigs: { ...PRESETS }, stageImages: {}, profilePic: null, drawerBgColor: '#ffffff', drawerOpacity: 0.95, drawerBlur: 20, 
         primaryBtnColor: '#0f172a', primaryBtnTextColor: '#ffffff', userName: 'משה אלי', totalDays: 0,
       });
-
       const [history, setHistory] = useState(() => {
-        const mock = [];
-        const today = new Date();
+        const mock = []; const today = new Date();
         for (let i = 14; i >= 0; i--) {
-          const d = new Date(today);
-          d.setDate(d.getDate() - i);
+          const d = new Date(today); d.setDate(d.getDate() - i);
           const randomTaskIds = [1, 2, 3].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 1);
-          mock.push({
-            id: Date.now() - i * 1000,
-            date: d,
-            emotionId: Math.floor(Math.random() * 5) + 1,
-            tasksCompleted: randomTaskIds.length,
-            completedTasks: randomTaskIds
-          });
+          mock.push({ id: Date.now() - i * 1000, date: d, emotionId: Math.floor(Math.random() * 5) + 1, tasksCompleted: randomTaskIds.length, completedTasks: randomTaskIds });
         }
         return mock;
       });
-
       const [workspace, setWorkspace] = useState({ isOpen: false, activeTab: 'stats' });
-      const [editingSmileyFor, setEditingSmileyFor] = useState(null); 
-      
       const interactionRef = useRef({ active: false, x: 0, y: 0, time: 0 });
       const gameStateRef = useRef(gameState);
-
-      useEffect(() => {
-        gameStateRef.current = gameState;
-      }, [gameState]);
-
+      
+      useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
+      
       const currentShields = Math.min(3, Math.floor(settingsData.totalDays / 10));
       const isDrawerExpanded = ['MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState);
-      const hideSidebarItems = !['EMOTION'].includes(gameState);
-
       const activeColorHex = activeEmotion ? (settingsData.smileyConfigs[activeEmotion.id]?.bodyColor || PRESETS[activeEmotion.id].bodyColor) : settingsData.drawerBgColor;
       const opacityHex = Math.round(settingsData.drawerOpacity * 255).toString(16).padStart(2, '0');
       const dynamicSidebarBg = `${activeColorHex}${opacityHex}`;
-
+      
       const appContainerRef = useRef(null);
       const sceneRef = useRef(null);
       const engineRef = useRef(null);
 
-      const EmotionBallUI = ({ emo, isFloating }) => {
-         const conf = settingsData.smileyConfigs[emo.id] || PRESETS[emo.id];
-         let mode = 'idle';
-         if (isFloating) {
-             mode = gameState === 'DROPPING' ? 'falling' : 'excited';
-         } else if (isDrawerExpanded) {
-             mode = 'follow';
-         }
-         return (
-            <div className="w-full h-full rounded-full flex items-center justify-center overflow-visible pointer-events-none">
-                <LiveSmiley config={conf} mode={mode} />
-            </div>
-         );
-      };
-
-      const handleNextIntro = () => { if (introIndex < 2) setIntroIndex(p => p + 1); else setAppFlow('SCREEN_EXPLANATION'); };
-      const handleDragEnd = () => { if (dragStartX === null) return; if (Math.abs(dragOffset) > 100) handleNextIntro(); setDragStartX(null); setDragOffset(0); };
-
       const registerGlobalInteraction = (clientX, clientY) => {
-          if (sceneRef.current && appFlow === 'MAIN') {
+          if (sceneRef.current) {
               const rect = sceneRef.current.getBoundingClientRect();
               interactionRef.current = { active: true, x: clientX - rect.left, y: clientY - rect.top, time: performance.now() };
           }
       };
 
-      useEffect(() => { if (appFlow === 'MAIN') initMatter(); }, [appFlow]);
+      useEffect(() => { 
+        if (isAuthenticated) { initMatter(); setGameState('EMOTION'); setLottoPhase('READY'); }
+      }, [isAuthenticated]);
 
       const initMatter = async () => {
         if (!sceneRef.current) return;
         const Matter = window.Matter;
         if (engineRef.current) { Matter.Render.stop(engineRef.current.render); Matter.Engine.clear(engineRef.current); }
-        const engine = Matter.Engine.create();
-        engineRef.current = engine;
-        engine.world.gravity.y = 5.0; 
-
+        const engine = Matter.Engine.create(); engineRef.current = engine; engine.world.gravity.y = 5.0; 
         const mouse = Matter.Mouse.create(sceneRef.current);
         const mouseConstraint = Matter.MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
-
         Matter.Events.on(engine, 'collisionStart', (event) => {
           event.pairs.forEach((pair) => {
             const current = pair.bodyA.label === 'currentDay' ? pair.bodyA : (pair.bodyB.label === 'currentDay' ? pair.bodyB : null);
             if (current && current.customSmiley) {
-              const phys = current.customSmiley.phys;
-              const config = current.customSmiley.config;
-              phys.squashX = config.hitSquash || 1.4;
-              phys.squashY = 1 / (config.hitSquash || 1.4);
-              phys.vy = -3; 
-              current.label = 'settled';
-              if (navigator.vibrate) navigator.vibrate(30);
+              const phys = current.customSmiley.phys; const config = current.customSmiley.config;
+              phys.squashX = config.hitSquash || 1.4; phys.squashY = 1 / (config.hitSquash || 1.4);
+              phys.vy = -3; current.label = 'settled'; if (navigator.vibrate) navigator.vibrate(30);
             }
           });
         });
-
-        const width = sceneRef.current.clientWidth;
-        const height = sceneRef.current.clientHeight;
-        const render = Matter.Render.create({
-          element: sceneRef.current, engine: engine,
-          options: { width, height, wireframes: false, background: 'transparent', pixelRatio: window.devicePixelRatio || 1 }
-        });
+        const width = sceneRef.current.clientWidth; const height = sceneRef.current.clientHeight;
+        const render = Matter.Render.create({ element: sceneRef.current, engine: engine, options: { width, height, wireframes: false, background: 'transparent', pixelRatio: window.devicePixelRatio || 1 } });
         engine.render = render; 
-        
         const wallOptions = { isStatic: true, render: { visible: false }, friction: 0.1, restitution: 0.4 };
-        
-        const introFloor = Matter.Bodies.rectangle(width / 2, height - 10, width * 2, 40, { isStatic: true, render: { visible: false } });
         Matter.Composite.add(engine.world, [
-          introFloor, 
           Matter.Bodies.rectangle(-50, height / 2, 100, height * 3, wallOptions),
           Matter.Bodies.rectangle(width + 50, height / 2, 100, height * 3, wallOptions),
           Matter.Bodies.rectangle(width / 2, -120, width * 3, 100, { isStatic: true, render: { visible: false } }),
+          Matter.Bodies.rectangle(width / 2, height + 20, width, 40, wallOptions),
           mouseConstraint
         ]);
-        
         Matter.Events.on(render, 'afterRender', () => {
-           const ctx = render.context;
-           const bodies = Matter.Composite.allBodies(engine.world);
-           const time = performance.now();
-           const customBodies = bodies.filter(b => b.customSmiley);
-           
+           const ctx = render.context; const bodies = Matter.Composite.allBodies(engine.world);
+           const time = performance.now(); const customBodies = bodies.filter(b => b.customSmiley);
            const droppingBody = bodies.find(b => b.label === 'currentDay');
-
-           bodies.forEach(b => {
-               if (b.position.y > height + 400 || b.position.x < -200 || b.position.x > width + 200) {
-                   Matter.Body.setPosition(b, { x: width / 2, y: 100 });
-                   Matter.Body.setVelocity(b, { x: 0, y: 0 });
-               }
-           });
-
+           bodies.forEach(b => { if (b.position.y > height + 400 || b.position.x < -200 || b.position.x > width + 200) { Matter.Body.setPosition(b, { x: width / 2, y: 100 }); Matter.Body.setVelocity(b, { x: 0, y: 0 }); } });
            customBodies.forEach(b => { b.customSmiley.reflections = []; });
            for (let i = 0; i < customBodies.length; i++) {
                for (let j = i + 1; j < customBodies.length; j++) {
-                   const b1 = customBodies[i];
-                   const b2 = customBodies[j];
-                   const dx = b2.position.x - b1.position.x;
-                   const dy = b2.position.y - b1.position.y;
-                   const dist = Math.sqrt(dx*dx + dy*dy);
-                   const r1 = 110 * b1.customSmiley.config.bodyScale * b1.customSmiley.scale;
-                   const r2 = 110 * b2.customSmiley.config.bodyScale * b2.customSmiley.scale;
-                   const minDist = r1 + r2;
-
+                   const b1 = customBodies[i]; const b2 = customBodies[j];
+                   const dx = b2.position.x - b1.position.x; const dy = b2.position.y - b1.position.y;
+                   const dist = Math.sqrt(dx*dx + dy*dy); const r1 = 110 * b1.customSmiley.config.bodyScale * b1.customSmiley.scale;
+                   const r2 = 110 * b2.customSmiley.config.bodyScale * b2.customSmiley.scale; const minDist = r1 + r2;
                    if (dist < minDist * 1.5) { 
                        const intensity = Math.max(0, 1 - (dist / (minDist * 1.5)));
                        b1.customSmiley.reflections.push({ dx, dy, dist, intensity, color: b2.customSmiley.config.bodyColor });
@@ -882,118 +449,59 @@
                    }
                }
            }
-
            customBodies.forEach(b => {
-               const { phys, scale, config } = b.customSmiley;
-               const visualFloor = height - 5;
-               const r = 110 * config.bodyScale * scale;
+               const { phys, scale, config } = b.customSmiley; const visualFloor = height - 5; const r = 110 * config.bodyScale * scale;
                const distFromFloor = Math.max(0, visualFloor - (phys.worldY + r * phys.squashY));
-               
                if (distFromFloor < 150) {
-                   const shadowOp = 0.4 * (1 - distFromFloor/150);
-                   const shadowW = r * 1.5 * phys.squashX;
-                   const rgb = hexToRgb(config.bodyColor);
-                   ctx.beginPath();
-                   ctx.ellipse(phys.worldX, visualFloor, shadowW, 12, 0, 0, Math.PI*2);
+                   const shadowOp = 0.4 * (1 - distFromFloor/150); const shadowW = r * 1.5 * phys.squashX; const rgb = hexToRgb(config.bodyColor);
+                   ctx.beginPath(); ctx.ellipse(phys.worldX, visualFloor, shadowW, 12, 0, 0, Math.PI*2);
                    const shadowGrad = ctx.createRadialGradient(phys.worldX, visualFloor, 0, phys.worldX, visualFloor, shadowW);
-                   shadowGrad.addColorStop(0, `rgba(${rgb},${shadowOp * 1.2})`);
-                   shadowGrad.addColorStop(0.3, `rgba(0,0,0,${shadowOp * 0.8})`);
-                   shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                   ctx.fillStyle = shadowGrad;
-                   ctx.fill();
+                   shadowGrad.addColorStop(0, `rgba(${rgb},${shadowOp * 1.2})`); shadowGrad.addColorStop(0.3, `rgba(0,0,0,${shadowOp * 0.8})`); shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                   ctx.fillStyle = shadowGrad; ctx.fill();
                }
            });
-
            customBodies.forEach(b => {
-               const { config, phys, scale, reflections } = b.customSmiley;
-               if (!config) return;
-               
-               if (b.speed < 2.0 && b.position.y > height * 0.5) {
-                   Matter.Body.setAngle(b, b.angle * 0.92);
-               }
-
-               phys.worldX = b.position.x;
-               phys.worldY = b.position.y;
-               phys.vx = b.velocity.x;
-               phys.vy = b.velocity.y;
-               phys.rotation = b.angle;
-               
-               const fallMode = Math.abs(b.velocity.y) > 0.5 ? 'falling' : 'idle';
-               phys.targetGaze = null;
-
+               const { config, phys, scale, reflections } = b.customSmiley; if (!config) return;
+               if (b.speed < 2.0 && b.position.y > height * 0.5) { Matter.Body.setAngle(b, b.angle * 0.92); }
+               phys.worldX = b.position.x; phys.worldY = b.position.y; phys.vx = b.velocity.x; phys.vy = b.velocity.y; phys.rotation = b.angle;
+               const fallMode = Math.abs(b.velocity.y) > 0.5 ? 'falling' : 'idle'; phys.targetGaze = null;
                if (['HIDE_OTHERS', 'MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameStateRef.current)) {
-                   const dx = (width / 2) - phys.worldX;
-                   const dy = 120 - phys.worldY; 
-                   const dist = Math.sqrt(dx*dx + dy*dy);
-                   phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 };
-               }
-               else if (droppingBody && b.label !== 'currentDay') {
-                   const dx = droppingBody.position.x - phys.worldX;
-                   const dy = droppingBody.position.y - phys.worldY;
-                   const dist = Math.sqrt(dx*dx + dy*dy);
-                   if (dist > 30) { phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 }; }
+                   const dx = (width / 2) - phys.worldX; const dy = 120 - phys.worldY; 
+                   const dist = Math.sqrt(dx*dx + dy*dy); phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 };
+               } else if (droppingBody && b.label !== 'currentDay') {
+                   const dx = droppingBody.position.x - phys.worldX; const dy = droppingBody.position.y - phys.worldY;
+                   const dist = Math.sqrt(dx*dx + dy*dy); if (dist > 30) { phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 }; }
                } else if (interactionRef.current.active) {
                    const { x, y, time: clickTime } = interactionRef.current;
                    if (time - clickTime < 2500) {
-                       const dx = x - phys.worldX;
-                       const dy = y - phys.worldY;
-                       const dist = Math.sqrt(dx*dx + dy*dy);
-                       if (dist < 300) { phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 }; }
-                   } else {
-                       interactionRef.current.active = false; 
-                   }
+                       const dx = x - phys.worldX; const dy = y - phys.worldY;
+                       const dist = Math.sqrt(dx*dx + dy*dy); if (dist < 300) { phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 }; }
+                   } else { interactionRef.current.active = false; }
                }
-
                updateSmileyPhys(phys, config, time, phys.vx, phys.vy, fallMode);
                drawSmileyCanvas(ctx, config, phys, time, scale, false, reflections);
            });
         });
-        
-        Matter.Render.run(render); 
-        Matter.Runner.run(Matter.Runner.create(), engine);
-        
-        const introBalls = [];
-        for (let i = 0; i < 35; i++) {
-          const emoId = Math.floor(Math.random() * 5) + 1;
-          const config = settingsData.smileyConfigs[emoId] || PRESETS[emoId];
-          const radius = Math.random() * 10 + 35; 
-          const physicsRadius = radius * config.bodyScale;
-
-          const ball = Matter.Bodies.circle((Math.random() * (width - 40)) + 20, -Math.random() * 1500 - 100, physicsRadius, { 
-              restitution: 0.8, friction: 0.01, 
-              render: { visible: false } 
-          });
-          ball.customSmiley = {
-              config, scale: radius / 110, 
-              phys: { worldX:0, worldY:0, vx:0, vy:0, rotation:0, x:0, y:0, squashX:1, squashY:1, blink:1, faceSlide:{x:0,y:0}, arms:[{x:-20,y:0,vx:0,vy:0},{x:20,y:0,vx:0,vy:0}] }
-          };
-          introBalls.push(ball);
-        }
-        Matter.Composite.add(engine.world, introBalls);
-        setShowTopPopup(true);
-        setTimeout(() => { if(introFloor) Matter.Body.setPosition(introFloor, { x: width / 2, y: height + 500 }); }, 4500);
-        setTimeout(() => {
-          Matter.Composite.remove(engine.world, introBalls);
-          Matter.Composite.remove(engine.world, introFloor);
-          Matter.Composite.add(engine.world, Matter.Bodies.rectangle(width / 2, height + 20, width, 40, wallOptions)); 
-        }, 7000);
+        Matter.Render.run(render); Matter.Runner.run(Matter.Runner.create(), engine);
       };
 
-      const startSidebarSequence = () => {
-        setLottoPhase('SIDEBAR_OPEN');
-        setTimeout(() => setLottoPhase('BALLS_DROP'), 250); 
-        setTimeout(() => setLottoPhase('PROFILE_APPEAR'), 700); 
-        setTimeout(() => setLottoPhase('READY'), 700); 
+      const handleSidebarBottomClick = () => {
+        if (gameState === 'EMOTION') {
+            setViewMode('STAGES');
+            setGameState('SHOW_CONTENT'); // Opens drawer fully
+        } else if (isDrawerExpanded && viewMode === 'STAGES') {
+            setViewMode('EMOTIONS');
+            setGameState('EMOTION'); // Closes drawer back
+        }
       };
 
       const handleStartSelection = (e, emo) => {
         if (gameState !== 'EMOTION' || workspace.isOpen || lottoPhase !== 'READY' || tasks.length === 0) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const containerRect = appContainerRef.current.getBoundingClientRect();
-        
-        setActiveEmoStartPos(rect.top - containerRect.top);
+        setActiveEmoStartPos(rect.top - containerRect.top); 
         setActiveEmotion(emo);
-        
+        setViewMode('EMOTIONS');
         setGameState('HIDE_OTHERS'); 
         setTimeout(() => setGameState('MOVE_UP'), 200); 
         setTimeout(() => setGameState('SHOW_CONTENT'), 600); 
@@ -1002,177 +510,64 @@
 
       const executeDrop = async () => {
         if (!activeEmotion) return;
-        
         setGameState('DROPPING'); 
-        
-        const Matter = window.Matter;
-        const width = appContainerRef.current.clientWidth;
+        const Matter = window.Matter; const width = appContainerRef.current.clientWidth;
         const config = settingsData.smileyConfigs[activeEmotion.id] || PRESETS[activeEmotion.id];
-        
         const baseRadius = Math.min(width * 0.12, 38);
-        const spawnRadius = baseRadius * 1.35;
-        const physicsRadius = spawnRadius * config.bodyScale;
-        
-        const ball = Matter.Bodies.circle(width / 2, 170, physicsRadius, { 
-          label: 'currentDay', restitution: 0.5, friction: 0.1, 
-          render: { visible: false }
-        });
-        
+        const spawnRadius = baseRadius * 1.35; const physicsRadius = spawnRadius * config.bodyScale;
+        const ball = Matter.Bodies.circle(width / 2, 170, physicsRadius, { label: 'currentDay', restitution: 0.5, friction: 0.1, render: { visible: false } });
         Matter.Body.setVelocity(ball, { x: 0, y: 2 });
-        
-        ball.customSmiley = {
-          config, scale: spawnRadius / 110,
-          phys: { worldX:0, worldY:0, vx:0, vy:0, rotation:0, x:0, y:0, squashX:1, squashY:1, blink:1, faceSlide:{x:0,y:0}, arms:[{x:-20,y:0,vx:0,vy:0},{x:20,y:0,vx:0,vy:0}] }
-        };
+        ball.customSmiley = { config, scale: spawnRadius / 110, phys: { worldX:0, worldY:0, vx:0, vy:0, rotation:0, x:0, y:0, squashX:1, squashY:1, blink:1, faceSlide:{x:0,y:0}, arms:[{x:-20,y:0,vx:0,vy:0},{x:20,y:0,vx:0,vy:0}] } };
         Matter.Composite.add(engineRef.current.world, ball);
         
         setTimeout(() => { 
-            setHistory(prev => [...prev, {
-                id: Date.now(),
-                date: new Date(),
-                emotionId: activeEmotion.id,
-                tasksCompleted: tasks.length || 1,
-                completedTasks: tasks.map(t => t.id)
-            }]);
-            setGameState('EMOTION'); 
-            setActiveEmotion(null); 
+            setSettingsData(s => ({ ...s, totalDays: s.totalDays + 1 }));
+            setHistory(prev => [...prev, { id: Date.now(), date: new Date(), emotionId: activeEmotion.id, tasksCompleted: tasks.length || 1, completedTasks: tasks.map(t => t.id) }]);
+            setGameState('EMOTION'); setActiveEmotion(null); 
         }, 2000);
       };
 
       const handleCreateHabitFinish = () => {
         const habit = { id: Date.now(), name: newHabit.name, amount: newHabit.amount, ridiculousAction: newHabit.ridiculousAction, minU: newHabit.unit, maxU: newHabit.unit };
-        setTasks([habit, ...tasks]);
-        setShowTopPopup(false); setWizardStep(1); setGameState('EMOTION');
-        setTimeout(() => startSidebarSequence(), 200); 
+        setTasks([habit, ...tasks]); setShowTopPopup(false); setWizardStep(1); setGameState('EMOTION');
       };
 
       let floatingClasses = "absolute left-1/2 -translate-x-1/2 flex items-center justify-center rounded-full pointer-events-none ";
       let floatingStyle = {};
-
       if (!activeEmotion || gameState === 'DROPPING' || gameState === 'EMOTION') {
-          floatingClasses += " opacity-0 w-[56px] h-[56px] transition-none";
-          floatingStyle.top = `${activeEmoStartPos}px`;
+          floatingClasses += " opacity-0 w-[56px] h-[56px] transition-none"; floatingStyle.top = `${activeEmoStartPos}px`;
       } else if (gameState === 'HIDE_OTHERS') {
-          floatingClasses += " opacity-100 w-[56px] h-[56px] transition-opacity duration-200";
-          floatingStyle.top = `${activeEmoStartPos}px`;
+          floatingClasses += " opacity-100 w-[56px] h-[56px] transition-opacity duration-200"; floatingStyle.top = `${activeEmoStartPos}px`;
       } else if (['MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState)) {
           floatingClasses += " opacity-100 w-[140px] h-[140px] transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)]";
           floatingStyle.top = '120px';
       }
 
-      let uiMode = 'idle';
-      if (['MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState)) {
-          uiMode = 'excited';
-      }
-
+      let uiMode = 'idle'; if (['MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState)) uiMode = 'excited';
       const showContent = ['SHOW_CONTENT', 'SELECTING'].includes(gameState);
       const showButton = gameState === 'SELECTING';
-
+      
       const getEmotionClass = (emo) => {
+          if (viewMode === 'STAGES') return 'duration-200 translate-x-[150%] opacity-0 pointer-events-none';
           if (gameState === 'EMOTION') return 'duration-500 translate-x-0 opacity-100 scale-100';
           if (activeEmotion?.id === emo.id && gameState === 'HIDE_OTHERS') return 'duration-200 opacity-0 scale-90'; 
-          return 'duration-200 translate-x-[150%] opacity-0'; 
+          return 'duration-200 translate-x-[150%] opacity-0 pointer-events-none'; 
       };
 
       return (
         <>
           <div className="fixed inset-0 bg-[#0F172A] flex justify-center items-center font-sans overflow-hidden" 
-                onMouseDown={e => { 
-                    if(appFlow==='SCREEN_2_CARDS') setDragStartX(e.clientX); 
-                    registerGlobalInteraction(e.clientX, e.clientY);
-                }}
-                onMouseMove={e => { 
-                    if(dragStartX!==null) setDragOffset(e.clientX - dragStartX); 
-                }}
-                onMouseUp={handleDragEnd} 
-                onTouchStart={e => { 
-                    if(appFlow==='SCREEN_2_CARDS') setDragStartX(e.touches[0].clientX); 
-                    registerGlobalInteraction(e.touches[0].clientX, e.touches[0].clientY);
-                }}
-                onTouchMove={e => { if(dragStartX!==null) setDragOffset(e.touches[0].clientX - dragStartX); }}
-                onTouchEnd={handleDragEnd} style={{ height: '100dvh', touchAction: 'none' }} >
+                onMouseDown={e => registerGlobalInteraction(e.clientX, e.clientY)}
+                onTouchStart={e => registerGlobalInteraction(e.touches[0].clientX, e.touches[0].clientY)}
+                style={{ height: '100dvh', touchAction: 'none' }} >
             
             <div ref={appContainerRef} dir="rtl" className="relative w-full h-full sm:max-w-[480px] sm:max-h-[92vh] bg-white sm:rounded-[40px] shadow-2xl overflow-hidden transition-all duration-1000" 
-                  style={{ backgroundImage: (appFlow === 'MAIN' && settingsData.stageImages[settingsData.totalDays + 1]) ? `url(${settingsData.stageImages[settingsData.totalDays + 1]})` : 'none', backgroundSize: 'cover' }}>
+                  style={{ backgroundImage: settingsData.stageImages[settingsData.totalDays + 1] ? `url(${settingsData.stageImages[settingsData.totalDays + 1]})` : 'none', backgroundSize: 'cover' }}>
 
-              {/* --- מסכי פתיחה --- */}
-              {['SCREEN_1_LOGIN', 'SCREEN_2_CARDS', 'SCREEN_EXPLANATION', 'SCREEN_3_READY'].includes(appFlow) && (
-                <div className="absolute inset-0 flex flex-col overflow-hidden bg-white text-slate-900 text-center">
-                  {appFlow !== 'SCREEN_1_LOGIN' && (
-                    <button onClick={() => setAppFlow('SCREEN_3_READY')} className="absolute top-10 left-10 z-[200] w-12 h-12 flex items-center justify-center rounded-full bg-slate-50 shadow-sm text-slate-400 active:scale-90 transition-all"><Flag className="w-5 h-5" /></button>
-                  )}
-                  <div className="flex-1 relative flex flex-col items-center justify-center p-8">
-                      {appFlow === 'SCREEN_1_LOGIN' && (
-                        <div className="text-center animate-in fade-in duration-700">
-                          <h1 className="text-6xl font-black mb-4">Minimum<br/>Winner</h1>
-                          <p className="text-slate-400 text-lg font-bold">הדרך הקלה ביותר להתמיד.</p>
-                        </div>
-                      )}
-                      {appFlow === 'SCREEN_2_CARDS' && (
-                        <div className="relative w-full max-w-[360px] flex-1 max-h-[450px] min-h-[300px] flex items-center justify-center mx-auto mt-4 perspective-1000">
-                          {introCardsData.map((card, i) => {
-                            const isCurrent = i === introIndex;
-                            return (
-                              <div key={i} style={isCurrent ? { transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.05}deg)` } : {}} 
-                                    className={`absolute inset-0 flex flex-col items-center justify-center p-4 transition-all duration-500 ${isCurrent ? 'z-30 opacity-100' : (i < introIndex ? 'translate-x-[150%] opacity-0' : '-translate-y-8 scale-90 opacity-0')}`}>
-                                <div className="w-full max-w-[280px] aspect-video bg-transparent border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center mb-8 text-slate-300">
-                                   <Icon className="w-8 h-8 mb-2 opacity-50"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></Icon>
-                                   <span className="text-xs font-bold">[תמונה {i + 1}]</span>
-                                </div>
-                                <h3 className="text-3xl sm:text-4xl font-black mb-4 text-[#0f172a] leading-tight">{card.title}</h3>
-                                <p className="text-lg sm:text-xl font-medium text-slate-500">{card.desc}</p>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
-                      {appFlow === 'SCREEN_EXPLANATION' && (
-                        <div className="w-full flex flex-col items-center h-full pt-4 sm:pt-16 pb-2">
-                          <div className="text-[10px] font-black text-slate-400 tracking-[0.8em] mb-4 sm:mb-12 uppercase shrink-0">Mood Essence</div>
-                          <div className="relative w-full flex-1 max-h-[240px] min-h-[160px] flex items-center justify-center perspective-1000 shrink-0">
-                            {emotions.map((emo, i) => {
-                              const diff = i - explanationIndex;
-                              const conf = settingsData.smileyConfigs[emo.id] || PRESETS[emo.id];
-                              let cls = (diff === 0) ? "center" : (diff === -1 || (explanationIndex === 0 && i === emotions.length-1)) ? "side left" : (diff === 1 || (explanationIndex === emotions.length-1 && i === 0)) ? "side right" : "hidden";
-                              return (
-                                <div key={emo.id} onClick={() => setExplanationIndex(i)} className={`explanation-sphere ${cls}`}>
-                                    <LiveSmiley config={conf} mode={diff === 0 ? 'follow' : 'idle'} />
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="mt-auto mb-2 sm:mb-8 animate-in fade-in shrink-0 bg-transparent text-center" key={explanationIndex}>
-                            <h2 className="info-title mb-2 sm:mb-4">{emotions[explanationIndex].label}</h2>
-                            <p className="text-slate-500 font-medium leading-snug sm:leading-relaxed text-sm sm:text-base px-8">{emotions[explanationIndex].desc}</p>
-                          </div>
-                        </div>
-                      )}
-                      {appFlow === 'SCREEN_3_READY' && (
-                          <div className="text-center animate-in zoom-in-95 duration-500">
-                            <div className="text-8xl mb-8 drop-shadow-xl text-[#0f172a]">🚀</div>
-                            <h2 className="text-4xl font-black mb-2">הכל מוכן!</h2>
-                            <p className="text-slate-400 text-xl font-bold">בוא נתחיל לנצח.</p>
-                          </div>
-                      )}
-                  </div>
-                  <div className="p-8 pb-12 flex justify-center relative z-50 shrink-0">
-                      <button onClick={() => {
-                        if (appFlow === 'SCREEN_1_LOGIN') setAppFlow('SCREEN_2_CARDS');
-                        else if (appFlow === 'SCREEN_2_CARDS') handleNextIntro();
-                        else if (appFlow === 'SCREEN_EXPLANATION') { if (explanationIndex < 4) setExplanationIndex(prev => prev + 1); else setAppFlow('SCREEN_3_READY'); }
-                        else setAppFlow('MAIN');
-                      }} className="w-full h-16 rounded-full bg-[#0f172a] text-white font-black text-xl flex items-center justify-center active:scale-95 transition-transform">המשך</button>
-                  </div>
-                </div>
-              )}
-
-              {/* --- אפליקציה ראשית --- */}
-              {appFlow === 'MAIN' && (
-                <>
                   <div id="physics-container" ref={sceneRef} style={{ zIndex: gameState === 'DROPPING' ? 60 : 10 }} />
                   
                   {['HIDE_OTHERS', 'MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState) && (
-                     <div className="absolute inset-0 z-[40]" onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }}></div>
+                     <div className="absolute inset-0 z-[40]" onClick={() => { setGameState('EMOTION'); setViewMode('EMOTIONS'); setActiveEmotion(null); }}></div>
                   )}
 
                   {activeEmotion && (
@@ -1182,7 +577,7 @@
                           <LiveSmiley config={settingsData.smileyConfigs[activeEmotion.id] || PRESETS[activeEmotion.id]} mode={uiMode} />
                       </div>
                       
-                      <div className={`absolute top-[280px] left-1/2 -translate-x-1/2 text-center w-full whitespace-nowrap transition-all ease-[cubic-bezier(0.19,1,0.22,1)] ${['SHOW_CONTENT', 'SELECTING'].includes(gameState) ? 'duration-700 translate-x-0 opacity-100' : 'duration-200 translate-x-[150%] opacity-0'}`}>
+                      <div className={`absolute top-[270px] left-1/2 -translate-x-1/2 text-center w-full whitespace-nowrap transition-all ease-[cubic-bezier(0.19,1,0.22,1)] ${['SHOW_CONTENT', 'SELECTING'].includes(gameState) ? 'duration-700 translate-x-0 opacity-100' : 'duration-200 translate-x-[150%] opacity-0'}`}>
                          <span className="text-[20px] font-black text-slate-800 tracking-wide" style={{ textShadow: '0 4px 12px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5)' }}>
                              {activeEmotion.subtext}
                          </span>
@@ -1190,11 +585,11 @@
                     </div>
                   )}
 
-                  <div className="sidebar" style={{ transform: ['EMOTION', 'HIDE_OTHERS', 'MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState) ? 'translateX(0)' : 'translateX(100%)', width: isDrawerExpanded ? '75%' : '110px', backgroundColor: dynamicSidebarBg, backdropFilter: `blur(${settingsData.drawerBlur}px)` }}>
-                    
-                    <div className="h-full flex flex-col p-5 overflow-hidden">
+                  <div className="sidebar" style={{ transform: ['EMOTION', 'HIDE_OTHERS', 'MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState) ? 'translateX(0)' : 'translateX(100%)', width: isDrawerExpanded ? '85%' : '110px', backgroundColor: dynamicSidebarBg, backdropFilter: `blur(${settingsData.drawerBlur}px)` }}>
+                    <div className="h-full flex flex-col p-5 overflow-hidden relative">
                       
-                      <div onClick={() => setWorkspace({ isOpen: true, activeTab: 'profile' })} className={`pt-8 flex flex-col items-center cursor-pointer shrink-0 transition-all ease-[cubic-bezier(0.23,1,0.32,1)] ${hideSidebarItems ? 'duration-200 translate-x-[150%] opacity-0' : 'duration-500 translate-x-0 opacity-100'}`}>
+                      {/* Header Element (Profile) */}
+                      <div onClick={() => setWorkspace({ isOpen: true, activeTab: 'profile' })} className={`pt-8 flex flex-col items-center cursor-pointer shrink-0 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isDrawerExpanded && viewMode === 'EMOTIONS' ? 'opacity-0 -translate-y-10 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}`}>
                         <div className="w-16 h-16 rounded-full bg-white border-2 border-slate-100 shadow-md overflow-hidden mb-3 relative flex items-center justify-center text-slate-300">
                             {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User size={32} />}
                         </div>
@@ -1206,41 +601,76 @@
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex-1 relative flex flex-col items-center justify-center space-y-4 overflow-visible">
-                        {emotions.map((emo) => (
-                          <div key={emo.id} onMouseDown={(e) => handleStartSelection(e, emo)} onTouchStart={(e) => handleStartSelection(e, emo)} 
-                                className={`sidebar-btn transition-all ease-[cubic-bezier(0.23,1,0.32,1)] w-14 h-14 ${lottoPhase === 'READY' ? 'pointer-events-auto' : 'pointer-events-none'} ${getEmotionClass(emo)}`}>
-                            <div className="w-full h-full rounded-full flex items-center justify-center overflow-visible pointer-events-none">
-                                <LiveSmiley config={settingsData.smileyConfigs[emo.id] || PRESETS[emo.id]} mode="idle" />
-                            </div>
+                      
+                      <div className="flex-1 relative flex items-center justify-center w-full">
+                          
+                          {/* Main Sidebar Emotion Buttons */}
+                          <div className={`absolute inset-0 flex flex-col items-center justify-center space-y-4 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${viewMode === 'STAGES' ? 'translate-x-[150%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100 pointer-events-auto'}`}>
+                            {emotions.map((emo) => (
+                              <div key={emo.id} onMouseDown={(e) => handleStartSelection(e, emo)} onTouchStart={(e) => handleStartSelection(e, emo)} 
+                                    className={`sidebar-btn transition-all ease-[cubic-bezier(0.23,1,0.32,1)] w-14 h-14 ${lottoPhase === 'READY' ? 'pointer-events-auto' : 'pointer-events-none'} ${getEmotionClass(emo)}`}>
+                                <div className="w-full h-full rounded-full flex items-center justify-center overflow-visible pointer-events-none">
+                                    <LiveSmiley config={settingsData.smileyConfigs[emo.id] || PRESETS[emo.id]} mode="idle" />
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+
+                          {/* New Stages Scroll View */}
+                          <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${viewMode === 'EMOTIONS' ? 'translate-x-[150%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100 pointer-events-auto'}`}>
+                              <div className="w-full stages-scroll-container">
+                                  {Array.from({ length: 32 }).map((_, i) => {
+                                      const stageNum = i + 1;
+                                      const isCurrent = stageNum === settingsData.totalDays + 1;
+                                      const isPassed = stageNum <= settingsData.totalDays;
+                                      const isLocked = stageNum > settingsData.totalDays + 1;
+                                      
+                                      return (
+                                          <div key={i} className="stage-card flex flex-col items-center justify-center gap-3">
+                                              <div className={`w-full h-full rounded-2xl flex flex-col items-center justify-center shadow-lg border-2 transition-all 
+                                                  ${isCurrent ? 'bg-white border-blue-500 scale-105 z-10' : 'bg-slate-50/80 border-transparent'} 
+                                                  ${isLocked ? 'blur-[3px] opacity-50 grayscale' : 'blur-0 opacity-100'}`}>
+                                                  <span className="text-[10px] font-black text-slate-400 mb-1">שלב</span>
+                                                  <span className={`text-4xl font-black ${isCurrent ? 'text-blue-500' : 'text-slate-800'}`}>{stageNum}</span>
+                                                  {isPassed && <div className="mt-2 bg-[#58CC02] rounded-full p-1"><Check size={14} className="text-white" /></div>}
+                                                  {isLocked && <div className="mt-2 text-slate-400"><Lock size={18} /></div>}
+                                              </div>
+                                              {isCurrent && <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full animate-pulse shadow-sm">נוכחי</span>}
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          </div>
+
+                      </div>
+                      
+                      {/* Footer Toggle Element */}
+                      <div onClick={handleSidebarBottomClick} className={`mt-auto pb-8 flex flex-col items-center cursor-pointer group transition-all duration-500 ${isDrawerExpanded && viewMode === 'EMOTIONS' ? 'opacity-0 translate-y-10 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}`}>
+                          <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-900 transition-colors">
+                              שלב {settingsData.totalDays + 1}
+                          </div>
+                          {!isDrawerExpanded && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 animate-bounce shadow-sm" />}
                       </div>
 
-                      <div className={`pb-8 mt-auto flex justify-center transition-all ease-[cubic-bezier(0.23,1,0.32,1)] ${hideSidebarItems ? 'duration-200 translate-x-[150%] opacity-0' : 'duration-500 translate-x-0 opacity-100'}`}>
-                          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">יום {settingsData.totalDays + 1}</span>
-                      </div>
                     </div>
-
-                    <div className="absolute inset-0 w-full h-full overflow-hidden flex flex-col pointer-events-none">
-                      <div className={`habit-list-container flex-1 pointer-events-none transition-all ease-[cubic-bezier(0.19,1,0.22,1)] ${showContent ? 'duration-700 translate-x-0 opacity-100' : 'duration-200 translate-x-[150%] opacity-0'}`}>
+                    
+                    <div className={`absolute inset-0 w-full h-full overflow-hidden flex flex-col pointer-events-none transition-all ${viewMode === 'STAGES' ? 'opacity-0 hidden' : 'opacity-100 flex'}`}>
+                      {/* habit list is precisely centered within calc boundaries so it won't overlap */}
+                      <div className={`habit-list-container flex-1 transition-all ease-[cubic-bezier(0.19,1,0.22,1)] ${showContent ? 'duration-700 translate-x-0 opacity-100' : 'duration-200 translate-x-[150%] opacity-0'}`}>
                         {tasks.map((task, i) => (
-                            <div key={task.id} onClick={() => setActiveIndex(i)} className="habit-item absolute text-center px-6 text-slate-900 pointer-events-auto" style={{ transform: `translateY(${(i - activeIndex) * 110}px) scale(${1.3 - Math.abs(i - activeIndex) * 0.3})`, opacity: Math.max(0, 1 - Math.abs(i - activeIndex) * 0.55), zIndex: 10 - Math.abs(i - activeIndex) }}>
-                              <h3 className="font-black text-3xl leading-tight">{task.name}</h3>
-                              {(i === activeIndex) && <p className="font-black uppercase tracking-widest text-base mt-2 text-slate-500">{activeEmotion?.id >= 4 ? task.ridiculousAction : `${task.amount} ${task.minU}`}</p>}
+                            <div key={task.id} onClick={() => setActiveIndex(i)} className="habit-item text-center px-6 text-slate-900 pointer-events-auto absolute" style={{ top: '50%', transform: `translateY(calc(-50% + ${(i - activeIndex) * 100}px)) scale(${1.3 - Math.abs(i - activeIndex) * 0.3})`, opacity: Math.max(0, 1 - Math.abs(i - activeIndex) * 0.55), zIndex: 10 - Math.abs(i - activeIndex) }}>
+                              <h3 className="font-black text-3xl leading-tight text-slate-800">{task.name}</h3>
+                              {(i === activeIndex) && <p className="font-black uppercase tracking-widest text-[13px] mt-2 text-slate-500">{activeEmotion?.id >= 4 ? task.ridiculousAction : `${task.amount} ${task.minU}`}</p>}
                             </div>
                         ))}
                       </div>
-
-                      <div className={`absolute bottom-12 inset-x-8 flex flex-col gap-4 items-center pointer-events-auto transition-all ease-[cubic-bezier(0.34,1.56,0.64,1)] ${showButton ? 'duration-500 translate-y-0 opacity-100 scale-100' : 'duration-200 translate-y-10 opacity-0 scale-90'}`}>
-                        <button onMouseDown={(e) => { e.stopPropagation(); executeDrop(); }} onTouchStart={(e) => { e.stopPropagation(); executeDrop(); }} className="w-full py-5 rounded-full font-black shadow-2xl text-xl text-white active:scale-95 transition-transform" style={{ backgroundColor: settingsData.primaryBtnColor }}>בוצע</button>
-                        <button onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }} className="text-[12px] font-black text-slate-400 uppercase tracking-[2px] cursor-pointer active:text-slate-500">ביטול</button>
+                      <div className={`absolute bottom-10 inset-x-8 flex flex-col gap-4 items-center pointer-events-auto transition-all ease-[cubic-bezier(0.34,1.56,0.64,1)] ${showButton ? 'duration-500 translate-y-0 opacity-100 scale-100' : 'duration-200 translate-y-10 opacity-0 scale-90'}`}>
+                        <button onMouseDown={(e) => { e.stopPropagation(); executeDrop(); }} onTouchStart={(e) => { e.stopPropagation(); executeDrop(); }} className="w-full py-5 rounded-[24px] font-black shadow-xl text-lg sm:text-xl text-white active:scale-95 transition-transform" style={{ backgroundColor: settingsData.primaryBtnColor }}>בוצע</button>
+                        <button onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }} className="text-[11px] sm:text-xs font-black text-slate-400 uppercase tracking-[2px] cursor-pointer active:text-slate-500">ביטול</button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Creator Drawer */}
                   <div className={`absolute top-0 left-0 right-0 bg-white/95 backdrop-blur-xl z-[200] rounded-b-[50px] shadow-2xl transition-transform duration-500 ${showTopPopup ? 'translate-y-0' : '-translate-y-[120%]'}`}>
                       <div className="p-8 pt-12 flex flex-col min-h-[460px]">
                           <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center relative overflow-hidden text-slate-900 font-heebo">
@@ -1278,7 +708,6 @@
                       </div>
                   </div>
 
-                  {/* מרכז שליטה / הגדרות */}
                   {workspace.isOpen && (
                     <div className="absolute inset-0 z-[300] bg-slate-900/80 backdrop-blur-xl flex justify-center items-end sm:items-center sm:p-10" onClick={() => setWorkspace({ ...workspace, isOpen: false })}>
                       <div className="w-full sm:max-w-xl bg-white h-[92vh] sm:h-auto sm:max-h-[90vh] rounded-t-[40px] sm:rounded-[60px] overflow-hidden flex flex-col shadow-2xl text-slate-900" onClick={e => e.stopPropagation()}>
@@ -1286,19 +715,14 @@
                             <h3 className="font-black text-2xl font-heebo text-slate-900">מרכז שליטה</h3>
                             <button onClick={() => setWorkspace({ ...workspace, isOpen: false })} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center active:scale-90"><X className="w-5 h-5 text-slate-500" /></button>
                           </div>
-                          
                           <div className="flex px-4 sm:px-6 gap-3 sm:gap-4 border-b border-slate-100 overflow-x-auto whitespace-nowrap scrollbar-hide text-slate-400 font-heebo">
                             {['stats', 'profile', 'design', 'stages', 'balls'].map(tab => (
                               <button key={tab} onClick={() => setWorkspace({...workspace, activeTab: tab})} className={`pb-3 pt-4 px-2 font-black text-[13px] sm:text-sm uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${workspace.activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : ''}`}>{tab === 'stats' ? 'מעקב' : tab === 'profile' ? 'פרופיל' : tab === 'design' ? 'עיצוב' : tab === 'stages' ? 'שלבים' : 'כדורים'}</button>
                             ))}
                           </div>
-                          
                           <div className="flex-1 overflow-y-auto p-5 sm:p-8 bg-slate-50/30 font-heebo text-slate-800">
-                             
-                             {/* Stats Tab */}
                              {workspace.activeTab === 'stats' && (
                               <div className="space-y-5 sm:space-y-6 animate-in fade-in pb-8">
-                                {/* Top Cards */}
                                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                   <div className="bg-white p-4 sm:p-5 rounded-[24px] sm:rounded-[30px] shadow-sm text-center flex flex-col items-center justify-center">
                                     <div className="text-3xl sm:text-4xl font-black text-[#1CB0F6] mb-1">{history.length}</div>
@@ -1309,52 +733,30 @@
                                     <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">הרגלים שבוצעו</div>
                                   </div>
                                 </div>
-
-                                {/* Parabolic Mood Graph */}
                                 <div className="bg-white p-5 sm:p-6 rounded-[24px] sm:rounded-[30px] shadow-sm overflow-hidden">
                                   <h4 className="text-xs sm:text-sm font-black text-slate-800 mb-4 sm:mb-6">מגמת מצב הרוח (7 ימים)</h4>
                                   <div className="relative w-full h-[100px] sm:h-[120px] flex items-center justify-center">
                                      {(() => {
-                                        const last7 = history.slice(-7);
-                                        if (last7.length === 0) return null;
+                                        const last7 = history.slice(-7); if (last7.length === 0) return null;
                                         const w = 260, h = 100;
-                                        const pts = last7.map((item, i) => ({
-                                            x: (i / (last7.length - 1 || 1)) * w,
-                                            y: 10 + ((item.emotionId - 1) / 4) * (h - 20), 
-                                            emoId: item.emotionId,
-                                            date: item.date
-                                        }));
+                                        const pts = last7.map((item, i) => ({ x: (i / (last7.length - 1 || 1)) * w, y: 10 + ((item.emotionId - 1) / 4) * (h - 20), emoId: item.emotionId, date: item.date }));
                                         let d = `M ${pts[0].x} ${pts[0].y}`;
-                                        for (let i = 0; i < pts.length - 1; i++) {
-                                            const cx = (pts[i].x + pts[i+1].x) / 2;
-                                            d += ` C ${cx} ${pts[i].y}, ${cx} ${pts[i+1].y}, ${pts[i+1].x} ${pts[i+1].y}`;
-                                        }
+                                        for (let i = 0; i < pts.length - 1; i++) { const cx = (pts[i].x + pts[i+1].x) / 2; d += ` C ${cx} ${pts[i].y}, ${cx} ${pts[i+1].y}, ${pts[i+1].x} ${pts[i+1].y}`; }
                                         return (
                                             <svg width="100%" height="100%" viewBox={`-20 -10 ${w+40} ${h+20}`} className="overflow-visible">
                                                 <path d={d} fill="none" stroke="#E5E7EB" strokeWidth="4" strokeLinecap="round" />
                                                 <path d={d} fill="none" stroke="url(#moodGradient)" strokeWidth="4" strokeLinecap="round" />
-                                                <defs>
-                                                    <linearGradient id="moodGradient" x1="0" y1="0" x2="1" y2="0">
-                                                        <stop offset="0%" stopColor="#1CB0F6" />
-                                                        <stop offset="100%" stopColor="#CE82FF" />
-                                                    </linearGradient>
-                                                </defs>
+                                                <defs><linearGradient id="moodGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#1CB0F6" /><stop offset="100%" stopColor="#CE82FF" /></linearGradient></defs>
                                                 {pts.map((p, i) => {
                                                     const conf = settingsData.smileyConfigs[p.emoId] || PRESETS[p.emoId];
                                                     const color = typeof conf.bodyColor === 'string' && conf.bodyColor.startsWith('#') ? conf.bodyColor : '#58CC02';
-                                                    return (
-                                                        <g key={i} transform={`translate(${p.x}, ${p.y})`}>
-                                                            <circle r="7" fill={color} stroke="#fff" strokeWidth="2.5" className="shadow-sm" />
-                                                        </g>
-                                                    )
+                                                    return ( <g key={i} transform={`translate(${p.x}, ${p.y})`}><circle r="7" fill={color} stroke="#fff" strokeWidth="2.5" className="shadow-sm" /></g> );
                                                 })}
                                             </svg>
-                                        )
+                                        );
                                      })()}
                                   </div>
                                 </div>
-
-                                {/* Habit Stats */}
                                 <div className="bg-white p-5 sm:p-6 rounded-[24px] sm:rounded-[30px] shadow-sm">
                                   <h4 className="text-xs sm:text-sm font-black text-slate-800 mb-4 sm:mb-5">מעקב הרגלים אישי</h4>
                                   <div className="space-y-4">
@@ -1363,21 +765,14 @@
                                         const pct = history.length ? Math.min(100, (count / history.length) * 100) : 0;
                                         return (
                                             <div key={task.id} className="relative">
-                                                <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-slate-600 mb-1.5">
-                                                    <span>{task.name}</span>
-                                                    <span>{count} פעמים</span>
-                                                </div>
-                                                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
-                                                    {pct > 0 && <div className="h-full bg-gradient-to-l from-[#58CC02] to-[#A1CE40] rounded-full transition-all duration-1000" style={{ width: `${pct}%` }}></div>}
-                                                </div>
+                                                <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-slate-600 mb-1.5"><span>{task.name}</span><span>{count} פעמים</span></div>
+                                                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">{pct > 0 && <div className="h-full bg-gradient-to-l from-[#58CC02] to-[#A1CE40] rounded-full transition-all duration-1000" style={{ width: `${pct}%` }}></div>}</div>
                                             </div>
                                         );
                                     })}
                                     {tasks.length === 0 && <div className="text-xs text-slate-400 text-center">אין הרגלים למעקב עדיין.</div>}
                                   </div>
                                 </div>
-
-                                {/* Emotions Distribution */}
                                 <div className="bg-white p-5 sm:p-6 rounded-[24px] sm:rounded-[30px] shadow-sm space-y-4 sm:space-y-5">
                                   <h4 className="text-xs sm:text-sm font-black text-slate-800 mb-2">התפלגות מצבי רוח</h4>
                                   {emotions.map(emo => {
@@ -1385,22 +780,13 @@
                                     const percentage = history.length > 0 ? (count / history.length) * 100 : 0;
                                     const conf = settingsData.smileyConfigs[emo.id] || PRESETS[emo.id];
                                     const color = typeof conf.bodyColor === 'string' && conf.bodyColor.startsWith('#') ? conf.bodyColor : '#58CC02';
-                                    
                                     if (count === 0) return null;
-                                    
                                     return (
                                       <div key={emo.id} className="flex items-center gap-3 sm:gap-4">
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl bg-slate-50 border border-slate-100 shadow-sm flex-shrink-0 overflow-hidden pointer-events-none">
-                                          <LiveSmiley config={conf} mode="idle" />
-                                        </div>
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl bg-slate-50 border border-slate-100 shadow-sm flex-shrink-0 overflow-hidden pointer-events-none"><LiveSmiley config={conf} mode="idle" /></div>
                                         <div className="flex-1">
-                                          <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-slate-600 mb-1.5">
-                                            <span>{emo.label}</span>
-                                            <span>{count} ימים</span>
-                                          </div>
-                                          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
-                                            {percentage > 0 && <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${percentage}%`, backgroundColor: color }}></div>}
-                                          </div>
+                                          <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-slate-600 mb-1.5"><span>{emo.label}</span><span>{count} ימים</span></div>
+                                          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">{percentage > 0 && <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${percentage}%`, backgroundColor: color }}></div>}</div>
                                         </div>
                                       </div>
                                     );
@@ -1408,8 +794,6 @@
                                 </div>
                               </div>
                             )}
-                             
-                             {/* Profile Tab */}
                              {workspace.activeTab === 'profile' && (
                               <div className="space-y-5 sm:space-y-6 animate-in fade-in pb-8">
                                 <div className="flex flex-col items-center gap-4 sm:gap-6 py-5 sm:py-6 bg-white rounded-[30px] sm:rounded-[40px] shadow-sm text-slate-900">
@@ -1427,8 +811,6 @@
                                 </div>
                               </div>
                             )}
-
-                            {/* Design Tab */}
                             {workspace.activeTab === 'design' && (
                               <div className="space-y-5 sm:space-y-6 animate-in fade-in pb-8">
                                 <div className="p-5 sm:p-6 bg-white rounded-[30px] sm:rounded-[40px] shadow-sm space-y-4 sm:space-y-6 text-slate-700 font-heebo">
@@ -1439,8 +821,6 @@
                                 </div>
                               </div>
                             )}
-
-                            {/* Stages Tab */}
                             {workspace.activeTab === 'stages' && (
                               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 animate-in fade-in pb-10">
                                 {Array.from({ length: 32 }).map((_, i) => (
@@ -1451,49 +831,39 @@
                                 ))}
                               </div>
                             )}
-
-                            {/* Balls Tab */}
                             {workspace.activeTab === 'balls' && (
                               <div className="space-y-3 sm:space-y-4 animate-in fade-in pb-10 text-slate-900 font-heebo">
                                 {emotions.map(emo => (
                                   <div key={emo.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white rounded-[30px] shadow-sm relative">
-                                     <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shadow-inner bg-slate-100/50 border border-slate-200 flex-shrink-0`}>
-                                        <LiveSmiley config={settingsData.smileyConfigs[emo.id] || PRESETS[emo.id]} mode="idle" />
-                                     </div>
-                                     <div className="flex-1 text-[11px] font-black text-slate-500 w-full overflow-hidden">
-                                        <div className="flex justify-between items-center mb-1">
-                                          <span className="truncate pr-1">דמות חיה פעילה ({emo.label})</span>
-                                          <button onClick={() => setEditingSmileyFor(emo.id)} className="hidden md:inline-flex items-center gap-1 bg-[#DDF4FF] text-[#1CB0F6] px-3 py-1.5 rounded-lg hover:bg-[#1CB0F6] hover:text-white transition-colors">
-                                            <PaletteIcon size={14} /> עיצוב אישי ופיזיקה
-                                          </button>
-                                        </div>
-                                     </div>
+                                     <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shadow-inner bg-slate-100/50 border border-slate-200 flex-shrink-0`}><LiveSmiley config={settingsData.smileyConfigs[emo.id] || PRESETS[emo.id]} mode="idle" /></div>
+                                     <div className="flex-1 text-[11px] font-black text-slate-500 w-full overflow-hidden"><div className="flex justify-between items-center mb-1"><span className="truncate pr-1">דמות חיה פעילה ({emo.label})</span></div></div>
                                   </div>
                                 ))}
-                                <div className="text-center text-xs text-slate-400 mt-4 md:hidden">עורך הסמיילים המתקדם זמין במסכים רחבים בלבד</div>
                               </div>
                             )}
                           </div>
                       </div>
                     </div>
                   )}
-                </>
-              )}
+
+                  {!isAuthenticated && (
+                    <div className="absolute inset-0 z-[600] bg-slate-900/80 backdrop-blur-xl flex justify-center items-end sm:items-center sm:p-10" onClick={e => e.stopPropagation()}>
+                        <div className="w-full sm:max-w-xl bg-white h-[85vh] sm:h-auto sm:max-h-[90vh] rounded-t-[40px] sm:rounded-[60px] overflow-hidden flex flex-col shadow-2xl text-slate-900 animate-in slide-in-from-bottom-full sm:zoom-in duration-500" onClick={e => e.stopPropagation()}>
+                            <div className="flex-1 overflow-y-auto p-6 sm:p-10 flex flex-col items-center justify-center text-center font-heebo relative">
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 sm:mb-8 shadow-inner border border-slate-100 shrink-0 mt-auto sm:mt-0"><Shield className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300" /></div>
+                                <h2 className="text-3xl sm:text-4xl font-black text-slate-800 mb-3 sm:mb-4">ברוכים הבאים</h2>
+                                <p className="text-slate-500 text-sm font-medium mb-10 sm:mb-12 max-w-sm px-2">כדי להתחיל לעקוב אחרי ההרגלים שלך ולהשתמש במערכת, יש להתחבר עם חשבון Google.</p>
+                                <button onClick={() => setIsAuthenticated(true)} className="w-full max-w-sm bg-white border-2 border-slate-200 text-slate-700 font-bold py-4 px-4 sm:px-6 rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all shadow-sm text-base sm:text-lg mt-auto sm:mt-0 mb-4 sm:mb-0">
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                                    התחברות עם Google
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                  )}
+
             </div>
           </div>
-
-          {/* --- THE FULL SCREEN SMILEY ENGINE OVERLAY (Mobile Responsive) --- */}
-          {editingSmileyFor && (
-            <SmileyEditor 
-              emotion={emotions.find(e => e.id === editingSmileyFor)} 
-              initialConfig={settingsData.smileyConfigs[editingSmileyFor] || PRESETS[editingSmileyFor]}
-              onSave={(newConfig) => {
-                 setSettingsData(s => ({ ...s, smileyConfigs: { ...s.smileyConfigs, [editingSmileyFor]: newConfig } }));
-                 setEditingSmileyFor(null);
-              }}
-              onClose={() => setEditingSmileyFor(null)} 
-            />
-          )}
         </>
       );
     }
