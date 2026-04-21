@@ -1,784 +1,304 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Community App</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <title>Community App – Supabase Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- אפשר לעצב אחר כך, כרגע הכי פשוט ועובד -->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap');
-    html, body, #root { min-height: 100%; }
-    body { margin: 0; font-family: 'Heebo', sans-serif; background: #F7F7F6; }
-    .no-scrollbar::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .no-scrollbar, .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f5f5f5;
+      direction: rtl;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    label {
+      display: block;
+      margin: 8px 0 4px;
+      font-weight: 500;
+    }
+    input, textarea, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    button {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: none;
+      background: #3ecf8e;
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .list {
+      margin-top: 24px;
+    }
+    .item {
+      border-bottom: 1px solid #eee;
+      padding: 8px 0;
+    }
+    .item:last-child {
+      border-bottom: none;
+    }
+    .error {
+      color: #d00;
+      margin-top: 8px;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #555;
+    }
+    .debug {
+      margin-top: 16px;
+      font-size: 12px;
+      direction: ltr;
+      background: #fafafa;
+      border-radius: 4px;
+      padding: 8px;
+      border: 1px dashed #ddd;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect, useRef, useMemo } = React;
+  <div class="container">
+    <h1>Community App – חיבור Supabase</h1>
+    <p>טופס דוגמה שמדבר עם Supabase דרך ה־Data API (REST) שלך.</p>
 
-    const makeIcon = (name) => ({ size = 24, className = '', strokeWidth = 2, ...props }) => {
-      const iconNode = window.lucide?.icons?.[name]?.iconNode;
-      if (!iconNode) return null;
-      return React.createElement(
-        'svg',
-        {
-          xmlns: 'http://www.w3.org/2000/svg',
-          width: size,
-          height: size,
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          stroke: 'currentColor',
-          strokeWidth,
-          strokeLinecap: 'round',
-          strokeLinejoin: 'round',
-          className,
-          ...props
-        },
-        iconNode.map((node, i) => React.createElement(node[0], { key: i, ...node[1] }))
-      );
-    };
+    <form id="create-form">
+      <label for="title">כותרת</label>
+      <input id="title" name="title" placeholder="למשל: פוסט בדיקה ראשון" required />
 
-    const Sparkles = makeIcon('sparkles');
-    const Shield = makeIcon('shield');
-    const ShieldAlert = makeIcon('shield-alert');
-    const Flame = makeIcon('flame');
-    const Check = makeIcon('check');
-    const Plus = makeIcon('plus');
-    const Minus = makeIcon('minus');
-    const ArrowLeft = makeIcon('arrow-left');
-    const ArrowRight = makeIcon('arrow-right');
-    const BrainCircuit = makeIcon('brain-circuit');
-    const Search = makeIcon('search');
-    const ShoppingCart = makeIcon('shopping-cart');
-    const Inbox = makeIcon('inbox');
-    const Sprout = makeIcon('sprout');
-    const Target = makeIcon('target');
-    const Clock = makeIcon('clock');
-    const Layers = makeIcon('layers');
-    const X = makeIcon('x');
-    const Zap = makeIcon('zap');
-    const Sun = makeIcon('sun');
-    const ChevronDown = makeIcon('chevron-down');
-    const PartyPopper = makeIcon('party-popper');
-    const CalendarDays = makeIcon('calendar-days');
-    const Trash2 = makeIcon('trash-2');
-    const GripVertical = makeIcon('grip-vertical');
-    const Maximize2 = makeIcon('maximize-2');
-    const Hourglass = makeIcon('hourglass');
-    const ChevronRight = makeIcon('chevron-right');
-    const AlarmClock = makeIcon('alarm-clock');
-    const CalendarIcon = makeIcon('calendar');
-    const Tag = makeIcon('tag');
-    const Filter = makeIcon('filter');
-    const LayoutGrid = makeIcon('layout-grid');
+      <label for="content">תוכן</label>
+      <textarea id="content" name="content" rows="3" placeholder="תיאור קצר של הפוסט" required></textarea>
 
-// --- קבועים ועזרים חיצוניים ---
-const monthsHe = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-const daysHe = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+      <label for="author">מחבר</label>
+      <input id="author" name="author" placeholder="השם שלך" required />
 
-const GROCERY_KEYWORDS = ['מלפפון', 'עגבניה', 'חלב', 'לחם', 'ביצים', 'גבינה', 'מים', 'תפוח', 'בננה', 'פרי', 'ירק', 'קפה', 'סופר', 'לקנות', 'שידה', 'ארון', 'שולחן'];
-const HABIT_KEYWORDS = ['לשתות', 'לקרוא', 'לרוץ', 'להתאמן', 'מדיטציה', 'ספר', 'כושר', 'הליכה', 'כל יום', 'יומי', 'ללמוד', 'לתרגל'];
+      <button type="submit" id="submit-btn">שמור</button>
+      <div class="status" id="status"></div>
+      <div class="error" id="error"></div>
+    </form>
 
-const generateYearOfDays = () => {
-  const days = [];
-  const start = new Date();
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    days.push({
-      fullDate: d.toISOString().split('T')[0],
-      dayName: daysHe[d.getDay()],
-      dayNumber: d.getDate(),
-      monthName: monthsHe[d.getMonth()],
-      monthIdx: d.getMonth(),
-      year: d.getFullYear()
-    });
-  }
-  return days;
-};
-
-const getShortDate = (dateString) => {
-  if (!dateString) return null;
-  const d = new Date(dateString);
-  return { dayName: daysHe[d.getDay()], dayNumber: d.getDate() };
-};
-
-// --- רכיב הקונפטי ---
-const Confetti = () => {
-  return (
-    <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
-      {[...Array(60)].map((_, i) => (
-        <div 
-          key={i} 
-          className="absolute w-3 h-3 rounded-sm opacity-90"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `-5%`,
-            backgroundColor: ['#f59e0b', '#10b981', '#6366f1', '#ec4899', '#3b82f6', '#f43f5e'][Math.floor(Math.random() * 6)],
-            animation: `fall ${Math.random() * 2 + 1.5}s linear forwards`,
-            animationDelay: `${Math.random() * 0.5}s`,
-            transform: `rotate(${Math.random() * 360}deg)`
-          }} 
-        />
-      ))}
-      <style>{`
-        @keyframes fall {
-          0% { transform: translateY(-10vh) rotate(0deg) scale(1); opacity: 1; }
-          100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
-        }
-      `}</style>
+    <div class="list">
+      <h2>רשומות אחרונות</h2>
+      <button id="refresh-btn">רענן רשימה</button>
+      <div id="list"></div>
     </div>
-  );
-};
 
-function App() {
-  // --- States ---
-  const [vision] = useState("לפעול מתוך מיקוד וחופש, להעניק נוכחות מלאה לילדים ולבנות מציאות עסקית משגשגת.");
-  const [shields] = useState(2);
-  const [magicInput, setMagicInput] = useState('');
-  const [canAddHabit, setCanAddHabit] = useState(true); 
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [activeTab, setActiveTab] = useState('task');
-  const [suggestedQuantity, setSuggestedQuantity] = useState(1);
-  const [suggestedUnit, setSuggestedUnit] = useState('פעמים');
+    <div class="debug" id="debug"></div>
+  </div>
 
-  const [categories] = useState(['כללי', 'גמבו', 'ריהוט', 'סופר', 'פארם', 'איקאה']);
-  const [selectedFilterCategory, setSelectedFilterCategory] = useState('הכל');
+  <script type="module">
+    // הפרטים שלך – אל תיגע בזה אלא אם תחליף פרויקט
+    const SUPABASE_URL = 'https://igpzawemolsajreiuxck.supabase.co';
+    const SUPABASE_REST_URL = 'https://igpzawemolsajreiuxck.supabase.co/rest/v1';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_VWqg5KanuCRMFAAMCBWnuA_ZtSWIBWr';
 
-  const [habits, setHabits] = useState([
-    { id: 1, title: 'הזנת תודעה (קריאה)', minGoal: '1', minUnit: 'עמודים', isMinDone: false, breakthroughCount: 2, breakthroughUnit: 'עמודים', breakthroughStreak: 9, isBreakthroughDone: false, streak: 14, stage: '🌱', isCollapsed: false },
-    { id: 2, title: 'סנכרון פנימי (מדיטציה)', minGoal: '5', minUnit: 'דקות', isMinDone: true, breakthroughCount: 10, breakthroughUnit: 'דקות', breakthroughStreak: 2, isBreakthroughDone: false, streak: 5, stage: '🌳', isCollapsed: false },
-  ]);
+    // שם הטבלה – תחליף לשם הטבלה האמיתית שלך (למשל: posts / community_posts / messages)
+    const TABLE_NAME = 'posts';
 
-  const [tasks, setTasks] = useState([
-    { id: 10, title: 'כיול משאבים (חשבון)', status: 'active', date: new Date().toISOString().split('T')[0], time: '10:00', completed: false, subtasks: [], manualOrder: 0 },
-    { id: 11, title: 'שיפור חיוניות (תור)', status: 'active', date: new Date().toISOString().split('T')[0], time: '16:30', completed: false, subtasks: [{ id: 201, title: 'להזמין תור באפליקציה', completed: false }], manualOrder: 1 },
-    { id: 12, title: 'אספקת אנרגיה', status: 'active', isList: true, items: [
-      { name: 'שקיות זבל', qty: 1, completed: true, category: 'סופר' },
-      { name: 'שידה', qty: 1, completed: false, category: 'גמבו' }
-    ], manualOrder: 2 },
-  ]);
+    const statusEl = document.getElementById('status');
+    const errorEl = document.getElementById('error');
+    const listEl = document.getElementById('list');
+    const debugEl = document.getElementById('debug');
+    const form = document.getElementById('create-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const refreshBtn = document.getElementById('refresh-btn');
 
-  const [expandedTaskId, setExpandedTaskId] = useState(null);
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
-  const [showAllTasks, setShowAllTasks] = useState(false);
-
-  // כיול זמן
-  const [schedulingTask, setSchedulingTask] = useState(null);
-  const [tempDate, setTempDate] = useState(new Date().toISOString().split('T')[0]);
-  const [tempTime, setTempTime] = useState('12:00');
-  const [calendarView, setCalendarView] = useState('scroll'); // 'scroll' or 'grid'
-  const [viewingMonth, setViewingMonth] = useState(new Date().getMonth());
-  const [viewingYear, setViewingYear] = useState(new Date().getFullYear());
-
-  const allDays = useMemo(() => generateYearOfDays(), []);
-  const scrollRef = useRef(null);
-
-  // גרירה
-  const [draggedId, setDraggedId] = useState(null);
-  const [dragType, setDragType] = useState(null);
-  const [flashId, setFlashId] = useState(null);
-
-  // --- לוגיקה וחישובים ---
-  const parseMagicDate = (input) => {
-    const regex = /^(\d{2})(\d{2})(\d{4})(\d{2})(\d{2})$/;
-    const match = input.match(regex);
-    if (match) {
-      return {
-        date: `${match[3]}-${match[2]}-${match[1]}`,
-        time: `${match[4]}:${match[5]}`
-      };
+    function setStatus(msg) {
+      statusEl.textContent = msg || '';
     }
-    return null;
-  };
 
-  const magicDateParsed = useMemo(() => parseMagicDate(magicInput), [magicInput]);
-
-  const activeTasksList = useMemo(() => {
-    return tasks
-      .filter(t => t.status === 'active' && !t.isList)
-      .sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        if (a.manualOrder !== b.manualOrder) return a.manualOrder - b.manualOrder;
-        if (a.date && b.date) return a.date.localeCompare(b.date);
-        return 0;
-      });
-  }, [tasks]);
-
-  const visibleTasks = showAllTasks ? activeTasksList : activeTasksList.slice(0, 3);
-  const shoppingListTask = tasks.find(t => t.isList);
-  const uncompletedGroceries = shoppingListTask?.items.filter(i => !i.completed).length || 0;
-  
-  const filteredShoppingItems = useMemo(() => {
-    if (!shoppingListTask) return [];
-    if (selectedFilterCategory === 'הכל') return shoppingListTask.items;
-    return shoppingListTask.items.filter(i => i.category === selectedFilterCategory);
-  }, [shoppingListTask, selectedFilterCategory]);
-
-  // --- פונקציות טיפול (Handlers) ---
-  const triggerHaptic = (type = 'light') => {
-    if (window.navigator && window.navigator.vibrate) {
-      if (type === 'celebrate') window.navigator.vibrate([100, 50, 100, 50, 200]);
-      else window.navigator.vibrate(50);
+    function setError(msg) {
+      errorEl.textContent = msg || '';
     }
-  };
 
-  const handleDragStart = (e, id, type) => {
-    setDraggedId(id);
-    setDragType(type);
-  };
-
-  const handleDragEnter = (e, targetId, type) => {
-    e.preventDefault();
-    if (dragType !== type || draggedId === targetId || !draggedId) return;
-
-    if (type === 'habit') {
-      setHabits(prev => {
-        const arr = [...prev];
-        const dIdx = arr.findIndex(h => h.id === draggedId);
-        const tIdx = arr.findIndex(h => h.id === targetId);
-        if (dIdx === -1 || tIdx === -1) return prev;
-        const [item] = arr.splice(dIdx, 1);
-        arr.splice(tIdx, 0, item);
-        return arr;
-      });
-    } else if (type === 'task') {
-      setTasks(prev => {
-        const arr = [...prev];
-        const dIdx = arr.findIndex(t => t.id === draggedId);
-        const tIdx = arr.findIndex(t => t.id === targetId);
-        if (dIdx === -1 || tIdx === -1) return prev;
-        const [item] = arr.splice(dIdx, 1);
-        arr.splice(tIdx, 0, item);
-        return arr.map((t, idx) => ({ ...t, manualOrder: idx }));
-      });
-    }
-  };
-
-  const handleDragEnd = () => {
-    if (draggedId) {
-      setFlashId(draggedId);
-      setTimeout(() => setFlashId(null), 800);
-      triggerHaptic();
-    }
-    setDraggedId(null);
-    setDragType(null);
-  };
-
-  const handleDrop = (e) => { e.preventDefault(); };
-
-  const finalizeItem = (date, time = '12:00') => {
-    const text = magicInput.trim();
-    if (!text) return;
-
-    if (activeTab === 'grocery') {
-      setTasks(prev => prev.map(t => t.isList ? { ...t, items: [...t.items, { name: text, qty: suggestedQuantity, completed: false, category: 'כללי' }] } : t));
-      setIsCartOpen(true); 
-    } 
-    else if (activeTab === 'task') {
-      const parsed = magicDateParsed;
-      const finalDate = parsed ? parsed.date : (date === 'dump' ? null : (date || null));
-      const finalTime = parsed ? parsed.time : (date === 'dump' ? null : (time || '12:00'));
-      const targetStatus = finalDate ? 'active' : 'dump';
-
-      setTasks(prev => [{ 
-        id: Date.now(), title: text, status: targetStatus, 
-        date: finalDate, time: finalTime, completed: false, 
-        subtasks: [], manualOrder: -1 
-      }, ...prev]);
-    } 
-    else if (activeTab === 'habit' && canAddHabit) {
-      setHabits(prev => [{ id: Date.now(), title: text, minGoal: suggestedQuantity.toString(), minUnit: suggestedUnit, isMinDone: false, breakthroughCount: suggestedQuantity * 2, breakthroughUnit: suggestedUnit, breakthroughStreak: 0, isBreakthroughDone: false, streak: 0, stage: '🥚', isCollapsed: false }, ...prev]);
-      setCanAddHabit(false);
-    }
-    triggerHaptic();
-    setMagicInput('');
-  };
-
-  const updateItemCategory = (itemName, newCat) => {
-    setTasks(prev => prev.map(t => {
-      if (!t.isList) return t;
-      return {
-        ...t,
-        items: t.items.map(item => item.name === itemName ? { ...item, category: newCat } : item)
-      };
-    }));
-    triggerHaptic();
-  };
-
-  const toggleTaskCompletion = (id) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-    triggerHaptic();
-  };
-
-  const toggleMinHabit = (id) => {
-    setHabits(prev => prev.map(h => h.id === id ? { ...h, isMinDone: !h.isMinDone } : h));
-    triggerHaptic();
-  };
-
-  const toggleBreakthrough = (id) => {
-    let win = false;
-    setHabits(prev => prev.map(h => {
-      if (h.id === id && !h.isBreakthroughDone) {
-        win = true;
-        setTimeout(() => setHabits(curr => curr.map(item => item.id === id ? {...item, isCollapsed: true} : item)), 3000);
-        return { ...h, isBreakthroughDone: true, breakthroughStreak: h.breakthroughStreak + 1 };
+    function setDebug(obj) {
+      try {
+        debugEl.textContent = JSON.stringify(obj, null, 2);
+      } catch (e) {
+        debugEl.textContent = String(obj);
       }
-      return h;
-    }));
-    if (win) { triggerHaptic('celebrate'); setShowCelebration(true); }
-  };
-
-  const toggleGroceryItem = (itemName) => {
-    setTasks(prev => prev.map(t => t.isList ? { ...t, items: t.items.map(item => item.name === itemName ? { ...item, completed: !item.completed } : item) } : t));
-    triggerHaptic();
-  };
-
-  const addSubtask = (taskId) => {
-    if (!newSubtaskTitle.trim()) return;
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, subtasks: [...(t.subtasks || []), { id: Date.now(), title: newSubtaskTitle, completed: false }] } : t));
-    setNewSubtaskTitle('');
-    triggerHaptic();
-  };
-
-  const toggleSubtask = (taskId, subtaskId) => {
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, subtasks: t.subtasks.map(st => st.id === subtaskId ? { ...st, completed: !st.completed } : st) } : t));
-    triggerHaptic();
-  };
-
-  // --- לוגיקת לוח שנה ---
-  const currentSelectedDayInfo = allDays.find(d => d.fullDate === tempDate) || allDays[0];
-
-  const getDaysInMonth = (month, year) => {
-    const days = [];
-    const firstDay = new Date(year, month, 1).getDay();
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let i = 1; i <= lastDay; i++) days.push(i);
-    return days;
-  };
-
-  const monthGridDays = useMemo(() => getDaysInMonth(viewingMonth, viewingYear), [viewingMonth, viewingYear]);
-
-  // --- אפקטים NLP ---
-  useEffect(() => {
-    const text = magicInput.trim();
-    if (!text) {
-      setActiveTab('task');
-      return;
     }
-    const isGrocery = GROCERY_KEYWORDS.some(k => text.includes(k));
-    const isHabit = HABIT_KEYWORDS.some(k => text.includes(k));
-    if (isGrocery) setActiveTab('grocery');
-    else if (isHabit && canAddHabit) setActiveTab('habit');
-    else setActiveTab('task');
 
-    if (text.includes('מים')) setSuggestedUnit('כוסות');
-    else if (text.includes('קריאה') || text.includes('ספר')) setSuggestedUnit('עמודים');
-    else if (text.includes('ריצה')) setSuggestedUnit('ק"מ');
-    else if (text.includes('מדיטציה')) setSuggestedUnit('דקות');
-  }, [magicInput, canAddHabit]);
+    async function fetchPosts() {
+      setStatus('טוען רשומות...');
+      setError('');
 
-  return (
-    <div dir="rtl" className="min-h-screen bg-[#F7F7F6] text-stone-800 font-sans pb-24 selection:bg-indigo-100 relative overflow-x-hidden">
-      
-      {/* פופ-אפ כיול זמן (Calibration Hub) */}
-      {schedulingTask && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="absolute inset-0 bg-stone-900/70 backdrop-blur-md" onClick={() => setSchedulingTask(null)}></div>
-          <div className="relative bg-white rounded-[2.5rem] p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2 text-indigo-600 font-black">
-                <CalendarIcon size={20} />
-                <span className="text-xl">כיול מרחב המימוש</span>
-              </div>
-              <button 
-                onClick={() => setCalendarView(calendarView === 'scroll' ? 'grid' : 'scroll')}
-                className="p-2 bg-indigo-50 text-indigo-600 rounded-xl flex items-center gap-1"
-              >
-                {calendarView === 'scroll' ? <LayoutGrid size={14}/> : <ChevronRight size={14}/>}
-                <span className="text-[10px] font-black uppercase">{calendarView === 'scroll' ? 'רשת' : 'ציר'}</span>
-              </button>
-            </div>
+      try {
+        const url = `${SUPABASE_REST_URL}/${TABLE_NAME}?select=*&order=created_at.desc&limit=20`;
 
-            <div className="space-y-6">
-              {calendarView === 'scroll' ? (
-                <div className="space-y-6 animate-in slide-in-from-right-2 duration-300">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">מיקום בזמן</span>
-                    <div className="flex items-center gap-2 text-stone-800 font-black text-2xl">
-                      {currentSelectedDayInfo.monthName} {currentSelectedDayInfo.year}
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <div 
-                      ref={scrollRef}
-                      className="flex gap-3 overflow-x-auto pb-6 pt-2 scrollbar-hide no-scrollbar px-12 cursor-grab active:cursor-grabbing"
-                      style={{ scrollSnapType: 'x mandatory' }}
-                    >
-                      {allDays.map(day => (
-                        <button 
-                          key={day.fullDate}
-                          onClick={() => {setTempDate(day.fullDate); triggerHaptic();}}
-                          className={`flex-shrink-0 w-16 h-20 rounded-3xl flex flex-col items-center justify-center border-2 transition-all duration-300 ${
-                            tempDate === day.fullDate ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-110' : 'bg-stone-50 border-stone-100 text-stone-400 opacity-60'
-                          }`}
-                          style={{ scrollSnapAlign: 'center' }}
-                        >
-                          <span className="text-[10px] font-bold mb-1">{day.dayName}</span>
-                          <span className="text-2xl font-black">{day.dayNumber}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+        const res = await fetch(url, {
+          headers: {
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const text = await res.text();
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (e) {
+          setError('בעיה בפענוח תגובת השרת');
+          setDebug({ text });
+          setStatus('');
+          return;
+        }
+
+        if (!res.ok) {
+          setError('שגיאה בטעינה מה־Supabase');
+          setDebug({ status: res.status, data });
+          setStatus('');
+          return;
+        }
+
+        if (!Array.isArray(data)) {
+          setError('התגובה מה־Supabase לא במבנה המצופה (לא מערך).');
+          setDebug(data);
+          setStatus('');
+          return;
+        }
+
+        if (data.length === 0) {
+          listEl.innerHTML = '<p>אין עדיין רשומות.</p>';
+        } else {
+          listEl.innerHTML = data
+            .map((row) => {
+              const title = row.title || '(ללא כותרת)';
+              const content = row.content || '';
+              const author = row.author || '';
+              const created = row.created_at || '';
+              return `
+                <div class="item">
+                  <strong>${title}</strong><br />
+                  <small>${author} • ${created}</small><br />
+                  <div>${content}</div>
                 </div>
-              ) : (
-                <div className="space-y-4 animate-in slide-in-from-left-2 duration-300">
-                  <div className="flex items-center justify-between px-2">
-                    <button onClick={() => setViewingMonth(prev => prev === 0 ? 11 : prev - 1)} className="p-2 bg-stone-50 rounded-full"><ArrowRight size={16}/></button>
-                    <span className="font-black text-lg">{monthsHe[viewingMonth]} {viewingYear}</span>
-                    <button onClick={() => setViewingMonth(prev => prev === 11 ? 0 : prev + 1)} className="p-2 bg-stone-50 rounded-full"><ArrowLeft size={16}/></button>
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {daysHe.map(d => <div key={d} className="text-[9px] font-black text-stone-400 text-center uppercase py-1">{d}</div>)}
-                    {monthGridDays.map((d, i) => {
-                      if (d === null) return <div key={`empty-${i}`} />;
-                      const dateStr = `${viewingYear}-${(viewingMonth+1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
-                      const isSelected = tempDate === dateStr;
-                      return (
-                        <button 
-                          key={i} 
-                          onClick={() => {setTempDate(dateStr); triggerHaptic();}}
-                          className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-indigo-50 text-stone-600'}`}
-                        >
-                          {d}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              `;
+            })
+            .join('');
+        }
 
-              <div className="flex flex-col items-center gap-3 bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100">
-                <div className="flex items-center gap-2 text-indigo-600 font-black mb-1">
-                  <AlarmClock size={16}/> <span className="text-xs uppercase tracking-wider text-right">שעת מימוש</span>
-                </div>
-                <input 
-                  type="time" value={tempTime} onChange={(e) => setTempTime(e.target.value)}
-                  className="bg-white px-6 py-4 rounded-2xl shadow-sm border border-indigo-100 font-black text-3xl text-indigo-700 outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-center"
-                />
-              </div>
+        setDebug({ lastFetch: data });
+        setStatus('הרשימה עודכנה.');
+      } catch (err) {
+        console.error(err);
+        setError('שגיאה כללית בטעינת נתונים.');
+        setDebug(err);
+        setStatus('');
+      }
+    }
 
-              <button 
-                onClick={saveCalibration}
-                className="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-3 text-lg"
-              >
-                <Check size={24} strokeWidth={4} /> אמת כיול
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    async function createPost(payload) {
+      setStatus('שומר לרשומה חדשה...');
+      setError('');
+      submitBtn.disabled = true;
 
-      {showCelebration && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowCelebration(false)}></div>
-          <Confetti />
-          <div className="relative bg-white rounded-[2.5rem] p-8 text-center max-w-sm w-full shadow-2xl animate-in zoom-in-90 duration-300 border-2 border-indigo-50">
-            <PartyPopper size={60} className="mx-auto text-indigo-500 mb-6" />
-            <h2 className="text-2xl font-black text-stone-800 mb-3 text-right">פריצה קוונטית!</h2>
-            <p className="bg-orange-50 text-orange-700 rounded-2xl p-5 font-bold mb-8 text-sm leading-relaxed text-right border border-orange-100">"חייבים לחגוג ניצחונות קטנים כדי שזה יעבוד!" 🏆 <br/> התת-מודע שלך לומד עכשיו שאתה מנצח.</p>
-            <button onClick={() => setShowCelebration(false)} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg">מעולה, ממשיכים!</button>
-          </div>
-        </div>
-      )}
+      try {
+        const url = `${SUPABASE_REST_URL}/${TABLE_NAME}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=representation',
+          },
+          body: JSON.stringify(payload),
+        });
 
-      {/* מגירת אספקת אנרגיה */}
-      <button onClick={() => setIsCartOpen(true)} className="fixed left-0 top-1/2 -translate-y-1/2 bg-emerald-500 text-white py-5 px-3 rounded-r-[1.5rem] shadow-xl z-40">
-        <ShoppingCart size={24} strokeWidth={2.5} />
-        {uncompletedGroceries > 0 && <span className="font-bold text-[10px] bg-white text-emerald-600 rounded-full w-5 h-5 flex items-center justify-center shadow-sm">{uncompletedGroceries}</span>}
-      </button>
+        const text = await res.text();
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (e) {
+          setError('בעיה בפענוח תגובת השרת בעת שמירה.');
+          setDebug({ text });
+          setStatus('');
+          submitBtn.disabled = false;
+          return null;
+        }
 
-      <div className={`fixed inset-0 bg-stone-900/10 backdrop-blur-sm z-50 transition-opacity duration-300 ${isCartOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCartOpen(false)}></div>
-      <div className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#F9F9F8] z-50 shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${isCartOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 bg-emerald-500 text-white flex items-center justify-between shadow-md">
-          <div className="flex items-center gap-3"><ShoppingCart size={22} strokeWidth={2.5} /><h2 className="text-xl font-black">אספקת אנרגיה</h2></div>
-          <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-emerald-600 rounded-full transition-colors"><X size={20} /></button>
-        </div>
-        
-        {/* סנן קטגוריות */}
-        <div className="p-4 bg-white border-b border-stone-100 flex gap-2 overflow-x-auto no-scrollbar">
-          {['הכל', ...categories].map(cat => (
-            <button 
-              key={cat} onClick={() => setSelectedFilterCategory(cat)}
-              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-black transition-all ${selectedFilterCategory === cat ? 'bg-emerald-500 text-white shadow-md' : 'bg-stone-50 text-stone-400 hover:bg-stone-100'}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        if (!res.ok) {
+          setError('שגיאה בשמירה ל־Supabase.');
+          setDebug({ status: res.status, data });
+          setStatus('');
+          submitBtn.disabled = false;
+          return null;
+        }
 
-        <div className="p-4 overflow-y-auto flex-1 space-y-2">
-          {filteredShoppingItems.map((item, idx) => (
-            <div key={idx} className={`flex flex-col bg-white p-4 rounded-2xl transition-all border ${item.completed ? 'opacity-40 border-transparent bg-stone-50 shadow-none' : 'border-stone-100 shadow-sm hover:border-emerald-200'}`}>
-              <div className="flex justify-between items-center mb-2">
-                <div onClick={() => toggleGroceryItem(item.name)} className="flex items-center gap-3 cursor-pointer">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${item.completed ? 'bg-emerald-400 text-white' : 'border-2 border-stone-200 text-transparent'}`}><Check size={14} strokeWidth={4} /></div>
-                  <span className={`font-bold ${item.completed ? 'text-stone-400 line-through' : 'text-stone-700'}`}>{item.name}</span>
-                </div>
-                {!item.completed && <span className="font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg text-xs">x{item.qty}</span>}
-              </div>
-              
-              {!item.completed && (
-                <div className="flex gap-1 overflow-x-auto no-scrollbar pt-2 border-t border-stone-50">
-                  {categories.map(cat => (
-                    <button 
-                      key={cat} onClick={() => updateItemCategory(item.name, cat)}
-                      className={`flex-shrink-0 px-2 py-1 rounded-md text-[9px] font-black uppercase transition-all ${item.category === cat ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-50 text-stone-300'}`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="p-4 border-t border-stone-100 bg-white">
-          <button onClick={() => { setTasks(prev => prev.map(t => t.isList ? { ...t, items: t.items.filter(i => !i.completed) } : t)); triggerHaptic(); }} className="w-full bg-rose-50 text-rose-600 font-bold py-4 rounded-2xl transition-colors border border-rose-100 text-sm">ניקוי מוצרים שנאספו</button>
-        </div>
-      </div>
+        setDebug({ lastInsert: data });
+        setStatus('נשמר בהצלחה!');
+        submitBtn.disabled = false;
+        return data;
+      } catch (err) {
+        console.error(err);
+        setError('שגיאה כללית בשמירה.');
+        setDebug(err);
+        setStatus('');
+        submitBtn.disabled = false;
+        return null;
+      }
+    }
 
-      <div className="bg-white/60 backdrop-blur-md sticky top-0 z-30 border-b border-stone-200/50 p-4 shadow-sm text-right">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-4 text-right">
-          <div className="flex items-center gap-3 flex-1 text-right"><BrainCircuit size={16} className="text-indigo-400" /><p className="text-[11px] text-stone-500 font-bold italic line-clamp-1">"{vision}"</p></div>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3].map((num) => (num <= shields ? <Shield key={num} size={14} className="text-amber-400 fill-amber-400" /> : <ShieldAlert key={num} size={14} className="text-stone-200" />))}
-          </div>
-        </div>
-      </div>
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+      const author = document.getElementById('author').value.trim();
 
-      <div className="max-w-md mx-auto px-4 mt-6 space-y-10">
+      if (!title || !content || !author) {
+        setError('נא למלא את כל השדות.');
+        return;
+      }
 
-        {/* Omnibar */}
-        <div className="relative z-20">
-          <div className="relative group animate-in fade-in zoom-in-95 duration-200">
-            <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none text-stone-300 group-focus-within:text-indigo-500 transition-colors">
-              {magicDateParsed ? <Zap size={22} className="text-amber-500 animate-pulse" /> : <Sparkles size={22} />}
-            </div>
-            <input 
-              type="text" value={magicInput} onChange={(e) => setMagicInput(e.target.value)}
-              placeholder="איזו כוונה נרצה לממש?..." 
-              className="w-full bg-white text-stone-800 rounded-[2.5rem] py-5 pr-14 pl-5 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-stone-100 outline-none focus:ring-4 focus:ring-indigo-50 text-lg font-bold text-right"
-            />
-          </div>
+      const payload = {
+        title,
+        content,
+        author,
+        // created_at אפשר לתת ל-DB ברירת מחדל NOW()
+      };
 
-          {magicInput && (
-            <div className="absolute top-full mt-4 w-full bg-white rounded-[2rem] shadow-2xl border border-stone-50 overflow-hidden animate-in slide-in-from-top-3 duration-300 text-right">
-              <div className="flex p-2 bg-stone-50/50 border-b border-stone-100 text-[11px] font-black uppercase">
-                <button onClick={() => setActiveTab('task')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'task' ? 'bg-white text-indigo-600 shadow-sm' : 'text-stone-400'}`}>פעולה</button>
-                {canAddHabit && <button onClick={() => setActiveTab('habit')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'habit' ? 'bg-white text-orange-500 shadow-sm' : 'text-stone-400'}`}>עוגן</button>}
-                <button onClick={() => setActiveTab('grocery')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'grocery' ? 'bg-white text-emerald-500 shadow-sm' : 'text-stone-400'}`}>אספקה</button>
-              </div>
-              <div className="p-4">
-                {activeTab === 'task' && (
-                  <div className="flex gap-2">
-                    {magicDateParsed ? (
-                      <button 
-                        onClick={() => finalizeItem()} 
-                        className="flex-1 bg-amber-500 text-white font-black py-4 rounded-2xl shadow-lg flex flex-col items-center animate-bounce"
-                      >
-                        <Zap size={18} className="mb-1" />
-                        <span className="text-[10px]">כיול קוונטי מזוהה</span>
-                      </button>
-                    ) : (
-                      <>
-                        <button onClick={() => finalizeItem(new Date().toISOString().split('T')[0])} className="flex-1 bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg flex flex-col items-center">
-                          <Sun size={18} className="mb-1" /><span className="text-[10px]">היום</span>
-                        </button>
-                        <button 
-                          onClick={() => { setSchedulingTask({ id: 'new', title: magicInput }); setTempDate(new Date().toISOString().split('T')[0]); }}
-                          className="flex-1 bg-white text-stone-400 font-black py-4 rounded-2xl border border-stone-100 flex flex-col items-center"
-                        >
-                          <CalendarDays size={18} className="mb-1" /><span className="text-[10px]">כיול זמן</span>
-                        </button>
-                      </>
-                    )}
-                    <button onClick={() => finalizeItem('dump')} className="flex-1 bg-stone-800 text-white font-black py-4 rounded-2xl flex flex-col items-center text-center">
-                      <Inbox size={18} className="mb-1" /><span className="text-[10px]">פוטנציאל</span>
-                    </button>
-                  </div>
-                )}
-                {(activeTab === 'habit' || activeTab === 'grocery') && (
-                  <div className={`flex items-center gap-3 p-2 rounded-3xl border ${activeTab === 'habit' ? 'bg-orange-50 border-orange-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                    <div className="flex-1 flex items-center justify-between gap-2 bg-white rounded-2xl p-2 border text-right">
-                      <button onClick={() => setSuggestedQuantity(Math.max(1, suggestedQuantity - 1))} className="w-8 h-8 text-stone-300 hover:text-rose-500 transition-colors"><Minus size={18}/></button>
-                      <span className="font-black text-stone-800 text-lg text-right">{suggestedQuantity} {activeTab === 'habit' ? suggestedUnit : 'יחידות'}</span>
-                      <button onClick={() => setSuggestedQuantity(suggestedQuantity + 1)} className="w-8 h-8 text-stone-300 hover:text-emerald-500 transition-colors"><Plus size={18}/></button>
-                    </div>
-                    <button onClick={() => finalizeItem()} className={`w-12 h-12 text-white rounded-2xl shadow-lg flex items-center justify-center ${activeTab === 'habit' ? 'bg-orange-500' : 'bg-emerald-500'}`}><Check size={24} strokeWidth={4}/></button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+      const result = await createPost(payload);
+      if (result) {
+        form.reset();
+        fetchPosts();
+      }
+    });
 
-        {/* --- עוגנים (הרגלים) --- */}
-        <section className="text-right">
-          <div className="flex items-center gap-3 mb-6 px-2 opacity-30 text-right"><Flame size={20} className="text-orange-500" /><div className="flex-1 h-0.5 bg-stone-300 rounded-full"></div></div>
-          <div className="space-y-2 text-right">
-            {habits.map((habit) => (
-              <div 
-                key={habit.id} draggable
-                onDragStart={(e) => handleDragStart(e, habit.id, 'habit')}
-                onDragEnter={(e) => handleDragEnter(e, habit.id, 'habit')}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
-                className={`relative group transition-all duration-500 overflow-hidden text-right
-                  ${habit.isCollapsed ? 'py-1 opacity-40 grayscale translate-y-2' : 'py-5 px-3 rounded-[2rem] bg-white shadow-sm border border-stone-100'} 
-                  ${draggedId === habit.id ? 'opacity-20 scale-95 border-2 border-dashed border-orange-200' : ''}
-                  ${flashId === habit.id ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200' : ''}
-                `}
-              >
-                {habit.isCollapsed ? (
-                  <div className="flex items-center justify-center gap-2 py-1 text-right">
-                    <Check size={12} className="text-emerald-500" /><span className="text-[10px] font-bold text-stone-400 uppercase text-right">עוגן הוטמע</span>
-                    <button onClick={() => setHabits(prev => prev.map(h => h.id === habit.id ? {...h, isCollapsed: false} : h))} className="p-1 text-stone-300 hover:text-indigo-500"><Maximize2 size={10}/></button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col text-right">
-                    <div className="flex items-start justify-between text-right">
-                      <div className="flex items-center gap-5 text-right">
-                        <button onClick={() => toggleMinHabit(habit.id)} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm ${habit.isMinDone ? 'bg-emerald-500 text-white shadow-lg' : 'bg-stone-50 border-2 text-transparent border-stone-100'}`}><Check size={24} strokeWidth={4} /></button>
-                        <div className="text-right">
-                          <h3 className={`font-black text-lg text-right ${habit.isMinDone ? 'text-stone-400 line-through' : 'text-stone-800'}`}>{habit.title}</h3>
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-lg mt-1 inline-block bg-orange-100 text-orange-600 text-right"><Target size={10} className="inline ml-1" /> {habit.minGoal} {habit.minUnit}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 pr-4 text-right">
-                        <span className="text-3xl filter drop-shadow-sm">{habit.stage}</span>
-                        <div className="flex items-center gap-1 text-[10px] font-black text-orange-500 text-right"><Flame size={12} /> {habit.streak}</div>
-                      </div>
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-500 pr-16 text-right ${habit.isMinDone ? 'opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-                      <div className="bg-indigo-50/50 rounded-[1.5rem] p-4 border border-indigo-100/50 text-right">
-                        <div className="flex items-center justify-between mb-3 text-right">
-                          <span className="text-[11px] font-black text-indigo-900 flex items-center gap-1.5 text-right"><Zap size={14} className="text-indigo-500" /> פריצה: {habit.breakthroughCount} {habit.breakthroughUnit}</span>
-                          <button onClick={() => toggleBreakthrough(habit.id)} className={`px-4 py-2 rounded-xl font-black text-xs ${habit.isBreakthroughDone ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-indigo-600 border border-indigo-100'} text-right`}>סיימתי פריצה</button>
-                        </div>
-                        <div className="flex gap-1.5 text-right">{[...Array(10)].map((_, i) => (<div key={i} className={`h-2 flex-1 rounded-full ${i < habit.breakthroughStreak ? 'bg-indigo-500 shadow-sm' : 'bg-indigo-200/30'}`}></div>))}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
+    refreshBtn.addEventListener('click', () => {
+      fetchPosts();
+    });
 
-        {/* --- פעולות מיקוד (משימות) --- */}
-        <section className="text-right">
-          <div className="flex items-center gap-3 mb-6 px-2 opacity-30 text-right">
-            <Layers size={20} className="text-indigo-500" />
-            <div className="flex-1 h-0.5 bg-stone-300 rounded-full"></div>
-            {activeTasksList.length > 3 && (
-              <button onClick={() => setShowAllTasks(!showAllTasks)} className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full font-black text-xs flex items-center gap-1">
-                {showAllTasks ? "צמצום" : `עוד ${activeTasksList.length - 3}`} {showAllTasks ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-4 text-right">
-            {visibleTasks.map((task) => {
-              const res = getShortDate(task.date);
-              const isExpanded = expandedTaskId === task.id;
-              const nextSubtask = task.subtasks?.find(st => !st.completed);
-              const displayTitle = (nextSubtask && !task.completed) ? nextSubtask.title : task.title;
-
-              return (
-                <div 
-                  key={task.id} draggable
-                  onDragStart={(e) => handleDragStart(e, task.id, 'task')}
-                  onDragEnter={(e) => handleDragEnter(e, task.id, 'task')}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                  className={`flex items-center gap-3 w-full transition-all duration-300 ${draggedId === task.id ? 'opacity-10 scale-95' : 'opacity-100'} text-right`}
-                >
-                  <div 
-                    className="w-12 flex flex-col items-center justify-center flex-shrink-0 cursor-pointer group text-right"
-                    onClick={() => { setSchedulingTask(task); setTempDate(task.date || new Date().toISOString().split('T')[0]); setTempTime(task.time || '12:00'); }}
-                  >
-                    {task.date && res ? (
-                      <div className="bg-white/40 py-2 w-full rounded-2xl border border-stone-100/50 shadow-sm flex flex-col items-center transition-all group-hover:bg-indigo-50 group-hover:border-indigo-100">
-                        <span className="text-[10px] font-black text-stone-400 uppercase group-hover:text-indigo-400">{res.dayName}</span>
-                        <span className="text-xl font-black text-indigo-600 leading-none">{res.dayNumber}</span>
-                        {task.time && <span className="text-[8px] font-bold text-stone-400 mt-1">{task.time}</span>}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1 animate-pulse text-right">
-                        <Hourglass size={20} className="text-amber-500" />
-                        <span className="text-[7px] font-black text-amber-600 text-center leading-tight uppercase text-right">דרוש כיול</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={`flex-1 flex flex-col bg-white p-5 rounded-[2rem] border-2 transition-all duration-500 group/card relative text-right
-                    ${isExpanded ? 'scale-[1.04] shadow-2xl border-indigo-200 z-10' : 'shadow-sm border-stone-50 hover:border-indigo-100'} 
-                    ${flashId === task.id ? 'bg-emerald-50 border-emerald-400 ring-4 ring-emerald-100' : ''}
-                    ${task.completed ? 'opacity-40 grayscale' : 'opacity-100'}
-                  `}>
-                    <div className="flex items-center gap-4 w-full text-right">
-                      <button onClick={(e) => { e.stopPropagation(); toggleTaskCompletion(task.id); }} className={`w-8 h-8 flex-shrink-0 rounded-2xl flex items-center justify-center transition-all ${task.completed ? 'bg-emerald-500 text-white shadow-lg' : 'bg-stone-50 border-2 border-stone-100 text-transparent hover:border-emerald-400 shadow-sm'}`}><Check size={18} strokeWidth={4} /></button>
-                      <div className="flex-1 flex flex-col justify-center cursor-pointer min-w-0 text-right" onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}>
-                        <h3 className={`font-black text-lg truncate text-right transition-all ${task.completed ? 'text-stone-300 line-through' : 'text-stone-800'}`}>
-                          {displayTitle}
-                        </h3>
-                        {nextSubtask && !task.completed && (
-                          <span className="text-[10px] text-stone-400 font-bold mt-1 flex items-center gap-1 truncate text-right justify-end">שייך ל: {task.title}</span>
-                        )}
-                      </div>
-                      <div className="text-stone-200 hover:text-stone-400 opacity-0 group-hover/card:opacity-100 p-1 cursor-grab active:cursor-grabbing text-right"><GripVertical size={20} /></div>
-                    </div>
-
-                    <div className={`overflow-hidden transition-all duration-500 ${isExpanded ? 'max-h-96 mt-6 opacity-100 border-t border-stone-50 pt-6' : 'max-h-0 opacity-0'} text-right`}>
-                      <div className="pr-1 space-y-3 text-right">
-                        <h4 className="text-[10px] font-black text-stone-300 uppercase tracking-widest mb-4 text-right">ניהול התפתחות</h4>
-                        {task.subtasks?.map(st => (
-                          <div key={st.id} onClick={() => toggleSubtask(task.id, st.id)} className="flex items-center gap-4 cursor-pointer p-3 rounded-2xl bg-stone-50/40 border border-transparent hover:bg-indigo-50/30 transition-all text-right">
-                            <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all ${st.completed ? 'bg-indigo-500 border-indigo-500 text-white shadow-md' : 'border-stone-200 text-transparent group-hover/st:border-indigo-400'}`}><Check size={14} strokeWidth={4} /></div>
-                            <span className={`text-sm font-bold ${st.completed ? 'text-stone-400 line-through' : 'text-stone-700'} text-right`}>{st.title}</span>
-                          </div>
-                        ))}
-                        <div className="flex items-center gap-4 pt-4 border-t border-stone-50/50 mt-2 text-right">
-                          <Plus size={20} className="text-indigo-400" />
-                          <input type="text" placeholder="להוסיף צעד פריצה..." value={newSubtaskTitle} onChange={(e) => setNewSubtaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addSubtask(task.id)} className="flex-1 bg-transparent text-sm font-bold text-indigo-900 outline-none placeholder:text-stone-300 text-right"/>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-      </div>
-    </div>
-  );
-}
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    // טעינה ראשונית
+    fetchPosts();
   </script>
 </body>
 </html>
