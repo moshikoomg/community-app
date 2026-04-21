@@ -35,12 +35,12 @@ import {
   LayoutGrid
 } from 'lucide-react';
 
-// --- קבועים ועזרים חיצוניים ---
-const monthsHe = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-const daysHe = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+// --- ×§×‘×•×¢×™× ×•×¢×–×¨×™× ×—×™×¦×•× ×™×™× ---
+const monthsHe = ['×™× ×•××¨', '×¤×‘×¨×•××¨', '×ž×¨×¥', '××¤×¨×™×œ', '×ž××™', '×™×•× ×™', '×™×•×œ×™', '××•×’×•×¡×˜', '×¡×¤×˜×ž×‘×¨', '××•×§×˜×•×‘×¨', '× ×•×‘×ž×‘×¨', '×“×¦×ž×‘×¨'];
+const daysHe = ['××³', '×‘×³', '×’×³', '×“×³', '×”×³', '×•×³', '×©×³'];
 
-const GROCERY_KEYWORDS = ['מלפפון', 'עגבניה', 'חלב', 'לחם', 'ביצים', 'גבינה', 'מים', 'תפוח', 'בננה', 'פרי', 'ירק', 'קפה', 'סופר', 'לקנות', 'שידה', 'ארון', 'שולחן'];
-const HABIT_KEYWORDS = ['לשתות', 'לקרוא', 'לרוץ', 'להתאמן', 'מדיטציה', 'ספר', 'כושר', 'הליכה', 'כל יום', 'יומי', 'ללמוד', 'לתרגל'];
+const GROCERY_KEYWORDS = ['×ž×œ×¤×¤×•×Ÿ', '×¢×’×‘× ×™×”', '×—×œ×‘', '×œ×—×', '×‘×™×¦×™×', '×’×‘×™× ×”', '×ž×™×', '×ª×¤×•×—', '×‘× × ×”', '×¤×¨×™', '×™×¨×§', '×§×¤×”', '×¡×•×¤×¨', '×œ×§× ×•×ª', '×©×™×“×”', '××¨×•×Ÿ', '×©×•×œ×—×Ÿ'];
+const HABIT_KEYWORDS = ['×œ×©×ª×•×ª', '×œ×§×¨×•×', '×œ×¨×•×¥', '×œ×”×ª××ž×Ÿ', '×ž×“×™×˜×¦×™×”', '×¡×¤×¨', '×›×•×©×¨', '×”×œ×™×›×”', '×›×œ ×™×•×', '×™×•×ž×™', '×œ×œ×ž×•×“', '×œ×ª×¨×’×œ'];
 
 const generateYearOfDays = () => {
   const days = [];
@@ -66,7 +66,7 @@ const getShortDate = (dateString) => {
   return { dayName: daysHe[d.getDay()], dayNumber: d.getDate() };
 };
 
-// --- רכיב הקונפטי ---
+// --- ×¨×›×™×‘ ×”×§×•× ×¤×˜×™ ---
 const Confetti = () => {
   return (
     <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
@@ -96,7 +96,7 @@ const Confetti = () => {
 
 export default function App() {
   // --- States ---
-  const [vision] = useState("לפעול מתוך מיקוד וחופש, להעניק נוכחות מלאה לילדים ולבנות מציאות עסקית משגשגת.");
+  const [vision] = useState("×œ×¤×¢×•×œ ×ž×ª×•×š ×ž×™×§×•×“ ×•×—×•×¤×©, ×œ×”×¢× ×™×§ × ×•×›×—×•×ª ×ž×œ××” ×œ×™×œ×“×™× ×•×œ×‘× ×•×ª ×ž×¦×™××•×ª ×¢×¡×§×™×ª ×ž×©×’×©×’×ª.");
   const [shields] = useState(2);
   const [magicInput, setMagicInput] = useState('');
   const [canAddHabit, setCanAddHabit] = useState(true); 
@@ -104,22 +104,22 @@ export default function App() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [activeTab, setActiveTab] = useState('task');
   const [suggestedQuantity, setSuggestedQuantity] = useState(1);
-  const [suggestedUnit, setSuggestedUnit] = useState('פעמים');
+  const [suggestedUnit, setSuggestedUnit] = useState('×¤×¢×ž×™×');
 
-  const [categories] = useState(['כללי', 'גמבו', 'ריהוט', 'סופר', 'פארם', 'איקאה']);
-  const [selectedFilterCategory, setSelectedFilterCategory] = useState('הכל');
+  const [categories] = useState(['×›×œ×œ×™', '×’×ž×‘×•', '×¨×™×”×•×˜', '×¡×•×¤×¨', '×¤××¨×', '××™×§××”']);
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState('×”×›×œ');
 
   const [habits, setHabits] = useState([
-    { id: 1, title: 'הזנת תודעה (קריאה)', minGoal: '1', minUnit: 'עמודים', isMinDone: false, breakthroughCount: 2, breakthroughUnit: 'עמודים', breakthroughStreak: 9, isBreakthroughDone: false, streak: 14, stage: '🌱', isCollapsed: false },
-    { id: 2, title: 'סנכרון פנימי (מדיטציה)', minGoal: '5', minUnit: 'דקות', isMinDone: true, breakthroughCount: 10, breakthroughUnit: 'דקות', breakthroughStreak: 2, isBreakthroughDone: false, streak: 5, stage: '🌳', isCollapsed: false },
+    { id: 1, title: '×”×–× ×ª ×ª×•×“×¢×” (×§×¨×™××”)', minGoal: '1', minUnit: '×¢×ž×•×“×™×', isMinDone: false, breakthroughCount: 2, breakthroughUnit: '×¢×ž×•×“×™×', breakthroughStreak: 9, isBreakthroughDone: false, streak: 14, stage: 'ðŸŒ±', isCollapsed: false },
+    { id: 2, title: '×¡× ×›×¨×•×Ÿ ×¤× ×™×ž×™ (×ž×“×™×˜×¦×™×”)', minGoal: '5', minUnit: '×“×§×•×ª', isMinDone: true, breakthroughCount: 10, breakthroughUnit: '×“×§×•×ª', breakthroughStreak: 2, isBreakthroughDone: false, streak: 5, stage: 'ðŸŒ³', isCollapsed: false },
   ]);
 
   const [tasks, setTasks] = useState([
-    { id: 10, title: 'כיול משאבים (חשבון)', status: 'active', date: new Date().toISOString().split('T')[0], time: '10:00', completed: false, subtasks: [], manualOrder: 0 },
-    { id: 11, title: 'שיפור חיוניות (תור)', status: 'active', date: new Date().toISOString().split('T')[0], time: '16:30', completed: false, subtasks: [{ id: 201, title: 'להזמין תור באפליקציה', completed: false }], manualOrder: 1 },
-    { id: 12, title: 'אספקת אנרגיה', status: 'active', isList: true, items: [
-      { name: 'שקיות זבל', qty: 1, completed: true, category: 'סופר' },
-      { name: 'שידה', qty: 1, completed: false, category: 'גמבו' }
+    { id: 10, title: '×›×™×•×œ ×ž×©××‘×™× (×—×©×‘×•×Ÿ)', status: 'active', date: new Date().toISOString().split('T')[0], time: '10:00', completed: false, subtasks: [], manualOrder: 0 },
+    { id: 11, title: '×©×™×¤×•×¨ ×—×™×•× ×™×•×ª (×ª×•×¨)', status: 'active', date: new Date().toISOString().split('T')[0], time: '16:30', completed: false, subtasks: [{ id: 201, title: '×œ×”×–×ž×™×Ÿ ×ª×•×¨ ×‘××¤×œ×™×§×¦×™×”', completed: false }], manualOrder: 1 },
+    { id: 12, title: '××¡×¤×§×ª ×× ×¨×’×™×”', status: 'active', isList: true, items: [
+      { name: '×©×§×™×•×ª ×–×‘×œ', qty: 1, completed: true, category: '×¡×•×¤×¨' },
+      { name: '×©×™×“×”', qty: 1, completed: false, category: '×’×ž×‘×•' }
     ], manualOrder: 2 },
   ]);
 
@@ -127,7 +127,7 @@ export default function App() {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [showAllTasks, setShowAllTasks] = useState(false);
 
-  // כיול זמן
+  // ×›×™×•×œ ×–×ž×Ÿ
   const [schedulingTask, setSchedulingTask] = useState(null);
   const [tempDate, setTempDate] = useState(new Date().toISOString().split('T')[0]);
   const [tempTime, setTempTime] = useState('12:00');
@@ -138,12 +138,12 @@ export default function App() {
   const allDays = useMemo(() => generateYearOfDays(), []);
   const scrollRef = useRef(null);
 
-  // גרירה
+  // ×’×¨×™×¨×”
   const [draggedId, setDraggedId] = useState(null);
   const [dragType, setDragType] = useState(null);
   const [flashId, setFlashId] = useState(null);
 
-  // --- לוגיקה וחישובים ---
+  // --- ×œ×•×’×™×§×” ×•×—×™×©×•×‘×™× ---
   const parseMagicDate = (input) => {
     const regex = /^(\d{2})(\d{2})(\d{4})(\d{2})(\d{2})$/;
     const match = input.match(regex);
@@ -175,11 +175,11 @@ export default function App() {
   
   const filteredShoppingItems = useMemo(() => {
     if (!shoppingListTask) return [];
-    if (selectedFilterCategory === 'הכל') return shoppingListTask.items;
+    if (selectedFilterCategory === '×”×›×œ') return shoppingListTask.items;
     return shoppingListTask.items.filter(i => i.category === selectedFilterCategory);
   }, [shoppingListTask, selectedFilterCategory]);
 
-  // --- פונקציות טיפול (Handlers) ---
+  // --- ×¤×•× ×§×¦×™×•×ª ×˜×™×¤×•×œ (Handlers) ---
   const triggerHaptic = (type = 'light') => {
     if (window.navigator && window.navigator.vibrate) {
       if (type === 'celebrate') window.navigator.vibrate([100, 50, 100, 50, 200]);
@@ -236,7 +236,7 @@ export default function App() {
     if (!text) return;
 
     if (activeTab === 'grocery') {
-      setTasks(prev => prev.map(t => t.isList ? { ...t, items: [...t.items, { name: text, qty: suggestedQuantity, completed: false, category: 'כללי' }] } : t));
+      setTasks(prev => prev.map(t => t.isList ? { ...t, items: [...t.items, { name: text, qty: suggestedQuantity, completed: false, category: '×›×œ×œ×™' }] } : t));
       setIsCartOpen(true); 
     } 
     else if (activeTab === 'task') {
@@ -252,7 +252,7 @@ export default function App() {
       }, ...prev]);
     } 
     else if (activeTab === 'habit' && canAddHabit) {
-      setHabits(prev => [{ id: Date.now(), title: text, minGoal: suggestedQuantity.toString(), minUnit: suggestedUnit, isMinDone: false, breakthroughCount: suggestedQuantity * 2, breakthroughUnit: suggestedUnit, breakthroughStreak: 0, isBreakthroughDone: false, streak: 0, stage: '🥚', isCollapsed: false }, ...prev]);
+      setHabits(prev => [{ id: Date.now(), title: text, minGoal: suggestedQuantity.toString(), minUnit: suggestedUnit, isMinDone: false, breakthroughCount: suggestedQuantity * 2, breakthroughUnit: suggestedUnit, breakthroughStreak: 0, isBreakthroughDone: false, streak: 0, stage: 'ðŸ¥š', isCollapsed: false }, ...prev]);
       setCanAddHabit(false);
     }
     triggerHaptic();
@@ -310,7 +310,7 @@ export default function App() {
     triggerHaptic();
   };
 
-  // --- לוגיקת לוח שנה ---
+  // --- ×œ×•×’×™×§×ª ×œ×•×— ×©× ×” ---
   const currentSelectedDayInfo = allDays.find(d => d.fullDate === tempDate) || allDays[0];
 
   const getDaysInMonth = (month, year) => {
@@ -324,7 +324,7 @@ export default function App() {
 
   const monthGridDays = useMemo(() => getDaysInMonth(viewingMonth, viewingYear), [viewingMonth, viewingYear]);
 
-  // --- אפקטים NLP ---
+  // --- ××¤×§×˜×™× NLP ---
   useEffect(() => {
     const text = magicInput.trim();
     if (!text) {
@@ -337,16 +337,16 @@ export default function App() {
     else if (isHabit && canAddHabit) setActiveTab('habit');
     else setActiveTab('task');
 
-    if (text.includes('מים')) setSuggestedUnit('כוסות');
-    else if (text.includes('קריאה') || text.includes('ספר')) setSuggestedUnit('עמודים');
-    else if (text.includes('ריצה')) setSuggestedUnit('ק"מ');
-    else if (text.includes('מדיטציה')) setSuggestedUnit('דקות');
+    if (text.includes('×ž×™×')) setSuggestedUnit('×›×•×¡×•×ª');
+    else if (text.includes('×§×¨×™××”') || text.includes('×¡×¤×¨')) setSuggestedUnit('×¢×ž×•×“×™×');
+    else if (text.includes('×¨×™×¦×”')) setSuggestedUnit('×§"×ž');
+    else if (text.includes('×ž×“×™×˜×¦×™×”')) setSuggestedUnit('×“×§×•×ª');
   }, [magicInput, canAddHabit]);
 
   return (
     <div dir="rtl" className="min-h-screen bg-[#F7F7F6] text-stone-800 font-sans pb-24 selection:bg-indigo-100 relative overflow-x-hidden">
       
-      {/* פופ-אפ כיול זמן (Calibration Hub) */}
+      {/* ×¤×•×¤-××¤ ×›×™×•×œ ×–×ž×Ÿ (Calibration Hub) */}
       {schedulingTask && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-stone-900/70 backdrop-blur-md" onClick={() => setSchedulingTask(null)}></div>
@@ -354,14 +354,14 @@ export default function App() {
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2 text-indigo-600 font-black">
                 <CalendarIcon size={20} />
-                <span className="text-xl">כיול מרחב המימוש</span>
+                <span className="text-xl">×›×™×•×œ ×ž×¨×—×‘ ×”×ž×™×ž×•×©</span>
               </div>
               <button 
                 onClick={() => setCalendarView(calendarView === 'scroll' ? 'grid' : 'scroll')}
                 className="p-2 bg-indigo-50 text-indigo-600 rounded-xl flex items-center gap-1"
               >
                 {calendarView === 'scroll' ? <LayoutGrid size={14}/> : <ChevronRight size={14}/>}
-                <span className="text-[10px] font-black uppercase">{calendarView === 'scroll' ? 'רשת' : 'ציר'}</span>
+                <span className="text-[10px] font-black uppercase">{calendarView === 'scroll' ? '×¨×©×ª' : '×¦×™×¨'}</span>
               </button>
             </div>
 
@@ -369,7 +369,7 @@ export default function App() {
               {calendarView === 'scroll' ? (
                 <div className="space-y-6 animate-in slide-in-from-right-2 duration-300">
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">מיקום בזמן</span>
+                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">×ž×™×§×•× ×‘×–×ž×Ÿ</span>
                     <div className="flex items-center gap-2 text-stone-800 font-black text-2xl">
                       {currentSelectedDayInfo.monthName} {currentSelectedDayInfo.year}
                     </div>
@@ -425,7 +425,7 @@ export default function App() {
 
               <div className="flex flex-col items-center gap-3 bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100">
                 <div className="flex items-center gap-2 text-indigo-600 font-black mb-1">
-                  <AlarmClock size={16}/> <span className="text-xs uppercase tracking-wider text-right">שעת מימוש</span>
+                  <AlarmClock size={16}/> <span className="text-xs uppercase tracking-wider text-right">×©×¢×ª ×ž×™×ž×•×©</span>
                 </div>
                 <input 
                   type="time" value={tempTime} onChange={(e) => setTempTime(e.target.value)}
@@ -437,7 +437,7 @@ export default function App() {
                 onClick={saveCalibration}
                 className="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-3 text-lg"
               >
-                <Check size={24} strokeWidth={4} /> אמת כיול
+                <Check size={24} strokeWidth={4} /> ××ž×ª ×›×™×•×œ
               </button>
             </div>
           </div>
@@ -450,14 +450,14 @@ export default function App() {
           <Confetti />
           <div className="relative bg-white rounded-[2.5rem] p-8 text-center max-w-sm w-full shadow-2xl animate-in zoom-in-90 duration-300 border-2 border-indigo-50">
             <PartyPopper size={60} className="mx-auto text-indigo-500 mb-6" />
-            <h2 className="text-2xl font-black text-stone-800 mb-3 text-right">פריצה קוונטית!</h2>
-            <p className="bg-orange-50 text-orange-700 rounded-2xl p-5 font-bold mb-8 text-sm leading-relaxed text-right border border-orange-100">"חייבים לחגוג ניצחונות קטנים כדי שזה יעבוד!" 🏆 <br/> התת-מודע שלך לומד עכשיו שאתה מנצח.</p>
-            <button onClick={() => setShowCelebration(false)} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg">מעולה, ממשיכים!</button>
+            <h2 className="text-2xl font-black text-stone-800 mb-3 text-right">×¤×¨×™×¦×” ×§×•×•× ×˜×™×ª!</h2>
+            <p className="bg-orange-50 text-orange-700 rounded-2xl p-5 font-bold mb-8 text-sm leading-relaxed text-right border border-orange-100">"×—×™×™×‘×™× ×œ×—×’×•×’ × ×™×¦×—×•× ×•×ª ×§×˜× ×™× ×›×“×™ ×©×–×” ×™×¢×‘×•×“!" ðŸ† <br/> ×”×ª×ª-×ž×•×“×¢ ×©×œ×š ×œ×•×ž×“ ×¢×›×©×™×• ×©××ª×” ×ž× ×¦×—.</p>
+            <button onClick={() => setShowCelebration(false)} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg">×ž×¢×•×œ×”, ×ž×ž×©×™×›×™×!</button>
           </div>
         </div>
       )}
 
-      {/* מגירת אספקת אנרגיה */}
+      {/* ×ž×’×™×¨×ª ××¡×¤×§×ª ×× ×¨×’×™×” */}
       <button onClick={() => setIsCartOpen(true)} className="fixed left-0 top-1/2 -translate-y-1/2 bg-emerald-500 text-white py-5 px-3 rounded-r-[1.5rem] shadow-xl z-40">
         <ShoppingCart size={24} strokeWidth={2.5} />
         {uncompletedGroceries > 0 && <span className="font-bold text-[10px] bg-white text-emerald-600 rounded-full w-5 h-5 flex items-center justify-center shadow-sm">{uncompletedGroceries}</span>}
@@ -466,13 +466,13 @@ export default function App() {
       <div className={`fixed inset-0 bg-stone-900/10 backdrop-blur-sm z-50 transition-opacity duration-300 ${isCartOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCartOpen(false)}></div>
       <div className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#F9F9F8] z-50 shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${isCartOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 bg-emerald-500 text-white flex items-center justify-between shadow-md">
-          <div className="flex items-center gap-3"><ShoppingCart size={22} strokeWidth={2.5} /><h2 className="text-xl font-black">אספקת אנרגיה</h2></div>
+          <div className="flex items-center gap-3"><ShoppingCart size={22} strokeWidth={2.5} /><h2 className="text-xl font-black">××¡×¤×§×ª ×× ×¨×’×™×”</h2></div>
           <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-emerald-600 rounded-full transition-colors"><X size={20} /></button>
         </div>
         
-        {/* סנן קטגוריות */}
+        {/* ×¡× ×Ÿ ×§×˜×’×•×¨×™×•×ª */}
         <div className="p-4 bg-white border-b border-stone-100 flex gap-2 overflow-x-auto no-scrollbar">
-          {['הכל', ...categories].map(cat => (
+          {['×”×›×œ', ...categories].map(cat => (
             <button 
               key={cat} onClick={() => setSelectedFilterCategory(cat)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-black transition-all ${selectedFilterCategory === cat ? 'bg-emerald-500 text-white shadow-md' : 'bg-stone-50 text-stone-400 hover:bg-stone-100'}`}
@@ -509,7 +509,7 @@ export default function App() {
           ))}
         </div>
         <div className="p-4 border-t border-stone-100 bg-white">
-          <button onClick={() => { setTasks(prev => prev.map(t => t.isList ? { ...t, items: t.items.filter(i => !i.completed) } : t)); triggerHaptic(); }} className="w-full bg-rose-50 text-rose-600 font-bold py-4 rounded-2xl transition-colors border border-rose-100 text-sm">ניקוי מוצרים שנאספו</button>
+          <button onClick={() => { setTasks(prev => prev.map(t => t.isList ? { ...t, items: t.items.filter(i => !i.completed) } : t)); triggerHaptic(); }} className="w-full bg-rose-50 text-rose-600 font-bold py-4 rounded-2xl transition-colors border border-rose-100 text-sm">× ×™×§×•×™ ×ž×•×¦×¨×™× ×©× ××¡×¤×•</button>
         </div>
       </div>
 
@@ -532,7 +532,7 @@ export default function App() {
             </div>
             <input 
               type="text" value={magicInput} onChange={(e) => setMagicInput(e.target.value)}
-              placeholder="איזו כוונה נרצה לממש?..." 
+              placeholder="××™×–×• ×›×•×•× ×” × ×¨×¦×” ×œ×ž×ž×©?..." 
               className="w-full bg-white text-stone-800 rounded-[2.5rem] py-5 pr-14 pl-5 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-stone-100 outline-none focus:ring-4 focus:ring-indigo-50 text-lg font-bold text-right"
             />
           </div>
@@ -540,9 +540,9 @@ export default function App() {
           {magicInput && (
             <div className="absolute top-full mt-4 w-full bg-white rounded-[2rem] shadow-2xl border border-stone-50 overflow-hidden animate-in slide-in-from-top-3 duration-300 text-right">
               <div className="flex p-2 bg-stone-50/50 border-b border-stone-100 text-[11px] font-black uppercase">
-                <button onClick={() => setActiveTab('task')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'task' ? 'bg-white text-indigo-600 shadow-sm' : 'text-stone-400'}`}>פעולה</button>
-                {canAddHabit && <button onClick={() => setActiveTab('habit')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'habit' ? 'bg-white text-orange-500 shadow-sm' : 'text-stone-400'}`}>עוגן</button>}
-                <button onClick={() => setActiveTab('grocery')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'grocery' ? 'bg-white text-emerald-500 shadow-sm' : 'text-stone-400'}`}>אספקה</button>
+                <button onClick={() => setActiveTab('task')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'task' ? 'bg-white text-indigo-600 shadow-sm' : 'text-stone-400'}`}>×¤×¢×•×œ×”</button>
+                {canAddHabit && <button onClick={() => setActiveTab('habit')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'habit' ? 'bg-white text-orange-500 shadow-sm' : 'text-stone-400'}`}>×¢×•×’×Ÿ</button>}
+                <button onClick={() => setActiveTab('grocery')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'grocery' ? 'bg-white text-emerald-500 shadow-sm' : 'text-stone-400'}`}>××¡×¤×§×”</button>
               </div>
               <div className="p-4">
                 {activeTab === 'task' && (
@@ -553,23 +553,23 @@ export default function App() {
                         className="flex-1 bg-amber-500 text-white font-black py-4 rounded-2xl shadow-lg flex flex-col items-center animate-bounce"
                       >
                         <Zap size={18} className="mb-1" />
-                        <span className="text-[10px]">כיול קוונטי מזוהה</span>
+                        <span className="text-[10px]">×›×™×•×œ ×§×•×•× ×˜×™ ×ž×–×•×”×”</span>
                       </button>
                     ) : (
                       <>
                         <button onClick={() => finalizeItem(new Date().toISOString().split('T')[0])} className="flex-1 bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg flex flex-col items-center">
-                          <Sun size={18} className="mb-1" /><span className="text-[10px]">היום</span>
+                          <Sun size={18} className="mb-1" /><span className="text-[10px]">×”×™×•×</span>
                         </button>
                         <button 
                           onClick={() => { setSchedulingTask({ id: 'new', title: magicInput }); setTempDate(new Date().toISOString().split('T')[0]); }}
                           className="flex-1 bg-white text-stone-400 font-black py-4 rounded-2xl border border-stone-100 flex flex-col items-center"
                         >
-                          <CalendarDays size={18} className="mb-1" /><span className="text-[10px]">כיול זמן</span>
+                          <CalendarDays size={18} className="mb-1" /><span className="text-[10px]">×›×™×•×œ ×–×ž×Ÿ</span>
                         </button>
                       </>
                     )}
                     <button onClick={() => finalizeItem('dump')} className="flex-1 bg-stone-800 text-white font-black py-4 rounded-2xl flex flex-col items-center text-center">
-                      <Inbox size={18} className="mb-1" /><span className="text-[10px]">פוטנציאל</span>
+                      <Inbox size={18} className="mb-1" /><span className="text-[10px]">×¤×•×˜× ×¦×™××œ</span>
                     </button>
                   </div>
                 )}
@@ -577,7 +577,7 @@ export default function App() {
                   <div className={`flex items-center gap-3 p-2 rounded-3xl border ${activeTab === 'habit' ? 'bg-orange-50 border-orange-100' : 'bg-emerald-50 border-emerald-100'}`}>
                     <div className="flex-1 flex items-center justify-between gap-2 bg-white rounded-2xl p-2 border text-right">
                       <button onClick={() => setSuggestedQuantity(Math.max(1, suggestedQuantity - 1))} className="w-8 h-8 text-stone-300 hover:text-rose-500 transition-colors"><Minus size={18}/></button>
-                      <span className="font-black text-stone-800 text-lg text-right">{suggestedQuantity} {activeTab === 'habit' ? suggestedUnit : 'יחידות'}</span>
+                      <span className="font-black text-stone-800 text-lg text-right">{suggestedQuantity} {activeTab === 'habit' ? suggestedUnit : '×™×—×™×“×•×ª'}</span>
                       <button onClick={() => setSuggestedQuantity(suggestedQuantity + 1)} className="w-8 h-8 text-stone-300 hover:text-emerald-500 transition-colors"><Plus size={18}/></button>
                     </div>
                     <button onClick={() => finalizeItem()} className={`w-12 h-12 text-white rounded-2xl shadow-lg flex items-center justify-center ${activeTab === 'habit' ? 'bg-orange-500' : 'bg-emerald-500'}`}><Check size={24} strokeWidth={4}/></button>
@@ -588,7 +588,7 @@ export default function App() {
           )}
         </div>
 
-        {/* --- עוגנים (הרגלים) --- */}
+        {/* --- ×¢×•×’× ×™× (×”×¨×’×œ×™×) --- */}
         <section className="text-right">
           <div className="flex items-center gap-3 mb-6 px-2 opacity-30 text-right"><Flame size={20} className="text-orange-500" /><div className="flex-1 h-0.5 bg-stone-300 rounded-full"></div></div>
           <div className="space-y-2 text-right">
@@ -608,7 +608,7 @@ export default function App() {
               >
                 {habit.isCollapsed ? (
                   <div className="flex items-center justify-center gap-2 py-1 text-right">
-                    <Check size={12} className="text-emerald-500" /><span className="text-[10px] font-bold text-stone-400 uppercase text-right">עוגן הוטמע</span>
+                    <Check size={12} className="text-emerald-500" /><span className="text-[10px] font-bold text-stone-400 uppercase text-right">×¢×•×’×Ÿ ×”×•×˜×ž×¢</span>
                     <button onClick={() => setHabits(prev => prev.map(h => h.id === habit.id ? {...h, isCollapsed: false} : h))} className="p-1 text-stone-300 hover:text-indigo-500"><Maximize2 size={10}/></button>
                   </div>
                 ) : (
@@ -629,8 +629,8 @@ export default function App() {
                     <div className={`overflow-hidden transition-all duration-500 pr-16 text-right ${habit.isMinDone ? 'opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
                       <div className="bg-indigo-50/50 rounded-[1.5rem] p-4 border border-indigo-100/50 text-right">
                         <div className="flex items-center justify-between mb-3 text-right">
-                          <span className="text-[11px] font-black text-indigo-900 flex items-center gap-1.5 text-right"><Zap size={14} className="text-indigo-500" /> פריצה: {habit.breakthroughCount} {habit.breakthroughUnit}</span>
-                          <button onClick={() => toggleBreakthrough(habit.id)} className={`px-4 py-2 rounded-xl font-black text-xs ${habit.isBreakthroughDone ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-indigo-600 border border-indigo-100'} text-right`}>סיימתי פריצה</button>
+                          <span className="text-[11px] font-black text-indigo-900 flex items-center gap-1.5 text-right"><Zap size={14} className="text-indigo-500" /> ×¤×¨×™×¦×”: {habit.breakthroughCount} {habit.breakthroughUnit}</span>
+                          <button onClick={() => toggleBreakthrough(habit.id)} className={`px-4 py-2 rounded-xl font-black text-xs ${habit.isBreakthroughDone ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-indigo-600 border border-indigo-100'} text-right`}>×¡×™×™×ž×ª×™ ×¤×¨×™×¦×”</button>
                         </div>
                         <div className="flex gap-1.5 text-right">{[...Array(10)].map((_, i) => (<div key={i} className={`h-2 flex-1 rounded-full ${i < habit.breakthroughStreak ? 'bg-indigo-500 shadow-sm' : 'bg-indigo-200/30'}`}></div>))}</div>
                       </div>
@@ -642,14 +642,14 @@ export default function App() {
           </div>
         </section>
 
-        {/* --- פעולות מיקוד (משימות) --- */}
+        {/* --- ×¤×¢×•×œ×•×ª ×ž×™×§×•×“ (×ž×©×™×ž×•×ª) --- */}
         <section className="text-right">
           <div className="flex items-center gap-3 mb-6 px-2 opacity-30 text-right">
             <Layers size={20} className="text-indigo-500" />
             <div className="flex-1 h-0.5 bg-stone-300 rounded-full"></div>
             {activeTasksList.length > 3 && (
               <button onClick={() => setShowAllTasks(!showAllTasks)} className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full font-black text-xs flex items-center gap-1">
-                {showAllTasks ? "צמצום" : `עוד ${activeTasksList.length - 3}`} {showAllTasks ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
+                {showAllTasks ? "×¦×ž×¦×•×" : `×¢×•×“ ${activeTasksList.length - 3}`} {showAllTasks ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
               </button>
             )}
           </div>
@@ -684,7 +684,7 @@ export default function App() {
                     ) : (
                       <div className="flex flex-col items-center gap-1 animate-pulse text-right">
                         <Hourglass size={20} className="text-amber-500" />
-                        <span className="text-[7px] font-black text-amber-600 text-center leading-tight uppercase text-right">דרוש כיול</span>
+                        <span className="text-[7px] font-black text-amber-600 text-center leading-tight uppercase text-right">×“×¨×•×© ×›×™×•×œ</span>
                       </div>
                     )}
                   </div>
@@ -701,7 +701,7 @@ export default function App() {
                           {displayTitle}
                         </h3>
                         {nextSubtask && !task.completed && (
-                          <span className="text-[10px] text-stone-400 font-bold mt-1 flex items-center gap-1 truncate text-right justify-end">שייך ל: {task.title}</span>
+                          <span className="text-[10px] text-stone-400 font-bold mt-1 flex items-center gap-1 truncate text-right justify-end">×©×™×™×š ×œ: {task.title}</span>
                         )}
                       </div>
                       <div className="text-stone-200 hover:text-stone-400 opacity-0 group-hover/card:opacity-100 p-1 cursor-grab active:cursor-grabbing text-right"><GripVertical size={20} /></div>
@@ -709,7 +709,7 @@ export default function App() {
 
                     <div className={`overflow-hidden transition-all duration-500 ${isExpanded ? 'max-h-96 mt-6 opacity-100 border-t border-stone-50 pt-6' : 'max-h-0 opacity-0'} text-right`}>
                       <div className="pr-1 space-y-3 text-right">
-                        <h4 className="text-[10px] font-black text-stone-300 uppercase tracking-widest mb-4 text-right">ניהול התפתחות</h4>
+                        <h4 className="text-[10px] font-black text-stone-300 uppercase tracking-widest mb-4 text-right">× ×™×”×•×œ ×”×ª×¤×ª×—×•×ª</h4>
                         {task.subtasks?.map(st => (
                           <div key={st.id} onClick={() => toggleSubtask(task.id, st.id)} className="flex items-center gap-4 cursor-pointer p-3 rounded-2xl bg-stone-50/40 border border-transparent hover:bg-indigo-50/30 transition-all text-right">
                             <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all ${st.completed ? 'bg-indigo-500 border-indigo-500 text-white shadow-md' : 'border-stone-200 text-transparent group-hover/st:border-indigo-400'}`}><Check size={14} strokeWidth={4} /></div>
@@ -718,7 +718,7 @@ export default function App() {
                         ))}
                         <div className="flex items-center gap-4 pt-4 border-t border-stone-50/50 mt-2 text-right">
                           <Plus size={20} className="text-indigo-400" />
-                          <input type="text" placeholder="להוסיף צעד פריצה..." value={newSubtaskTitle} onChange={(e) => setNewSubtaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addSubtask(task.id)} className="flex-1 bg-transparent text-sm font-bold text-indigo-900 outline-none placeholder:text-stone-300 text-right"/>
+                          <input type="text" placeholder="×œ×”×•×¡×™×£ ×¦×¢×“ ×¤×¨×™×¦×”..." value={newSubtaskTitle} onChange={(e) => setNewSubtaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addSubtask(task.id)} className="flex-1 bg-transparent text-sm font-bold text-indigo-900 outline-none placeholder:text-stone-300 text-right"/>
                         </div>
                       </div>
                     </div>
