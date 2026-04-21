@@ -1,735 +1,874 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-  Sparkles, 
-  Shield, 
-  ShieldAlert,
-  Flame, 
-  Check,
-  Plus,
-  Minus,
-  ArrowLeft,
-  ArrowRight,
-  BrainCircuit,
-  Search,
-  ShoppingCart,
-  Inbox,
-  Sprout,
-  Target,
-  Clock,
-  Layers,
-  X,
-  Zap,
-  Sun,
-  ChevronDown,
-  PartyPopper,
-  CalendarDays,
-  Trash2,
-  GripVertical,
-  Maximize2,
-  Hourglass,
-  ChevronRight,
-  AlarmClock,
-  Calendar as CalendarIcon,
-  Tag,
-  Filter,
-  LayoutGrid
-} from 'lucide-react';
-
-// --- קבועים ועזרים חיצוניים ---
-const monthsHe = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-const daysHe = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
-
-const GROCERY_KEYWORDS = ['מלפפון', 'עגבניה', 'חלב', 'לחם', 'ביצים', 'גבינה', 'מים', 'תפוח', 'בננה', 'פרי', 'ירק', 'קפה', 'סופר', 'לקנות', 'שידה', 'ארון', 'שולחן'];
-const HABIT_KEYWORDS = ['לשתות', 'לקרוא', 'לרוץ', 'להתאמן', 'מדיטציה', 'ספר', 'כושר', 'הליכה', 'כל יום', 'יומי', 'ללמוד', 'לתרגל'];
-
-const generateYearOfDays = () => {
-  const days = [];
-  const start = new Date();
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    days.push({
-      fullDate: d.toISOString().split('T')[0],
-      dayName: daysHe[d.getDay()],
-      dayNumber: d.getDate(),
-      monthName: monthsHe[d.getMonth()],
-      monthIdx: d.getMonth(),
-      year: d.getFullYear()
-    });
-  }
-  return days;
-};
-
-const getShortDate = (dateString) => {
-  if (!dateString) return null;
-  const d = new Date(dateString);
-  return { dayName: daysHe[d.getDay()], dayNumber: d.getDate() };
-};
-
-// --- רכיב הקונפטי ---
-const Confetti = () => {
-  return (
-    <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
-      {[...Array(60)].map((_, i) => (
-        <div 
-          key={i} 
-          className="absolute w-3 h-3 rounded-sm opacity-90"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `-5%`,
-            backgroundColor: ['#f59e0b', '#10b981', '#6366f1', '#ec4899', '#3b82f6', '#f43f5e'][Math.floor(Math.random() * 6)],
-            animation: `fall ${Math.random() * 2 + 1.5}s linear forwards`,
-            animationDelay: `${Math.random() * 0.5}s`,
-            transform: `rotate(${Math.random() * 360}deg)`
-          }} 
-        />
-      ))}
-      <style>{`
-        @keyframes fall {
-          0% { transform: translateY(-10vh) rotate(0deg) scale(1); opacity: 1; }
-          100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
-        }
-      `}</style>
-    </div>
-  );
-};
-
-export default function App() {
-  // --- States ---
-  const [vision] = useState("לפעול מתוך מיקוד וחופש, להעניק נוכחות מלאה לילדים ולבנות מציאות עסקית משגשגת.");
-  const [shields] = useState(2);
-  const [magicInput, setMagicInput] = useState('');
-  const [canAddHabit, setCanAddHabit] = useState(true); 
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [activeTab, setActiveTab] = useState('task');
-  const [suggestedQuantity, setSuggestedQuantity] = useState(1);
-  const [suggestedUnit, setSuggestedUnit] = useState('פעמים');
-
-  const [categories] = useState(['כללי', 'גמבו', 'ריהוט', 'סופר', 'פארם', 'איקאה']);
-  const [selectedFilterCategory, setSelectedFilterCategory] = useState('הכל');
-
-  const [habits, setHabits] = useState([
-    { id: 1, title: 'הזנת תודעה (קריאה)', minGoal: '1', minUnit: 'עמודים', isMinDone: false, breakthroughCount: 2, breakthroughUnit: 'עמודים', breakthroughStreak: 9, isBreakthroughDone: false, streak: 14, stage: '🌱', isCollapsed: false },
-    { id: 2, title: 'סנכרון פנימי (מדיטציה)', minGoal: '5', minUnit: 'דקות', isMinDone: true, breakthroughCount: 10, breakthroughUnit: 'דקות', breakthroughStreak: 2, isBreakthroughDone: false, streak: 5, stage: '🌳', isCollapsed: false },
-  ]);
-
-  const [tasks, setTasks] = useState([
-    { id: 10, title: 'כיול משאבים (חשבון)', status: 'active', date: new Date().toISOString().split('T')[0], time: '10:00', completed: false, subtasks: [], manualOrder: 0 },
-    { id: 11, title: 'שיפור חיוניות (תור)', status: 'active', date: new Date().toISOString().split('T')[0], time: '16:30', completed: false, subtasks: [{ id: 201, title: 'להזמין תור באפליקציה', completed: false }], manualOrder: 1 },
-    { id: 12, title: 'אספקת אנרגיה', status: 'active', isList: true, items: [
-      { name: 'שקיות זבל', qty: 1, completed: true, category: 'סופר' },
-      { name: 'שידה', qty: 1, completed: false, category: 'גמבו' }
-    ], manualOrder: 2 },
-  ]);
-
-  const [expandedTaskId, setExpandedTaskId] = useState(null);
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
-  const [showAllTasks, setShowAllTasks] = useState(false);
-
-  // כיול זמן
-  const [schedulingTask, setSchedulingTask] = useState(null);
-  const [tempDate, setTempDate] = useState(new Date().toISOString().split('T')[0]);
-  const [tempTime, setTempTime] = useState('12:00');
-  const [calendarView, setCalendarView] = useState('scroll'); // 'scroll' or 'grid'
-  const [viewingMonth, setViewingMonth] = useState(new Date().getMonth());
-  const [viewingYear, setViewingYear] = useState(new Date().getFullYear());
-
-  const allDays = useMemo(() => generateYearOfDays(), []);
-  const scrollRef = useRef(null);
-
-  // גרירה
-  const [draggedId, setDraggedId] = useState(null);
-  const [dragType, setDragType] = useState(null);
-  const [flashId, setFlashId] = useState(null);
-
-  // --- לוגיקה וחישובים ---
-  const parseMagicDate = (input) => {
-    const regex = /^(\d{2})(\d{2})(\d{4})(\d{2})(\d{2})$/;
-    const match = input.match(regex);
-    if (match) {
-      return {
-        date: `${match[3]}-${match[2]}-${match[1]}`,
-        time: `${match[4]}:${match[5]}`
-      };
-    }
-    return null;
-  };
-
-  const magicDateParsed = useMemo(() => parseMagicDate(magicInput), [magicInput]);
-
-  const activeTasksList = useMemo(() => {
-    return tasks
-      .filter(t => t.status === 'active' && !t.isList)
-      .sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        if (a.manualOrder !== b.manualOrder) return a.manualOrder - b.manualOrder;
-        if (a.date && b.date) return a.date.localeCompare(b.date);
-        return 0;
-      });
-  }, [tasks]);
-
-  const visibleTasks = showAllTasks ? activeTasksList : activeTasksList.slice(0, 3);
-  const shoppingListTask = tasks.find(t => t.isList);
-  const uncompletedGroceries = shoppingListTask?.items.filter(i => !i.completed).length || 0;
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Minimum Winner & Live Smiley Engine</title>
   
-  const filteredShoppingItems = useMemo(() => {
-    if (!shoppingListTask) return [];
-    if (selectedFilterCategory === 'הכל') return shoppingListTask.items;
-    return shoppingListTask.items.filter(i => i.category === selectedFilterCategory);
-  }, [shoppingListTask, selectedFilterCategory]);
+  <!-- CDN Libraries -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap');
+    
+    body { font-family: 'Heebo', sans-serif; user-select: none; margin: 0; position: fixed; width: 100%; height: 100%; overflow: hidden; background: #0F172A; }
+    #physics-container { position: absolute; inset: 0; z-index: 10; pointer-events: auto; cursor: grab; }
+    #physics-container:active { cursor: grabbing; }
 
-  // --- פונקציות טיפול (Handlers) ---
-  const triggerHaptic = (type = 'light') => {
-    if (window.navigator && window.navigator.vibrate) {
-      if (type === 'celebrate') window.navigator.vibrate([100, 50, 100, 50, 200]);
-      else window.navigator.vibrate(50);
+    .sidebar { position: absolute; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; transition: width 600ms cubic-bezier(0.19, 1, 0.22, 1), transform 600ms cubic-bezier(0.19, 1, 0.22, 1), background-color 600ms ease; z-index: 50; overflow: hidden; background: white; pointer-events: auto; }
+    .sidebar-btn { width: 56px; height: 56px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; position: relative; border: none; flex-shrink: 0; overflow: visible; cursor: pointer; }
+    
+    @keyframes bouncePop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    .bounce-pop { animation: bouncePop 0.4s ease-out; }
+    
+    /* Adjusted habit container to perfectly center and prevent overlaps */
+    .habit-list-container { position: absolute; top: 310px; bottom: 150px; left: 0; right: 0; overflow: hidden; z-index: 45; pointer-events: none; }
+    .habit-item { transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer; }
+    
+    .explanation-sphere { position: absolute; width: 160px; height: 160px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); cursor: pointer; overflow: visible; }
+    .explanation-sphere.center { transform: translate3d(0, 0, 100px); z-index: 50; opacity: 1; }
+    .explanation-sphere.side { z-index: 10; opacity: 0.15; filter: blur(8px) grayscale(50%); }
+    .explanation-sphere.left { transform: translate3d(-140px, 20px, -150px) rotateY(20deg); }
+    .explanation-sphere.right { transform: translate3d(140px, 20px, -150px) rotateY(-20deg); }
+    .explanation-sphere.hidden { transform: translate3d(0, 50px, -300px); opacity: 0; }
+    
+    .editor-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .editor-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .editor-scrollbar::-webkit-scrollbar-thumb { background: #E5E5E5; border-radius: 10px; }
+
+    .live-canvas-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+    .live-canvas-wrapper canvas { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+    
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom styles for horizontal stage scroll */
+    .stages-scroll-container {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1rem 2rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        align-items: center;
     }
-  };
-
-  const handleDragStart = (e, id, type) => {
-    setDraggedId(id);
-    setDragType(type);
-  };
-
-  const handleDragEnter = (e, targetId, type) => {
-    e.preventDefault();
-    if (dragType !== type || draggedId === targetId || !draggedId) return;
-
-    if (type === 'habit') {
-      setHabits(prev => {
-        const arr = [...prev];
-        const dIdx = arr.findIndex(h => h.id === draggedId);
-        const tIdx = arr.findIndex(h => h.id === targetId);
-        if (dIdx === -1 || tIdx === -1) return prev;
-        const [item] = arr.splice(dIdx, 1);
-        arr.splice(tIdx, 0, item);
-        return arr;
-      });
-    } else if (type === 'task') {
-      setTasks(prev => {
-        const arr = [...prev];
-        const dIdx = arr.findIndex(t => t.id === draggedId);
-        const tIdx = arr.findIndex(t => t.id === targetId);
-        if (dIdx === -1 || tIdx === -1) return prev;
-        const [item] = arr.splice(dIdx, 1);
-        arr.splice(tIdx, 0, item);
-        return arr.map((t, idx) => ({ ...t, manualOrder: idx }));
-      });
+    .stage-card {
+        flex: 0 0 110px;
+        aspect-ratio: 3/4;
+        scroll-snap-align: center;
+        transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
     }
-  };
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+    
+    const hexToRgb = (hex) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '88,204,2';
+    };
 
-  const handleDragEnd = () => {
-    if (draggedId) {
-      setFlashId(draggedId);
-      setTimeout(() => setFlashId(null), 800);
-      triggerHaptic();
-    }
-    setDraggedId(null);
-    setDragType(null);
-  };
+    const Icon = ({ children, className = "", size = 24, ...rest }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...rest}>
+        {children}
+      </svg>
+    );
 
-  const handleDrop = (e) => { e.preventDefault(); };
+    const User = (props) => <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>;
+    const Check = (props) => <Icon {...props}><polyline points="20 6 9 17 4 12"/></Icon>;
+    const X = (props) => <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>;
+    const ChevronLeft = (props) => <Icon {...props}><polyline points="15 18 9 12 15 6"/></Icon>;
+    const ChevronDown = (props) => <Icon {...props}><polyline points="6 9 12 15 18 9"/></Icon>;
+    const Plus = (props) => <Icon {...props}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
+    const Minus = (props) => <Icon {...props}><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
+    const Shield = (props) => <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></Icon>;
+    const Flag = (props) => <Icon {...props}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></Icon>;
+    const Lock = (props) => <Icon {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
+    const PaletteIcon = (props) => <Icon {...props}><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></Icon>;
+    const ActivityIcon = (props) => <Icon {...props}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Icon>;
+    const HandIcon = (props) => <Icon {...props}><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M6 14v-1a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M18 11a4 4 0 0 1 4 4v2a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.82-2.14l-5.17-5.17a2 2 0 0 1 2.83-2.82L7 15"/></Icon>;
+    const EyeIcon = (props) => <Icon {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></Icon>;
+    const SmileIcon = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></Icon>;
+    const ZapIcon = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
 
-  const finalizeItem = (date, time = '12:00') => {
-    const text = magicInput.trim();
-    if (!text) return;
+    const emotions = [
+      { id: 1, label: "×× ×¨×’×™×™×ª ×©×™×", subtext: "×œ×”×¦×™×œ ××ª ×”×™×•×!", desc: "×ž×¦×‘ ×©×‘×• ××ª×” ×ž×¨×’×™×© ×‘×©×™× ×”×›×•×— ×•×”×ª×©×•×§×” ×©×œ×š. ×–×ž×Ÿ ×œ×¤×¢×•×œ×•×ª ×”×ž×•×¨×›×‘×•×ª ×‘×™×•×ª×¨." }, 
+      { id: 2, label: "×¡×§×¨× ×•×ª ×•×’×™×œ×•×™", subtext: "×‘×œ×™ ×ž×œ×—!", desc: "×¨×’×¢ ×©×œ ×¤×ª×™×—×•×ª ×œ×œ×ž×™×“×” ×•×“×‘×¨×™× ×—×“×©×™×. ×ž×¦×•×™×Ÿ ×œ×”×¨×’×œ×™ ×§×¨×™××” ×•×ž×—×§×¨." }, 
+      { id: 3, label: "×©×œ×•×•×” ×ž×ž×•×§×“×ª", subtext: "×ž×¢×•×œ×”!", desc: "×¨×™×›×•×– ×©×§×˜ ×•×—×“. ×ž×ª××™× ×œ×”×¨×’×œ×™ ×¢×‘×•×“×” ×¢×ž×•×§×” ×•×ž×©×™×ž×•×ª ×ž× ×˜×œ×™×•×ª." }, 
+      { id: 4, label: "×”× ××” ×•×¡×™×¤×•×§", subtext: "×¡×‘×‘×” ×œ×™", desc: "×”× ××” ×ž×”×“×¨×š ×•×ž×”× ×™×¦×—×•× ×•×ª ×”×§×˜× ×™×. ×”×¨×’×¢ ×©×‘×• ×”×”×¨×’×œ ×”×•×¤×š ×œ×ª×¢× ×•×’." }, 
+      { id: 5, label: "×”×¨×ž×•× ×™×” ×¤× ×™×ž×™×ª", subtext: "×œ×ž×¨×•×ª ×”×›×œ", desc: "×—×™×‘×•×¨ ×¤× ×™×ž×™ ×¢×“×™×Ÿ. ×–×ž×Ÿ ×ž×¢×•×œ×” ×œ×ž×“×™×˜×¦×™×”, ×™×•×’×” ××• ×¤×©×•×˜ × ×©×™×ž×” ×¢×ž×•×§×”." }, 
+    ];
 
-    if (activeTab === 'grocery') {
-      setTasks(prev => prev.map(t => t.isList ? { ...t, items: [...t.items, { name: text, qty: suggestedQuantity, completed: false, category: 'כללי' }] } : t));
-      setIsCartOpen(true); 
-    } 
-    else if (activeTab === 'task') {
-      const parsed = magicDateParsed;
-      const finalDate = parsed ? parsed.date : (date === 'dump' ? null : (date || null));
-      const finalTime = parsed ? parsed.time : (date === 'dump' ? null : (time || '12:00'));
-      const targetStatus = finalDate ? 'active' : 'dump';
+    const DEFAULT_SMILEY_CONFIG = {
+      bodyColor: '#58CC02', bodyOuterColor: '#2A5200', bodyStrokeColor: '#1a1a1a', bodyStrokeWidth: 4,
+      showBorder: true, bodyScale: 1.0, flatMode: false, glassEffect: false,
+      viscosity: 0.15, flexibility: 0.6, gravity: 0.5, bounciness: 0.6,
+      faceYOffset: 0, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 1.4, rotationIntensity: 1.2, linkEyes: true,
+      leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8,
+      rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 10,
+      mouthYOffset: 38, mouthWidth: 32, mouthCurve: 0.2, mouthStrokeWidth: 12,
+      hasHands: true, handLength: 85, handYOffset: 15, armCurvature: 1.8, armThickness: 5,
+      stringGravity: 0.5, stringDamping: 0.96, armRepulsion: 0.5,
+      shadowOpacity: 0.25, lightX: -0.3, lightY: -0.3, blinkRate: 0.006, blinkSpeed: 0.4,
+      idleFloatSpeed: 0.002, excitedFlapSpeed: 0.02, hitSquash: 1.5, gazeSpeed: 2.0
+    };
 
-      setTasks(prev => [{ 
-        id: Date.now(), title: text, status: targetStatus, 
-        date: finalDate, time: finalTime, completed: false, 
-        subtasks: [], manualOrder: -1 
-      }, ...prev]);
-    } 
-    else if (activeTab === 'habit' && canAddHabit) {
-      setHabits(prev => [{ id: Date.now(), title: text, minGoal: suggestedQuantity.toString(), minUnit: suggestedUnit, isMinDone: false, breakthroughCount: suggestedQuantity * 2, breakthroughUnit: suggestedUnit, breakthroughStreak: 0, isBreakthroughDone: false, streak: 0, stage: '🥚', isCollapsed: false }, ...prev]);
-      setCanAddHabit(false);
-    }
-    triggerHaptic();
-    setMagicInput('');
-  };
+    const PRESETS = {
+      1: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#ff7070", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: -8, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 13, mouthCurve: 0.4, mouthStrokeWidth: 7, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
+      2: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#c7b8a3", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 40, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 7, mouthYOffset: 6, mouthWidth: 12, mouthCurve: -0.3, mouthStrokeWidth: 7, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
+      3: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#ad8cde", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 8, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.8, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.8, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 13, mouthCurve: -0.2, mouthStrokeWidth: 7, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
+      4: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#ffbf75", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 8, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.5, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: 0.1, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: 0.1, eyeStrokeWidth: 7, mouthYOffset: 13, mouthWidth: 28, mouthCurve: 0, mouthStrokeWidth: 8, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.25 },
+      5: { ...DEFAULT_SMILEY_CONFIG, bodyColor: "#a1ce40", bodyStrokeColor: "#1a1a1a", bodyStrokeWidth: 4, showBorder: true, bodyScale: 1.25, flatMode: true, glassEffect: true, shadowOpacity: 0, faceYOffset: 30, eyeSpacing: 42, eyeYOffset: -18, projectionDepth: 0.65, linkEyes: true, leftEyeSize: 1.1, leftEyeWidth: 18, leftEyeCurve: -0.1, rightEyeSize: 1.1, rightEyeWidth: 18, rightEyeCurve: -0.1, eyeStrokeWidth: 7, mouthYOffset: 0, mouthWidth: 47, mouthCurve: 0.1, mouthStrokeWidth: 4, hasHands: true, handLength: 20, handYOffset: 15, armCurvature: 1.8, armThickness: 7, viscosity: 0.05, flexibility: 1.55, bounciness: 1.1, gravity: 1.7, stringGravity: 1.6, stringDamping: 0.87, armRepulsion: 0.5, blinkRate: 0.006, blinkSpeed: 0.4, rotationIntensity: 0.75 },
+    };
 
-  const updateItemCategory = (itemName, newCat) => {
-    setTasks(prev => prev.map(t => {
-      if (!t.isList) return t;
-      return {
-        ...t,
-        items: t.items.map(item => item.name === itemName ? { ...item, category: newCat } : item)
-      };
-    }));
-    triggerHaptic();
-  };
-
-  const toggleTaskCompletion = (id) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-    triggerHaptic();
-  };
-
-  const toggleMinHabit = (id) => {
-    setHabits(prev => prev.map(h => h.id === id ? { ...h, isMinDone: !h.isMinDone } : h));
-    triggerHaptic();
-  };
-
-  const toggleBreakthrough = (id) => {
-    let win = false;
-    setHabits(prev => prev.map(h => {
-      if (h.id === id && !h.isBreakthroughDone) {
-        win = true;
-        setTimeout(() => setHabits(curr => curr.map(item => item.id === id ? {...item, isCollapsed: true} : item)), 3000);
-        return { ...h, isBreakthroughDone: true, breakthroughStreak: h.breakthroughStreak + 1 };
-      }
-      return h;
-    }));
-    if (win) { triggerHaptic('celebrate'); setShowCelebration(true); }
-  };
-
-  const toggleGroceryItem = (itemName) => {
-    setTasks(prev => prev.map(t => t.isList ? { ...t, items: t.items.map(item => item.name === itemName ? { ...item, completed: !item.completed } : item) } : t));
-    triggerHaptic();
-  };
-
-  const addSubtask = (taskId) => {
-    if (!newSubtaskTitle.trim()) return;
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, subtasks: [...(t.subtasks || []), { id: Date.now(), title: newSubtaskTitle, completed: false }] } : t));
-    setNewSubtaskTitle('');
-    triggerHaptic();
-  };
-
-  const toggleSubtask = (taskId, subtaskId) => {
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, subtasks: t.subtasks.map(st => st.id === subtaskId ? { ...st, completed: !st.completed } : st) } : t));
-    triggerHaptic();
-  };
-
-  // --- לוגיקת לוח שנה ---
-  const currentSelectedDayInfo = allDays.find(d => d.fullDate === tempDate) || allDays[0];
-
-  const getDaysInMonth = (month, year) => {
-    const days = [];
-    const firstDay = new Date(year, month, 1).getDay();
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let i = 1; i <= lastDay; i++) days.push(i);
-    return days;
-  };
-
-  const monthGridDays = useMemo(() => getDaysInMonth(viewingMonth, viewingYear), [viewingMonth, viewingYear]);
-
-  // --- אפקטים NLP ---
-  useEffect(() => {
-    const text = magicInput.trim();
-    if (!text) {
-      setActiveTab('task');
-      return;
-    }
-    const isGrocery = GROCERY_KEYWORDS.some(k => text.includes(k));
-    const isHabit = HABIT_KEYWORDS.some(k => text.includes(k));
-    if (isGrocery) setActiveTab('grocery');
-    else if (isHabit && canAddHabit) setActiveTab('habit');
-    else setActiveTab('task');
-
-    if (text.includes('מים')) setSuggestedUnit('כוסות');
-    else if (text.includes('קריאה') || text.includes('ספר')) setSuggestedUnit('עמודים');
-    else if (text.includes('ריצה')) setSuggestedUnit('ק"מ');
-    else if (text.includes('מדיטציה')) setSuggestedUnit('דקות');
-  }, [magicInput, canAddHabit]);
-
-  return (
-    <div dir="rtl" className="min-h-screen bg-[#F7F7F6] text-stone-800 font-sans pb-24 selection:bg-indigo-100 relative overflow-x-hidden">
+    const drawSmileyCanvas = (ctx, conf, phys, time, renderScale = 1, isExport = false, reflections = []) => {
+      if (!conf || !phys) return; 
+      const isValidHex = (c) => typeof c === 'string' && /^#([A-Fa-f0-9]{3}){1,2}$/.test(c);
+      const bodyColor = isValidHex(conf.bodyColor) ? conf.bodyColor : '#58CC02';
+      const outerColor = isValidHex(conf.bodyOuterColor) ? conf.bodyOuterColor : '#222222';
+      const strokeColor = isValidHex(conf.bodyStrokeColor) ? conf.bodyStrokeColor : '#1a1a1a';
+      const radius = 110 * conf.bodyScale * renderScale;
       
-      {/* פופ-אפ כיול זמן (Calibration Hub) */}
-      {schedulingTask && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="absolute inset-0 bg-stone-900/70 backdrop-blur-md" onClick={() => setSchedulingTask(null)}></div>
-          <div className="relative bg-white rounded-[2.5rem] p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2 text-indigo-600 font-black">
-                <CalendarIcon size={20} />
-                <span className="text-xl">כיול מרחב המימוש</span>
-              </div>
-              <button 
-                onClick={() => setCalendarView(calendarView === 'scroll' ? 'grid' : 'scroll')}
-                className="p-2 bg-indigo-50 text-indigo-600 rounded-xl flex items-center gap-1"
-              >
-                {calendarView === 'scroll' ? <LayoutGrid size={14}/> : <ChevronRight size={14}/>}
-                <span className="text-[10px] font-black uppercase">{calendarView === 'scroll' ? 'רשת' : 'ציר'}</span>
-              </button>
-            </div>
+      ctx.save();
+      ctx.translate(phys.worldX, phys.worldY);
+      ctx.rotate(phys.rotation || 0);
+      ctx.scale(phys.squashX, phys.squashY);
 
-            <div className="space-y-6">
-              {calendarView === 'scroll' ? (
-                <div className="space-y-6 animate-in slide-in-from-right-2 duration-300">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">מיקום בזמן</span>
-                    <div className="flex items-center gap-2 text-stone-800 font-black text-2xl">
-                      {currentSelectedDayInfo.monthName} {currentSelectedDayInfo.year}
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <div 
-                      ref={scrollRef}
-                      className="flex gap-3 overflow-x-auto pb-6 pt-2 scrollbar-hide no-scrollbar px-12 cursor-grab active:cursor-grabbing"
-                      style={{ scrollSnapType: 'x mandatory' }}
-                    >
-                      {allDays.map(day => (
-                        <button 
-                          key={day.fullDate}
-                          onClick={() => {setTempDate(day.fullDate); triggerHaptic();}}
-                          className={`flex-shrink-0 w-16 h-20 rounded-3xl flex flex-col items-center justify-center border-2 transition-all duration-300 ${
-                            tempDate === day.fullDate ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-110' : 'bg-stone-50 border-stone-100 text-stone-400 opacity-60'
-                          }`}
-                          style={{ scrollSnapAlign: 'center' }}
-                        >
-                          <span className="text-[10px] font-bold mb-1">{day.dayName}</span>
-                          <span className="text-2xl font-black">{day.dayNumber}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4 animate-in slide-in-from-left-2 duration-300">
-                  <div className="flex items-center justify-between px-2">
-                    <button onClick={() => setViewingMonth(prev => prev === 0 ? 11 : prev - 1)} className="p-2 bg-stone-50 rounded-full"><ArrowRight size={16}/></button>
-                    <span className="font-black text-lg">{monthsHe[viewingMonth]} {viewingYear}</span>
-                    <button onClick={() => setViewingMonth(prev => prev === 11 ? 0 : prev + 1)} className="p-2 bg-stone-50 rounded-full"><ArrowLeft size={16}/></button>
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {daysHe.map(d => <div key={d} className="text-[9px] font-black text-stone-400 text-center uppercase py-1">{d}</div>)}
-                    {monthGridDays.map((d, i) => {
-                      if (d === null) return <div key={`empty-${i}`} />;
-                      const dateStr = `${viewingYear}-${(viewingMonth+1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
-                      const isSelected = tempDate === dateStr;
-                      return (
-                        <button 
-                          key={i} 
-                          onClick={() => {setTempDate(dateStr); triggerHaptic();}}
-                          className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-indigo-50 text-stone-600'}`}
-                        >
-                          {d}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+      const project = (lx, ly) => {
+        const ax = isExport ? 0 : ((phys.x || 0) + (phys.faceSlide?.x || 0)) * (Math.PI / 2.2) * conf.projectionDepth * conf.rotationIntensity;
+        const ay = isExport ? 0 : ((phys.y || 0) + (phys.faceSlide?.y || 0)) * (Math.PI / 3.0) * conf.projectionDepth * conf.rotationIntensity;
+        const lon = (lx / 110) * (Math.PI / 2) + ax;
+        const lat = ((ly + conf.faceYOffset) / 110) * (Math.PI / 2) + ay;
+        const zS = Math.cos(lon) * Math.cos(lat);
+        return { x: radius * Math.sin(lon) * Math.cos(lat), y: radius * Math.sin(lat), z: zS, sX: Math.cos(lon), sY: Math.cos(lat), vis: zS > -0.45 };
+      };
 
-              <div className="flex flex-col items-center gap-3 bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100">
-                <div className="flex items-center gap-2 text-indigo-600 font-black mb-1">
-                  <AlarmClock size={16}/> <span className="text-xs uppercase tracking-wider text-right">שעת מימוש</span>
-                </div>
-                <input 
-                  type="time" value={tempTime} onChange={(e) => setTempTime(e.target.value)}
-                  className="bg-white px-6 py-4 rounded-2xl shadow-sm border border-indigo-100 font-black text-3xl text-indigo-700 outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-center"
-                />
-              </div>
-
-              <button 
-                onClick={saveCalibration}
-                className="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-3 text-lg"
-              >
-                <Check size={24} strokeWidth={4} /> אמת כיול
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCelebration && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowCelebration(false)}></div>
-          <Confetti />
-          <div className="relative bg-white rounded-[2.5rem] p-8 text-center max-w-sm w-full shadow-2xl animate-in zoom-in-90 duration-300 border-2 border-indigo-50">
-            <PartyPopper size={60} className="mx-auto text-indigo-500 mb-6" />
-            <h2 className="text-2xl font-black text-stone-800 mb-3 text-right">פריצה קוונטית!</h2>
-            <p className="bg-orange-50 text-orange-700 rounded-2xl p-5 font-bold mb-8 text-sm leading-relaxed text-right border border-orange-100">"חייבים לחגוג ניצחונות קטנים כדי שזה יעבוד!" 🏆 <br/> התת-מודע שלך לומד עכשיו שאתה מנצח.</p>
-            <button onClick={() => setShowCelebration(false)} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg">מעולה, ממשיכים!</button>
-          </div>
-        </div>
-      )}
-
-      {/* מגירת אספקת אנרגיה */}
-      <button onClick={() => setIsCartOpen(true)} className="fixed left-0 top-1/2 -translate-y-1/2 bg-emerald-500 text-white py-5 px-3 rounded-r-[1.5rem] shadow-xl z-40">
-        <ShoppingCart size={24} strokeWidth={2.5} />
-        {uncompletedGroceries > 0 && <span className="font-bold text-[10px] bg-white text-emerald-600 rounded-full w-5 h-5 flex items-center justify-center shadow-sm">{uncompletedGroceries}</span>}
-      </button>
-
-      <div className={`fixed inset-0 bg-stone-900/10 backdrop-blur-sm z-50 transition-opacity duration-300 ${isCartOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCartOpen(false)}></div>
-      <div className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#F9F9F8] z-50 shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${isCartOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 bg-emerald-500 text-white flex items-center justify-between shadow-md">
-          <div className="flex items-center gap-3"><ShoppingCart size={22} strokeWidth={2.5} /><h2 className="text-xl font-black">אספקת אנרגיה</h2></div>
-          <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-emerald-600 rounded-full transition-colors"><X size={20} /></button>
-        </div>
+      const drawArms = (isBack) => {
+        if (!conf.hasHands || !phys.arms) return;
+        ctx.save(); ctx.lineWidth = conf.armThickness * renderScale * (radius / (110 * renderScale)); ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
         
-        {/* סנן קטגוריות */}
-        <div className="p-4 bg-white border-b border-stone-100 flex gap-2 overflow-x-auto no-scrollbar">
-          {['הכל', ...categories].map(cat => (
-            <button 
-              key={cat} onClick={() => setSelectedFilterCategory(cat)}
-              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-black transition-all ${selectedFilterCategory === cat ? 'bg-emerald-500 text-white shadow-md' : 'bg-stone-50 text-stone-400 hover:bg-stone-100'}`}
-            >
-              {cat}
-            </button>
-          ))}
+        [-1, 1].forEach((side, i) => {
+          const start = project(side * 105, conf.handYOffset);
+          if ((start.z < 0) !== isBack) return;
+          const armP = phys.arms[i];
+          
+          const exactLen = conf.handLength * conf.bodyScale * renderScale;
+          const armAngle = Math.atan2(armP.y, armP.x);
+          const endX = start.x + Math.cos(armAngle) * exactLen; 
+          const endY = start.y + Math.sin(armAngle) * exactLen;
+          
+          const dragX = isExport ? 0 : phys.vx * 2.5 * conf.armCurvature * renderScale;
+          const dragY = isExport ? 0 : phys.vy * 2.5 * conf.armCurvature * renderScale;
+          const cpX = start.x + (Math.cos(armAngle) * exactLen * 0.5) - dragX;
+          const cpY = start.y + (Math.sin(armAngle) * exactLen * 0.7) - dragY;
+          
+          ctx.beginPath(); ctx.moveTo(start.x, start.y);
+          ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+          ctx.stroke();
+        });
+        ctx.restore();
+      };
+
+      drawArms(true);
+      const body = new Path2D(); body.arc(0, 0, radius, 0, Math.PI * 2);
+      if (conf.flatMode) { ctx.fillStyle = bodyColor; } else {
+        try {
+          const grad = ctx.createRadialGradient(radius * conf.lightX, radius * conf.lightY, 0, 0, 0, radius * 1.3);
+          grad.addColorStop(0, bodyColor);
+          grad.addColorStop(1, outerColor);
+          ctx.fillStyle = grad;
+        } catch (e) { ctx.fillStyle = bodyColor; }
+      }
+      ctx.fill(body);
+      if (conf.showBorder && conf.bodyStrokeWidth > 0) {
+        ctx.lineWidth = conf.bodyStrokeWidth * renderScale * (radius / (110 * renderScale));
+        ctx.strokeStyle = strokeColor;
+        ctx.stroke(body);
+      }
+      ctx.save(); ctx.clip(body);
+      if (reflections && reflections.length > 0 && !conf.flatMode) {
+          reflections.forEach(ref => {
+              const angle = Math.atan2(ref.dy, ref.dx);
+              const cx = Math.cos(angle) * radius * 0.95;
+              const cy = Math.sin(angle) * radius * 0.95;
+              ctx.beginPath(); ctx.arc(cx, cy, radius * 0.8, 0, Math.PI * 2);
+              const shadowGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.8);
+              shadowGrad.addColorStop(0, `rgba(0,0,0,${0.6 * ref.intensity})`);
+              shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.fillStyle = shadowGrad; ctx.fill();
+              if (ref.color) {
+                  ctx.beginPath(); ctx.arc(cx, cy, radius * 0.9, 0, Math.PI * 2);
+                  const colorGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.9);
+                  ctx.globalAlpha = 0.5 * ref.intensity;
+                  colorGrad.addColorStop(0, ref.color); colorGrad.addColorStop(1, 'transparent');
+                  ctx.fillStyle = colorGrad; ctx.fill(); ctx.globalAlpha = 1.0;
+              }
+          });
+      }
+      if (conf.glassEffect && !conf.flatMode) {
+        ctx.save(); ctx.beginPath();
+        ctx.ellipse(-radius * 0.25, -radius * 0.4, radius * 0.6, radius * 0.35, Math.PI / 8, 0, Math.PI * 2);
+        const glassGrad = ctx.createLinearGradient(-radius * 0.5, -radius * 0.8, radius * 0.2, 0);
+        glassGrad.addColorStop(0, 'rgba(255,255,255,0.7)'); glassGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glassGrad; ctx.fill(); ctx.restore();
+      }
+      [-1, 1].forEach(side => {
+        const ep = project(side * conf.eyeSpacing, conf.eyeYOffset);
+        if (ep.vis) {
+          const size = side === -1 ? conf.leftEyeSize : conf.rightEyeSize;
+          const curve = side === -1 ? conf.leftEyeCurve : conf.rightEyeCurve;
+          const ew = conf.leftEyeWidth * Math.abs(ep.sX) * renderScale * size;
+          const eh = 24 * phys.blink * curve * renderScale;
+          ctx.beginPath(); ctx.lineWidth = conf.eyeStrokeWidth * renderScale; ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
+          ctx.moveTo(ep.x - ew, ep.y); ctx.quadraticCurveTo(ep.x, ep.y - eh, ep.x + ew, ep.y); ctx.stroke();
+        }
+      });
+      const mp = project(0, conf.mouthYOffset);
+      if (mp.vis) {
+        const mw = conf.mouthWidth * Math.abs(mp.sX) * renderScale;
+        const mh = (conf.mouthCurve || 0.2) * 50 * Math.abs(mp.sY) * renderScale;
+        ctx.beginPath(); ctx.lineWidth = conf.mouthStrokeWidth * renderScale; ctx.lineCap = 'round'; ctx.strokeStyle = strokeColor;
+        ctx.moveTo(mp.x - mw, mp.y); ctx.bezierCurveTo(mp.x - mw/2, mp.y + mh, mp.x + mw/2, mp.y + mh, mp.x + mw, mp.y); ctx.stroke();
+      }
+      ctx.restore(); drawArms(false); ctx.restore();
+    };
+
+    const updateSmileyPhys = (phys, config, time, externalVx, externalVy, mode) => {
+      if (!config || !phys) return;
+      if (Math.abs(externalVx) < 0.1) externalVx = 0;
+      if (Math.abs(externalVy) < 0.1) externalVy = 0;
+      if (!phys.isBlinking && Math.random() < config.blinkRate && time - phys.lastBlink > 1000) phys.isBlinking = true;
+      if (phys.isBlinking) {
+        phys.blink -= config.blinkSpeed; if (phys.blink <= 0) { phys.blink = 0; phys.isBlinking = false; phys.lastBlink = time; }
+      } else { phys.blink += (1 - phys.blink) * config.blinkSpeed; }
+      const faceInertia = config.viscosity * 2.5;
+      const targetSlideX = -externalVx * 0.05;
+      const targetSlideY = -externalVy * 0.05;
+      phys.faceSlide.x += (targetSlideX - phys.faceSlide.x) * faceInertia;
+      phys.faceSlide.y += (targetSlideY - phys.faceSlide.y) * faceInertia;
+      const maxSlide = 0.5;
+      phys.faceSlide.x = Math.max(-maxSlide, Math.min(maxSlide, phys.faceSlide.x));
+      phys.faceSlide.y = Math.max(-maxSlide, Math.min(maxSlide, phys.faceSlide.y));
+      phys.squashX += (1.0 - phys.squashX) * 0.15;
+      phys.squashY += (1.0 - phys.squashY) * 0.15;
+      phys.arms.forEach((arm, idx) => {
+        const side = idx === 0 ? -1 : 1;
+        arm.vy += config.stringGravity; arm.vx += side * (config.armRepulsion || 1.5);
+        arm.vx *= config.stringDamping; arm.vy *= config.stringDamping;
+        arm.vx -= externalVx * 0.6; arm.vy -= externalVy * 0.6;
+        if (mode === 'falling') arm.vy -= 4; 
+        if (mode === 'excited') { arm.vy -= 1.5; arm.vx += side * Math.sin(time * (config.excitedFlapSpeed || 0.02)) * 3; }
+        arm.x += arm.vx; arm.y += arm.vy;
+        const exactLen = config.handLength * config.bodyScale;
+        const dist = Math.sqrt(arm.x * arm.x + arm.y * arm.y);
+        if (dist > 0) {
+            const angle = Math.atan2(arm.y, arm.x);
+            arm.x = Math.cos(angle) * exactLen; arm.y = Math.sin(angle) * exactLen;
+        } else { arm.y = exactLen; }
+      });
+      if (mode === 'idle') {
+        phys.x += (Math.sin(time * (config.idleFloatSpeed || 0.002)) * 0.2 - phys.x) * config.viscosity;
+        phys.y += (Math.cos(time * ((config.idleFloatSpeed || 0.002) * 1.3)) * 0.2 - phys.y) * config.viscosity;
+      } else if (phys.targetGaze) {
+        phys.x += (phys.targetGaze.x - phys.x) * config.viscosity * (config.gazeSpeed || 2.0);
+        phys.y += (phys.targetGaze.y - phys.y) * config.viscosity * (config.gazeSpeed || 2.0);
+      }
+    };
+
+    const LiveSmiley = ({ config, mode = 'idle', className = "", onClick }) => {
+      const canvasRef = useRef(null);
+      const reqRef = useRef();
+      const configRef = useRef(config);
+      const modeRef = useRef(mode);
+      useEffect(() => { configRef.current = config; }, [config]);
+      useEffect(() => { modeRef.current = mode; }, [mode]);
+      const physRef = useRef({
+        initialized: false, worldX: 0, worldY: 0, vx: 0, vy: 0, rotation: 0, x: 0, y: 0, targetGaze: {x:0, y:0},
+        scale: 1, squashX: 1, squashY: 1, blink: 1, lastBlink: 0, isBlinking: false,
+        faceSlide: { x: 0, y: 0 }, baseFloatOffset: Math.random() * Math.PI * 2,
+        arms: [{ x: -20, y: 0, vx: 0, vy: 0 }, { x: 20, y: 0, vx: 0, vy: 0 }]
+      });
+      useEffect(() => {
+        const handleMouseMove = (e) => {
+           if (modeRef.current === 'follow' || modeRef.current === 'excited') {
+              physRef.current.targetGaze = {
+                x: (e.clientX / window.innerWidth) * 2 - 1,
+                y: (e.clientY / window.innerHeight) * 2 - 1
+              };
+           }
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+      }, []);
+      useEffect(() => {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const RESOLUTION = 300; 
+        if (canvas.width !== RESOLUTION) canvas.width = RESOLUTION;
+        if (canvas.height !== RESOLUTION) canvas.height = RESOLUTION;
+        const loop = (t) => {
+          ctx.clearRect(0,0,RESOLUTION,RESOLUTION);
+          const p = physRef.current;
+          const currentConfig = configRef.current;
+          const currentMode = modeRef.current;
+          if (!currentConfig) { reqRef.current = requestAnimationFrame(loop); return; }
+          const padding = 100;
+          const maxExpectedRadius = Math.max(110 * currentConfig.bodyScale, currentConfig.hasHands ? currentConfig.handLength * currentConfig.bodyScale : 0);
+          const renderScale = RESOLUTION / ((maxExpectedRadius * 2) + padding); 
+          if (!p.initialized) { p.worldX = RESOLUTION / 2; p.worldY = RESOLUTION / 2; p.initialized = true; }
+          const floatOffset = Math.sin(t * (currentConfig.idleFloatSpeed || 0.002) + p.baseFloatOffset) * (currentMode === 'excited' ? 12 : 3);
+          const targetY = RESOLUTION / 2 + floatOffset; const targetX = RESOLUTION / 2;
+          p.vy += (targetY - p.worldY) * 0.15; p.vy *= 0.8; p.worldY += p.vy;
+          p.vx += (targetX - p.worldX) * 0.15; p.vx *= 0.8; p.worldX += p.vx;
+          updateSmileyPhys(p, currentConfig, t, p.vx, p.vy, currentMode);
+          drawSmileyCanvas(ctx, currentConfig, p, t, renderScale, false, []); 
+          reqRef.current = requestAnimationFrame(loop);
+        };
+        reqRef.current = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(reqRef.current);
+      }, []);
+      return (
+        <div className={`w-full h-full flex items-center justify-center relative ${className}`} onClick={onClick}>
+          <canvas ref={canvasRef} style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
         </div>
+      );
+    };
 
-        <div className="p-4 overflow-y-auto flex-1 space-y-2">
-          {filteredShoppingItems.map((item, idx) => (
-            <div key={idx} className={`flex flex-col bg-white p-4 rounded-2xl transition-all border ${item.completed ? 'opacity-40 border-transparent bg-stone-50 shadow-none' : 'border-stone-100 shadow-sm hover:border-emerald-200'}`}>
-              <div className="flex justify-between items-center mb-2">
-                <div onClick={() => toggleGroceryItem(item.name)} className="flex items-center gap-3 cursor-pointer">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${item.completed ? 'bg-emerald-400 text-white' : 'border-2 border-stone-200 text-transparent'}`}><Check size={14} strokeWidth={4} /></div>
-                  <span className={`font-bold ${item.completed ? 'text-stone-400 line-through' : 'text-stone-700'}`}>{item.name}</span>
-                </div>
-                {!item.completed && <span className="font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg text-xs">x{item.qty}</span>}
-              </div>
-              
-              {!item.completed && (
-                <div className="flex gap-1 overflow-x-auto no-scrollbar pt-2 border-t border-stone-50">
-                  {categories.map(cat => (
-                    <button 
-                      key={cat} onClick={() => updateItemCategory(item.name, cat)}
-                      className={`flex-shrink-0 px-2 py-1 rounded-md text-[9px] font-black uppercase transition-all ${item.category === cat ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-50 text-stone-300'}`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="p-4 border-t border-stone-100 bg-white">
-          <button onClick={() => { setTasks(prev => prev.map(t => t.isList ? { ...t, items: t.items.filter(i => !i.completed) } : t)); triggerHaptic(); }} className="w-full bg-rose-50 text-rose-600 font-bold py-4 rounded-2xl transition-colors border border-rose-100 text-sm">ניקוי מוצרים שנאספו</button>
-        </div>
-      </div>
+    const unitOptions = ['×¤×¢×ž×™×', '×›×•×¡×•×ª', '×¢×ž×•×“×™×', '×“×§×•×ª', '×§×´×ž'];
+    const habitSuggestions = ['×›×•×¡ ×ž×™×', '×”×œ×™×›×”', '×©×›×™×‘×•×ª ×¡×ž×™×›×”', '×§×¨×™××”', '×ž×“×™×˜×¦×™×”'];
 
-      <div className="bg-white/60 backdrop-blur-md sticky top-0 z-30 border-b border-stone-200/50 p-4 shadow-sm text-right">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-4 text-right">
-          <div className="flex items-center gap-3 flex-1 text-right"><BrainCircuit size={16} className="text-indigo-400" /><p className="text-[11px] text-stone-500 font-bold italic line-clamp-1">"{vision}"</p></div>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3].map((num) => (num <= shields ? <Shield key={num} size={14} className="text-amber-400 fill-amber-400" /> : <ShieldAlert key={num} size={14} className="text-stone-200" />))}
-          </div>
-        </div>
-      </div>
+    function App() {
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [showTopPopup, setShowTopPopup] = useState(false);
+      const [wizardStep, setWizardStep] = useState(1);
+      const [newHabit, setNewHabit] = useState({ name: '', amount: 1, unit: '×¤×¢×ž×™×', ridiculousAction: '' });
+      const [tasks, setTasks] = useState([
+        { id: 1, name: '×›×•×¡ ×ž×™× ×‘×‘×•×§×¨', amount: 1, minU: '×›×•×¡×•×ª', maxU: '×›×•×¡×•×ª', ridiculousAction: '×œ×’×™×ž×” ××—×ª' },
+        { id: 2, name: '×§×¨×™××ª ×¡×¤×¨', amount: 10, minU: '×¢×ž×•×“×™×', maxU: '×¢×ž×•×“×™×', ridiculousAction: '×¤×¡×§×” ××—×ª' },
+        { id: 3, name: '×ž×“×™×˜×¦×™×”', amount: 5, minU: '×“×§×•×ª', maxU: '×“×§×•×ª', ridiculousAction: '× ×©×™×ž×” ×¢×ž×•×§×”' }
+      ]);
+      const [gameState, setGameState] = useState('EMOTION'); 
+      const [viewMode, setViewMode] = useState('EMOTIONS'); // New State for viewing Emotions vs Stages
+      const [activeEmotion, setActiveEmotion] = useState(null);
+      const [activeEmoStartPos, setActiveEmoStartPos] = useState(0); 
+      const [activeIndex, setActiveIndex] = useState(0);
+      const [lottoPhase, setLottoPhase] = useState('IDLE');
+      const [settingsData, setSettingsData] = useState({ 
+        smileyConfigs: { ...PRESETS }, stageImages: {}, profilePic: null, drawerBgColor: '#ffffff', drawerOpacity: 0.95, drawerBlur: 20, 
+        primaryBtnColor: '#0f172a', primaryBtnTextColor: '#ffffff', userName: '×ž×©×” ××œ×™', totalDays: 0,
+      });
+      const [history, setHistory] = useState(() => {
+        const mock = []; const today = new Date();
+        for (let i = 14; i >= 0; i--) {
+          const d = new Date(today); d.setDate(d.getDate() - i);
+          const randomTaskIds = [1, 2, 3].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 1);
+          mock.push({ id: Date.now() - i * 1000, date: d, emotionId: Math.floor(Math.random() * 5) + 1, tasksCompleted: randomTaskIds.length, completedTasks: randomTaskIds });
+        }
+        return mock;
+      });
+      const [workspace, setWorkspace] = useState({ isOpen: false, activeTab: 'stats' });
+      const interactionRef = useRef({ active: false, x: 0, y: 0, time: 0 });
+      const gameStateRef = useRef(gameState);
+      
+      useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
+      
+      const currentShields = Math.min(3, Math.floor(settingsData.totalDays / 10));
+      const isDrawerExpanded = ['MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState);
+      const activeColorHex = activeEmotion ? (settingsData.smileyConfigs[activeEmotion.id]?.bodyColor || PRESETS[activeEmotion.id].bodyColor) : settingsData.drawerBgColor;
+      const opacityHex = Math.round(settingsData.drawerOpacity * 255).toString(16).padStart(2, '0');
+      const dynamicSidebarBg = `${activeColorHex}${opacityHex}`;
+      
+      const appContainerRef = useRef(null);
+      const sceneRef = useRef(null);
+      const engineRef = useRef(null);
 
-      <div className="max-w-md mx-auto px-4 mt-6 space-y-10">
+      const registerGlobalInteraction = (clientX, clientY) => {
+          if (sceneRef.current) {
+              const rect = sceneRef.current.getBoundingClientRect();
+              interactionRef.current = { active: true, x: clientX - rect.left, y: clientY - rect.top, time: performance.now() };
+          }
+      };
 
-        {/* Omnibar */}
-        <div className="relative z-20">
-          <div className="relative group animate-in fade-in zoom-in-95 duration-200">
-            <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none text-stone-300 group-focus-within:text-indigo-500 transition-colors">
-              {magicDateParsed ? <Zap size={22} className="text-amber-500 animate-pulse" /> : <Sparkles size={22} />}
-            </div>
-            <input 
-              type="text" value={magicInput} onChange={(e) => setMagicInput(e.target.value)}
-              placeholder="איזו כוונה נרצה לממש?..." 
-              className="w-full bg-white text-stone-800 rounded-[2.5rem] py-5 pr-14 pl-5 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-stone-100 outline-none focus:ring-4 focus:ring-indigo-50 text-lg font-bold text-right"
-            />
-          </div>
+      useEffect(() => { 
+        if (isAuthenticated) { initMatter(); setGameState('EMOTION'); setLottoPhase('READY'); }
+      }, [isAuthenticated]);
 
-          {magicInput && (
-            <div className="absolute top-full mt-4 w-full bg-white rounded-[2rem] shadow-2xl border border-stone-50 overflow-hidden animate-in slide-in-from-top-3 duration-300 text-right">
-              <div className="flex p-2 bg-stone-50/50 border-b border-stone-100 text-[11px] font-black uppercase">
-                <button onClick={() => setActiveTab('task')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'task' ? 'bg-white text-indigo-600 shadow-sm' : 'text-stone-400'}`}>פעולה</button>
-                {canAddHabit && <button onClick={() => setActiveTab('habit')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'habit' ? 'bg-white text-orange-500 shadow-sm' : 'text-stone-400'}`}>עוגן</button>}
-                <button onClick={() => setActiveTab('grocery')} className={`flex-1 py-3 rounded-2xl ${activeTab === 'grocery' ? 'bg-white text-emerald-500 shadow-sm' : 'text-stone-400'}`}>אספקה</button>
-              </div>
-              <div className="p-4">
-                {activeTab === 'task' && (
-                  <div className="flex gap-2">
-                    {magicDateParsed ? (
-                      <button 
-                        onClick={() => finalizeItem()} 
-                        className="flex-1 bg-amber-500 text-white font-black py-4 rounded-2xl shadow-lg flex flex-col items-center animate-bounce"
-                      >
-                        <Zap size={18} className="mb-1" />
-                        <span className="text-[10px]">כיול קוונטי מזוהה</span>
-                      </button>
-                    ) : (
-                      <>
-                        <button onClick={() => finalizeItem(new Date().toISOString().split('T')[0])} className="flex-1 bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg flex flex-col items-center">
-                          <Sun size={18} className="mb-1" /><span className="text-[10px]">היום</span>
-                        </button>
-                        <button 
-                          onClick={() => { setSchedulingTask({ id: 'new', title: magicInput }); setTempDate(new Date().toISOString().split('T')[0]); }}
-                          className="flex-1 bg-white text-stone-400 font-black py-4 rounded-2xl border border-stone-100 flex flex-col items-center"
-                        >
-                          <CalendarDays size={18} className="mb-1" /><span className="text-[10px]">כיול זמן</span>
-                        </button>
-                      </>
-                    )}
-                    <button onClick={() => finalizeItem('dump')} className="flex-1 bg-stone-800 text-white font-black py-4 rounded-2xl flex flex-col items-center text-center">
-                      <Inbox size={18} className="mb-1" /><span className="text-[10px]">פוטנציאל</span>
-                    </button>
-                  </div>
-                )}
-                {(activeTab === 'habit' || activeTab === 'grocery') && (
-                  <div className={`flex items-center gap-3 p-2 rounded-3xl border ${activeTab === 'habit' ? 'bg-orange-50 border-orange-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                    <div className="flex-1 flex items-center justify-between gap-2 bg-white rounded-2xl p-2 border text-right">
-                      <button onClick={() => setSuggestedQuantity(Math.max(1, suggestedQuantity - 1))} className="w-8 h-8 text-stone-300 hover:text-rose-500 transition-colors"><Minus size={18}/></button>
-                      <span className="font-black text-stone-800 text-lg text-right">{suggestedQuantity} {activeTab === 'habit' ? suggestedUnit : 'יחידות'}</span>
-                      <button onClick={() => setSuggestedQuantity(suggestedQuantity + 1)} className="w-8 h-8 text-stone-300 hover:text-emerald-500 transition-colors"><Plus size={18}/></button>
+      const initMatter = async () => {
+        if (!sceneRef.current) return;
+        const Matter = window.Matter;
+        if (engineRef.current) { Matter.Render.stop(engineRef.current.render); Matter.Engine.clear(engineRef.current); }
+        const engine = Matter.Engine.create(); engineRef.current = engine; engine.world.gravity.y = 5.0; 
+        const mouse = Matter.Mouse.create(sceneRef.current);
+        const mouseConstraint = Matter.MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
+        Matter.Events.on(engine, 'collisionStart', (event) => {
+          event.pairs.forEach((pair) => {
+            const current = pair.bodyA.label === 'currentDay' ? pair.bodyA : (pair.bodyB.label === 'currentDay' ? pair.bodyB : null);
+            if (current && current.customSmiley) {
+              const phys = current.customSmiley.phys; const config = current.customSmiley.config;
+              phys.squashX = config.hitSquash || 1.4; phys.squashY = 1 / (config.hitSquash || 1.4);
+              phys.vy = -3; current.label = 'settled'; if (navigator.vibrate) navigator.vibrate(30);
+            }
+          });
+        });
+        const width = sceneRef.current.clientWidth; const height = sceneRef.current.clientHeight;
+        const render = Matter.Render.create({ element: sceneRef.current, engine: engine, options: { width, height, wireframes: false, background: 'transparent', pixelRatio: window.devicePixelRatio || 1 } });
+        engine.render = render; 
+        const wallOptions = { isStatic: true, render: { visible: false }, friction: 0.1, restitution: 0.4 };
+        Matter.Composite.add(engine.world, [
+          Matter.Bodies.rectangle(-50, height / 2, 100, height * 3, wallOptions),
+          Matter.Bodies.rectangle(width + 50, height / 2, 100, height * 3, wallOptions),
+          Matter.Bodies.rectangle(width / 2, -120, width * 3, 100, { isStatic: true, render: { visible: false } }),
+          Matter.Bodies.rectangle(width / 2, height + 20, width, 40, wallOptions),
+          mouseConstraint
+        ]);
+        Matter.Events.on(render, 'afterRender', () => {
+           const ctx = render.context; const bodies = Matter.Composite.allBodies(engine.world);
+           const time = performance.now(); const customBodies = bodies.filter(b => b.customSmiley);
+           const droppingBody = bodies.find(b => b.label === 'currentDay');
+           bodies.forEach(b => { if (b.position.y > height + 400 || b.position.x < -200 || b.position.x > width + 200) { Matter.Body.setPosition(b, { x: width / 2, y: 100 }); Matter.Body.setVelocity(b, { x: 0, y: 0 }); } });
+           customBodies.forEach(b => { b.customSmiley.reflections = []; });
+           for (let i = 0; i < customBodies.length; i++) {
+               for (let j = i + 1; j < customBodies.length; j++) {
+                   const b1 = customBodies[i]; const b2 = customBodies[j];
+                   const dx = b2.position.x - b1.position.x; const dy = b2.position.y - b1.position.y;
+                   const dist = Math.sqrt(dx*dx + dy*dy); const r1 = 110 * b1.customSmiley.config.bodyScale * b1.customSmiley.scale;
+                   const r2 = 110 * b2.customSmiley.config.bodyScale * b2.customSmiley.scale; const minDist = r1 + r2;
+                   if (dist < minDist * 1.5) { 
+                       const intensity = Math.max(0, 1 - (dist / (minDist * 1.5)));
+                       b1.customSmiley.reflections.push({ dx, dy, dist, intensity, color: b2.customSmiley.config.bodyColor });
+                       b2.customSmiley.reflections.push({ dx: -dx, dy: -dy, dist, intensity, color: b1.customSmiley.config.bodyColor });
+                   }
+               }
+           }
+           customBodies.forEach(b => {
+               const { phys, scale, config } = b.customSmiley; const visualFloor = height - 5; const r = 110 * config.bodyScale * scale;
+               const distFromFloor = Math.max(0, visualFloor - (phys.worldY + r * phys.squashY));
+               if (distFromFloor < 150) {
+                   const shadowOp = 0.4 * (1 - distFromFloor/150); const shadowW = r * 1.5 * phys.squashX; const rgb = hexToRgb(config.bodyColor);
+                   ctx.beginPath(); ctx.ellipse(phys.worldX, visualFloor, shadowW, 12, 0, 0, Math.PI*2);
+                   const shadowGrad = ctx.createRadialGradient(phys.worldX, visualFloor, 0, phys.worldX, visualFloor, shadowW);
+                   shadowGrad.addColorStop(0, `rgba(${rgb},${shadowOp * 1.2})`); shadowGrad.addColorStop(0.3, `rgba(0,0,0,${shadowOp * 0.8})`); shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                   ctx.fillStyle = shadowGrad; ctx.fill();
+               }
+           });
+           customBodies.forEach(b => {
+               const { config, phys, scale, reflections } = b.customSmiley; if (!config) return;
+               if (b.speed < 2.0 && b.position.y > height * 0.5) { Matter.Body.setAngle(b, b.angle * 0.92); }
+               phys.worldX = b.position.x; phys.worldY = b.position.y; phys.vx = b.velocity.x; phys.vy = b.velocity.y; phys.rotation = b.angle;
+               const fallMode = Math.abs(b.velocity.y) > 0.5 ? 'falling' : 'idle'; phys.targetGaze = null;
+               if (['HIDE_OTHERS', 'MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameStateRef.current)) {
+                   const dx = (width / 2) - phys.worldX; const dy = 120 - phys.worldY; 
+                   const dist = Math.sqrt(dx*dx + dy*dy); phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 };
+               } else if (droppingBody && b.label !== 'currentDay') {
+                   const dx = droppingBody.position.x - phys.worldX; const dy = droppingBody.position.y - phys.worldY;
+                   const dist = Math.sqrt(dx*dx + dy*dy); if (dist > 30) { phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 }; }
+               } else if (interactionRef.current.active) {
+                   const { x, y, time: clickTime } = interactionRef.current;
+                   if (time - clickTime < 2500) {
+                       const dx = x - phys.worldX; const dy = y - phys.worldY;
+                       const dist = Math.sqrt(dx*dx + dy*dy); if (dist < 300) { phys.targetGaze = { x: (dx/dist) * 0.8, y: (dy/dist) * 0.8 }; }
+                   } else { interactionRef.current.active = false; }
+               }
+               updateSmileyPhys(phys, config, time, phys.vx, phys.vy, fallMode);
+               drawSmileyCanvas(ctx, config, phys, time, scale, false, reflections);
+           });
+        });
+        Matter.Render.run(render); Matter.Runner.run(Matter.Runner.create(), engine);
+      };
+
+      const handleSidebarBottomClick = () => {
+        if (gameState === 'EMOTION') {
+            setViewMode('STAGES');
+            setGameState('SHOW_CONTENT'); // Opens drawer fully
+        } else if (isDrawerExpanded && viewMode === 'STAGES') {
+            setViewMode('EMOTIONS');
+            setGameState('EMOTION'); // Closes drawer back
+        }
+      };
+
+      const handleStartSelection = (e, emo) => {
+        if (gameState !== 'EMOTION' || workspace.isOpen || lottoPhase !== 'READY' || tasks.length === 0) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const containerRect = appContainerRef.current.getBoundingClientRect();
+        setActiveEmoStartPos(rect.top - containerRect.top); 
+        setActiveEmotion(emo);
+        setViewMode('EMOTIONS');
+        setGameState('HIDE_OTHERS'); 
+        setTimeout(() => setGameState('MOVE_UP'), 200); 
+        setTimeout(() => setGameState('SHOW_CONTENT'), 600); 
+        setTimeout(() => setGameState('SELECTING'), 1000); 
+      };
+
+      const executeDrop = async () => {
+        if (!activeEmotion) return;
+        setGameState('DROPPING'); 
+        const Matter = window.Matter; const width = appContainerRef.current.clientWidth;
+        const config = settingsData.smileyConfigs[activeEmotion.id] || PRESETS[activeEmotion.id];
+        const baseRadius = Math.min(width * 0.12, 38);
+        const spawnRadius = baseRadius * 1.35; const physicsRadius = spawnRadius * config.bodyScale;
+        const ball = Matter.Bodies.circle(width / 2, 170, physicsRadius, { label: 'currentDay', restitution: 0.5, friction: 0.1, render: { visible: false } });
+        Matter.Body.setVelocity(ball, { x: 0, y: 2 });
+        ball.customSmiley = { config, scale: spawnRadius / 110, phys: { worldX:0, worldY:0, vx:0, vy:0, rotation:0, x:0, y:0, squashX:1, squashY:1, blink:1, faceSlide:{x:0,y:0}, arms:[{x:-20,y:0,vx:0,vy:0},{x:20,y:0,vx:0,vy:0}] } };
+        Matter.Composite.add(engineRef.current.world, ball);
+        
+        setTimeout(() => { 
+            setSettingsData(s => ({ ...s, totalDays: s.totalDays + 1 }));
+            setHistory(prev => [...prev, { id: Date.now(), date: new Date(), emotionId: activeEmotion.id, tasksCompleted: tasks.length || 1, completedTasks: tasks.map(t => t.id) }]);
+            setGameState('EMOTION'); setActiveEmotion(null); 
+        }, 2000);
+      };
+
+      const handleCreateHabitFinish = () => {
+        const habit = { id: Date.now(), name: newHabit.name, amount: newHabit.amount, ridiculousAction: newHabit.ridiculousAction, minU: newHabit.unit, maxU: newHabit.unit };
+        setTasks([habit, ...tasks]); setShowTopPopup(false); setWizardStep(1); setGameState('EMOTION');
+      };
+
+      let floatingClasses = "absolute left-1/2 -translate-x-1/2 flex items-center justify-center rounded-full pointer-events-none ";
+      let floatingStyle = {};
+      if (!activeEmotion || gameState === 'DROPPING' || gameState === 'EMOTION') {
+          floatingClasses += " opacity-0 w-[56px] h-[56px] transition-none"; floatingStyle.top = `${activeEmoStartPos}px`;
+      } else if (gameState === 'HIDE_OTHERS') {
+          floatingClasses += " opacity-100 w-[56px] h-[56px] transition-opacity duration-200"; floatingStyle.top = `${activeEmoStartPos}px`;
+      } else if (['MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState)) {
+          floatingClasses += " opacity-100 w-[140px] h-[140px] transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)]";
+          floatingStyle.top = '120px';
+      }
+
+      let uiMode = 'idle'; if (['MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState)) uiMode = 'excited';
+      const showContent = ['SHOW_CONTENT', 'SELECTING'].includes(gameState);
+      const showButton = gameState === 'SELECTING';
+      
+      const getEmotionClass = (emo) => {
+          if (viewMode === 'STAGES') return 'duration-200 translate-x-[150%] opacity-0 pointer-events-none';
+          if (gameState === 'EMOTION') return 'duration-500 translate-x-0 opacity-100 scale-100';
+          if (activeEmotion?.id === emo.id && gameState === 'HIDE_OTHERS') return 'duration-200 opacity-0 scale-90'; 
+          return 'duration-200 translate-x-[150%] opacity-0 pointer-events-none'; 
+      };
+
+      return (
+        <>
+          <div className="fixed inset-0 bg-[#0F172A] flex justify-center items-center font-sans overflow-hidden" 
+                onMouseDown={e => registerGlobalInteraction(e.clientX, e.clientY)}
+                onTouchStart={e => registerGlobalInteraction(e.touches[0].clientX, e.touches[0].clientY)}
+                style={{ height: '100dvh', touchAction: 'none' }} >
+            
+            <div ref={appContainerRef} dir="rtl" className="relative w-full h-full sm:max-w-[480px] sm:max-h-[92vh] bg-white sm:rounded-[40px] shadow-2xl overflow-hidden transition-all duration-1000" 
+                  style={{ backgroundImage: settingsData.stageImages[settingsData.totalDays + 1] ? `url(${settingsData.stageImages[settingsData.totalDays + 1]})` : 'none', backgroundSize: 'cover' }}>
+
+                  <div id="physics-container" ref={sceneRef} style={{ zIndex: gameState === 'DROPPING' ? 60 : 10 }} />
+                  
+                  {['HIDE_OTHERS', 'MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState) && (
+                     <div className="absolute inset-0 z-[40]" onClick={() => { setGameState('EMOTION'); setViewMode('EMOTIONS'); setActiveEmotion(null); }}></div>
+                  )}
+
+                  {activeEmotion && (
+                    <div className="absolute right-0 top-0 bottom-0 pointer-events-none z-[100]" style={{ width: isDrawerExpanded ? '75%' : '110px', transition: 'width 600ms cubic-bezier(0.19, 1, 0.22, 1)' }}>
+                      
+                      <div className={floatingClasses} style={floatingStyle}>
+                          <LiveSmiley config={settingsData.smileyConfigs[activeEmotion.id] || PRESETS[activeEmotion.id]} mode={uiMode} />
+                      </div>
+                      
+                      <div className={`absolute top-[270px] left-1/2 -translate-x-1/2 text-center w-full whitespace-nowrap transition-all ease-[cubic-bezier(0.19,1,0.22,1)] ${['SHOW_CONTENT', 'SELECTING'].includes(gameState) ? 'duration-700 translate-x-0 opacity-100' : 'duration-200 translate-x-[150%] opacity-0'}`}>
+                         <span className="text-[20px] font-black text-slate-800 tracking-wide" style={{ textShadow: '0 4px 12px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5)' }}>
+                             {activeEmotion.subtext}
+                         </span>
+                      </div>
                     </div>
-                    <button onClick={() => finalizeItem()} className={`w-12 h-12 text-white rounded-2xl shadow-lg flex items-center justify-center ${activeTab === 'habit' ? 'bg-orange-500' : 'bg-emerald-500'}`}><Check size={24} strokeWidth={4}/></button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+                  )}
 
-        {/* --- עוגנים (הרגלים) --- */}
-        <section className="text-right">
-          <div className="flex items-center gap-3 mb-6 px-2 opacity-30 text-right"><Flame size={20} className="text-orange-500" /><div className="flex-1 h-0.5 bg-stone-300 rounded-full"></div></div>
-          <div className="space-y-2 text-right">
-            {habits.map((habit) => (
-              <div 
-                key={habit.id} draggable
-                onDragStart={(e) => handleDragStart(e, habit.id, 'habit')}
-                onDragEnter={(e) => handleDragEnter(e, habit.id, 'habit')}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
-                className={`relative group transition-all duration-500 overflow-hidden text-right
-                  ${habit.isCollapsed ? 'py-1 opacity-40 grayscale translate-y-2' : 'py-5 px-3 rounded-[2rem] bg-white shadow-sm border border-stone-100'} 
-                  ${draggedId === habit.id ? 'opacity-20 scale-95 border-2 border-dashed border-orange-200' : ''}
-                  ${flashId === habit.id ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200' : ''}
-                `}
-              >
-                {habit.isCollapsed ? (
-                  <div className="flex items-center justify-center gap-2 py-1 text-right">
-                    <Check size={12} className="text-emerald-500" /><span className="text-[10px] font-bold text-stone-400 uppercase text-right">עוגן הוטמע</span>
-                    <button onClick={() => setHabits(prev => prev.map(h => h.id === habit.id ? {...h, isCollapsed: false} : h))} className="p-1 text-stone-300 hover:text-indigo-500"><Maximize2 size={10}/></button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col text-right">
-                    <div className="flex items-start justify-between text-right">
-                      <div className="flex items-center gap-5 text-right">
-                        <button onClick={() => toggleMinHabit(habit.id)} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm ${habit.isMinDone ? 'bg-emerald-500 text-white shadow-lg' : 'bg-stone-50 border-2 text-transparent border-stone-100'}`}><Check size={24} strokeWidth={4} /></button>
-                        <div className="text-right">
-                          <h3 className={`font-black text-lg text-right ${habit.isMinDone ? 'text-stone-400 line-through' : 'text-stone-800'}`}>{habit.title}</h3>
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-lg mt-1 inline-block bg-orange-100 text-orange-600 text-right"><Target size={10} className="inline ml-1" /> {habit.minGoal} {habit.minUnit}</span>
+                  <div className="sidebar" style={{ transform: ['EMOTION', 'HIDE_OTHERS', 'MOVE_UP', 'SHOW_CONTENT', 'SELECTING'].includes(gameState) ? 'translateX(0)' : 'translateX(100%)', width: isDrawerExpanded ? '85%' : '110px', backgroundColor: dynamicSidebarBg, backdropFilter: `blur(${settingsData.drawerBlur}px)` }}>
+                    <div className="h-full flex flex-col p-5 overflow-hidden relative">
+                      
+                      {/* Header Element (Profile) */}
+                      <div onClick={() => setWorkspace({ isOpen: true, activeTab: 'profile' })} className={`pt-8 flex flex-col items-center cursor-pointer shrink-0 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isDrawerExpanded && viewMode === 'EMOTIONS' ? 'opacity-0 -translate-y-10 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}`}>
+                        <div className="w-16 h-16 rounded-full bg-white border-2 border-slate-100 shadow-md overflow-hidden mb-3 relative flex items-center justify-center text-slate-300">
+                            {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User size={32} />}
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 pr-4 text-right">
-                        <span className="text-3xl filter drop-shadow-sm">{habit.stage}</span>
-                        <div className="flex items-center gap-1 text-[10px] font-black text-orange-500 text-right"><Flame size={12} /> {habit.streak}</div>
-                      </div>
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-500 pr-16 text-right ${habit.isMinDone ? 'opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-                      <div className="bg-indigo-50/50 rounded-[1.5rem] p-4 border border-indigo-100/50 text-right">
-                        <div className="flex items-center justify-between mb-3 text-right">
-                          <span className="text-[11px] font-black text-indigo-900 flex items-center gap-1.5 text-right"><Zap size={14} className="text-indigo-500" /> פריצה: {habit.breakthroughCount} {habit.breakthroughUnit}</span>
-                          <button onClick={() => toggleBreakthrough(habit.id)} className={`px-4 py-2 rounded-xl font-black text-xs ${habit.isBreakthroughDone ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-indigo-600 border border-indigo-100'} text-right`}>סיימתי פריצה</button>
-                        </div>
-                        <div className="flex gap-1.5 text-right">{[...Array(10)].map((_, i) => (<div key={i} className={`h-2 flex-1 rounded-full ${i < habit.breakthroughStreak ? 'bg-indigo-500 shadow-sm' : 'bg-indigo-200/30'}`}></div>))}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* --- פעולות מיקוד (משימות) --- */}
-        <section className="text-right">
-          <div className="flex items-center gap-3 mb-6 px-2 opacity-30 text-right">
-            <Layers size={20} className="text-indigo-500" />
-            <div className="flex-1 h-0.5 bg-stone-300 rounded-full"></div>
-            {activeTasksList.length > 3 && (
-              <button onClick={() => setShowAllTasks(!showAllTasks)} className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full font-black text-xs flex items-center gap-1">
-                {showAllTasks ? "צמצום" : `עוד ${activeTasksList.length - 3}`} {showAllTasks ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-4 text-right">
-            {visibleTasks.map((task) => {
-              const res = getShortDate(task.date);
-              const isExpanded = expandedTaskId === task.id;
-              const nextSubtask = task.subtasks?.find(st => !st.completed);
-              const displayTitle = (nextSubtask && !task.completed) ? nextSubtask.title : task.title;
-
-              return (
-                <div 
-                  key={task.id} draggable
-                  onDragStart={(e) => handleDragStart(e, task.id, 'task')}
-                  onDragEnter={(e) => handleDragEnter(e, task.id, 'task')}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                  className={`flex items-center gap-3 w-full transition-all duration-300 ${draggedId === task.id ? 'opacity-10 scale-95' : 'opacity-100'} text-right`}
-                >
-                  <div 
-                    className="w-12 flex flex-col items-center justify-center flex-shrink-0 cursor-pointer group text-right"
-                    onClick={() => { setSchedulingTask(task); setTempDate(task.date || new Date().toISOString().split('T')[0]); setTempTime(task.time || '12:00'); }}
-                  >
-                    {task.date && res ? (
-                      <div className="bg-white/40 py-2 w-full rounded-2xl border border-stone-100/50 shadow-sm flex flex-col items-center transition-all group-hover:bg-indigo-50 group-hover:border-indigo-100">
-                        <span className="text-[10px] font-black text-stone-400 uppercase group-hover:text-indigo-400">{res.dayName}</span>
-                        <span className="text-xl font-black text-indigo-600 leading-none">{res.dayNumber}</span>
-                        {task.time && <span className="text-[8px] font-bold text-stone-400 mt-1">{task.time}</span>}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1 animate-pulse text-right">
-                        <Hourglass size={20} className="text-amber-500" />
-                        <span className="text-[7px] font-black text-amber-600 text-center leading-tight uppercase text-right">דרוש כיול</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={`flex-1 flex flex-col bg-white p-5 rounded-[2rem] border-2 transition-all duration-500 group/card relative text-right
-                    ${isExpanded ? 'scale-[1.04] shadow-2xl border-indigo-200 z-10' : 'shadow-sm border-stone-50 hover:border-indigo-100'} 
-                    ${flashId === task.id ? 'bg-emerald-50 border-emerald-400 ring-4 ring-emerald-100' : ''}
-                    ${task.completed ? 'opacity-40 grayscale' : 'opacity-100'}
-                  `}>
-                    <div className="flex items-center gap-4 w-full text-right">
-                      <button onClick={(e) => { e.stopPropagation(); toggleTaskCompletion(task.id); }} className={`w-8 h-8 flex-shrink-0 rounded-2xl flex items-center justify-center transition-all ${task.completed ? 'bg-emerald-500 text-white shadow-lg' : 'bg-stone-50 border-2 border-stone-100 text-transparent hover:border-emerald-400 shadow-sm'}`}><Check size={18} strokeWidth={4} /></button>
-                      <div className="flex-1 flex flex-col justify-center cursor-pointer min-w-0 text-right" onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}>
-                        <h3 className={`font-black text-lg truncate text-right transition-all ${task.completed ? 'text-stone-300 line-through' : 'text-stone-800'}`}>
-                          {displayTitle}
-                        </h3>
-                        {nextSubtask && !task.completed && (
-                          <span className="text-[10px] text-stone-400 font-bold mt-1 flex items-center gap-1 truncate text-right justify-end">שייך ל: {task.title}</span>
-                        )}
-                      </div>
-                      <div className="text-stone-200 hover:text-stone-400 opacity-0 group-hover/card:opacity-100 p-1 cursor-grab active:cursor-grabbing text-right"><GripVertical size={20} /></div>
-                    </div>
-
-                    <div className={`overflow-hidden transition-all duration-500 ${isExpanded ? 'max-h-96 mt-6 opacity-100 border-t border-stone-50 pt-6' : 'max-h-0 opacity-0'} text-right`}>
-                      <div className="pr-1 space-y-3 text-right">
-                        <h4 className="text-[10px] font-black text-stone-300 uppercase tracking-widest mb-4 text-right">ניהול התפתחות</h4>
-                        {task.subtasks?.map(st => (
-                          <div key={st.id} onClick={() => toggleSubtask(task.id, st.id)} className="flex items-center gap-4 cursor-pointer p-3 rounded-2xl bg-stone-50/40 border border-transparent hover:bg-indigo-50/30 transition-all text-right">
-                            <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all ${st.completed ? 'bg-indigo-500 border-indigo-500 text-white shadow-md' : 'border-stone-200 text-transparent group-hover/st:border-indigo-400'}`}><Check size={14} strokeWidth={4} /></div>
-                            <span className={`text-sm font-bold ${st.completed ? 'text-stone-400 line-through' : 'text-stone-700'} text-right`}>{st.title}</span>
+                        <div className="flex flex-col items-center text-slate-900">
+                          <span className="text-[11px] font-black uppercase tracking-widest leading-none mb-2">{settingsData.userName}</span>
+                          <div className="relative flex items-center justify-center">
+                              <Shield className={`w-9 h-9 transition-colors duration-500 ${currentShields > 0 ? 'text-blue-500 fill-blue-500' : 'text-slate-300 fill-slate-300'}`} />
+                              <span className="absolute text-[12px] font-black text-white">{currentShields}</span>
                           </div>
-                        ))}
-                        <div className="flex items-center gap-4 pt-4 border-t border-stone-50/50 mt-2 text-right">
-                          <Plus size={20} className="text-indigo-400" />
-                          <input type="text" placeholder="להוסיף צעד פריצה..." value={newSubtaskTitle} onChange={(e) => setNewSubtaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addSubtask(task.id)} className="flex-1 bg-transparent text-sm font-bold text-indigo-900 outline-none placeholder:text-stone-300 text-right"/>
                         </div>
+                      </div>
+                      
+                      <div className="flex-1 relative flex items-center justify-center w-full">
+                          
+                          {/* Main Sidebar Emotion Buttons */}
+                          <div className={`absolute inset-0 flex flex-col items-center justify-center space-y-4 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${viewMode === 'STAGES' ? 'translate-x-[150%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100 pointer-events-auto'}`}>
+                            {emotions.map((emo) => (
+                              <div key={emo.id} onMouseDown={(e) => handleStartSelection(e, emo)} onTouchStart={(e) => handleStartSelection(e, emo)} 
+                                    className={`sidebar-btn transition-all ease-[cubic-bezier(0.23,1,0.32,1)] w-14 h-14 ${lottoPhase === 'READY' ? 'pointer-events-auto' : 'pointer-events-none'} ${getEmotionClass(emo)}`}>
+                                <div className="w-full h-full rounded-full flex items-center justify-center overflow-visible pointer-events-none">
+                                    <LiveSmiley config={settingsData.smileyConfigs[emo.id] || PRESETS[emo.id]} mode="idle" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* New Stages Scroll View */}
+                          <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${viewMode === 'EMOTIONS' ? 'translate-x-[150%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100 pointer-events-auto'}`}>
+                              <div className="w-full stages-scroll-container">
+                                  {Array.from({ length: 32 }).map((_, i) => {
+                                      const stageNum = i + 1;
+                                      const isCurrent = stageNum === settingsData.totalDays + 1;
+                                      const isPassed = stageNum <= settingsData.totalDays;
+                                      const isLocked = stageNum > settingsData.totalDays + 1;
+                                      
+                                      return (
+                                          <div key={i} className="stage-card flex flex-col items-center justify-center gap-3">
+                                              <div className={`w-full h-full rounded-2xl flex flex-col items-center justify-center shadow-lg border-2 transition-all 
+                                                  ${isCurrent ? 'bg-white border-blue-500 scale-105 z-10' : 'bg-slate-50/80 border-transparent'} 
+                                                  ${isLocked ? 'blur-[3px] opacity-50 grayscale' : 'blur-0 opacity-100'}`}>
+                                                  <span className="text-[10px] font-black text-slate-400 mb-1">×©×œ×‘</span>
+                                                  <span className={`text-4xl font-black ${isCurrent ? 'text-blue-500' : 'text-slate-800'}`}>{stageNum}</span>
+                                                  {isPassed && <div className="mt-2 bg-[#58CC02] rounded-full p-1"><Check size={14} className="text-white" /></div>}
+                                                  {isLocked && <div className="mt-2 text-slate-400"><Lock size={18} /></div>}
+                                              </div>
+                                              {isCurrent && <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full animate-pulse shadow-sm">× ×•×›×—×™</span>}
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          </div>
+
+                      </div>
+                      
+                      {/* Footer Toggle Element */}
+                      <div onClick={handleSidebarBottomClick} className={`mt-auto pb-8 flex flex-col items-center cursor-pointer group transition-all duration-500 ${isDrawerExpanded && viewMode === 'EMOTIONS' ? 'opacity-0 translate-y-10 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}`}>
+                          <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-900 transition-colors">
+                              ×©×œ×‘ {settingsData.totalDays + 1}
+                          </div>
+                          {!isDrawerExpanded && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 animate-bounce shadow-sm" />}
+                      </div>
+
+                    </div>
+                    
+                    <div className={`absolute inset-0 w-full h-full overflow-hidden flex flex-col pointer-events-none transition-all ${viewMode === 'STAGES' ? 'opacity-0 hidden' : 'opacity-100 flex'}`}>
+                      {/* habit list is precisely centered within calc boundaries so it won't overlap */}
+                      <div className={`habit-list-container flex-1 transition-all ease-[cubic-bezier(0.19,1,0.22,1)] ${showContent ? 'duration-700 translate-x-0 opacity-100' : 'duration-200 translate-x-[150%] opacity-0'}`}>
+                        {tasks.map((task, i) => (
+                            <div key={task.id} onClick={() => setActiveIndex(i)} className="habit-item text-center px-6 text-slate-900 pointer-events-auto absolute" style={{ top: '50%', transform: `translateY(calc(-50% + ${(i - activeIndex) * 100}px)) scale(${1.3 - Math.abs(i - activeIndex) * 0.3})`, opacity: Math.max(0, 1 - Math.abs(i - activeIndex) * 0.55), zIndex: 10 - Math.abs(i - activeIndex) }}>
+                              <h3 className="font-black text-3xl leading-tight text-slate-800">{task.name}</h3>
+                              {(i === activeIndex) && <p className="font-black uppercase tracking-widest text-[13px] mt-2 text-slate-500">{activeEmotion?.id >= 4 ? task.ridiculousAction : `${task.amount} ${task.minU}`}</p>}
+                            </div>
+                        ))}
+                      </div>
+                      <div className={`absolute bottom-10 inset-x-8 flex flex-col gap-4 items-center pointer-events-auto transition-all ease-[cubic-bezier(0.34,1.56,0.64,1)] ${showButton ? 'duration-500 translate-y-0 opacity-100 scale-100' : 'duration-200 translate-y-10 opacity-0 scale-90'}`}>
+                        <button onMouseDown={(e) => { e.stopPropagation(); executeDrop(); }} onTouchStart={(e) => { e.stopPropagation(); executeDrop(); }} className="w-full py-5 rounded-[24px] font-black shadow-xl text-lg sm:text-xl text-white active:scale-95 transition-transform" style={{ backgroundColor: settingsData.primaryBtnColor }}>×‘×•×¦×¢</button>
+                        <button onClick={() => { setGameState('EMOTION'); setActiveEmotion(null); }} className="text-[11px] sm:text-xs font-black text-slate-400 uppercase tracking-[2px] cursor-pointer active:text-slate-500">×‘×™×˜×•×œ</button>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
 
-      </div>
-    </div>
-  );
-}
+                  <div className={`absolute top-0 left-0 right-0 bg-white/95 backdrop-blur-xl z-[200] rounded-b-[50px] shadow-2xl transition-transform duration-500 ${showTopPopup ? 'translate-y-0' : '-translate-y-[120%]'}`}>
+                      <div className="p-8 pt-12 flex flex-col min-h-[460px]">
+                          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center relative overflow-hidden text-slate-900 font-heebo">
+                              {wizardStep === 1 && (
+                                  <div className="w-full animate-in fade-in duration-300">
+                                      <h2 className="text-3xl font-black mb-8 tracking-tight">××™×–×” ×”×¨×’×œ × ×•×¡×™×£?</h2>
+                                      <div className="flex flex-wrap justify-center gap-3 mb-6">{habitSuggestions.map(s => <button key={s} onClick={() => { setNewHabit({...newHabit, name: s}); setWizardStep(2); }} className="px-5 py-3 rounded-full bg-slate-100 text-slate-800 font-bold active:scale-95 transition-transform">{s}</button>)}</div>
+                                      <div className="relative text-slate-900"><input type="text" placeholder="×”×¨×’×œ ××—×¨..." className="w-full text-center text-xl font-bold bg-slate-50 py-5 rounded-3xl border-2 border-transparent focus:border-purple-200 outline-none shadow-inner" value={newHabit.name} onChange={e => setNewHabit({...newHabit, name: e.target.value})} />{newHabit.name && <button onClick={() => setWizardStep(2)} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center active:scale-90"><ChevronLeft className="w-5 h-5" /></button>}</div>
+                                  </div>
+                              )}
+                              {wizardStep === 2 && (
+                                  <div className="w-full animate-in fade-in duration-300">
+                                      <h2 className="text-3xl font-black mb-6 tracking-tight">×›×ž×•×ª ×•×™×—×™×“×”</h2>
+                                      <div className="flex items-center justify-center gap-6 mb-8 bg-slate-50 p-6 rounded-[35px] shadow-inner border border-slate-100 text-slate-900">
+                                          <button onClick={() => setNewHabit(h => ({...h, amount: Math.max(1, h.amount - 1)}))} className="w-12 h-12 rounded-full bg-white shadow-md text-3xl font-black flex items-center justify-center text-slate-400 active:scale-90"><Minus className="w-6 h-6" /></button>
+                                          <input type="number" className="bg-transparent text-5xl font-black w-24 text-center outline-none text-slate-900" value={newHabit.amount} onChange={e => setNewHabit({...newHabit, amount: Number(e.target.value)})} />
+                                          <button onClick={() => setNewHabit(h => ({...h, amount: h.amount + 1}))} className="w-12 h-12 rounded-full bg-[#0f172a] text-white shadow-lg text-3xl font-black flex items-center justify-center active:scale-90"><Plus className="w-6 h-6" /></button>
+                                      </div>
+                                      <div className="relative mb-6 font-heebo text-slate-900"><input type="text" placeholder="×”×§×œ×“ ×™×—×™×“×”..." className="w-full text-center text-lg font-bold bg-white py-4 rounded-2xl border-2 border-purple-50 focus:border-purple-300 outline-none shadow-sm text-slate-900" value={newHabit.unit} onChange={e => setNewHabit({...newHabit, unit: e.target.value})} /></div>
+                                      <div className="flex flex-wrap justify-center gap-2 mb-6 font-heebo">{unitOptions.map(u => <button key={u} onClick={() => setNewHabit({...newHabit, unit: u})} className={`px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-all ${newHabit.unit === u ? 'bg-purple-600 text-white shadow-md scale-105' : 'bg-slate-100 text-slate-600'}`}>{u}</button>)}</div>
+                                      <button onClick={() => setWizardStep(3)} className="w-full py-4 bg-[#0f172a] text-white font-black rounded-2xl active:scale-95 shadow-xl flex items-center justify-center gap-2 text-white">×”×ž×©×š <ChevronLeft className="w-5 h-5 rotate-180" /></button>
+                                  </div>
+                              )}
+                              {wizardStep === 3 && (
+                                  <div className="w-full animate-in fade-in text-center text-slate-900">
+                                      <h2 className="text-3xl font-black mb-2 text-purple-600 tracking-tight text-slate-900">×”×ž×™× ×™×ž×•× ×”×ž×’×•×—×š</h2>
+                                      <p className="text-slate-500 font-bold mb-6 font-heebo">×ž×” ×œ× ×ª×•×•×ª×¨ ×œ×¢×©×•×ª ×‘×—×™×™×?</p>
+                                      <div className="relative text-slate-900">
+                                          <input type="text" placeholder="×œ×ž×©×œ: ×œ×’×™×ž×” ××—×ª..." className="w-full text-2xl font-black text-center border-b-4 border-purple-100 bg-transparent py-4 outline-none focus:border-purple-600 transition-colors mb-8 text-slate-900" value={newHabit.ridiculousAction} onChange={e => setNewHabit({...newHabit, ridiculousAction: e.target.value})} />
+                                          <button disabled={!newHabit.ridiculousAction} onClick={handleCreateHabitFinish} className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-all ${newHabit.ridiculousAction ? 'bg-purple-600 text-white shadow-2xl active:scale-90' : 'bg-slate-100 text-slate-300'}`}><Check className="w-10 h-10" /></button>
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+                  </div>
+
+                  {workspace.isOpen && (
+                    <div className="absolute inset-0 z-[300] bg-slate-900/80 backdrop-blur-xl flex justify-center items-end sm:items-center sm:p-10" onClick={() => setWorkspace({ ...workspace, isOpen: false })}>
+                      <div className="w-full sm:max-w-xl bg-white h-[92vh] sm:h-auto sm:max-h-[90vh] rounded-t-[40px] sm:rounded-[60px] overflow-hidden flex flex-col shadow-2xl text-slate-900" onClick={e => e.stopPropagation()}>
+                          <div className="p-6 pb-4 sm:p-8 sm:pb-4 flex justify-between items-center border-b border-slate-50">
+                            <h3 className="font-black text-2xl font-heebo text-slate-900">×ž×¨×›×– ×©×œ×™×˜×”</h3>
+                            <button onClick={() => setWorkspace({ ...workspace, isOpen: false })} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center active:scale-90"><X className="w-5 h-5 text-slate-500" /></button>
+                          </div>
+                          <div className="flex px-4 sm:px-6 gap-3 sm:gap-4 border-b border-slate-100 overflow-x-auto whitespace-nowrap scrollbar-hide text-slate-400 font-heebo">
+                            {['stats', 'profile', 'design', 'stages', 'balls'].map(tab => (
+                              <button key={tab} onClick={() => setWorkspace({...workspace, activeTab: tab})} className={`pb-3 pt-4 px-2 font-black text-[13px] sm:text-sm uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${workspace.activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : ''}`}>{tab === 'stats' ? '×ž×¢×§×‘' : tab === 'profile' ? '×¤×¨×•×¤×™×œ' : tab === 'design' ? '×¢×™×¦×•×‘' : tab === 'stages' ? '×©×œ×‘×™×' : '×›×“×•×¨×™×'}</button>
+                            ))}
+                          </div>
+                          <div className="flex-1 overflow-y-auto p-5 sm:p-8 bg-slate-50/30 font-heebo text-slate-800">
+                             {workspace.activeTab === 'stats' && (
+                              <div className="space-y-5 sm:space-y-6 animate-in fade-in pb-8">
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                  <div className="bg-white p-4 sm:p-5 rounded-[24px] sm:rounded-[30px] shadow-sm text-center flex flex-col items-center justify-center">
+                                    <div className="text-3xl sm:text-4xl font-black text-[#1CB0F6] mb-1">{history.length}</div>
+                                    <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">×™×ž×™ ×”×ª×ž×“×”</div>
+                                  </div>
+                                  <div className="bg-white p-4 sm:p-5 rounded-[24px] sm:rounded-[30px] shadow-sm text-center flex flex-col items-center justify-center">
+                                    <div className="text-3xl sm:text-4xl font-black text-[#58CC02] mb-1">{history.reduce((sum, h) => sum + h.tasksCompleted, 0)}</div>
+                                    <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">×”×¨×’×œ×™× ×©×‘×•×¦×¢×•</div>
+                                  </div>
+                                </div>
+                                <div className="bg-white p-5 sm:p-6 rounded-[24px] sm:rounded-[30px] shadow-sm overflow-hidden">
+                                  <h4 className="text-xs sm:text-sm font-black text-slate-800 mb-4 sm:mb-6">×ž×’×ž×ª ×ž×¦×‘ ×”×¨×•×— (7 ×™×ž×™×)</h4>
+                                  <div className="relative w-full h-[100px] sm:h-[120px] flex items-center justify-center">
+                                     {(() => {
+                                        const last7 = history.slice(-7); if (last7.length === 0) return null;
+                                        const w = 260, h = 100;
+                                        const pts = last7.map((item, i) => ({ x: (i / (last7.length - 1 || 1)) * w, y: 10 + ((item.emotionId - 1) / 4) * (h - 20), emoId: item.emotionId, date: item.date }));
+                                        let d = `M ${pts[0].x} ${pts[0].y}`;
+                                        for (let i = 0; i < pts.length - 1; i++) { const cx = (pts[i].x + pts[i+1].x) / 2; d += ` C ${cx} ${pts[i].y}, ${cx} ${pts[i+1].y}, ${pts[i+1].x} ${pts[i+1].y}`; }
+                                        return (
+                                            <svg width="100%" height="100%" viewBox={`-20 -10 ${w+40} ${h+20}`} className="overflow-visible">
+                                                <path d={d} fill="none" stroke="#E5E7EB" strokeWidth="4" strokeLinecap="round" />
+                                                <path d={d} fill="none" stroke="url(#moodGradient)" strokeWidth="4" strokeLinecap="round" />
+                                                <defs><linearGradient id="moodGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#1CB0F6" /><stop offset="100%" stopColor="#CE82FF" /></linearGradient></defs>
+                                                {pts.map((p, i) => {
+                                                    const conf = settingsData.smileyConfigs[p.emoId] || PRESETS[p.emoId];
+                                                    const color = typeof conf.bodyColor === 'string' && conf.bodyColor.startsWith('#') ? conf.bodyColor : '#58CC02';
+                                                    return ( <g key={i} transform={`translate(${p.x}, ${p.y})`}><circle r="7" fill={color} stroke="#fff" strokeWidth="2.5" className="shadow-sm" /></g> );
+                                                })}
+                                            </svg>
+                                        );
+                                     })()}
+                                  </div>
+                                </div>
+                                <div className="bg-white p-5 sm:p-6 rounded-[24px] sm:rounded-[30px] shadow-sm">
+                                  <h4 className="text-xs sm:text-sm font-black text-slate-800 mb-4 sm:mb-5">×ž×¢×§×‘ ×”×¨×’×œ×™× ××™×©×™</h4>
+                                  <div className="space-y-4">
+                                    {tasks.map(task => {
+                                        const count = history.filter(h => h.completedTasks?.includes(task.id)).length;
+                                        const pct = history.length ? Math.min(100, (count / history.length) * 100) : 0;
+                                        return (
+                                            <div key={task.id} className="relative">
+                                                <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-slate-600 mb-1.5"><span>{task.name}</span><span>{count} ×¤×¢×ž×™×</span></div>
+                                                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">{pct > 0 && <div className="h-full bg-gradient-to-l from-[#58CC02] to-[#A1CE40] rounded-full transition-all duration-1000" style={{ width: `${pct}%` }}></div>}</div>
+                                            </div>
+                                        );
+                                    })}
+                                    {tasks.length === 0 && <div className="text-xs text-slate-400 text-center">××™×Ÿ ×”×¨×’×œ×™× ×œ×ž×¢×§×‘ ×¢×“×™×™×Ÿ.</div>}
+                                  </div>
+                                </div>
+                                <div className="bg-white p-5 sm:p-6 rounded-[24px] sm:rounded-[30px] shadow-sm space-y-4 sm:space-y-5">
+                                  <h4 className="text-xs sm:text-sm font-black text-slate-800 mb-2">×”×ª×¤×œ×’×•×ª ×ž×¦×‘×™ ×¨×•×—</h4>
+                                  {emotions.map(emo => {
+                                    const count = history.filter(h => h.emotionId === emo.id).length;
+                                    const percentage = history.length > 0 ? (count / history.length) * 100 : 0;
+                                    const conf = settingsData.smileyConfigs[emo.id] || PRESETS[emo.id];
+                                    const color = typeof conf.bodyColor === 'string' && conf.bodyColor.startsWith('#') ? conf.bodyColor : '#58CC02';
+                                    if (count === 0) return null;
+                                    return (
+                                      <div key={emo.id} className="flex items-center gap-3 sm:gap-4">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl bg-slate-50 border border-slate-100 shadow-sm flex-shrink-0 overflow-hidden pointer-events-none"><LiveSmiley config={conf} mode="idle" /></div>
+                                        <div className="flex-1">
+                                          <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-slate-600 mb-1.5"><span>{emo.label}</span><span>{count} ×™×ž×™×</span></div>
+                                          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">{percentage > 0 && <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${percentage}%`, backgroundColor: color }}></div>}</div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                             {workspace.activeTab === 'profile' && (
+                              <div className="space-y-5 sm:space-y-6 animate-in fade-in pb-8">
+                                <div className="flex flex-col items-center gap-4 sm:gap-6 py-5 sm:py-6 bg-white rounded-[30px] sm:rounded-[40px] shadow-sm text-slate-900">
+                                   <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-slate-100 border-4 border-white shadow-xl overflow-hidden relative group">
+                                     {settingsData.profilePic ? <img src={settingsData.profilePic} className="w-full h-full object-cover" alt="p" /> : <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 m-7 sm:m-10" />}
+                                     <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, profilePic: URL.createObjectURL(f)})); }} />
+                                   </div>
+                                   <input type="text" value={settingsData.userName} onChange={e => setSettingsData(s => ({...s, userName: e.target.value}))} className="text-center font-black text-xl sm:text-2xl w-full outline-none text-slate-900 bg-slate-50 py-2 sm:py-3 rounded-2xl" />
+                                   <div className="flex flex-col items-center gap-2">
+                                      <label className="text-[9px] sm:text-[10px] font-black uppercase opacity-40">× ×ª×•× ×™ ×”×ª×ž×“×”</label>
+                                      <div className="flex items-center gap-3 bg-slate-50 px-5 sm:px-6 py-2.5 sm:py-3 rounded-2xl border border-slate-100">
+                                         <div className="flex flex-col items-center text-slate-900 font-heebo"><span className="text-xl sm:text-2xl font-black text-purple-600">{settingsData.totalDays}</span><span className="text-[8px] sm:text-[9px] font-bold opacity-40">×™×ž×™× ×©× ×¦×‘×¨×•</span></div>
+                                      </div>
+                                   </div>
+                                </div>
+                              </div>
+                            )}
+                            {workspace.activeTab === 'design' && (
+                              <div className="space-y-5 sm:space-y-6 animate-in fade-in pb-8">
+                                <div className="p-5 sm:p-6 bg-white rounded-[30px] sm:rounded-[40px] shadow-sm space-y-4 sm:space-y-6 text-slate-700 font-heebo">
+                                  <label className="text-[11px] sm:text-xs font-black uppercase tracking-widest block opacity-50 text-slate-900">×ž×¨××” ×”×ž×’×™×¨×”</label>
+                                  <div className="flex items-center justify-between bg-slate-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm"><span>×¦×‘×¢ ×¨×§×¢</span><input type="color" value={settingsData.drawerBgColor} onChange={e => setSettingsData(s => ({...s, drawerBgColor: e.target.value}))} className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg cursor-pointer shadow-sm border-0" /></div>
+                                  <div className="space-y-3 sm:space-y-4 bg-slate-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm"><span>×©×§×™×¤×•×ª</span><input type="range" min="0" max="1" step="0.01" value={settingsData.drawerOpacity} onChange={e => setSettingsData(s => ({...s, drawerOpacity: parseFloat(e.target.value)}))} className="w-full accent-slate-900" /></div>
+                                  <div className="space-y-3 sm:space-y-4 bg-slate-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm"><span>×˜×©×˜×•×©</span><input type="range" min="0" max="40" step="1" value={settingsData.drawerBlur} onChange={e => setSettingsData(s => ({...s, drawerBlur: parseInt(e.target.value)}))} className="w-full accent-slate-900" /></div>
+                                </div>
+                              </div>
+                            )}
+                            {workspace.activeTab === 'stages' && (
+                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 animate-in fade-in pb-10">
+                                {Array.from({ length: 32 }).map((_, i) => (
+                                  <div key={i+1} className="aspect-square relative rounded-xl sm:rounded-2xl overflow-hidden border-2 flex items-center justify-center group bg-white shadow-sm transition-all active:scale-90" style={{ borderColor: settingsData.stageImages[i+1] ? settingsData.primaryBtnColor : '#f1f5f9' }}>
+                                    {settingsData.stageImages[i+1] ? <img src={settingsData.stageImages[i+1]} className="w-full h-full object-cover" alt="stage" /> : <span className="text-[9px] sm:text-[10px] font-black opacity-20 text-slate-900 font-heebo">{i+1}</span>}
+                                    <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => { const f = e.target.files?.[0]; if (f) setSettingsData(s => ({...s, stageImages: {...s.stageImages, [i+1]: URL.createObjectURL(f)}})) }} />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {workspace.activeTab === 'balls' && (
+                              <div className="space-y-3 sm:space-y-4 animate-in fade-in pb-10 text-slate-900 font-heebo">
+                                {emotions.map(emo => (
+                                  <div key={emo.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white rounded-[30px] shadow-sm relative">
+                                     <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shadow-inner bg-slate-100/50 border border-slate-200 flex-shrink-0`}><LiveSmiley config={settingsData.smileyConfigs[emo.id] || PRESETS[emo.id]} mode="idle" /></div>
+                                     <div className="flex-1 text-[11px] font-black text-slate-500 w-full overflow-hidden"><div className="flex justify-between items-center mb-1"><span className="truncate pr-1">×“×ž×•×ª ×—×™×” ×¤×¢×™×œ×” ({emo.label})</span></div></div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!isAuthenticated && (
+                    <div className="absolute inset-0 z-[600] bg-slate-900/80 backdrop-blur-xl flex justify-center items-end sm:items-center sm:p-10" onClick={e => e.stopPropagation()}>
+                        <div className="w-full sm:max-w-xl bg-white h-[85vh] sm:h-auto sm:max-h-[90vh] rounded-t-[40px] sm:rounded-[60px] overflow-hidden flex flex-col shadow-2xl text-slate-900 animate-in slide-in-from-bottom-full sm:zoom-in duration-500" onClick={e => e.stopPropagation()}>
+                            <div className="flex-1 overflow-y-auto p-6 sm:p-10 flex flex-col items-center justify-center text-center font-heebo relative">
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 sm:mb-8 shadow-inner border border-slate-100 shrink-0 mt-auto sm:mt-0"><Shield className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300" /></div>
+                                <h2 className="text-3xl sm:text-4xl font-black text-slate-800 mb-3 sm:mb-4">×‘×¨×•×›×™× ×”×‘××™×</h2>
+                                <p className="text-slate-500 text-sm font-medium mb-10 sm:mb-12 max-w-sm px-2">×›×“×™ ×œ×”×ª×—×™×œ ×œ×¢×§×•×‘ ××—×¨×™ ×”×”×¨×’×œ×™× ×©×œ×š ×•×œ×”×©×ª×ž×© ×‘×ž×¢×¨×›×ª, ×™×© ×œ×”×ª×—×‘×¨ ×¢× ×—×©×‘×•×Ÿ Google.</p>
+                                <button onClick={() => setIsAuthenticated(true)} className="w-full max-w-sm bg-white border-2 border-slate-200 text-slate-700 font-bold py-4 px-4 sm:px-6 rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all shadow-sm text-base sm:text-lg mt-auto sm:mt-0 mb-4 sm:mb-0">
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                                    ×”×ª×—×‘×¨×•×ª ×¢× Google
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                  )}
+
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
