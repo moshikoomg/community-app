@@ -163,8 +163,6 @@
             display: flex; justify-content: center; align-items: center; position: relative; 
             z-index: 1; box-shadow: 0 -4px 15px rgba(0,0,0,0.03); 
         }
-        .active-icon-bg::before { content: ''; position: absolute; bottom: 42px; left: -12px; width: 16px; height: 12px; background: radial-gradient(circle at 0% 0%, transparent 12px, #ffffff 12.5px); z-index: -1; }
-        .active-icon-bg::after { content: ''; position: absolute; bottom: 42px; right: -12px; width: 16px; height: 12px; background: radial-gradient(circle at 100% 0%, transparent 12px, #ffffff 12.5px); z-index: -1; }
 
         #marble-drop-zone { width: 60px; height: 60px; pointer-events: none; }
         
@@ -408,15 +406,15 @@
         function popMarble() {
             if(fm.style.display === 'none' || isAnimatingJump) return;
             fm.classList.remove('marble-pulse');
-            fm.style.transition = 'none';
-            fm.style.transform = 'scale(0.1) translateY(40px) rotate(-45deg)';
-            fm.style.opacity = '0';
-            requestAnimationFrame(() => {
+            
+            fm.style.transition = 'transform 0.15s ease-out';
+            fm.style.transform = 'scale(0.6)';
+            
+            setTimeout(() => {
+                fm.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.7, 0.64, 1.1)'; 
                 renderActiveHabit(); 
-                fm.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.7, 0.64, 1.1), opacity 0.3s'; 
-                fm.style.transform = 'scale(1) translateY(0) rotate(0deg)'; fm.style.opacity = '1';
                 setTimeout(() => { if(!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); }, 500);
-            });
+            }, 150);
         }
 
         function moveCanvas(idx) {
@@ -568,7 +566,6 @@
                     
                     setTimeout(() => animateLid(false), 150);
                     
-                    // מחכים עד שהכדור יסיים ליפול לחלוטין לפני שיוצרים כדור חדש במגירה
                     setTimeout(() => { 
                         fm.style.transform = 'scale(0)'; 
                         fm.style.visibility = 'visible';
@@ -613,7 +610,6 @@
             const dist = Math.sqrt(tx * tx + ty * ty);
             
             if (dist < 10) {
-                // לחיצה פשוטה ללא גרירה - הכדור ייזרק מהמגירה ישר לצנצנת
                 tx = 0; ty = 0;
                 fm.style.transform = `translate(0px, 0px) scale(1)`;
                 performNaturalJump();
