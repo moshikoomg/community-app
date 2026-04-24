@@ -246,7 +246,7 @@
         <!-- Header -->
         <div class="header-ui">
             <div style="flex: 1;"></div> 
-            <div class="user-pill" onclick="openProfilePopup()">
+            <div class="user-pill" onclick="window.openProfilePopup()">
                 <div class="name" id="display-profile-name">ישראל</div>
                 <div class="user-avatar">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -270,7 +270,7 @@
             
             <!-- Normal View -->
             <div id="drawer-normal-view" class="drawer-view active">
-                <div class="edit-btn" onclick="openEditMode()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
+                <div class="edit-btn" onclick="window.openEditMode()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
                 <div class="picker-top">
                     <div class="active-icon-bg"><div id="marble-drop-zone"></div></div>
                     <div id="picker-time" style="color:#94a3b8; font-size:13px; font-weight:700; margin-top:2px;"></div>
@@ -289,8 +289,8 @@
                         <div style="flex:1.2;"><label style="display:block; font-size:12px; margin-bottom:4px;">צבע</label><input type="color" id="input-habit-color" style="width:100%; height:48px; border-radius:12px; border:1.5px solid #e2e8f0; padding:2px;"></div>
                     </div>
                     <div style="margin-top:15px; text-align: right;"><label style="display:block; font-size:12px; margin-bottom:4px;">יעד</label><input type="text" id="input-habit-time" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px;"></div>
-                    <div style="display:flex; gap:12px; margin-top:20px;"><button style="flex:2; background:var(--primary-color); color:white; border:none; padding:15px; border-radius:14px; font-weight:800;" onclick="saveHabitChanges()">שמור</button><button style="flex:1; background:#f1f5f9; border:none; padding:15px; border-radius:14px;" onclick="closeEditMode()">ביטול</button></div>
-                    <button style="width:100%; margin-top:15px; color:var(--danger-color); background:none; border:1px solid var(--danger-color); padding:12px; border-radius:12px; font-weight:800;" onclick="deleteCurrentHabit()">מחק הרגל</button>
+                    <div style="display:flex; gap:12px; margin-top:20px;"><button style="flex:2; background:var(--primary-color); color:white; border:none; padding:15px; border-radius:14px; font-weight:800;" onclick="window.saveHabitChanges()">שמור</button><button style="flex:1; background:#f1f5f9; border:none; padding:15px; border-radius:14px;" onclick="window.closeEditMode()">ביטול</button></div>
+                    <button style="width:100%; margin-top:15px; color:var(--danger-color); background:none; border:1px solid var(--danger-color); padding:12px; border-radius:12px; font-weight:800;" onclick="window.deleteCurrentHabit()">מחק הרגל</button>
                 </div>
             </div>
 
@@ -330,9 +330,9 @@
         <canvas id="floating-marble" width="60" height="60"></canvas>
 
         <!-- Popups -->
-        <div class="popup-backdrop" id="profile-popup" onclick="handleBackdropClick(event, 'profile-popup')">
+        <div class="popup-backdrop" id="profile-popup" onclick="window.handleBackdropClick(event, 'profile-popup')">
             <div class="popup-content">
-                <button class="close-popup-btn" onclick="closeProfilePopup()">✕</button>
+                <button class="close-popup-btn" onclick="window.closeProfilePopup()">✕</button>
                 <div style="font-size:22px; font-weight:900; margin-bottom:20px;">החשבון שלי</div>
                 
                 <div style="display:flex; gap:12px; margin-bottom:20px;">
@@ -340,9 +340,9 @@
                     <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#94a3b8;">גולות</span></div>
                 </div>
                 
-                <div style="text-align: right;"><label style="font-size:13px; font-weight:700; color:#64748b;">שם תצוגה</label><input type="text" id="input-profile-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;" onkeyup="updateProfileName(this.value)"></div>
+                <div style="text-align: right;"><label style="font-size:13px; font-weight:700; color:#64748b;">שם תצוגה</label><input type="text" id="input-profile-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;" onkeyup="window.updateProfileName(this.value)"></div>
                 
-                <!-- לחצן התחברות לגוגל לשמירת נתונים מבוססת ענן מובהקת -->
+                <!-- לחצן התחברות לגוגל לשמירת נתונים מבוססת ענן -->
                 <button id="google-sync-btn" onclick="window.connectGoogle()" style="width:100%; margin-top:20px; padding:14px; border-radius:14px; border:none; background:#4285F4; color:white; font-weight:800; display:flex; justify-content:center; align-items:center; gap:10px; cursor:pointer;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                     שמור התקדמות בענן (גוגל)
@@ -355,56 +355,59 @@
                     <div>
                         <label style="font-size:11px; font-weight:700; color:#64748b;">רקע אפליקציה (צבע / URL)</label>
                         <div style="display:flex; gap:8px; margin-top:4px;">
-                            <input type="color" id="input-app-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="updateCustomBgs()">
-                            <input type="text" id="input-app-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="updateCustomBgs()">
+                            <input type="color" id="input-app-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="window.updateCustomBgs()">
+                            <input type="text" id="input-app-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="window.updateCustomBgs()">
                         </div>
                     </div>
                     <div>
                         <label style="font-size:11px; font-weight:700; color:#64748b;">רקע צנצנת (צבע / URL)</label>
                         <div style="display:flex; gap:8px; margin-top:4px;">
-                            <input type="color" id="input-jar-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="updateCustomBgs()">
-                            <input type="text" id="input-jar-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="updateCustomBgs()">
+                            <input type="color" id="input-jar-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="window.updateCustomBgs()">
+                            <input type="text" id="input-jar-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="window.updateCustomBgs()">
                         </div>
                     </div>
-                    <button style="margin-top:5px; background:none; border:none; color:var(--danger-color); font-size:12px; font-weight:700; cursor:pointer; text-align:right; padding:0;" onclick="resetCustomBgs()">אפס עיצוב אישי</button>
+                    <button style="margin-top:5px; background:none; border:none; color:var(--danger-color); font-size:12px; font-weight:700; cursor:pointer; text-align:right; padding:0;" onclick="window.resetCustomBgs()">אפס עיצוב אישי</button>
                 </div>
 
-                <button id="admin-dashboard-btn" style="display:none; width:100%; margin-top:20px; padding:14px; border-radius:14px; border:1.5px solid var(--admin-color); color:var(--admin-color); background:none; font-weight:800;" onclick="openAdminDashboard()">ניהול שלבים</button>
+                <button id="admin-dashboard-btn" style="display:none; width:100%; margin-top:20px; padding:14px; border-radius:14px; border:1.5px solid var(--admin-color); color:var(--admin-color); background:none; font-weight:800;" onclick="window.openAdminDashboard()">ניהול שלבים</button>
             </div>
         </div>
 
-        <div class="popup-backdrop" id="admin-popup" onclick="handleBackdropClick(event, 'admin-popup')">
+        <div class="popup-backdrop" id="admin-popup" onclick="window.handleBackdropClick(event, 'admin-popup')">
             <div class="popup-content" style="max-width:400px;">
-                <button class="close-popup-btn" onclick="closeAdminDashboard()">✕</button>
+                <button class="close-popup-btn" onclick="window.closeAdminDashboard()">✕</button>
                 <div style="font-size:22px; font-weight:900; margin-bottom:20px; color:var(--admin-color);">ניהול שלבים</div>
                 <div style="text-align: right; margin-bottom: 15px;">
                     <label style="font-size:13px; font-weight:700;">שלב 1 (ימים 1-5)</label>
-                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="uploadStageBg(event, 1)"><span id="label-bg-1">בחר תמונה מהמכשיר...</span></label>
+                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="window.uploadStageBg(event, 1)"><span id="label-bg-1">בחר תמונה מהמכשיר...</span></label>
                 </div>
                 <div style="text-align: right; margin-bottom: 15px;">
                     <label style="font-size:13px; font-weight:700;">שלב 2 (ימים 5-10)</label>
-                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="uploadStageBg(event, 2)"><span id="label-bg-2">בחר תמונה מהמכשיר...</span></label>
+                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="window.uploadStageBg(event, 2)"><span id="label-bg-2">בחר תמונה מהמכשיר...</span></label>
                 </div>
                 <div style="text-align: right; margin-bottom: 15px;">
                     <label style="font-size:13px; font-weight:700;">שלב 3 (ימים 10-21)</label>
-                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="uploadStageBg(event, 3)"><span id="label-bg-3">בחר תמונה מהמכשיר...</span></label>
+                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="window.uploadStageBg(event, 3)"><span id="label-bg-3">בחר תמונה מהמכשיר...</span></label>
                 </div>
                 <div style="text-align: right; margin-bottom: 15px;">
                     <label style="font-size:13px; font-weight:700;">שלב 4+ (קפיצות 21)</label>
-                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="uploadStageBg(event, 'generic')"><span id="label-bg-generic">בחר תמונה מהמכשיר...</span></label>
+                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="window.uploadStageBg(event, 'generic')"><span id="label-bg-generic">בחר תמונה מהמכשיר...</span></label>
                 </div>
-                <button style="width:100%; background:var(--admin-color); color:white; padding:15px; border-radius:14px; border:none; font-weight:800; margin-top:5px;" onclick="closeAdminDashboard()">סיום</button>
+                <button style="width:100%; background:var(--admin-color); color:white; padding:15px; border-radius:14px; border:none; font-weight:800; margin-top:5px;" onclick="window.closeAdminDashboard()">סיום</button>
             </div>
         </div>
     </div>
 
-    <!-- טעינת סקריפטים ומנגנון Firebase -->
+    <!-- טעינת סקריפטים ומנגנון נתונים -->
     <script>
         const STAGE_GAP = 21;
         const TOTAL_DISPLAY_DAYS = 63; 
         const ADMIN_EMAIL = "mosheally@gmail.com";
-        const currentUser = { displayName: "משה עלי", email: "mosheally@gmail.com" };
-
+        
+        let currentUser = { displayName: "משה עלי", email: "mosheally@gmail.com" };
+        let appStartDate = Date.now();
+        let lastActionDate = Date.now();
+        
         let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 1;
         let habitsData = [
             { id: 1, name: 'לנשום', time: '10 דקות', color: '#42b6c7' },
@@ -418,10 +421,30 @@
         let customBgs = {};
         let userStats = { daysData: [] };
 
+        // פונקציית אתחול מבנה הנתונים
         function initStats(idx) {
-            if(!userStats.daysData[idx]) userStats.daysData[idx] = { habits: {} };
+            if(!userStats.daysData[idx]) userStats.daysData[idx] = { habits: {}, savedBalls: [] };
             habitsData.forEach(h => { if(!userStats.daysData[idx].habits[h.id]) userStats.daysData[idx].habits[h.id] = { min: 0, breakthrough: 0 }; });
         }
+
+        // --- שחזור מיידי מ-LocalStorage ("קוקיז") טרם טעינת כל שאר המערכת ---
+        try {
+            const localData = localStorage.getItem('habit_jar_local_state_v1');
+            if (localData) {
+                const data = JSON.parse(localData);
+                if (data.habitsData) habitsData = data.habitsData;
+                if (data.userStats) userStats = data.userStats;
+                if (data.stageBackgrounds) stageBackgrounds = data.stageBackgrounds;
+                if (data.customBgs) customBgs = data.customBgs;
+                if (data.unlockedDays) unlockedDays = data.unlockedDays;
+                if (data.currentDayView !== undefined) currentDayView = data.currentDayView;
+                if (data.displayName) currentUser.displayName = data.displayName;
+                if (data.startDate) appStartDate = data.startDate;
+                if (data.lastActionDate) lastActionDate = data.lastActionDate;
+            }
+        } catch (e) { console.error("Error loading local data", e); }
+
+        // הבטחת קיום המבנה לכל הימים תמיד
         for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
 
         function getStageInfo(day) {
@@ -434,13 +457,43 @@
             return { stage: stageCount, maxDays: base };
         }
 
-        // --- מנגנון שמירה וענן חכם (Firebase) ---
+        // --- מנגנון שמירה רב-שכבתי חכם ---
         let db, auth, currentUserUid = null;
         let _setDoc, _doc;
 
-        // שימוש במשתנה דמה (No-op) עד ש-Firebase נטען לחלוטין
-        window.saveState = async () => {}; 
+        window.saveState = async () => {
+            lastActionDate = Date.now();
+            
+            // שמירת המיקומים המדויקים של הכדורים הפיזיים ברגע זה (אם ישנם)
+            if (typeof currentBalls !== 'undefined' && currentDayView >= 0 && currentDayView < TOTAL_DISPLAY_DAYS && currentBalls.length > 0) {
+                userStats.daysData[currentDayView].savedBalls = currentBalls.map(b => ({
+                    x: b.position.x,
+                    y: b.position.y,
+                    angle: b.angle,
+                    color: b.render.fillStyle
+                }));
+            }
 
+            const state = { 
+                habitsData, userStats, stageBackgrounds, customBgs, 
+                unlockedDays, currentDayView, displayName: currentUser.displayName,
+                startDate: appStartDate, lastActionDate 
+            };
+            
+            // 1. קודם כל: שמירה מקומית (Local Storage) עמידה ואמינה
+            try {
+                localStorage.setItem('habit_jar_local_state_v1', JSON.stringify(state));
+            } catch(e) {}
+
+            // 2. שנית: אם מחובר בענן - סנכרן לשם שיהיה גיבוי גלובלי
+            if (!db || !currentUserUid || !_setDoc || !_doc) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'habit-jar';
+            try {
+                await _setDoc(_doc(db, 'artifacts', appId, 'users', currentUserUid, 'appState', 'main'), state);
+            } catch(e) { console.error(e); }
+        };
+
+        // אתחול Firebase ברקע
         import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js").then(async ({ initializeApp }) => {
             const { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, linkWithPopup, signInWithPopup, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
             const { getFirestore, doc, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
@@ -449,7 +502,7 @@
             _doc = doc;
 
             const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            if (Object.keys(firebaseConfig).length === 0) return; // הרצה ללא שרת ענן
+            if (Object.keys(firebaseConfig).length === 0) return; 
 
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
@@ -460,9 +513,9 @@
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
-                        await signInAnonymously(auth); // יוצר סשן "קוקיז" וירטואלי בצורה חלקה
+                        await signInAnonymously(auth);
                     }
-                } catch(e) { console.error("שגיאת אימות", e); }
+                } catch(e) {}
             };
 
             onAuthStateChanged(auth, async (user) => {
@@ -471,11 +524,11 @@
                     const isGoogleLinked = user.providerData.some(p => p.providerId === 'google.com');
                     
                     if (isGoogleLinked) {
-                        currentUser.displayName = user.displayName || "משתמש";
-                        document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
                         document.getElementById('google-sync-btn').style.display = 'none';
                         document.getElementById('google-sync-status').style.display = 'block';
                     }
+                    
+                    // טעינה מהענן אם יש מידע (דורס מקומי במקרה של התנגשות, שימושי בסנכרון מכשירים)
                     loadStateFromCloud(getDoc, doc);
                 }
             });
@@ -486,16 +539,16 @@
                     const result = await linkWithPopup(auth.currentUser, provider);
                     document.getElementById('google-sync-btn').style.display = 'none';
                     document.getElementById('google-sync-status').style.display = 'block';
-                    currentUser.displayName = result.user.displayName || "משתמש";
+                    currentUser.displayName = result.user.displayName || currentUser.displayName;
                     document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
-                    window.saveState();
+                    window.saveState(); // עכשיו דוחף את כל המידע המקומי לענן!
                 } catch (err) {
                     if (err.code === 'auth/credential-already-in-use') {
                         try {
                             const result = await signInWithPopup(auth, provider);
                             document.getElementById('google-sync-btn').style.display = 'none';
                             document.getElementById('google-sync-status').style.display = 'block';
-                            currentUser.displayName = result.user.displayName || "משתמש";
+                            currentUser.displayName = result.user.displayName || currentUser.displayName;
                             document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
                             await loadStateFromCloud(getDoc, doc);
                         } catch(e) {}
@@ -508,50 +561,45 @@
             initAuth();
         });
 
-        window.saveState = async () => {
-            if (!db || !currentUserUid || !_setDoc || !_doc) return;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'habit-jar';
-            const state = { habitsData, userStats, stageBackgrounds, customBgs, unlockedDays, currentDayView, displayName: currentUser.displayName };
-            try {
-                await _setDoc(_doc(db, 'artifacts', appId, 'users', currentUserUid, 'appState', 'main'), state);
-            } catch(e) { console.error(e); }
-        };
-
         async function loadStateFromCloud(getDoc, doc) {
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'habit-jar';
             try {
                 const snap = await getDoc(doc(db, 'artifacts', appId, 'users', currentUserUid, 'appState', 'main'));
                 if (snap.exists()) {
                     const data = snap.data();
+                    // אם למשתמש יש שמירה בענן, נעדכן את הסטייט הפעיל
                     if (data.habitsData) habitsData = data.habitsData;
                     if (data.userStats) userStats = data.userStats;
                     if (data.stageBackgrounds) stageBackgrounds = data.stageBackgrounds;
                     if (data.customBgs) customBgs = data.customBgs;
                     if (data.unlockedDays) unlockedDays = data.unlockedDays;
                     if (data.currentDayView !== undefined) currentDayView = data.currentDayView;
-                    if (data.displayName) {
-                        currentUser.displayName = data.displayName;
-                        document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
-                    }
+                    if (data.displayName) currentUser.displayName = data.displayName;
+                    if (data.startDate) appStartDate = data.startDate;
+                    if (data.lastActionDate) lastActionDate = data.lastActionDate;
                     
-                    // הבטחת קיום המבנה
+                    document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
                     for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
 
                     buildJars();
                     initScroller();
-                    applyCustomBgs();
+                    window.applyCustomBgs();
                     
-                    // רענון פיזי למצב הכדורים החדש
                     const cdv = currentDayView;
                     currentDayView = -1;
                     moveCanvas(cdv);
                 } else {
+                    // פעם ראשונה בענן - ניקח את המידע המקומי ונעלה אותו לשם
                     window.saveState(); 
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) {}
         }
 
-        // --- הגדרת פונקציות העיצוב בצורה תקינה כדי למנוע שגיאות טעינה ---
+        // --- הבטחת שמירת מיקומי הכדורים במקרי עזיבה של האתר ---
+        window.addEventListener('beforeunload', () => { window.saveState(); });
+        window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') window.saveState(); });
+
+        // --- הגדרות עיצוב וממשק ---
         function applyCustomBgs() {
             if(document.getElementById('input-app-color')) {
                 if(customBgs.appColor) document.getElementById('input-app-color').value = customBgs.appColor;
@@ -772,6 +820,17 @@
 
         function moveCanvas(idx) {
             if(currentDayView === idx && currentBalls.length > 0) return;
+            
+            // שמירת המיקומים המדויקים של הצנצנת שאנחנו עוזבים כעת
+            if (currentDayView >= 0 && currentBalls.length > 0) {
+                userStats.daysData[currentDayView].savedBalls = currentBalls.map(b => ({
+                    x: b.position.x,
+                    y: b.position.y,
+                    angle: b.angle,
+                    color: b.render.fillStyle
+                }));
+            }
+
             const wrap = document.getElementById(`jar-wrapper-${idx}`);
             if(wrap) wrap.insertBefore(canvas, wrap.firstChild);
             
@@ -781,16 +840,35 @@
             currentDayView = idx;
             
             const stats = userStats.daysData[idx]?.habits || {};
+            const savedBalls = userStats.daysData[idx]?.savedBalls;
+            
+            let expectedBallCount = 0;
             for (const habitId in stats) {
-                const count = stats[habitId].min + stats[habitId].breakthrough;
-                const h = habitsData.find(ha => ha.id == parseInt(habitId));
-                if (h) {
-                    for (let i = 0; i < count; i++) {
-                        const bx = 170 + (Math.random() * 120 - 60); 
-                        const by = 200 + (Math.random() * 180);
-                        const b = Bodies.circle(bx, by, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
-                        currentBalls.push(b);
-                        Composite.add(world, b);
+                expectedBallCount += stats[habitId].min + stats[habitId].breakthrough;
+            }
+
+            // שחזור כדורים - אם יש מיקומים שמורים נשתמש בהם, אחרת נזרוק באקראיות
+            if (savedBalls && savedBalls.length === expectedBallCount && expectedBallCount > 0) {
+                savedBalls.forEach(ballData => {
+                    const b = Bodies.circle(ballData.x, ballData.y, 26, { 
+                        restitution:0.6, friction:0, frictionStatic:0, density:0.04, 
+                        angle: ballData.angle, label:'habit-ball', render:{fillStyle:ballData.color} 
+                    });
+                    currentBalls.push(b);
+                    Composite.add(world, b);
+                });
+            } else {
+                for (const habitId in stats) {
+                    const count = stats[habitId].min + stats[habitId].breakthrough;
+                    const h = habitsData.find(ha => ha.id == parseInt(habitId));
+                    if (h) {
+                        for (let i = 0; i < count; i++) {
+                            const bx = 170 + (Math.random() * 120 - 60); 
+                            const by = 200 + (Math.random() * 180);
+                            const b = Bodies.circle(bx, by, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
+                            currentBalls.push(b);
+                            Composite.add(world, b);
+                        }
                     }
                 }
             }
@@ -800,6 +878,7 @@
             
             updateStatsUI();
             updateBackgroundForStage(idx);
+            window.saveState(); // שמירה על המעבר
         }
 
         const obs = new IntersectionObserver(es => es.forEach(e => { 
@@ -1232,7 +1311,7 @@
             const deltaY = e.clientY - drawerStartY;
 
             if (deltaY < -40 && Math.abs(deltaY) > Math.abs(deltaX)) {
-                openStatsMode();
+                window.openStatsMode();
                 isDrawerDragging = false;
                 drawerNormalView.style.cursor = '';
                 return;
@@ -1274,7 +1353,7 @@
             const deltaY = e.clientY - statsStartY;
             
             if (deltaY > 60) {
-                closeStatsMode();
+                window.closeStatsMode();
                 isStatsDragging = false;
             }
         });
@@ -1286,11 +1365,18 @@
         const drawerHandle = document.getElementById('drawer-handle');
         drawerHandle.addEventListener('click', () => {
             if (bottomDrawer.classList.contains('stats-mode')) {
-                closeStatsMode();
+                window.closeStatsMode();
             } else if (document.getElementById('drawer-normal-view').classList.contains('active')) {
-                openStatsMode();
+                window.openStatsMode();
             }
         });
+
+        // הגדרה ויזואלית ראשונית בעת עליית הדף
+        document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+        const initialInfo = getStageInfo(0);
+        document.getElementById('bg-day-indicator').innerText = `1/${initialInfo.maxDays}`;
+        
+        setTimeout(() => { scroller.scrollTo({left:0}); lastIdx=1; renderActiveHabit(); fm.classList.add('marble-pulse'); }, 150);
 
     </script>
 </body>
