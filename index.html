@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>צנצנת ההרגלים שלי - שלבים</title>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>צנצנת ההרגלים שלי - חוויית זריקה רציפה</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 
     <style>
         :root {
-            --bg-color: #f4f6f8;
-            --jar-glass: rgba(255, 255, 255, 0.4);
-            --jar-highlight: rgba(255, 255, 255, 0.9);
-            --jar-shadow: rgba(0, 0, 0, 0.08);
+            --bg-color: #f8fafc;
             --primary-color: #239B62;
-            --danger-color: #e86a92;
-            --admin-color: #4a90e2;
+            --danger-color: #ef4444;
+            --admin-color: #3b82f6;
+            --text-main: #1e293b;
+            --jar-shadow: rgba(0, 0, 0, 0.06);
         }
 
         body {
             margin: 0; padding: 0;
             font-family: 'Heebo', sans-serif;
-            background-color: #d1d8e0;
-            background-image: radial-gradient(circle at top right, #e2e8f0, #cbd5e1); 
+            background-color: #cbd5e1;
             display: flex; justify-content: center; align-items: center;
             height: 100dvh; overflow: hidden;
             touch-action: manipulation;
@@ -37,48 +35,54 @@
 
         @media (min-width: 420px) {
             .app-container {
-                width: 390px; height: 844px; max-height: 90vh; 
-                border-radius: 40px; 
-                box-shadow: 0 30px 60px rgba(0,0,0,0.2); 
-            }
-            .app-container::before {
-                content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-                width: 80px; height: 16px; background-color: rgba(0,0,0,0.04);
-                border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 1000;
+                width: 390px; height: 844px; max-height: 92vh; 
+                border-radius: 48px; 
+                box-shadow: 0 40px 80px rgba(0,0,0,0.25); 
             }
         }
 
-        /* --- פרופיל --- */
-        .profile-header {
-            position: absolute; top: 15px; right: 15px;
-            z-index: 50; display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.7); padding: 4px 10px 4px 4px;
-            border-radius: 20px; backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.8);
-            cursor: pointer; transition: transform 0.2s;
+        /* --- Header UI --- */
+        .header-ui {
+            position: absolute; top: 0; left: 0; width: 100%;
+            padding: 15px 20px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 70; pointer-events: none;
         }
-        .profile-header:active { transform: scale(0.95); }
-        .profile-avatar {
-            width: 20px; height: 20px; border-radius: 50%;
-            background: linear-gradient(135deg, #e0eafc, #cfdef3);
-            display: flex; justify-content: center; align-items: center; color: #555;
-        }
-        .profile-name { font-size: 11px; font-weight: 800; color: #444; }
 
-        /* --- מחוון שלבים ויום --- */
-        .stage-info-container {
-            position: absolute; top: 50px; left: 0; width: 100%;
-            text-align: center; z-index: 5; pointer-events: none;
+        .user-pill {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 5px 12px 5px 6px;
+            border-radius: 20px;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.7);
+            pointer-events: auto; cursor: pointer;
         }
-        .stage-label { font-size: 14px; font-weight: 800; color: #777; letter-spacing: 1px; text-transform: uppercase; }
-        .bg-day-indicator {
-            font-size: 80px; font-weight: 800; color: rgba(0, 0, 0, 0.04);
-            user-select: none; letter-spacing: -2px; margin-top: -10px;
+        .user-pill .name { font-weight: 800; font-size: 13px; color: var(--text-main); }
+        .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center; }
+
+        .stage-badge {
+            background: var(--text-main); color: white;
+            padding: 3px 10px; border-radius: 10px;
+            font-size: 11px; font-weight: 900;
         }
+
+        /* --- Day Indicator --- */
+        .day-display {
+            position: absolute; top: 15px; left: 0; width: 100%;
+            text-align: center; pointer-events: none; z-index: 5;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .day-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: -4px; }
+        .big-day-number {
+            font-size: 24px; font-weight: 900; color: rgba(0,0,0,0.2);
+            user-select: none; letter-spacing: -1px;
+        }
+        .day-progress-sub { font-size: 9px; font-weight: 800; color: #cbd5e1; margin-top: -4px; }
 
         .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
 
-        /* --- סליידר צנצנות - מרכוז מדויק --- */
         .jars-slider {
             display: flex; width: 100%; height: 100%; overflow-x: auto;
             scroll-snap-type: x mandatory; align-items: center; scrollbar-width: none;
@@ -87,236 +91,185 @@
         .jars-slider::-webkit-scrollbar { display: none; }
 
         .jar-slide { 
-            flex: 0 0 95%; /* 95% רוחב כדי להשאיר 5% הצצה מימין */
-            height: 100%; display: flex; justify-content: center; 
+            flex: 0 0 95%; height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; position: relative; 
             box-sizing: border-box; padding-bottom: 180px;
-            transition: opacity 0.5s;
-            background-size: cover;
-            background-position: center;
+            transition: opacity 0.5s ease;
+            background-size: cover; background-position: center;
         }
-        
         .jar-slide::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.8) 100%);
+            background: linear-gradient(to bottom, var(--bg-color) 0%, rgba(248, 250, 252, 0.05) 50%, var(--bg-color) 100%);
             z-index: 1; pointer-events: none;
         }
-        
-        .jar-slide.locked { filter: grayscale(100%); opacity: 0.4; }
-        .jar-wrapper { position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; }
 
+        .jar-wrapper { position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; }
         canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
-        /* --- עיצוב משופר לצנצנת ולמכסה --- */
+        /* --- Jar Design + Lid Animation --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
+        .jar-cap-detail {
+            position: absolute; top: 32px; left: 85px; width: 170px; height: 22px;
+            background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 45%, #94a3b8 100%);
+            border-radius: 10px; z-index: 25;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.12), inset 0 -3px 4px rgba(0,0,0,0.1);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: left center;
+        }
+        .jar-cap-detail.open { transform: translateY(-50px) rotate(-30deg); }
+
+        .jar-opening {
+            position: absolute; top: 44px; left: 92px; width: 156px; height: 24px;
+            border-radius: 50%; background: rgba(255, 255, 255, 0.6); z-index: 24;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.08); border: 1.5px solid rgba(255,255,255,0.4);
+        }
         .jar-neck {
             position: absolute; top: 50px; left: 100px; width: 140px; height: 50px;
-            border-radius: 12px 12px 0 0;
-            background: linear-gradient(to right, 
-                rgba(255,255,255,0.4) 0%, 
-                rgba(255,255,255,0.1) 20%, 
-                rgba(255,255,255,0.1) 80%, 
-                rgba(255,255,255,0.4) 100%);
-            box-shadow: inset 0 0 15px rgba(255,255,255,0.3);
-            z-index: 19;
+            border-radius: 8px 8px 0 0;
+            background: linear-gradient(to right, rgba(255,255,255,0.5), rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.5));
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.3); z-index: 19;
         }
-        
-        /* מכסה עם הצללות משופרות */
-        .jar-cap-detail {
-            position: absolute; top: 38px; left: 88px; width: 164px; height: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 40%, #dcdcdc 100%);
-            border-radius: 10px;
-            z-index: 23;
-            box-shadow: 
-                0 4px 8px rgba(0,0,0,0.15), 
-                inset 0 -3px 4px rgba(0,0,0,0.1),
-                inset 0 2px 2px rgba(255,255,255,0.8);
-            border-bottom: 1px solid #bbb;
-        }
-
         .jar-body {
             position: absolute; top: 90px; left: 30px; width: 280px; height: 340px;
-            border-radius: 70px 70px 60px 60px;
-            box-shadow: 
-                inset 15px 0 35px rgba(255,255,255,0.6), 
-                inset -15px -15px 35px var(--jar-shadow),
-                0 15px 45px rgba(0,0,0,0.08); 
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .jar-opening {
-            position: absolute; top: 44px; left: 95px; width: 150px; height: 20px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4); 
-            z-index: 22;
-            box-shadow: 
-                inset 0 4px 10px rgba(0,0,0,0.1),
-                0 2px 4px rgba(255,255,255,0.6);
-            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 70px 70px 65px 65px;
+            box-shadow: inset 20px 0 40px rgba(255,255,255,0.6), inset -20px -20px 40px var(--jar-shadow), 0 20px 50px rgba(0,0,0,0.08); 
+            background: rgba(255, 255, 255, 0.02); border: 1.5px solid rgba(255,255,255,0.25);
         }
 
-        /* --- המגירה --- */
+        /* --- Drawer --- */
         .bottom-section {
-            background: #FDFBF7; border-radius: 30px 30px 0 0; 
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.08); 
+            background: #ffffff; border-radius: 36px 36px 0 0; 
+            box-shadow: 0 -12px 40px rgba(0,0,0,0.06); 
             z-index: 100; display: flex; flex-direction: column; align-items: center; 
             position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 210px; box-sizing: border-box;
+            height: 220px; box-sizing: border-box;
             transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
-        .bottom-section.edit-mode { height: 380px; }
+        .bottom-section.edit-mode { height: 400px; }
         .bottom-section::before {
-            content: ''; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            width: 40px; height: 4px; background-color: #E2DFD9; border-radius: 4px;
+            content: ''; position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            width: 44px; height: 5px; background-color: #f1f5f9; border-radius: 4px;
         }
 
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; }
         .drawer-view.active { display: flex; }
 
-        .edit-btn { position: absolute; top: 22px; right: 22px; color: #D0D0D0; cursor: pointer; padding: 5px; z-index: 15; transition: color 0.2s; }
-        .edit-btn:hover { color: #A0A0A0; }
-
-        .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -38px; min-height: 90px; }
-        .active-icon-bg {
-            width: 76px; height: 76px; background: #FDFBF7; border-radius: 50%; 
-            display: flex; justify-content: center; align-items: center; position: relative; z-index: 1; 
-        }
-        .active-icon-bg::before { content: ''; position: absolute; bottom: 37px; left: -12px; width: 14px; height: 12px; background: radial-gradient(circle at 0% 0%, transparent 11.5px, #FDFBF7 12px); z-index: -1; }
-        .active-icon-bg::after { content: ''; position: absolute; bottom: 37px; right: -12px; width: 14px; height: 12px; background: radial-gradient(circle at 100% 0%, transparent 11.5px, #FDFBF7 12px); z-index: -1; }
-
-        #marble-drop-zone { width: 55px; height: 55px; pointer-events: none; }
+        .edit-btn { position: absolute; top: 25px; right: 25px; color: #cbd5e1; cursor: pointer; padding: 6px; z-index: 110; }
         
-        #floating-marble {
-            position: absolute; z-index: 1000; cursor: grab; touch-action: none; transform-origin: center center;
-            transition: none; 
-            pointer-events: auto;
+        .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -42px; min-height: 100px; }
+        .active-icon-bg { 
+            width: 84px; height: 84px; background: #ffffff; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; position: relative; 
+            z-index: 1; box-shadow: 0 -4px 15px rgba(0,0,0,0.03); 
         }
-        #floating-marble.dragging { cursor: grabbing; }
+        .active-icon-bg::before { content: ''; position: absolute; bottom: 42px; left: -12px; width: 16px; height: 12px; background: radial-gradient(circle at 0% 0%, transparent 12px, #ffffff 12.5px); z-index: -1; }
+        .active-icon-bg::after { content: ''; position: absolute; bottom: 42px; right: -12px; width: 16px; height: 12px; background: radial-gradient(circle at 100% 0%, transparent 12px, #ffffff 12.5px); z-index: -1; }
 
-        .habit-time { color: #999; font-size: 14px; font-weight: 600; margin-top: -2px; margin-bottom: 5px; }
-
-        .habit-scroller-mask {
-            width: 100%; overflow: hidden; position: relative;
-            mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+        #marble-drop-zone { width: 60px; height: 60px; pointer-events: none; }
+        
+        #floating-marble { 
+            position: absolute; z-index: 1000; cursor: grab; touch-action: none; 
+            transform-origin: center center; pointer-events: auto;
         }
-        .habit-scroller { display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 5px; }
-        .habit-scroller::-webkit-scrollbar { display: none; }
-        .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 40px); }
-        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 20px; color: #B0B0B0; font-weight: 600; transition: 0.2s; cursor: pointer; white-space: nowrap; }
-        .habit-item.active { font-size: 32px; color: #111; font-weight: 800; }
+        #floating-marble.dragging { cursor: grabbing; animation: none !important; }
+        
+        @keyframes marblePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+        .marble-pulse { animation: marblePulse 2.8s ease-in-out infinite; }
 
-        .picker-dots { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
-        .dot.active { width: 22px; background: #333; border-radius: 4px; }
+        .habit-scroller { display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; padding: 5px 0; }
+        .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
+        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 22px; color: #cbd5e1; font-weight: 700; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; }
+        .habit-item.active { font-size: 34px; color: var(--text-main); font-weight: 900; }
 
-        /* --- עריכה --- */
-        .drawer-edit-content { width: 100%; padding: 25px; box-sizing: border-box; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; margin-bottom: 4px; font-weight: 600; color: #666; font-size: 14px; }
-        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; font-size: 15px; font-family: inherit; box-sizing: border-box; background: #fff; }
-        .btn-row { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-primary, .btn-secondary, .btn-danger { flex: 1; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; transition: 0.1s; }
-        .btn-primary { background: var(--primary-color); color: white; }
-        .btn-secondary { background: #E2DFD9; color: #444; }
-        .btn-danger { background: var(--danger-color); color: white; width: 100%; margin-top: 10px; }
+        .dots-container { display: flex; gap: 8px; margin-top: 5px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; transition: 0.4s; }
+        .dot.active { width: 22px; background: var(--text-main); border-radius: 4px; }
 
-        /* --- פופ-אפ פרופיל וניהול --- */
-        .popup-backdrop {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
-            z-index: 2000; display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: 0.3s;
-        }
+        /* --- Popups --- */
+        .popup-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
         .popup-backdrop.active { opacity: 1; pointer-events: all; }
-        .popup-content {
-            background: #FDFBF7; width: 88%; max-width: 340px; border-radius: 28px; padding: 25px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.25); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
-            max-height: 80vh; overflow-y: auto;
-        }
-        .popup-backdrop.active .popup-content { transform: scale(1); }
-        .close-popup-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.05); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;}
-        
-        .admin-section {
-            border-top: 1px solid #eee; margin-top: 20px; padding-top: 20px; display: none;
-        }
-        .admin-section.visible { display: block; }
-        .admin-badge { background: var(--admin-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 800; vertical-align: middle; margin-right: 5px; }
-
-        .stats-grid { display: flex; gap: 10px; margin-bottom: 20px; }
-        .stat-box { flex: 1; background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; text-align: center; }
+        .popup-content { background: #ffffff; width: 90%; max-width: 360px; border-radius: 28px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); max-height: 85vh; overflow-y: auto; position: relative; }
+        .close-popup-btn { position: absolute; top: 15px; left: 15px; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- פרופיל -->
-        <div class="profile-header" onclick="openProfilePopup()">
-            <div class="profile-name" id="display-profile-name">הפרופיל שלי</div>
-            <div class="profile-avatar"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+        <!-- Header -->
+        <div class="header-ui">
+            <div id="stage-badge" class="stage-badge">שלב 1</div>
+            <div class="user-pill" onclick="openProfilePopup()">
+                <div class="name" id="display-profile-name">ישראל</div>
+                <div class="user-avatar">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Days Display -->
+        <div class="day-display">
+            <div class="day-label">יום</div>
+            <div id="bg-day-indicator" class="big-day-number">1</div>
+            <div id="day-progress-sub" class="day-progress-sub">מתוך 5</div>
         </div>
 
         <div class="top-section" id="clickable-top-section">
-            <div class="stage-info-container">
-                <div id="stage-label" class="stage-label">שלב 1</div>
-                <div id="bg-day-indicator" class="bg-day-indicator">1 / 5</div>
-            </div>
-            
             <div class="jars-slider" id="jars-slider"></div>
             <canvas id="physics-canvas"></canvas>
         </div>
 
+        <!-- Drawer -->
         <div class="bottom-section" id="bottom-drawer">
             <div id="drawer-normal-view" class="drawer-view active">
-                <div class="edit-btn" onclick="openEditMode()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
+                <div class="edit-btn" onclick="openEditMode()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
                 <div class="picker-top">
                     <div class="active-icon-bg"><div id="marble-drop-zone"></div></div>
-                    <div class="habit-time" id="picker-time"></div>
+                    <div id="picker-time" style="color:#94a3b8; font-size:13px; font-weight:700; margin-top:2px;"></div>
                 </div>
-                <div class="habit-scroller-mask"><div class="habit-scroller" id="habit-scroller"></div></div>
-                <div class="picker-dots" id="picker-dots"></div>
+                <div class="habit-scroller" id="habit-scroller"></div>
+                <div class="dots-container" id="picker-dots"></div>
             </div>
 
             <div id="drawer-edit-view" class="drawer-view">
-                <div class="drawer-edit-content">
-                    <div style="font-size: 18px; font-weight: 800; margin-bottom: 15px; text-align: center;">עריכת הרגל</div>
-                    <div style="display:flex; gap:10px;">
-                        <div class="form-group" style="flex:2;"><label>שם</label><input type="text" id="input-habit-name" class="form-control"></div>
-                        <div class="form-group" style="flex:1;"><label>צבע</label><input type="color" id="input-habit-color" class="form-control" style="height:45px; padding:2px;"></div>
+                <div style="padding: 25px; width: 100%; box-sizing: border-box;">
+                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 20px; text-align: center;">עריכת הרגל</div>
+                    <div style="display:flex; gap:12px; text-align: right;">
+                        <div style="flex:3;"><label style="display:block; font-size:12px; margin-bottom:4px;">שם</label><input type="text" id="input-habit-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px;"></div>
+                        <div style="flex:1.2;"><label style="display:block; font-size:12px; margin-bottom:4px;">צבע</label><input type="color" id="input-habit-color" style="width:100%; height:48px; border-radius:12px; border:1.5px solid #e2e8f0; padding:2px;"></div>
                     </div>
-                    <div class="form-group"><label>יעד</label><input type="text" id="input-habit-time" class="form-control"></div>
-                    <div class="btn-row"><button class="btn-primary" onclick="saveHabitChanges()">שמור</button><button class="btn-secondary" onclick="closeEditMode()">ביטול</button></div>
-                    <button class="btn-danger" onclick="deleteCurrentHabit()">מחק</button>
+                    <div style="margin-top:15px; text-align: right;"><label style="display:block; font-size:12px; margin-bottom:4px;">יעד</label><input type="text" id="input-habit-time" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px;"></div>
+                    <div style="display:flex; gap:12px; margin-top:20px;"><button style="flex:2; background:var(--primary-color); color:white; border:none; padding:15px; border-radius:14px; font-weight:800;" onclick="saveHabitChanges()">שמור</button><button style="flex:1; background:#f1f5f9; border:none; padding:15px; border-radius:14px;" onclick="closeEditMode()">ביטול</button></div>
+                    <button style="width:100%; margin-top:15px; color:var(--danger-color); background:none; border:1px solid var(--danger-color); padding:12px; border-radius:12px; font-weight:800;" onclick="deleteCurrentHabit()">מחק הרגל</button>
                 </div>
             </div>
         </div>
 
-        <canvas id="floating-marble" width="55" height="55"></canvas>
+        <canvas id="floating-marble" width="60" height="60"></canvas>
 
+        <!-- Popups -->
         <div class="popup-backdrop" id="profile-popup" onclick="handleBackdropClick(event, 'profile-popup')">
             <div class="popup-content">
                 <button class="close-popup-btn" onclick="closeProfilePopup()">✕</button>
-                <div style="font-size:22px; font-weight:800; margin-bottom:15px;">החשבון שלי <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span></div>
-                
-                <div class="stats-grid">
-                    <div class="stat-box"><span style="display:block; font-size:20px; font-weight:800; color:var(--primary-color);" id="stat-days-active">1</span><span style="font-size:11px; color:#999;">ימים</span></div>
-                    <div class="stat-box"><span style="display:block; font-size:20px; font-weight:800; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#999;">גולות</span></div>
+                <div style="font-size:22px; font-weight:900; margin-bottom:20px;">החשבון שלי</div>
+                <div style="display:flex; gap:12px; margin-bottom:25px;">
+                    <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-days-active">1</span><span style="font-size:11px; color:#94a3b8;">ימים</span></div>
+                    <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#94a3b8;">גולות</span></div>
                 </div>
+                <div style="text-align: right;"><label style="font-size:13px; font-weight:700; color:#64748b;">שם תצוגה</label><input type="text" id="input-profile-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;" onkeyup="updateProfileName(this.value)"></div>
+                <button id="admin-dashboard-btn" style="display:none; width:100%; margin-top:20px; padding:14px; border-radius:14px; border:1.5px solid var(--admin-color); color:var(--admin-color); background:none; font-weight:800;" onclick="openAdminDashboard()">ניהול שלבים</button>
+            </div>
+        </div>
 
-                <div class="form-group"><label>אימייל (לגישת ניהול)</label><input type="email" id="input-profile-email" class="form-control" value="user@example.com" onchange="checkAdminStatus()"></div>
-                <div class="form-group"><label>שם תצוגה</label><input type="text" id="input-profile-name" class="form-control" value="הפרופיל שלי" onkeyup="updateProfileName(this.value)"></div>
-                
-                <div id="admin-panel" class="admin-section">
-                    <div style="font-size:16px; font-weight:800; margin-bottom:10px; color:var(--admin-color);">הגדרות רקע לשלבים</div>
-                    <div class="form-group">
-                        <label id="admin-stage-label">רקע לשלב הנוכחי (1)</label>
-                        <input type="text" id="input-stage-bg" class="form-control" placeholder="הכנס URL של תמונה..." onchange="updateStageBackground()">
-                    </div>
-                </div>
-
-                <div style="margin-top:20px; text-align:center; color:#999; font-size:12px; cursor:pointer;" onclick="location.reload()">🚪 התנתקות</div>
+        <div class="popup-backdrop" id="admin-popup" onclick="handleBackdropClick(event, 'admin-popup')">
+            <div class="popup-content" style="max-width:400px;">
+                <button class="close-popup-btn" onclick="closeAdminDashboard()">✕</button>
+                <div style="font-size:22px; font-weight:900; margin-bottom:20px; color:var(--admin-color);">ניהול שלבים</div>
+                <div style="text-align: right;"><label style="font-size:12px;">שלב 1 (1-5)</label><input type="text" id="bg-url-1" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px;" onchange="saveAllBgs()"></div>
+                <div style="text-align: right;"><label style="font-size:12px;">שלב 2 (5-10)</label><input type="text" id="bg-url-2" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px;" onchange="saveAllBgs()"></div>
+                <div style="text-align: right;"><label style="font-size:12px;">שלב 3 (10-21)</label><input type="text" id="bg-url-3" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px;" onchange="saveAllBgs()"></div>
+                <div style="text-align: right;"><label style="font-size:12px;">שלב 4+ (קפיצות 21)</label><input type="text" id="bg-url-generic" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px;" onchange="saveAllBgs()"></div>
+                <button style="width:100%; background:var(--admin-color); color:white; padding:15px; border-radius:14px; border:none; font-weight:800; margin-top:10px;" onclick="closeAdminDashboard()">סיום</button>
             </div>
         </div>
     </div>
@@ -325,6 +278,7 @@
         const STAGE_GAP = 21;
         const TOTAL_DISPLAY_DAYS = 63; 
         const ADMIN_EMAIL = "mosheally@gmail.com";
+        const currentUser = { displayName: "משה עלי", email: "mosheally@gmail.com" };
 
         let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 1;
         let habitsData = [
@@ -335,22 +289,16 @@
             { id: 5, name: 'לשתות', time: '1 כוס', color: '#8e44ad' }
         ];
 
-        let stageBackgrounds = JSON.parse(localStorage.getItem('stage_bgs')) || {};
+        let stageBackgrounds = JSON.parse(localStorage.getItem('stage_bgs_v7')) || {};
 
         function getStageInfo(day) {
             day = day + 1; 
-            if (day <= 5) return { stage: 1, maxDays: 5, start: 1 };
-            if (day <= 10) return { stage: 2, maxDays: 10, start: 6 };
-            if (day <= 21) return { stage: 3, maxDays: 21, start: 11 };
-            
-            let base = 21;
-            let stageCount = 3;
-            while (day > base) {
-                base += STAGE_GAP;
-                stageCount++;
-                if (day <= base) break;
-            }
-            return { stage: stageCount, maxDays: base, start: base - STAGE_GAP + 1 };
+            if (day <= 5) return { stage: 1, maxDays: 5 };
+            if (day <= 10) return { stage: 2, maxDays: 10 };
+            if (day <= 21) return { stage: 3, maxDays: 21 };
+            let base = 21, stageCount = 3;
+            while (day > base) { base += STAGE_GAP; stageCount++; if (day <= base) break; }
+            return { stage: stageCount, maxDays: base };
         }
 
         const userStats = { daysData: [] };
@@ -368,15 +316,12 @@
                 const slide = document.createElement('div');
                 slide.className = `jar-slide ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
-                
-                if (stageBackgrounds[info.stage]) {
-                    slide.style.backgroundImage = `url('${stageBackgrounds[info.stage]}')`;
-                }
-
+                const bg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
+                if (bg) slide.style.backgroundImage = `url('${bg}')`;
                 slide.innerHTML = `
                     <div class="jar-wrapper" id="jar-wrapper-${i}">
                         <div class="jar-glass-overlay">
-                            <div class="jar-cap-detail"></div>
+                            <div class="jar-cap-detail" id="lid-${i}"></div>
                             <div class="jar-opening"></div>
                             <div class="jar-neck"></div>
                             <div class="jar-body"></div>
@@ -393,7 +338,7 @@
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
         canvas.width = 340; canvas.height = 480;
 
-        const wallOptions = { isStatic: true, friction: 0.1, restitution: 0.3 };
+        const wallOptions = { isStatic: true, friction: 0.1, restitution: 0.4 };
         Composite.add(world, [
             Bodies.rectangle(170, 420, 200, 40, wallOptions),
             Bodies.rectangle(75, 400, 80, 40, { ...wallOptions, angle: Math.PI / 5 }),
@@ -412,8 +357,7 @@
         function initScroller() {
             scroller.innerHTML = '';
             habitsData.forEach((h, i) => { 
-                const el = document.createElement('div'); 
-                el.className = 'habit-item'; el.innerText = h.name; 
+                const el = document.createElement('div'); el.className = 'habit-item'; el.innerText = h.name; 
                 el.onclick = () => el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
                 scroller.appendChild(el); 
             });
@@ -422,7 +366,6 @@
 
         function renderDots() {
             const dotsContainer = document.getElementById('picker-dots');
-            if(!dotsContainer) return;
             dotsContainer.innerHTML = '';
             habitsData.forEach((_, index) => {
                 const dot = document.createElement('div');
@@ -436,30 +379,22 @@
             if(!habitsData[currentHabitIndex]) return;
             const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
             const timeEl = document.getElementById('picker-time');
-            if(stats && stats.min > 0) {
-                timeEl.innerText = '+' + h.time; timeEl.style.color = h.color;
-            } else { timeEl.innerText = h.time; timeEl.style.color = '#999'; }
+            if(stats && stats.min > 0) { timeEl.innerText = '+' + h.time; timeEl.style.color = h.color; } 
+            else { timeEl.innerText = h.time; timeEl.style.color = '#94a3b8'; }
         }
 
+        const fm = document.getElementById('floating-marble');
         function renderActiveHabit() {
-            const h = habitsData[currentHabitIndex];
-            if(!h) return;
-            const fm = document.getElementById('floating-marble');
+            const h = habitsData[currentHabitIndex]; if(!h) return;
             document.querySelectorAll('.habit-item').forEach((it, i) => it.classList.toggle('active', i === currentHabitIndex));
-            
-            const uctx = fm.getContext('2d'); 
-            uctx.clearRect(0,0,55,55); 
-            drawMarble(uctx, 27.5, 27.5, 24, 0, h.color);
-            
+            const uctx = fm.getContext('2d'); uctx.clearRect(0,0,60,60); 
+            drawMarble(uctx, 30, 30, 26, 0, h.color);
             if(fm.style.display !== 'none' && !isAnimatingJump) {
-                fm.style.display = 'block';
-                fm.style.opacity = '1';
-                fm.style.transform = 'scale(1)';
-                fm.style.filter = `drop-shadow(0 0 15px ${h.color}88) drop-shadow(0 6px 12px rgba(0,0,0,0.15))`;
+                fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.transform = 'scale(1)';
+                fm.style.filter = `drop-shadow(0 0 18px ${h.color}77) drop-shadow(0 8px 16px rgba(0,0,0,0.12))`;
                 updateFloatingPosition();
             }
-            updateStatsUI(); 
-            renderDots();
+            updateStatsUI(); renderDots();
         }
 
         let lastIdx = -1;
@@ -467,20 +402,20 @@
             const center = scroller.getBoundingClientRect().left + scroller.offsetWidth/2;
             let closest = -1, min = Infinity;
             document.querySelectorAll('.habit-item').forEach((it, i) => { const d = Math.abs(center - (it.getBoundingClientRect().left + it.offsetWidth/2)); if(d < min){ min = d; closest = i; } });
-            if(closest !== -1 && closest !== lastIdx) { lastIdx = closest; currentHabitIndex = closest; popMarble(); if(navigator.vibrate) navigator.vibrate(10); }
+            if(closest !== -1 && closest !== lastIdx) { lastIdx = closest; currentHabitIndex = closest; popMarble(); }
         });
 
         function popMarble() {
-            const fm = document.getElementById('floating-marble');
             if(fm.style.display === 'none' || isAnimatingJump) return;
+            fm.classList.remove('marble-pulse');
             fm.style.transition = 'none';
-            fm.style.transform = 'scale(0.1) rotate(-45deg)';
+            fm.style.transform = 'scale(0.1) translateY(40px) rotate(-45deg)';
             fm.style.opacity = '0';
             requestAnimationFrame(() => {
                 renderActiveHabit(); 
-                fm.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.8, 0.64, 1), opacity 0.3s'; 
-                fm.style.transform = 'scale(1) rotate(0deg)'; 
-                fm.style.opacity = '1';
+                fm.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.7, 0.64, 1.1), opacity 0.3s'; 
+                fm.style.transform = 'scale(1) translateY(0) rotate(0deg)'; fm.style.opacity = '1';
+                setTimeout(() => { if(!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); }, 500);
             });
         }
 
@@ -493,11 +428,10 @@
             currentBalls = userStats.daysData[idx].balls || [];
             currentBalls.forEach(b => Composite.add(world, b));
             currentDayView = idx;
-
             const info = getStageInfo(idx);
-            document.getElementById('stage-label').innerText = `שלב ${info.stage}`;
-            document.getElementById('bg-day-indicator').innerText = `${idx + 1} / ${info.maxDays}`;
-            
+            document.getElementById('stage-badge').innerText = `שלב ${info.stage}`;
+            document.getElementById('bg-day-indicator').innerText = (idx + 1);
+            document.getElementById('day-progress-sub').innerText = `מתוך ${info.maxDays}`;
             updateStatsUI();
         }
 
@@ -505,58 +439,41 @@
         function reobserve() { document.querySelectorAll('.jar-slide').forEach(s => obs.observe(s)); }
         reobserve();
 
-        function advanceDay() { if(unlockedDays < TOTAL_DISPLAY_DAYS){ unlockedDays++; buildJars(); reobserve(); const s = document.querySelector(`.jar-slide[data-index="${unlockedDays-1}"]`); s.scrollIntoView({ behavior:'smooth', inline:'center'}); } }
-
         function updateFloatingPosition() {
-            const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container'), fm = document.getElementById('floating-marble');
-            if(!dz || !cont || !fm || fm.style.display === 'none' || isAnimatingJump) return;
+            const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container');
+            if(!dz || !cont || fm.style.display === 'none' || isAnimatingJump) return;
             const r = dz.getBoundingClientRect(), cr = cont.getBoundingClientRect();
-            fm.style.left = (r.left - cr.left - cont.clientLeft + r.width/2 - 27.5) + 'px';
-            fm.style.top = (r.top - cr.top - cont.clientTop + r.height/2 - 27.5) + 'px';
+            fm.style.left = (r.left - cr.left + r.width/2 - 30) + 'px';
+            fm.style.top = (r.top - cr.top + r.height/2 - 30) + 'px';
         }
         window.addEventListener('resize', updateFloatingPosition);
 
-        document.getElementById('clickable-top-section').addEventListener('click', (e) => { 
-            if(e.target.id === 'clickable-top-section' && document.getElementById('drawer-edit-view').classList.contains('active')) closeEditMode(); 
-        });
-        
         function handleBackdropClick(e, id) { if(e.target.id === id) closeModal(id); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        function checkAdminStatus() {
-            const email = document.getElementById('input-profile-email').value.trim();
-            const isAdmin = email === ADMIN_EMAIL;
-            document.getElementById('admin-panel').classList.toggle('visible', isAdmin);
-            document.getElementById('admin-badge').style.display = isAdmin ? 'inline-block' : 'none';
-            
-            if (isAdmin) {
-                const info = getStageInfo(currentDayView);
-                document.getElementById('admin-stage-label').innerText = `רקע לשלב הנוכחי (${info.stage})`;
-                document.getElementById('input-stage-bg').value = stageBackgrounds[info.stage] || '';
-            }
-        }
-
-        function updateStageBackground() {
-            const info = getStageInfo(currentDayView);
-            const url = document.getElementById('input-stage-bg').value.trim();
-            if (url) stageBackgrounds[info.stage] = url;
-            else delete stageBackgrounds[info.stage];
-            
-            localStorage.setItem('stage_bgs', JSON.stringify(stageBackgrounds));
-            buildJars(); 
-            reobserve();
-        }
-
         function openProfilePopup() {
             document.getElementById('stat-days-active').innerText = unlockedDays;
-            let totalBalls = 0; 
-            userStats.daysData.forEach(d => totalBalls += d.balls.length);
-            document.getElementById('stat-total-habits').innerText = totalBalls;
-            checkAdminStatus();
+            let total = 0; userStats.daysData.forEach(d => total += d.balls.length);
+            document.getElementById('stat-total-habits').innerText = total;
+            document.getElementById('input-profile-name').value = currentUser.displayName;
+            document.getElementById('admin-dashboard-btn').style.display = (currentUser.email === ADMIN_EMAIL) ? 'block' : 'none';
             document.getElementById('profile-popup').classList.add('active');
         }
         function closeProfilePopup() { closeModal('profile-popup'); }
-        function updateProfileName(v) { document.getElementById('display-profile-name').innerText = v.trim() || "הפרופיל שלי"; }
+        function openAdminDashboard() { closeProfilePopup(); document.getElementById('admin-popup').classList.add('active'); }
+        function closeAdminDashboard() { closeModal('admin-popup'); }
+
+        function saveAllBgs() {
+            for(let i=1; i<=3; i++) stageBackgrounds[i] = document.getElementById(`bg-url-${i}`).value;
+            stageBackgrounds['generic'] = document.getElementById('bg-url-generic').value;
+            localStorage.setItem('stage_bgs_v7', JSON.stringify(stageBackgrounds));
+            buildJars(); reobserve();
+        }
+
+        function updateProfileName(v) { 
+            currentUser.displayName = v.trim() || "ישראל";
+            document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0]; 
+        }
 
         function openEditMode() {
             const h = habitsData[currentHabitIndex]; if(!h) return;
@@ -566,21 +483,18 @@
             document.getElementById('bottom-drawer').classList.add('edit-mode');
             document.getElementById('drawer-normal-view').classList.remove('active');
             document.getElementById('drawer-edit-view').classList.add('active');
-            document.getElementById('floating-marble').style.display = 'none';
+            fm.style.display = 'none';
         }
 
         function closeEditMode() {
             document.getElementById('bottom-drawer').classList.remove('edit-mode');
             document.getElementById('drawer-edit-view').classList.remove('active');
             document.getElementById('drawer-normal-view').classList.add('active');
-            
-            const originalIndex = currentHabitIndex;
-            const items = document.querySelectorAll('.habit-item');
             setTimeout(() => {
-                document.getElementById('floating-marble').style.display = 'block';
-                if (items[originalIndex]) {
-                    items[originalIndex].scrollIntoView({ behavior: 'auto', inline: 'center' });
-                    popMarble();
+                fm.style.display = 'block';
+                if (document.querySelectorAll('.habit-item')[currentHabitIndex]) { 
+                    document.querySelectorAll('.habit-item')[currentHabitIndex].scrollIntoView({ behavior: 'auto', inline: 'center' }); 
+                    popMarble(); 
                 }
             }, 10);
         }
@@ -598,76 +512,134 @@
             if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initScroller(); }
         }
 
-        const fm = document.getElementById('floating-marble');
+        const animateLid = (open) => {
+            const lid = document.getElementById(`lid-${currentDayView}`);
+            if (lid) {
+                if (open) lid.classList.add('open');
+                else lid.classList.remove('open');
+            }
+        };
+
         let isDrag = false, sx, sy, tx=0, ty=0, isAnimatingJump = false;
 
-        function performNaturalJump() {
+        function performNaturalJump(fromX = null, fromY = null) {
             if (isAnimatingJump) return;
-            isAnimatingJump = true;
-            const container = document.querySelector('.app-container');
-            const contRect = container.getBoundingClientRect();
-            const targetX = contRect.width / 2;
-            const targetY = 80; 
-            const currentPosLeft = parseFloat(fm.style.left) + 27.5;
-            const currentPosTop = parseFloat(fm.style.top) + 27.5;
-            const duration = 650; 
-            const startTime = performance.now();
-            fm.style.transition = 'transform 0.1s ease-in';
-            fm.style.transform = 'scale(0.85, 1.1) translateY(10px)';
+            isAnimatingJump = true; 
+            fm.classList.remove('marble-pulse');
             
-            setTimeout(() => {
-                fm.style.transition = 'none'; 
-                function animate(currentTime) {
-                    const elapsed = currentTime - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    const curX = currentPosLeft + (targetX - currentPosLeft) * progress;
-                    const jumpHeight = 160;
-                    const curY = currentPosTop + (targetY - currentPosTop) * progress - Math.sin(progress * Math.PI) * jumpHeight;
-                    const scale = 1 + Math.sin(progress * Math.PI) * 0.4;
-                    const rot = progress * 120;
-                    fm.style.left = (curX - 27.5) + 'px';
-                    fm.style.top = (curY - 27.5) + 'px';
-                    fm.style.transform = `scale(${scale}) rotate(${rot}deg)`;
-                    if (progress < 1) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        dropBall(170, 50); 
-                        fm.style.opacity = '0';
+            const contRect = document.querySelector('.app-container').getBoundingClientRect();
+            const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            
+            const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30);
+            const startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
+            
+            const targetX = jr.left - contRect.left + jr.width / 2;
+            const targetY = jr.top - contRect.top + 45; 
+            
+            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2));
+            const duration = Math.max(300, Math.min(700, distance * 1.5)); 
+            const startTime = performance.now();
+
+            animateLid(true);
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
+                
+                const curX = startX + (targetX - startX) * p;
+                
+                const distY = Math.abs(targetY - startY);
+                const jumpH = Math.max(60, distY * 0.4 + 20);
+                const curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
+                
+                const rot = p * 360;
+                
+                fm.style.left = (curX - 30) + 'px'; 
+                fm.style.top = (curY - 30) + 'px';
+                fm.style.transform = `scale(1) rotate(${rot}deg)`;
+                
+                if (p < 1) requestAnimationFrame(animate);
+                else {
+                    const canvasRect = canvas.getBoundingClientRect();
+                    const physicsX = (contRect.left + targetX) - canvasRect.left;
+                    const physicsY = (contRect.top + targetY) - canvasRect.top;
+                    
+                    fm.style.visibility = 'hidden'; 
+                    dropBall(physicsX, physicsY); 
+                    
+                    setTimeout(() => animateLid(false), 150);
+                    
+                    // מחכים עד שהכדור יסיים ליפול לחלוטין לפני שיוצרים כדור חדש במגירה
+                    setTimeout(() => { 
+                        fm.style.transform = 'scale(0)'; 
+                        fm.style.visibility = 'visible';
                         isAnimatingJump = false;
-                        setTimeout(() => { fm.style.transform = 'scale(0)'; popMarble(); }, 200);
-                    }
+                        popMarble(); 
+                    }, 1200);
                 }
-                requestAnimationFrame(animate);
-            }, 100);
+            }
+            requestAnimationFrame(animate);
         }
 
-        fm.addEventListener('pointerdown', e => { if(document.getElementById('drawer-edit-view').classList.contains('active') || isAnimatingJump) return; isDrag=true; fm.classList.add('dragging'); sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); });
-        fm.addEventListener('pointermove', e => { if(!isDrag) return; tx=e.clientX-sx; ty=e.clientY-sy; fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; });
+        fm.addEventListener('pointerdown', e => { 
+            if(document.getElementById('drawer-edit-view').classList.contains('active') || isAnimatingJump) return; 
+            isDrag=true; fm.classList.add('dragging'); fm.classList.remove('marble-pulse');
+            sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
+        });
+
+        fm.addEventListener('pointermove', e => { 
+            if(!isDrag) return; 
+            tx=e.clientX-sx; ty=e.clientY-sy; 
+            fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; 
+            const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            if (e.clientY < jr.top + 120) animateLid(true); else animateLid(false);
+        });
+
+        // סגירת מגירת עריכה בלחיצה מחוצה לה
+        document.getElementById('clickable-top-section').addEventListener('click', () => { 
+            if(document.getElementById('bottom-drawer').classList.contains('edit-mode')) closeEditMode(); 
+        });
+
         fm.addEventListener('pointerup', e => {
             if(!isDrag) return; isDrag=false; fm.classList.remove('dragging'); fm.releasePointerCapture(e.pointerId);
-            const dist = Math.sqrt(tx*tx+ty*ty);
-            if(dist < 10) { performNaturalJump(); } 
-            else {
-                const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
-                const r = fm.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
-                if(cx > jr.left-20 && cx < jr.right+20 && cy > jr.top-80 && cy < jr.bottom){
-                    const cr = canvas.getBoundingClientRect(); 
-                    if(dropBall(cx-cr.left, cy-cr.top)){ 
-                        fm.style.transition='none'; fm.style.opacity='0'; fm.style.transform='scale(0)'; 
-                        setTimeout(popMarble, 500); 
-                    } else fm.style.transform='scale(1)';
-                } else { 
-                    fm.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)'; 
-                    fm.style.transform='translate(0,0) scale(1)'; 
-                }
+            
+            const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            const r = fm.getBoundingClientRect();
+            const cx = r.left + 30;
+            const cy = r.top + 30;
+            
+            const contRect = document.querySelector('.app-container').getBoundingClientRect();
+            const isInside = cx > jr.left - 40 && cx < jr.right + 40 && cy < jr.bottom && cy > jr.top - 120;
+            
+            const dist = Math.sqrt(tx * tx + ty * ty);
+            
+            if (dist < 10) {
+                // לחיצה פשוטה ללא גרירה - הכדור ייזרק מהמגירה ישר לצנצנת
+                tx = 0; ty = 0;
+                fm.style.transform = `translate(0px, 0px) scale(1)`;
+                performNaturalJump();
+            } else if (isInside) {
+                tx = 0; ty = 0;
+                performNaturalJump(cx - contRect.left, cy - contRect.top);
+            } else {
+                magnetBack();
+                animateLid(false);
             }
         });
 
-        function dropBall(x=170+(Math.random()*40-20), y=-30) {
+        function magnetBack() {
+            fm.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
+            fm.style.transform = 'translate(0,0) scale(1)'; 
+            setTimeout(() => { if (!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); }, 450);
+        }
+
+        function dropBall(x, y) {
             if(currentDayView >= unlockedDays || !habitsData[currentHabitIndex]) return false;
             const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
             if(stats.min===0) stats.min=1; else stats.breakthrough++; updateStatsUI();
-            const b = Bodies.circle(x, y, 22, { restitution:0.6, friction:0.05, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
+            
+            const b = Bodies.circle(x, y, 26, { restitution:0.6, friction:0.05, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
+            Matter.Body.setVelocity(b, { x: 0, y: 7 });
+            
             currentBalls.push(b); Composite.add(world, b); return true;
         }
 
@@ -675,35 +647,24 @@
             c.save(); c.translate(x, y); c.rotate(a);
             c.beginPath(); c.arc(0,0,r,0,Math.PI*2);
             let g = c.createRadialGradient(-r*0.3,-r*0.3,r*0.1,0,0,r); 
-            g.addColorStop(0,'rgba(255,255,255,0.95)'); 
-            g.addColorStop(0.5,'rgba(240,240,240,0.8)'); 
-            g.addColorStop(1,'rgba(180,180,180,0.5)');
+            g.addColorStop(0,'rgba(255,255,255,0.98)'); g.addColorStop(0.5,'rgba(240,240,240,0.85)'); g.addColorStop(1,'rgba(180,180,180,0.5)');
             c.fillStyle=g; c.fill();
-            c.save(); c.globalAlpha=0.85; c.beginPath(); c.moveTo(0,r*0.7); 
+            c.save(); c.globalAlpha=0.8; c.beginPath(); c.moveTo(0,r*0.7); 
             c.quadraticCurveTo(r*0.6,0,0,-r*0.6); c.quadraticCurveTo(-r*0.3,0,0,r*0.7); 
             c.fillStyle=col; c.fill(); c.restore();
-            c.lineWidth=1; c.strokeStyle='rgba(255,255,255,0.6)'; c.stroke();
-            c.beginPath(); c.arc(-r*0.3,-r*0.3,r*0.2,0,Math.PI*2); 
-            c.fillStyle='rgba(255,255,255,0.7)'; c.fill(); c.restore();
+            c.lineWidth=1; c.strokeStyle='rgba(255,255,255,0.5)'; c.stroke();
+            c.beginPath(); c.arc(-r*0.3,-r*0.3,r*0.2,0,Math.PI*2); c.fillStyle='rgba(255,255,255,0.7)'; c.fill(); c.restore();
         }
 
         function loop() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            Composite.allBodies(world).forEach(b => { 
-                if(b.label==='habit-ball') drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle); 
-            });
+            Composite.allBodies(world).forEach(b => { if(b.label==='habit-ball') drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle); });
             Engine.update(engine, 1000/60); requestAnimationFrame(loop);
         }
         loop(); 
         
-        setTimeout(() => { 
-            scroller.scrollTo({left:0}); 
-            lastIdx=1; 
-            renderActiveHabit(); 
-            const info = getStageInfo(0);
-            document.getElementById('stage-label').innerText = `שלב ${info.stage}`;
-            document.getElementById('bg-day-indicator').innerText = `1 / ${info.maxDays}`;
-        }, 100);
+        document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+        setTimeout(() => { scroller.scrollTo({left:0}); lastIdx=1; renderActiveHabit(); fm.classList.add('marble-pulse'); }, 150);
     </script>
 </body>
 </html>
