@@ -69,12 +69,12 @@
         }
 
         .bg-day-indicator {
-            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%);
             font-size: 110px; font-weight: 800; color: rgba(0, 0, 0, 0.04);
             z-index: 0; white-space: nowrap; user-select: none; cursor: pointer; letter-spacing: -2px;
         }
 
-        .top-section { flex: 1; position: relative; background: radial-gradient(circle at center, #ffffff 0%, #eef1f5 100%); }
+        .top-section { flex: 1; position: relative; background: radial-gradient(circle at center, #ffffff 0%, #eef1f5 100%); width: 100%; height: 100%; }
 
         .jars-slider {
             display: flex; width: 100%; height: 100%; overflow-x: auto;
@@ -83,7 +83,7 @@
         }
         .jars-slider::-webkit-scrollbar { display: none; }
 
-        .jar-slide { flex: 0 0 100%; height: 100%; display: flex; justify-content: center; align-items: center; scroll-snap-align: center; position: relative; }
+        .jar-slide { flex: 0 0 100%; height: 100%; display: flex; justify-content: center; align-items: center; scroll-snap-align: center; position: relative; padding-bottom: 140px; box-sizing: border-box; }
         .jar-slide.locked { filter: blur(8px) grayscale(40%); opacity: 0.5; }
         .jar-wrapper { position: relative; width: 340px; height: 480px; direction: rtl; }
 
@@ -109,17 +109,23 @@
         /* --- המגירה --- */
         .bottom-section {
             background: #FDFBF7; border-radius: 30px 30px 0 0; 
-            box-shadow: 0 -10px 20px rgba(0,0,0,0.05); padding: 0 0 35px 0; 
-            z-index: 10; display: flex; flex-direction: column; align-items: center; position: relative;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.08); 
+            z-index: 100; display: flex; flex-direction: column; align-items: center; 
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 220px; /* גובה קבוע למניעת תזוזות */
+            box-sizing: border-box;
+            transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .bottom-section.edit-mode {
+            height: 320px; /* גדל מעט רק במצב עריכה */
         }
         .bottom-section::before {
             content: ''; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
             width: 40px; height: 4px; background-color: #E2DFD9; border-radius: 4px;
         }
 
-        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; animation: fadeIn 0.3s ease; }
+        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; }
         .drawer-view.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .edit-btn { position: absolute; top: 22px; right: 22px; color: #C0C0C0; cursor: pointer; padding: 5px; z-index: 15; }
         .breakthrough-badge {
@@ -128,7 +134,7 @@
         }
         .breakthrough-badge.show { opacity: 1; transform: translateY(0); }
 
-        .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -38px; margin-bottom: -5px; }
+        .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -38px; height: 100px; }
         .active-icon-bg {
             width: 76px; height: 76px; background: #FDFBF7; border-radius: 50%; 
             display: flex; justify-content: center; align-items: center; position: relative; z-index: 1; 
@@ -139,7 +145,7 @@
         #marble-drop-zone { width: 55px; height: 55px; }
         #floating-marble {
             position: absolute; z-index: 1000; cursor: grab; touch-action: none; transform-origin: center center;
-            transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1.2), opacity 0.3s, filter 0.4s;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1.2), opacity 0.2s, filter 0.3s;
         }
         #floating-marble.dragging { transition: none !important; }
 
@@ -149,15 +155,20 @@
             width: 100%; overflow: hidden; position: relative;
             mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+            margin-top: 10px;
         }
         .habit-scroller { display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 5px; }
         .habit-scroller::-webkit-scrollbar { display: none; }
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 40px); }
-        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 22px; color: #A0A0A0; font-weight: 600; transition: 0.3s; cursor: pointer; white-space: nowrap; }
+        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 22px; color: #A0A0A0; font-weight: 600; transition: 0.2s; cursor: pointer; white-space: nowrap; }
         .habit-item.active { font-size: 34px; color: #111; font-weight: 800; }
 
+        .picker-dots { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; transition: all 0.3s; }
+        .dot.active { width: 24px; background: #222; border-radius: 4px; }
+
         /* --- עריכה במגירה --- */
-        .drawer-edit-content { width: 100%; padding: 0 25px; box-sizing: border-box; margin-top: 15px; }
+        .drawer-edit-content { width: 100%; padding: 25px 25px; box-sizing: border-box; }
         .drawer-edit-title { font-size: 20px; font-weight: 800; color: #111; margin-bottom: 15px; text-align: center; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; margin-bottom: 4px; font-weight: 600; color: #666; font-size: 14px; }
@@ -182,9 +193,6 @@
         }
         .popup-backdrop.active .popup-content { transform: scale(1); }
         .close-popup-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.05); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
-        .stats-card { background: #fff; padding: 15px; border-radius: 14px; border: 1px solid #eee; margin-top: 15px; }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #444; }
-        .stat-val { font-weight: 800; color: var(--primary-color); }
     </style>
 </head>
 <body>
@@ -195,13 +203,13 @@
             <div class="profile-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
         </div>
 
-        <div class="top-section">
+        <div class="top-section" id="clickable-top-section">
             <div id="bg-day-indicator" class="bg-day-indicator" onclick="advanceDay()">1 / 12</div>
             <div class="jars-slider" id="jars-slider"></div>
             <canvas id="physics-canvas"></canvas>
         </div>
 
-        <div class="bottom-section">
+        <div class="bottom-section" id="bottom-drawer">
             <div id="drawer-normal-view" class="drawer-view active">
                 <div class="edit-btn" onclick="openEditMode()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
                 <div class="breakthrough-badge" id="breakthrough-badge"></div>
@@ -210,6 +218,7 @@
                     <div class="habit-time" id="picker-time"></div>
                 </div>
                 <div class="habit-scroller-mask"><div class="habit-scroller" id="habit-scroller"></div></div>
+                <div class="picker-dots" id="picker-dots"></div>
             </div>
 
             <div id="drawer-edit-view" class="drawer-view">
@@ -219,7 +228,7 @@
                         <div class="form-group" style="flex:2;"><label>שם</label><input type="text" id="input-habit-name" class="form-control"></div>
                         <div class="form-group" style="flex:1;"><label>צבע</label><input type="color" id="input-habit-color" class="form-control" style="height:45px; padding:2px;"></div>
                     </div>
-                    <div class="form-group"><label>יעד (למשל: 5 דקות)</label><input type="text" id="input-habit-time" class="form-control"></div>
+                    <div class="form-group"><label>יעד</label><input type="text" id="input-habit-time" class="form-control"></div>
                     <div class="btn-row"><button class="btn-primary" onclick="saveHabitChanges()">שמור</button><button class="btn-secondary" onclick="closeEditMode()">ביטול</button></div>
                     <button class="btn-danger" onclick="deleteCurrentHabit()">מחק הרגל</button>
                 </div>
@@ -228,16 +237,11 @@
 
         <canvas id="floating-marble" width="55" height="55"></canvas>
 
-        <div class="popup-backdrop" id="profile-popup">
+        <div class="popup-backdrop" id="profile-popup" onclick="handleBackdropClick(event, 'profile-popup')">
             <div class="popup-content">
                 <button class="close-popup-btn" onclick="closeProfilePopup()">✕</button>
                 <div style="font-size:22px; font-weight:800; margin-bottom:15px;">אזור אישי</div>
                 <div class="form-group"><label>שם המשתמש</label><input type="text" id="input-profile-name" class="form-control" value="הפרופיל שלי" onkeyup="updateProfileName(this.value)"></div>
-                <div class="stats-card">
-                    <div class="stat-row"><span>ימי פעילות:</span> <span class="stat-val" id="stat-days-active">1</span></div>
-                    <div class="stat-row"><span>הרגלים שבוצעו:</span> <span class="stat-val" id="stat-total-habits">0</span></div>
-                    <div class="stat-row"><span>פריצות שנצברו:</span> <span class="stat-val" id="stat-total-break">0</span></div>
-                </div>
             </div>
         </div>
     </div>
@@ -269,7 +273,7 @@
             slider.appendChild(slide);
         }
 
-        const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint } = Matter;
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint } = Matter;
         const engine = Engine.create(), world = engine.world;
         let currentBalls = [];
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
@@ -293,7 +297,23 @@
         const scroller = document.getElementById('habit-scroller');
         function initHabitScroller() {
             scroller.innerHTML = '';
-            habitsData.forEach((h, i) => { const el = document.createElement('div'); el.className = 'habit-item'; el.innerText = h.name; el.onclick = () => el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); scroller.appendChild(el); });
+            habitsData.forEach((h, i) => { 
+                const el = document.createElement('div'); 
+                el.className = 'habit-item'; el.innerText = h.name; 
+                el.onclick = () => el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
+                scroller.appendChild(el); 
+            });
+            renderDots();
+        }
+
+        function renderDots() {
+            const dotsContainer = document.getElementById('picker-dots');
+            dotsContainer.innerHTML = '';
+            habitsData.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = `dot ${index === currentHabitIndex ? 'active' : ''}`;
+                dotsContainer.appendChild(dot);
+            });
         }
         initHabitScroller();
 
@@ -315,7 +335,7 @@
             const uctx = fm.getContext('2d'); uctx.clearRect(0,0,55,55); drawMarble(uctx, 27.5, 27.5, 24, 0, h.color);
             updateFloatingPosition();
             if(fm.style.display !== 'none') fm.style.filter = `drop-shadow(0 0 15px ${h.color}) drop-shadow(0 6px 8px rgba(0,0,0,0.15))`;
-            updateStatsUI();
+            updateStatsUI(); renderDots();
         }
 
         let lastIdx = -1;
@@ -323,13 +343,18 @@
             const center = scroller.getBoundingClientRect().left + scroller.offsetWidth/2;
             let closest = -1, min = Infinity;
             document.querySelectorAll('.habit-item').forEach((it, i) => { const d = Math.abs(center - (it.getBoundingClientRect().left + it.offsetWidth/2)); if(d < min){ min = d; closest = i; } });
-            if(closest !== -1 && closest !== lastIdx) { lastIdx = closest; currentHabitIndex = closest; popMarble(); if(navigator.vibrate) navigator.vibrate(15); }
+            if(closest !== -1 && closest !== lastIdx) { lastIdx = closest; currentHabitIndex = closest; popMarble(); if(navigator.vibrate) navigator.vibrate(10); }
         });
 
         function popMarble() {
             const fm = document.getElementById('floating-marble');
-            fm.style.transition = '0.1s'; fm.style.transform = 'scale(0.3)'; fm.style.opacity = '0.5';
-            setTimeout(() => { renderActiveHabit(); fm.style.transition = '0.45s cubic-bezier(0.34, 1.56, 0.64, 1.2)'; fm.style.transform = 'scale(1)'; fm.style.opacity = '1'; }, 120);
+            // אפקט מהיר וקליל (Fast & Light)
+            fm.style.transition = 'transform 0.05s'; fm.style.transform = 'scale(0.6)';
+            setTimeout(() => { 
+                renderActiveHabit(); 
+                fm.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1.2)'; 
+                fm.style.transform = 'scale(1)'; 
+            }, 60);
         }
 
         function moveCanvas(idx) {
@@ -359,15 +384,13 @@
         }
         window.addEventListener('resize', updateFloatingPosition);
 
-        // Modals Logic
-        function openProfilePopup() {
-            document.getElementById('stat-days-active').innerText = unlockedDays;
-            let hbt = 0, brk = 0;
-            userStats.daysData.forEach(d => { for(let k in d.habits){ hbt += d.habits[k].min; brk += d.habits[k].breakthrough; } });
-            document.getElementById('stat-total-habits').innerText = hbt; document.getElementById('stat-total-break').innerText = brk;
-            document.getElementById('profile-popup').classList.add('active');
-        }
-        function closeProfilePopup() { document.getElementById('profile-popup').classList.remove('active'); }
+        // Click Outside Logic
+        document.getElementById('clickable-top-section').addEventListener('click', () => { if(document.getElementById('drawer-edit-view').classList.contains('active')) closeEditMode(); });
+        function handleBackdropClick(e, id) { if(e.target.id === id) closeModal(id); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function openProfilePopup() { document.getElementById('profile-popup').classList.add('active'); }
+        function closeProfilePopup() { closeModal('profile-popup'); }
         function updateProfileName(v) { document.getElementById('display-profile-name').innerText = v.trim() || "הפרופיל שלי"; }
 
         function openEditMode() {
@@ -375,15 +398,17 @@
             document.getElementById('input-habit-name').value = h.name;
             document.getElementById('input-habit-time').value = h.time;
             document.getElementById('input-habit-color').value = h.color;
+            document.getElementById('bottom-drawer').classList.add('edit-mode');
             document.getElementById('drawer-normal-view').classList.remove('active');
             document.getElementById('drawer-edit-view').classList.add('active');
             document.getElementById('floating-marble').style.display = 'none';
         }
         function closeEditMode() {
+            document.getElementById('bottom-drawer').classList.remove('edit-mode');
             document.getElementById('drawer-edit-view').classList.remove('active');
             document.getElementById('drawer-normal-view').classList.add('active');
             const fm = document.getElementById('floating-marble'); fm.style.display = 'block';
-            setTimeout(updateFloatingPosition, 50); renderActiveHabit();
+            setTimeout(updateFloatingPosition, 20); renderActiveHabit();
         }
         function saveHabitChanges() {
             const h = habitsData[currentHabitIndex];
@@ -398,21 +423,19 @@
             if(confirm("למחוק את ההרגל?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initHabitScroller(); setTimeout(() => { document.querySelectorAll('.habit-item')[0].scrollIntoView({ inline:'center'}); renderActiveHabit(); }, 50); }
         }
 
-        // Physics Logic
+        // Physics
         const fm = document.getElementById('floating-marble');
-        let isDrag = false, startX, startY, tx=0, ty=0;
-        fm.addEventListener('pointerdown', e => { isDrag=true; fm.classList.add('dragging'); fm.style.filter='drop-shadow(0 15px 15px rgba(0,0,0,0.3))'; startX=e.clientX; startY=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); });
-        fm.addEventListener('pointermove', e => { if(!isDrag) return; tx=e.clientX-startX; ty=e.clientY-startY; fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; });
+        let isDrag = false, sx, sy, tx=0, ty=0;
+        fm.addEventListener('pointerdown', e => { if(document.getElementById('drawer-edit-view').classList.contains('active')) return; isDrag=true; fm.classList.add('dragging'); sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); });
+        fm.addEventListener('pointermove', e => { if(!isDrag) return; tx=e.clientX-sx; ty=e.clientY-sy; fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; });
         fm.addEventListener('pointerup', e => {
             if(!isDrag) return; isDrag=false; fm.classList.remove('dragging'); fm.releasePointerCapture(e.pointerId);
-            if(Math.sqrt(tx*tx+ty*ty) < 10) { dropBall(); fm.style.opacity='0'; setTimeout(() => { fm.style.opacity='1'; fm.style.transform='scale(1)'; updateFloatingPosition(); }, 700); }
+            if(Math.sqrt(tx*tx+ty*ty) < 10) { if(dropBall()){ fm.style.opacity='0'; setTimeout(() => { fm.style.opacity='1'; fm.style.transform='scale(1)'; updateFloatingPosition(); }, 500); } else fm.style.transform='scale(1)'; }
             else {
-                const r = fm.getBoundingClientRect(), cx = r.left+r.width/2, cy = r.top+r.height/2;
                 const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+                const r = fm.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
                 if(cx > jr.left-20 && cx < jr.right+20 && cy > jr.top-80 && cy < jr.bottom){
-                    const cr = canvas.getBoundingClientRect(); dropBall(cx-cr.left, cy-cr.top);
-                    fm.style.transition='none'; fm.style.opacity='0'; fm.style.transform='scale(0)';
-                    setTimeout(() => { fm.style.transition='0.45s cubic-bezier(0.34, 1.56, 0.64, 1.2)'; fm.style.opacity='1'; fm.style.transform='scale(1)'; updateFloatingPosition(); }, 700);
+                    const cr = canvas.getBoundingClientRect(); if(dropBall(cx-cr.left, cy-cr.top)){ fm.style.transition='none'; fm.style.opacity='0'; fm.style.transform='scale(0)'; setTimeout(() => { fm.style.transition='0.2s'; fm.style.opacity='1'; fm.style.transform='scale(1)'; updateFloatingPosition(); }, 500); } else fm.style.transform='scale(1)';
                 } else fm.style.transform='scale(1)';
             }
         });
@@ -420,8 +443,7 @@
         function dropBall(x=170+(Math.random()*40-20), y=-30) {
             if(currentDayView >= unlockedDays || !habitsData[currentHabitIndex]) return false;
             const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
-            if(stats.min===0) stats.min=1; else stats.breakthrough++;
-            updateStatsUI();
+            if(stats.min===0) stats.min=1; else stats.breakthrough++; updateStatsUI();
             const b = Bodies.circle(x, y, 22, { restitution:0.6, friction:0.05, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
             currentBalls.push(b); Composite.add(world, b); return true;
         }
