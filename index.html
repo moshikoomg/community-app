@@ -163,9 +163,17 @@
             display: flex; justify-content: center; align-items: flex-start; padding-top: 12px; cursor: grab;
         }
         .drawer-handle::after {
-            content: ''; width: 44px; height: 5px; background-color: #e2e8f0; border-radius: 4px; transition: background 0.3s;
+            content: ''; width: 44px; height: 5px; background-color: transparent; border-radius: 4px; transition: background 0.3s;
         }
-        .drawer-handle:hover::after { background-color: #cbd5e1; }
+        /* הפס יופיע רק כשהמגירה פתוחה לסטטיסטיקה או עריכה */
+        .bottom-section.stats-mode .drawer-handle::after,
+        .bottom-section.edit-mode .drawer-handle::after {
+            background-color: #e2e8f0;
+        }
+        .bottom-section.stats-mode .drawer-handle:hover::after,
+        .bottom-section.edit-mode .drawer-handle:hover::after {
+            background-color: #cbd5e1;
+        }
 
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 25px; touch-action: pan-y; }
         .drawer-view.active { display: flex; }
