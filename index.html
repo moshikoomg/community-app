@@ -42,29 +42,29 @@
             }
             .app-container::before {
                 content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-                width: 80px; height: 20px; background-color: rgba(0,0,0,0.05);
+                width: 80px; height: 16px; background-color: rgba(0,0,0,0.04);
                 border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 1000;
             }
         }
 
-        /* --- פרופיל קומפקטי --- */
+        /* --- פרופיל מינימליסטי --- */
         .profile-header {
-            position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px;
-            z-index: 20; display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.7); padding: 3px 8px 3px 3px;
-            border-radius: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.8);
-            cursor: pointer; transition: all 0.2s;
+            position: absolute; top: 15px; right: 15px;
+            z-index: 50; display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.6); padding: 3px 8px 3px 3px;
+            border-radius: 20px; backdrop-filter: blur(10px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.8);
+            cursor: pointer; transition: transform 0.2s;
         }
         .profile-header:active { transform: scale(0.95); }
         .profile-avatar {
-            width: 20px; height: 20px; border-radius: 50%;
+            width: 18px; height: 18px; border-radius: 50%;
             background: linear-gradient(135deg, #e0eafc, #cfdef3);
             display: flex; justify-content: center; align-items: center; color: #555;
         }
-        .profile-name { font-size: 11px; font-weight: 800; color: #444; }
+        .profile-name { font-size: 10px; font-weight: 800; color: #444; }
 
-        /* --- צנצנת (ללא קווים לבנים) --- */
+        /* --- צנצנת - ללא קווים לבנים בכלל --- */
         .bg-day-indicator {
             position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%);
             font-size: 110px; font-weight: 800; color: rgba(0, 0, 0, 0.03);
@@ -85,16 +85,16 @@
             align-items: center; scroll-snap-align: center; position: relative; 
             box-sizing: border-box; padding-bottom: 220px;
         }
-        .jar-slide.locked { filter: blur(10px) grayscale(60%); opacity: 0.4; }
+        .jar-slide.locked { filter: blur(12px) grayscale(80%); opacity: 0.35; }
         .jar-wrapper { position: relative; width: 340px; height: 480px; direction: rtl; }
 
-        canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 1; touch-action: none; }
+        canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
-        .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         .jar-neck {
             position: absolute; top: 50px; left: 100px; width: 140px; height: 40px;
             border: none !important; border-radius: 10px 10px 0 0;
-            background: linear-gradient(to right, rgba(255,255,255,0.6), rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.6));
+            background: linear-gradient(to right, rgba(255,255,255,0.6), rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.05) 80%, rgba(255,255,255,0.6));
         }
         .jar-body {
             position: absolute; top: 90px; left: 30px; width: 280px; height: 340px;
@@ -108,7 +108,7 @@
         .jar-opening {
             position: absolute; top: 40px; left: 95px; width: 150px; height: 18px;
             border-radius: 50%; border: none !important;
-            background: rgba(255, 255, 255, 0.4); z-index: 3;
+            background: rgba(255, 255, 255, 0.3); z-index: 15;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
         }
 
@@ -118,8 +118,8 @@
             box-shadow: 0 -10px 30px rgba(0,0,0,0.08); 
             z-index: 100; display: flex; flex-direction: column; align-items: center; 
             position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 220px; box-sizing: border-box;
-            transition: height 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            height: 210px; box-sizing: border-box;
+            transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
         .bottom-section.edit-mode { height: 380px; }
         .bottom-section::before {
@@ -133,12 +133,6 @@
         .edit-btn { position: absolute; top: 22px; right: 22px; color: #D0D0D0; cursor: pointer; padding: 5px; z-index: 15; transition: color 0.2s; }
         .edit-btn:hover { color: #A0A0A0; }
 
-        .breakthrough-badge {
-            position: absolute; top: 25px; left: 20px; font-size: 13px; font-weight: 800; color: #999;
-            background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px; opacity: 0; transform: translateY(5px); transition: 0.3s;
-        }
-        .breakthrough-badge.show { opacity: 1; transform: translateY(0); }
-
         .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -38px; min-height: 90px; }
         .active-icon-bg {
             width: 76px; height: 76px; background: #FDFBF7; border-radius: 50%; 
@@ -151,11 +145,10 @@
         
         #floating-marble {
             position: absolute; z-index: 1000; cursor: grab; touch-action: none; transform-origin: center center;
-            /* אנימציית הגעה מרהיבה וגמישה */
-            transition: transform 0.6s cubic-bezier(0.34, 1.8, 0.64, 1), opacity 0.4s ease-out, filter 0.5s;
+            transition: none; 
             pointer-events: auto;
         }
-        #floating-marble.dragging { transition: none !important; cursor: grabbing; }
+        #floating-marble.dragging { cursor: grabbing; }
 
         .habit-time { color: #999; font-size: 14px; font-weight: 600; margin-top: -2px; margin-bottom: 5px; }
 
@@ -188,7 +181,7 @@
         /* --- פופ-אפ פרופיל --- */
         .popup-backdrop {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
             z-index: 2000; display: flex; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: 0.3s;
         }
@@ -219,7 +212,6 @@
         <div class="bottom-section" id="bottom-drawer">
             <div id="drawer-normal-view" class="drawer-view active">
                 <div class="edit-btn" onclick="openEditMode()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
-                <div class="breakthrough-badge" id="breakthrough-badge"></div>
                 <div class="picker-top">
                     <div class="active-icon-bg"><div id="marble-drop-zone"></div></div>
                     <div class="habit-time" id="picker-time"></div>
@@ -237,14 +229,13 @@
                     </div>
                     <div class="form-group"><label>יעד</label><input type="text" id="input-habit-time" class="form-control"></div>
                     <div class="btn-row"><button class="btn-primary" onclick="saveHabitChanges()">שמור</button><button class="btn-secondary" onclick="closeEditMode()">ביטול</button></div>
-                    <button class="btn-danger" onclick="deleteCurrentHabit()">מחק הרגל</button>
+                    <button class="btn-danger" onclick="deleteCurrentHabit()">מחק</button>
                 </div>
             </div>
         </div>
 
         <canvas id="floating-marble" width="55" height="55"></canvas>
 
-        <!-- פופ-אפ פרופיל -->
         <div class="popup-backdrop" id="profile-popup" onclick="handleBackdropClick(event, 'profile-popup')">
             <div class="popup-content">
                 <button class="close-popup-btn" onclick="closeProfilePopup()">✕</button>
@@ -254,7 +245,6 @@
                     <div class="stat-box"><span style="display:block; font-size:20px; font-weight:800; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#999;">בוצעו</span></div>
                 </div>
                 <div class="form-group"><label>שם המשתמש</label><input type="text" id="input-profile-name" class="form-control" value="הפרופיל שלי" onkeyup="updateProfileName(this.value)"></div>
-                <div class="nav-item">⚙️ הגדרות</div>
                 <div class="nav-item logout-item" onclick="handleLogout()">🚪 התנתקות</div>
             </div>
         </div>
@@ -339,12 +329,10 @@
         function updateStatsUI() {
             if(!habitsData[currentHabitIndex]) return;
             const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
-            const timeEl = document.getElementById('picker-time'), badge = document.getElementById('breakthrough-badge');
+            const timeEl = document.getElementById('picker-time');
             if(stats && stats.min > 0) {
                 timeEl.innerText = '+' + h.time; timeEl.style.color = h.color;
-                const total = stats.min + stats.breakthrough;
-                if(total > 1) { badge.innerText = `X${total}`; badge.classList.add('show'); } else badge.classList.remove('show');
-            } else { timeEl.innerText = h.time; timeEl.style.color = '#999'; badge.classList.remove('show'); }
+            } else { timeEl.innerText = h.time; timeEl.style.color = '#999'; }
         }
 
         function renderActiveHabit() {
@@ -357,12 +345,13 @@
             uctx.clearRect(0,0,55,55); 
             drawMarble(uctx, 27.5, 27.5, 24, 0, h.color);
             
-            if(fm.style.display !== 'none') {
+            if(fm.style.display !== 'none' && !isAnimatingJump) {
                 fm.style.display = 'block';
-                fm.style.filter = `drop-shadow(0 0 20px ${h.color}88) drop-shadow(0 6px 12px rgba(0,0,0,0.15))`;
+                fm.style.opacity = '1';
+                fm.style.transform = 'scale(1)';
+                fm.style.filter = `drop-shadow(0 0 15px ${h.color}88) drop-shadow(0 6px 12px rgba(0,0,0,0.15))`;
+                updateFloatingPosition();
             }
-            
-            updateFloatingPosition();
             updateStatsUI(); 
             renderDots();
         }
@@ -375,21 +364,15 @@
             if(closest !== -1 && closest !== lastIdx) { lastIdx = closest; currentHabitIndex = closest; popMarble(); if(navigator.vibrate) navigator.vibrate(10); }
         });
 
-        // אנימציית הגעה מרהיבה (Spectacular Arrival)
         function popMarble() {
             const fm = document.getElementById('floating-marble');
-            if(fm.style.display === 'none') return;
-            
-            // איפוס מיידי למצב "זעיר ושקוף"
+            if(fm.style.display === 'none' || isAnimatingJump) return;
             fm.style.transition = 'none';
-            fm.style.transform = 'scale(0) rotate(-45deg)';
+            fm.style.transform = 'scale(0.1) rotate(-45deg)';
             fm.style.opacity = '0';
-            
-            // תזמון "הגעה" מרהיבה
             requestAnimationFrame(() => {
                 renderActiveHabit(); 
-                // שימוש ב-cubic-bezier שיוצר אפקט קפיצי ורך (Bouncy Elastic)
-                fm.style.transition = 'transform 0.7s cubic-bezier(0.34, 1.85, 0.64, 1), opacity 0.4s ease-out'; 
+                fm.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.8, 0.64, 1), opacity 0.3s'; 
                 fm.style.transform = 'scale(1) rotate(0deg)'; 
                 fm.style.opacity = '1';
             });
@@ -416,11 +399,8 @@
 
         function updateFloatingPosition() {
             const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container'), fm = document.getElementById('floating-marble');
-            if(!dz || !cont || !fm || fm.style.display === 'none') return;
-            
+            if(!dz || !cont || !fm || fm.style.display === 'none' || isAnimatingJump) return;
             const r = dz.getBoundingClientRect(), cr = cont.getBoundingClientRect();
-            if (r.width === 0) return; 
-
             fm.style.left = (r.left - cr.left - cont.clientLeft + r.width/2 - 27.5) + 'px';
             fm.style.top = (r.top - cr.top - cont.clientTop + r.height/2 - 27.5) + 'px';
         }
@@ -456,20 +436,18 @@
             document.getElementById('drawer-edit-view').classList.remove('active');
             document.getElementById('drawer-normal-view').classList.add('active');
             
-            const fm = document.getElementById('floating-marble');
-            fm.style.display = 'block';
-            
-            // "גלילת בזק" מהירה לריענון המערכת
             const originalIndex = currentHabitIndex;
             const tempIndex = (originalIndex + 1) % habitsData.length;
             const items = document.querySelectorAll('.habit-item');
 
+            // גלילת בזק לאיפוס המערכת
             if (items[tempIndex]) items[tempIndex].scrollIntoView({ behavior: 'auto', inline: 'center' });
-
+            
             setTimeout(() => {
+                document.getElementById('floating-marble').style.display = 'block';
                 if (items[originalIndex]) {
                     items[originalIndex].scrollIntoView({ behavior: 'auto', inline: 'center' });
-                    popMarble(); // אנימציית הגעה מרהיבה
+                    popMarble();
                 }
             }, 10);
         }
@@ -488,32 +466,89 @@
         }
 
         const fm = document.getElementById('floating-marble');
-        let isDrag = false, sx, sy, tx=0, ty=0;
-        fm.addEventListener('pointerdown', e => { if(document.getElementById('drawer-edit-view').classList.contains('active')) return; isDrag=true; fm.classList.add('dragging'); sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); });
-        fm.addEventListener('pointermove', e => { if(!isDrag) return; tx=e.clientX-sx; ty=e.clientY-sy; fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.15)`; });
+        let isDrag = false, sx, sy, tx=0, ty=0, isAnimatingJump = false;
+
+        // אנימציית הזינוק הפיזיקלית החדשה (Bouncy Jump Logic)
+        function performNaturalJump() {
+            if (isAnimatingJump) return;
+            isAnimatingJump = true;
+            
+            const container = document.querySelector('.app-container');
+            const contRect = container.getBoundingClientRect();
+            
+            // יעד: פתח הצנצנת
+            const targetX = contRect.width / 2;
+            const targetY = 80; // כניסה עמוקה יותר לאשליית צלילה
+
+            const currentPosLeft = parseFloat(fm.style.left) + 27.5;
+            const currentPosTop = parseFloat(fm.style.top) + 27.5;
+            
+            const duration = 650; // זמן הזינוק
+            const startTime = performance.now();
+            
+            // שלב 0: דריכה קלה למטה (Squash)
+            fm.style.transition = 'transform 0.1s ease-in';
+            fm.style.transform = 'scale(0.85, 1.1) translateY(10px)';
+            
+            setTimeout(() => {
+                fm.style.transition = 'none'; // עוברים ל-JS Animation
+                function animate(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // תנועת קשת (פרבולה)
+                    const curX = currentPosLeft + (targetX - currentPosLeft) * progress;
+                    // קשת עם גובה זינוק
+                    const jumpHeight = 160;
+                    const curY = currentPosTop + (targetY - currentPosTop) * progress - Math.sin(progress * Math.PI) * jumpHeight;
+                    
+                    // אפקט גמישות: גדל בזינוק, קטן בצלילה
+                    const scale = 1 + Math.sin(progress * Math.PI) * 0.4;
+                    // סיבוב קל בדרך
+                    const rot = progress * 120;
+
+                    fm.style.left = (curX - 27.5) + 'px';
+                    fm.style.top = (curY - 27.5) + 'px';
+                    fm.style.transform = `scale(${scale}) rotate(${rot}deg)`;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        // המעבר - הכדור הפיזי מופיע בתוך הצנצנת
+                        dropBall(170, 50); 
+                        fm.style.opacity = '0';
+                        isAnimatingJump = false;
+                        
+                        // הכנת הגולה הבאה במגירה
+                        setTimeout(() => {
+                            fm.style.transform = 'scale(0)';
+                            popMarble();
+                        }, 200);
+                    }
+                }
+                requestAnimationFrame(animate);
+            }, 100);
+        }
+
+        fm.addEventListener('pointerdown', e => { if(document.getElementById('drawer-edit-view').classList.contains('active') || isAnimatingJump) return; isDrag=true; fm.classList.add('dragging'); sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); });
+        fm.addEventListener('pointermove', e => { if(!isDrag) return; tx=e.clientX-sx; ty=e.clientY-sy; fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; });
         fm.addEventListener('pointerup', e => {
             if(!isDrag) return; isDrag=false; fm.classList.remove('dragging'); fm.releasePointerCapture(e.pointerId);
             const dist = Math.sqrt(tx*tx+ty*ty);
             if(dist < 10) { 
-                if(dropBall()){ 
-                    fm.style.transition = 'transform 0.2s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.2s';
-                    fm.style.transform = 'scale(0)';
-                    fm.style.opacity = '0';
-                    setTimeout(popMarble, 750); 
-                } else fm.style.transform='scale(1)'; 
+                performNaturalJump(); 
             } else {
                 const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
                 const r = fm.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
                 if(cx > jr.left-20 && cx < jr.right+20 && cy > jr.top-80 && cy < jr.bottom){
                     const cr = canvas.getBoundingClientRect(); 
                     if(dropBall(cx-cr.left, cy-cr.top)){ 
-                        fm.style.transition='transform 0.15s ease-in, opacity 0.1s'; 
-                        fm.style.opacity='0'; fm.style.transform='scale(0)'; 
-                        setTimeout(popMarble, 750); 
+                        fm.style.transition='none'; fm.style.opacity='0'; fm.style.transform='scale(0)'; 
+                        setTimeout(popMarble, 500); 
                     } else fm.style.transform='scale(1)';
                 } else { 
                     fm.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)'; 
-                    fm.style.transform='translate(0px, 0px) scale(1)'; 
+                    fm.style.transform='translate(0,0) scale(1)'; 
                 }
             }
         });
@@ -529,16 +564,24 @@
         function drawMarble(c, x, y, r, a, col) {
             c.save(); c.translate(x, y); c.rotate(a);
             c.beginPath(); c.arc(0,0,r,0,Math.PI*2);
-            let g = c.createRadialGradient(-r*0.3,-r*0.3,r*0.1,0,0,r); g.addColorStop(0,'rgba(255,255,255,0.95)'); g.addColorStop(0.5,'rgba(240,240,240,0.8)'); g.addColorStop(1,'rgba(180,180,180,0.5)');
+            let g = c.createRadialGradient(-r*0.3,-r*0.3,r*0.1,0,0,r); 
+            g.addColorStop(0,'rgba(255,255,255,0.95)'); 
+            g.addColorStop(0.5,'rgba(240,240,240,0.8)'); 
+            g.addColorStop(1,'rgba(180,180,180,0.5)');
             c.fillStyle=g; c.fill();
-            c.save(); c.globalAlpha=0.85; c.beginPath(); c.moveTo(0,r*0.7); c.quadraticCurveTo(r*0.6,0,0,-r*0.6); c.quadraticCurveTo(-r*0.3,0,0,r*0.7); c.fillStyle=col; c.fill(); c.restore();
+            c.save(); c.globalAlpha=0.85; c.beginPath(); c.moveTo(0,r*0.7); 
+            c.quadraticCurveTo(r*0.6,0,0,-r*0.6); c.quadraticCurveTo(-r*0.3,0,0,r*0.7); 
+            c.fillStyle=col; c.fill(); c.restore();
             c.lineWidth=1; c.strokeStyle='rgba(255,255,255,0.6)'; c.stroke();
-            c.beginPath(); c.arc(-r*0.3,-r*0.3,r*0.2,0,Math.PI*2); c.fillStyle='rgba(255,255,255,0.7)'; c.fill(); c.restore();
+            c.beginPath(); c.arc(-r*0.3,-r*0.3,r*0.2,0,Math.PI*2); 
+            c.fillStyle='rgba(255,255,255,0.7)'; c.fill(); c.restore();
         }
 
         function loop() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            Composite.allBodies(world).forEach(b => { if(b.label==='habit-ball') drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle); });
+            Composite.allBodies(world).forEach(b => { 
+                if(b.label==='habit-ball') drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle); 
+            });
             Engine.update(engine, 1000/60); requestAnimationFrame(loop);
         }
         loop(); setTimeout(() => { scroller.scrollTo({left:0}); lastIdx=1; renderActiveHabit(); }, 100);
