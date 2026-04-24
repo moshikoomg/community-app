@@ -61,7 +61,13 @@
             pointer-events: auto; cursor: pointer;
         }
         .user-pill .name { font-weight: 800; font-size: 13px; color: var(--text-main); }
-        .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center; }
+        .user-avatar { 
+            width: 26px; height: 26px; border-radius: 50%; 
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0); 
+            display: flex; align-items: center; justify-content: center; 
+            overflow: hidden; border: 1px solid #e2e8f0;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         /* --- Day Indicator --- */
         .day-display {
@@ -77,7 +83,7 @@
             user-select: none; letter-spacing: 2px;
         }
 
-        .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding-bottom: 220px; }
+        .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
 
         /* --- Slider --- */
         .jars-slider {
@@ -97,17 +103,9 @@
             flex: 0 0 340px; 
             height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
-            box-sizing: border-box; padding-bottom: 0; margin: 0 10px;
+            box-sizing: border-box; padding-bottom: 180px; margin: 0 10px;
             transition: opacity 0.5s ease;
             opacity: 0.4; 
-        }
-
-        @media (max-height: 740px) {
-            .jar-slide { padding-bottom: 0; }
-            .jar-wrapper { transform: scale(0.6) !important; }
-            .jar-slide.active-slide .jar-wrapper { transform: scale(0.75) !important; }
-            .day-display { top: 50px; }
-            .big-day-number { font-size: 24px; }
         }
         .jar-slide.active-slide { opacity: 1; }
         .jar-slide.locked { filter: grayscale(1); opacity: 0.2; }
@@ -116,9 +114,9 @@
         .jar-wrapper { 
             position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; 
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0.75); 
+            transform: scale(0.85); 
         }
-        .jar-slide.active-slide .jar-wrapper { transform: scale(0.9); }
+        .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
         canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
         /* --- Jar Design --- */
@@ -164,9 +162,8 @@
         }
         .bottom-section.edit-mode { height: 400px; }
         .bottom-section.stats-mode { height: 60vh; }
-        .bottom-section.onboarding-mode { height: 380px; }
+        .bottom-section.onboarding-mode { height: 440px; }
         
-        /* אזור הגרירה העליון של המגירה */
         .drawer-handle {
             width: 100%; height: 30px; position: absolute; top: 0; left: 0; z-index: 10;
             display: flex; justify-content: center; align-items: flex-start; padding-top: 12px; cursor: grab;
@@ -175,12 +172,9 @@
             content: ''; width: 44px; height: 5px; background-color: transparent; border-radius: 4px; transition: background 0.3s;
         }
         .bottom-section.stats-mode .drawer-handle::after,
-        .bottom-section.edit-mode .drawer-handle::after {
+        .bottom-section.edit-mode .drawer-handle::after,
+        .bottom-section.onboarding-mode .drawer-handle::after {
             background-color: #e2e8f0;
-        }
-        .bottom-section.stats-mode .drawer-handle:hover::after,
-        .bottom-section.edit-mode .drawer-handle:hover::after {
-            background-color: #cbd5e1;
         }
 
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 25px; touch-action: pan-y; }
@@ -198,15 +192,14 @@
 
         #marble-drop-zone { width: 60px; height: 60px; pointer-events: none; }
         
-        /* הכדור */
         #floating-marble { 
             position: absolute; z-index: 1000; cursor: grab; touch-action: none; 
             transform-origin: center center; pointer-events: auto;
         }
         #floating-marble.dragging { cursor: grabbing; animation: none !important; }
         
-        @keyframes marblePulse { 0% { transform: scale(1); } 14% { transform: scale(1.25); } 28% { transform: scale(1); } 42% { transform: scale(1.15); } 70% { transform: scale(1); } }
-        .marble-pulse { animation: marblePulse 1.8s ease-in-out infinite; }
+        @keyframes marblePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+        .marble-pulse { animation: marblePulse 2.8s ease-in-out infinite; }
 
         .habit-scroller { 
             display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; 
@@ -239,20 +232,44 @@
 
         /* --- Onboarding View --- */
         #drawer-onboarding-view { padding: 0 25px; width: 100%; box-sizing: border-box; }
-        .onboarding-step { animation: fadeIn 0.4s; width: 100%; }
-        .preset-btn { background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 12px; border-radius: 12px; font-weight: 700; color: var(--text-main); cursor: pointer; transition: 0.2s; font-size: 14px; text-align: center; }
-        .preset-btn:hover { border-color: var(--primary-color); color: var(--primary-color); background: #f1f8f5; }
+        .onboarding-step { animation: fadeIn 0.4s; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        
+        .onboarding-title { font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; text-align: center; }
+        .onboarding-sub { font-size: 13px; font-weight: 600; color: #64748b; text-align: center; margin-bottom: 24px; max-width: 250px; line-height: 1.4; }
+        .onboarding-sub span { color: var(--danger-color); }
 
-        /* --- Popups --- */
-        .popup-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
-        .popup-backdrop.active { opacity: 1; pointer-events: all; }
-        .popup-content { background: #ffffff; width: 90%; max-width: 360px; border-radius: 28px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); max-height: 85vh; overflow-y: auto; position: relative; }
-        .close-popup-btn { position: absolute; top: 15px; left: 15px; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        
-        .file-upload-btn { display: block; width: 100%; padding: 12px; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; color: var(--admin-color); font-weight: 700; margin-top: 4px; transition: 0.2s; box-sizing: border-box;}
-        .file-upload-btn:hover { background: #f1f5f9; border-color: var(--admin-color); }
-        .file-upload-btn input[type="file"] { display: none; }
-        
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 20px; }
+        .preset-btn { 
+            background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 18px 12px; border-radius: 18px; 
+            font-weight: 800; color: var(--text-main); cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-size: 15px; text-align: center;
+        }
+        .preset-btn:hover { border-color: var(--primary-color); background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-2px); }
+
+        .custom-input-group { display: flex; width: 100%; gap: 8px; background: #f1f5f9; padding: 6px; border-radius: 16px; }
+        .custom-input-group input { 
+            flex: 1; border: none; background: transparent; padding: 12px 15px; font-family: inherit; font-weight: 700; 
+            font-size: 14px; outline: none; color: var(--text-main); 
+        }
+        .custom-input-group button { 
+            background: var(--primary-color); color: white; border: none; padding: 0 20px; border-radius: 12px; 
+            font-weight: 900; cursor: pointer; transition: 0.2s; 
+        }
+
+        .target-selector { display: flex; align-items: center; gap: 30px; margin: 30px 0; }
+        .target-btn { 
+            width: 64px; height: 64px; border-radius: 20px; border: 1.5px solid #e2e8f0; 
+            background: #ffffff; color: var(--text-main); font-size: 28px; font-weight: 900; 
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .target-display { font-size: 64px; font-weight: 900; color: var(--primary-color); min-width: 60px; text-align: center; letter-spacing: -2px; }
+
+        .finish-btn { 
+            width: 100%; background: var(--text-main); color: white; padding: 20px; border-radius: 20px; 
+            border: none; font-size: 17px; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
         /* --- Tutorial Tooltip --- */
         #tutorial-tooltip {
             position: absolute;
@@ -277,6 +294,23 @@
             0%, 100% { transform: translate(-50%, 0); }
             50% { transform: translate(-50%, -10px); }
         }
+
+        /* --- Popups --- */
+        .popup-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .popup-backdrop.active { opacity: 1; pointer-events: all; }
+        .popup-content { background: #ffffff; width: 90%; max-width: 360px; border-radius: 28px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); max-height: 85vh; overflow-y: auto; position: relative; }
+        .close-popup-btn { position: absolute; top: 15px; left: 15px; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        .profile-img-upload {
+            width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; 
+            margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+            position: relative; cursor: pointer; overflow: hidden; border: 2px solid #e2e8f0;
+        }
+        .profile-img-upload img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-img-upload .overlay {
+            position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.4);
+            color: white; font-size: 10px; padding: 2px 0; text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -286,9 +320,9 @@
         <div class="header-ui">
             <div style="flex: 1;"></div> 
             <div class="user-pill" onclick="window.openProfilePopup()">
-                <div class="name" id="header-streak-pill">🔥 1</div>
-                <div class="user-avatar" style="overflow: hidden;">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Luck" alt="Avatar" style="width: 100%; height: 100%;">
+                <div class="name" id="display-profile-name">שם משתמש</div>
+                <div class="user-avatar" id="header-avatar">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
             </div>
         </div>
@@ -307,7 +341,6 @@
         <div class="bottom-section" id="bottom-drawer">
             <div class="drawer-handle" id="drawer-handle"></div>
             
-            <!-- Normal View -->
             <div id="drawer-normal-view" class="drawer-view active">
                 <div class="edit-btn" onclick="window.openEditMode()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
                 <div class="picker-top">
@@ -319,7 +352,6 @@
                 <div style="font-size:10px; color:#cbd5e1; font-weight:700; margin-top:15px; user-select:none;">החלק למעלה לסטטיסטיקות ∧</div>
             </div>
 
-            <!-- Edit View -->
             <div id="drawer-edit-view" class="drawer-view">
                 <div style="padding: 0 25px; width: 100%; box-sizing: border-box;">
                     <div style="font-size: 18px; font-weight: 900; margin-bottom: 20px; text-align: center;">עריכת הרגל</div>
@@ -333,74 +365,55 @@
                 </div>
             </div>
 
-            <!-- Stats View -->
             <div id="drawer-stats-view" class="drawer-view">
                 <div class="stats-header">
                     <div class="stats-title" id="stats-title">שם ההרגל</div>
                     <div class="stats-subtitle">ביצועים וסטטיסטיקה</div>
                 </div>
-                
                 <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-val" id="stats-total">0</div>
-                        <div class="stat-label">סה״כ זריקות 🏆</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="stats-streak">0</div>
-                        <div class="stat-label">רצף ימים 🔥</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="stats-base">0</div>
-                        <div class="stat-label">בסיס (קליק ראשון) 🎯</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="stats-extra">0</div>
-                        <div class="stat-label">אקסטרה (רפליקות) 🚀</div>
-                    </div>
+                    <div class="stat-box"><div class="stat-val" id="stats-total">0</div><div class="stat-label">סה״כ זריקות 🏆</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stats-streak">0</div><div class="stat-label">רצף ימים 🔥</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stats-base">0</div><div class="stat-label">בסיס 🎯</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stats-extra">0</div><div class="stat-label">אקסטרה 🚀</div></div>
                 </div>
-
                 <div style="text-align:right; width:100%; font-size:12px; font-weight:800; color:#64748b; margin-bottom:5px;">7 ימים אחרונים</div>
-                <div class="graph-container" id="stats-graph">
-                    <!-- Graph bars injected by JS -->
-                </div>
+                <div class="graph-container" id="stats-graph"></div>
             </div>
 
-            <!-- Onboarding View (New User) -->
             <div id="drawer-onboarding-view" class="drawer-view">
                 <div id="drawer-onboarding-step1" class="onboarding-step active">
-                    <div style="font-size:22px; font-weight:900; text-align:center; margin-bottom:5px; color:var(--text-main);">איזה הרגל נוסיף לצנצנת שלך?</div>
-                    <div style="font-size:12px; font-weight:700; color:var(--danger-color); text-align:center; margin-bottom:20px;">* ההרגל חייב להיות קטן כל כך שקשה לסרב לו</div>
+                    <div class="onboarding-title">מה ההרגל שלך?</div>
+                    <div class="onboarding-sub">בחר הרגל קטן שתוכל להתמיד בו. <span>זכור: פחות זה יותר.</span></div>
                     
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לשתות כוס מים')">💧 לשתות כוס מים</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לנשום עמוק')">🌬️ לנשום עמוק</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לקרוא עמוד אחד')">📖 לקרוא עמוד אחד</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לעשות מתיחות')">🧘‍♂️ לעשות מתיחות</button>
+                    <div class="preset-grid">
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לשתות כוס מים')">לשתות כוס מים</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לנשום עמוק')">לנשום עמוק</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לקרוא עמוד אחד')">לקרוא עמוד אחד</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לעשות מתיחות')">לעשות מתיחות</button>
                     </div>
                     
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="custom-habit-input" placeholder="או כתוב הרגל בעצמך..." style="flex:1; padding:12px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:'Heebo';">
-                        <button onclick="window.handleCustomHabit()" style="background:var(--primary-color); color:white; border:none; padding:0 20px; border-radius:12px; font-weight:800; cursor:pointer;">המשך</button>
+                    <div class="custom-input-group">
+                        <input type="text" id="custom-habit-input" placeholder="או כתוב הרגל משלך...">
+                        <button onclick="window.handleCustomHabit()">המשך</button>
                     </div>
                 </div>
 
                 <div id="drawer-onboarding-step2" class="onboarding-step" style="display:none;">
-                    <div style="font-size:22px; font-weight:900; text-align:center; margin-bottom:15px; margin-top:20px; color:var(--text-main);">כמה ממנו אתה מתחייב לעשות בכל יום?</div>
+                    <div class="onboarding-title">כמה פעמים ביום?</div>
+                    <div class="onboarding-sub">התחייבות יומית להצלחה.</div>
                     
-                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:40px; gap:20px;">
-                        <button onclick="window.changeOnboardingTarget(-1)" style="width:50px; height:50px; border-radius:50%; border:none; background:#f1f5f9; color:var(--text-main); font-size:24px; font-weight:bold; cursor:pointer;">-</button>
-                        <input type="number" id="onboarding-target-input" value="1" min="1" style="width:80px; font-size:40px; font-weight:900; text-align:center; border:none; background:transparent; outline:none; color:var(--primary-color);">
-                        <button onclick="window.changeOnboardingTarget(1)" style="width:50px; height:50px; border-radius:50%; border:none; background:#f1f5f9; color:var(--text-main); font-size:24px; font-weight:bold; cursor:pointer;">+</button>
+                    <div class="target-selector">
+                        <button class="target-btn" onclick="window.changeOnboardingTarget(-1)">-</button>
+                        <div class="target-display" id="onboarding-target-display">1</div>
+                        <button class="target-btn" onclick="window.changeOnboardingTarget(1)">+</button>
                     </div>
                     
-                    <button onclick="window.finishOnboarding()" style="width:100%; background:var(--primary-color); color:white; padding:18px; border-radius:16px; border:none; font-size:16px; font-weight:900; cursor:pointer;">המשך לסיום</button>
+                    <button class="finish-btn" onclick="window.finishOnboarding()">יאללה, מתחילים!</button>
                 </div>
             </div>
         </div>
 
-        <!-- Tooltip הדרכה -->
         <div id="tutorial-tooltip" class="tutorial-bounce">גרור אותי לצנצנת! 👆</div>
-
         <canvas id="floating-marble" width="60" height="60"></canvas>
 
         <!-- Popups -->
@@ -409,1141 +422,481 @@
                 <button class="close-popup-btn" onclick="window.closeProfilePopup()">✕</button>
                 <div style="font-size:22px; font-weight:900; margin-bottom:20px;">החשבון שלי</div>
                 
+                <label class="profile-img-upload" onclick="document.getElementById('input-profile-img').click()">
+                    <div id="profile-img-preview" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div class="overlay">עריכה</div>
+                    <input type="file" id="input-profile-img" hidden accept="image/*" onchange="window.updateProfileImage(event)">
+                </label>
+
                 <div style="display:flex; gap:12px; margin-bottom:20px;">
                     <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-days-active">1</span><span style="font-size:11px; color:#94a3b8;">ימים</span></div>
                     <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#94a3b8;">גולות</span></div>
                 </div>
-                
                 <div style="text-align: right;"><label style="font-size:13px; font-weight:700; color:#64748b;">שם תצוגה</label><input type="text" id="input-profile-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;" onkeyup="window.updateProfileName(this.value)"></div>
                 
-                <!-- לחצן התחברות לגוגל לשמירת נתונים מבוססת ענן -->
-                <button id="google-sync-btn" onclick="window.connectGoogle()" style="width:100%; margin-top:20px; padding:14px; border-radius:14px; border:none; background:#4285F4; color:white; font-weight:800; display:flex; justify-content:center; align-items:center; gap:10px; cursor:pointer;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                    שמור התקדמות בענן (גוגל)
-                </button>
-                <div id="google-sync-status" style="font-size:12px; color:var(--primary-color); font-weight:700; margin-top:15px; display:none; text-align:center;">✅ מחובר ומגובה לענן</div>
-
                 <div style="font-size:16px; font-weight:800; margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">עיצוב אישי</div>
-                
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px; text-align:right;">
-                    <div>
-                        <label style="font-size:11px; font-weight:700; color:#64748b;">רקע אפליקציה (צבע / URL)</label>
-                        <div style="display:flex; gap:8px; margin-top:4px;">
-                            <input type="color" id="input-app-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="window.updateCustomBgs()">
-                            <input type="text" id="input-app-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="window.updateCustomBgs()">
-                        </div>
-                    </div>
-                    <div>
-                        <label style="font-size:11px; font-weight:700; color:#64748b;">רקע צנצנת (צבע / URL)</label>
-                        <div style="display:flex; gap:8px; margin-top:4px;">
-                            <input type="color" id="input-jar-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="window.updateCustomBgs()">
-                            <input type="text" id="input-jar-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="window.updateCustomBgs()">
-                        </div>
-                    </div>
-                    <button style="margin-top:5px; background:none; border:none; color:var(--danger-color); font-size:12px; font-weight:700; cursor:pointer; text-align:right; padding:0;" onclick="window.resetCustomBgs()">אפס עיצוב אישי</button>
+                    <div><label style="font-size:11px; font-weight:700; color:#64748b;">רקע אפליקציה</label>
+                        <div style="display:flex; gap:8px; margin-top:4px;"><input type="color" id="input-app-color" onchange="window.updateCustomBgs()"><input type="text" id="input-app-bg-url" onchange="window.updateCustomBgs()" placeholder="URL"></div></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#64748b;">רקע צנצנת</label>
+                        <div style="display:flex; gap:8px; margin-top:4px;"><input type="color" id="input-jar-color" onchange="window.updateCustomBgs()"><input type="text" id="input-jar-bg-url" onchange="window.updateCustomBgs()" placeholder="URL"></div></div>
+                    <button onclick="window.resetCustomBgs()" style="background:none; border:none; color:var(--danger-color); font-size:12px; font-weight:800; cursor:pointer; text-align:right;">אפס עיצוב</button>
                 </div>
-
-                <button id="admin-dashboard-btn" style="display:none; width:100%; margin-top:20px; padding:14px; border-radius:14px; border:1.5px solid var(--admin-color); color:var(--admin-color); background:none; font-weight:800;" onclick="window.openAdminDashboard()">ניהול שלבים</button>
-            </div>
-        </div>
-
-        <div class="popup-backdrop" id="admin-popup" onclick="window.handleBackdropClick(event, 'admin-popup')">
-            <div class="popup-content" style="max-width:400px;">
-                <button class="close-popup-btn" onclick="window.closeAdminDashboard()">✕</button>
-                <div style="font-size:22px; font-weight:900; margin-bottom:20px; color:var(--admin-color);">ניהול שלבים</div>
-                <div style="text-align: right; margin-bottom: 15px;">
-                    <label style="font-size:13px; font-weight:700;">שלב 1 (ימים 1-5)</label>
-                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="window.uploadStageBg(event, 1)"><span id="label-bg-1">בחר תמונה מהמכשיר...</span></label>
-                </div>
-                <div style="text-align: right; margin-bottom: 15px;">
-                    <label style="font-size:13px; font-weight:700;">שלב 2 (ימים 5-10)</label>
-                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="window.uploadStageBg(event, 2)"><span id="label-bg-2">בחר תמונה מהמכשיר...</span></label>
-                </div>
-                <div style="text-align: right; margin-bottom: 15px;">
-                    <label style="font-size:13px; font-weight:700;">שלב 3 (ימים 10-21)</label>
-                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="window.uploadStageBg(event, 3)"><span id="label-bg-3">בחר תמונה מהמכשיר...</span></label>
-                </div>
-                <div style="text-align: right; margin-bottom: 15px;">
-                    <label style="font-size:13px; font-weight:700;">שלב 4+ (קפיצות 21)</label>
-                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="window.uploadStageBg(event, 'generic')"><span id="label-bg-generic">בחר תמונה מהמכשיר...</span></label>
-                </div>
-                <button style="width:100%; background:var(--admin-color); color:white; padding:15px; border-radius:14px; border:none; font-weight:800; margin-top:5px;" onclick="window.closeAdminDashboard()">סיום</button>
             </div>
         </div>
     </div>
 
-    <!-- טעינת סקריפטים ומנגנון נתונים -->
     <script>
-        const STAGE_GAP = 21;
-        const TOTAL_DISPLAY_DAYS = 63; 
-        const ADMIN_EMAIL = "admin@email.com";
-        
-        let currentUser = { displayName: "שם", email: "" };
-        let appStartDate = Date.now();
-        let lastActionDate = Date.now();
-        
-        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 1;
-        window.isTutorialMode = false; // משתנה הדרכה גלובלי
-        let habitsData = [
-            { id: 1, name: 'לנשום', time: '10 דקות', color: '#42b6c7' },
-            { id: 2, name: 'לרוץ', time: '5 דקות', color: '#e86a92' },
-            { id: 3, name: 'לשחק', time: '15 דקות', color: '#f3c13a' },
-            { id: 4, name: 'לקרוא', time: '20 דקות', color: '#7bc043' },
-            { id: 5, name: 'לשתות', time: '1 כוס', color: '#8e44ad' }
-        ];
+        // --- 1. משתנים גלובליים ---
+        const STAGE_GAP = 21, TOTAL_DISPLAY_DAYS = 63;
+        let currentUser = { displayName: "שם משתמש", profileImage: null };
+        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0;
+        let habitsData = [];
+        let stageBackgrounds = {}, customBgs = {}, userStats = { daysData: [] };
+        window.isAnimatingJump = false;
+        window.isTutorialMode = false;
+        window.isDrag = false;
 
-        let stageBackgrounds = {};
-        let customBgs = {};
-        let userStats = { daysData: [] };
-
-        // פונקציית אתחול מבנה הנתונים
+        // --- 2. ליבת נתונים ושחזור ---
         function initStats(idx) {
             if(!userStats.daysData[idx]) userStats.daysData[idx] = { habits: {}, savedBalls: [] };
             habitsData.forEach(h => { if(!userStats.daysData[idx].habits[h.id]) userStats.daysData[idx].habits[h.id] = { min: 0, breakthrough: 0 }; });
         }
 
-        // --- שחזור מיידי מ-LocalStorage ("קוקיז") טרם טעינת כל שאר המערכת ---
-        try {
-            const localData = localStorage.getItem('habit_jar_local_state_v1');
-            if (localData) {
-                const data = JSON.parse(localData);
-                if (data.habitsData) habitsData = data.habitsData;
-                if (data.userStats) userStats = data.userStats;
-                if (data.stageBackgrounds) stageBackgrounds = data.stageBackgrounds;
-                if (data.customBgs) customBgs = data.customBgs;
-                if (data.unlockedDays) unlockedDays = data.unlockedDays;
-                if (data.currentDayView !== undefined) currentDayView = data.currentDayView;
-                if (data.displayName) currentUser.displayName = data.displayName;
-                if (data.startDate) appStartDate = data.startDate;
-                if (data.lastActionDate) lastActionDate = data.lastActionDate;
+        function loadLocalState() {
+            try {
+                const d = localStorage.getItem('habit_jar_local_state_v2');
+                if (d) {
+                    const data = JSON.parse(d);
+                    habitsData = data.habitsData || [];
+                    userStats = data.userStats || { daysData: [] };
+                    stageBackgrounds = data.stageBackgrounds || {};
+                    customBgs = data.customBgs || {};
+                    unlockedDays = data.unlockedDays || 1;
+                    currentDayView = data.currentDayView !== undefined ? data.currentDayView : 0;
+                    currentUser = data.currentUser || { displayName: "שם משתמש", profileImage: null };
+                }
+            } catch (e) {}
+            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
+        }
+        loadLocalState();
+
+        window.saveState = async () => {
+            if (typeof currentBalls !== 'undefined' && currentDayView >= 0 && currentBalls.length > 0) {
+                userStats.daysData[currentDayView].savedBalls = currentBalls.map(b => ({
+                    x: b.position.x, y: b.position.y, angle: b.angle, color: b.render.fillStyle
+                }));
             }
-        } catch (e) { console.error("Error loading local data", e); }
+            const s = { habitsData, userStats, stageBackgrounds, customBgs, unlockedDays, currentDayView, currentUser };
+            localStorage.setItem('habit_jar_local_state_v2', JSON.stringify(s));
+        };
 
-        // הבטחת קיום המבנה לכל הימים תמיד
-        for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
-
+        // --- 3. פונקציות עזר ו-UI ---
         function getStageInfo(day) {
-            day = day + 1; 
-            if (day <= 5) return { stage: 1, maxDays: 5 };
-            if (day <= 10) return { stage: 2, maxDays: 10 };
-            if (day <= 21) return { stage: 3, maxDays: 21 };
+            const d = day + 1; 
+            if (d <= 5) return { stage: 1, maxDays: 5 };
+            if (d <= 10) return { stage: 2, maxDays: 10 };
+            if (d <= 21) return { stage: 3, maxDays: 21 };
             let base = 21, stageCount = 3;
-            while (day > base) { base += STAGE_GAP; stageCount++; if (day <= base) break; }
+            while (d > base) { base += STAGE_GAP; stageCount++; if (d <= base) break; }
             return { stage: stageCount, maxDays: base };
         }
 
-        // --- מנגנון שמירה רב-שכבתי חכם ---
-        let db, auth, currentUserUid = null;
-        let _setDoc, _doc;
-
-        window.saveState = async () => {
-            lastActionDate = Date.now();
-            
-            // שמירת המיקומים המדויקים של הכדורים הפיזיים ברגע זה (אם ישנם)
-            if (typeof currentBalls !== 'undefined' && currentDayView >= 0 && currentDayView < TOTAL_DISPLAY_DAYS && currentBalls.length > 0) {
-                userStats.daysData[currentDayView].savedBalls = currentBalls.map(b => ({
-                    x: b.position.x,
-                    y: b.position.y,
-                    angle: b.angle,
-                    color: b.render.fillStyle
-                }));
+        function updateProfileUI() {
+            const shortName = currentUser.displayName.split(' ')[0];
+            document.getElementById('display-profile-name').innerText = shortName;
+            document.getElementById('input-profile-name').value = currentUser.displayName;
+            const headerAvatar = document.getElementById('header-avatar');
+            const previewAvatar = document.getElementById('profile-img-preview');
+            if (currentUser.profileImage) {
+                const imgTag = `<img src="${currentUser.profileImage}" alt="פרופיל">`;
+                headerAvatar.innerHTML = imgTag;
+                previewAvatar.innerHTML = imgTag;
+            } else {
+                const svg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                headerAvatar.innerHTML = svg;
+                previewAvatar.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
             }
-
-            const state = { 
-                habitsData, userStats, stageBackgrounds, customBgs, 
-                unlockedDays, currentDayView, displayName: currentUser.displayName,
-                startDate: appStartDate, lastActionDate 
-            };
-            
-            // 1. קודם כל: שמירה מקומית (Local Storage) עמידה ואמינה
-            try {
-                localStorage.setItem('habit_jar_local_state_v1', JSON.stringify(state));
-            } catch(e) {}
-
-            // 2. שנית: אם מחובר בענן - סנכרן לשם שיהיה גיבוי גלובלי
-            if (!db || !currentUserUid || !_setDoc || !_doc) return;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'habit-jar';
-            try {
-                await _setDoc(_doc(db, 'artifacts', appId, 'users', currentUserUid, 'appState', 'main'), state);
-            } catch(e) { console.error(e); }
-        };
-
-        // אתחול Firebase ברקע
-        import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js").then(async ({ initializeApp }) => {
-            const { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, linkWithPopup, signInWithPopup, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
-            const { getFirestore, doc, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-
-            _setDoc = setDoc;
-            _doc = doc;
-
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            if (Object.keys(firebaseConfig).length === 0) return; 
-
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            const initAuth = async () => {
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch(e) {}
-            };
-
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUserUid = user.uid;
-                    const isGoogleLinked = user.providerData.some(p => p.providerId === 'google.com');
-                    
-                    if (isGoogleLinked) {
-                        document.getElementById('google-sync-btn').style.display = 'none';
-                        document.getElementById('google-sync-status').style.display = 'block';
-                    }
-                    
-                    // טעינה מהענן אם יש מידע (דורס מקומי במקרה של התנגשות, שימושי בסנכרון מכשירים)
-                    loadStateFromCloud(getDoc, doc);
-                }
-            });
-
-            window.connectGoogle = async () => {
-                const provider = new GoogleAuthProvider();
-                try {
-                    const result = await linkWithPopup(auth.currentUser, provider);
-                    document.getElementById('google-sync-btn').style.display = 'none';
-                    document.getElementById('google-sync-status').style.display = 'block';
-                    currentUser.displayName = result.user.displayName || currentUser.displayName;
-                    document.getElementById('header-streak-pill').innerText = '🔥 ' + unlockedDays;
-                    window.saveState(); // עכשיו דוחף את כל המידע המקומי לענן!
-                } catch (err) {
-                    if (err.code === 'auth/credential-already-in-use') {
-                        try {
-                            const result = await signInWithPopup(auth, provider);
-                            document.getElementById('google-sync-btn').style.display = 'none';
-                            document.getElementById('google-sync-status').style.display = 'block';
-                            currentUser.displayName = result.user.displayName || currentUser.displayName;
-                            document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
-                            await loadStateFromCloud(getDoc, doc);
-                        } catch(e) {}
-                    } else {
-                        alert("שגיאה בחיבור לגוגל");
-                    }
-                }
-            };
-
-            initAuth();
-        });
-
-        async function loadStateFromCloud(getDoc, doc) {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'habit-jar';
-            try {
-                const snap = await getDoc(doc(db, 'artifacts', appId, 'users', currentUserUid, 'appState', 'main'));
-                if (snap.exists()) {
-                    const data = snap.data();
-                    // אם למשתמש יש שמירה בענן, נעדכן את הסטייט הפעיל
-                    if (data.habitsData) habitsData = data.habitsData;
-                    if (data.userStats) userStats = data.userStats;
-                    if (data.stageBackgrounds) stageBackgrounds = data.stageBackgrounds;
-                    if (data.customBgs) customBgs = data.customBgs;
-                    if (data.unlockedDays) unlockedDays = data.unlockedDays;
-                    if (data.currentDayView !== undefined) currentDayView = data.currentDayView;
-                    if (data.displayName) currentUser.displayName = data.displayName;
-                    if (data.startDate) appStartDate = data.startDate;
-                    if (data.lastActionDate) lastActionDate = data.lastActionDate;
-                    
-                    document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
-                    for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
-
-                    buildJars();
-                    initScroller();
-                    window.applyCustomBgs();
-                    
-                    const cdv = currentDayView;
-                    currentDayView = -1;
-                    moveCanvas(cdv);
-                } else {
-                    // פעם ראשונה בענן - ניקח את המידע המקומי ונעלה אותו לשם
-                    window.saveState(); 
-                }
-            } catch(e) {}
         }
 
-        // --- הבטחת שמירת מיקומי הכדורים במקרי עזיבה של האתר ---
-        window.addEventListener('beforeunload', () => { window.saveState(); });
-        window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') window.saveState(); });
+        window.updateProfileName = (v) => { currentUser.displayName = v.trim() || "שם משתמש"; updateProfileUI(); window.saveState(); };
+        window.updateProfileImage = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const cvs = document.createElement('canvas');
+                    cvs.width = 150; cvs.height = 150;
+                    cvs.getContext('2d').drawImage(img, 0, 0, 150, 150);
+                    currentUser.profileImage = cvs.toDataURL('image/jpeg', 0.7);
+                    updateProfileUI(); window.saveState();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
 
-        // --- הגדרות עיצוב וממשק ---
+        function updateStatsUI() {
+            if(!habitsData[currentHabitIndex]) return;
+            const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView]?.habits[h.id];
+            const timeEl = document.getElementById('picker-time');
+            if(!timeEl) return;
+            if(stats && stats.min > 0) { timeEl.innerText = '+' + h.time; timeEl.style.color = h.color; } 
+            else { timeEl.innerText = h.time; timeEl.style.color = '#94a3b8'; }
+        }
+        window.updateStatsUI = updateStatsUI;
+
+        // --- 4. ניהול עיצוב ורקעים ---
         function applyCustomBgs() {
-            if(document.getElementById('input-app-color')) {
-                if(customBgs.appColor) document.getElementById('input-app-color').value = customBgs.appColor;
-                if(customBgs.appUrl) document.getElementById('input-app-bg-url').value = customBgs.appUrl;
-                if(customBgs.jarColor) document.getElementById('input-jar-color').value = customBgs.jarColor;
-                if(customBgs.jarUrl) document.getElementById('input-jar-bg-url').value = customBgs.jarUrl;
-            }
+            const info = getStageInfo(currentDayView);
+            const stageBg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
+            const appCont = document.querySelector('.app-container');
 
-            updateBackgroundForStage(currentDayView);
+            if (customBgs.appUrl) appCont.style.backgroundImage = `url(${customBgs.appUrl})`;
+            else if (customBgs.appColor) appCont.style.backgroundColor = customBgs.appColor;
+            else if (stageBg) appCont.style.backgroundImage = `url(${stageBg})`;
+            else appCont.style.backgroundImage = 'none';
 
             document.querySelectorAll('.jar-body').forEach(jar => {
-                if (customBgs.jarUrl) {
-                    jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
-                    jar.style.backgroundSize = 'cover';
-                    jar.style.backgroundPosition = 'center';
-                    jar.style.backgroundColor = 'transparent';
-                } else if (customBgs.jarColor) {
-                    jar.style.backgroundImage = 'none';
-                    jar.style.backgroundColor = customBgs.jarColor + '80'; 
-                } else {
-                    jar.style.backgroundImage = 'none';
-                    jar.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
-                }
+                if (customBgs.jarUrl) jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
+                else if (customBgs.jarColor) jar.style.backgroundColor = customBgs.jarColor + '80';
+                else jar.style.backgroundColor = 'rgba(255,255,255,0.02)';
             });
         }
         window.applyCustomBgs = applyCustomBgs;
 
-        function updateCustomBgs() {
+        window.updateCustomBgs = () => {
             customBgs = {
                 appColor: document.getElementById('input-app-color').value,
                 appUrl: document.getElementById('input-app-bg-url').value,
                 jarColor: document.getElementById('input-jar-color').value,
                 jarUrl: document.getElementById('input-jar-bg-url').value
             };
-            applyCustomBgs();
-            window.saveState();
-        }
-        window.updateCustomBgs = updateCustomBgs;
-        
-        function resetCustomBgs() {
-            customBgs = {};
-            document.getElementById('input-app-color').value = '#000000';
-            document.getElementById('input-app-bg-url').value = '';
-            document.getElementById('input-jar-color').value = '#000000';
-            document.getElementById('input-jar-bg-url').value = '';
-            
-            updateBackgroundForStage(currentDayView);
-            
-            document.querySelectorAll('.jar-body').forEach(jar => {
-                jar.style.backgroundImage = '';
-                jar.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
-            });
-            window.saveState();
-        }
-        window.resetCustomBgs = resetCustomBgs;
+            applyCustomBgs(); window.saveState();
+        };
+        window.resetCustomBgs = () => { customBgs = {}; applyCustomBgs(); window.saveState(); };
 
-        const slider = document.getElementById('jars-slider');
-        
-        function updateBackgroundForStage(idx) {
-            const info = getStageInfo(idx);
-            const stageBg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
-            const appCont = document.querySelector('.app-container');
-
-            if (customBgs.appUrl) {
-                appCont.style.backgroundImage = `url(${customBgs.appUrl})`;
-                appCont.style.backgroundSize = 'cover';
-                appCont.style.backgroundPosition = 'center';
-                appCont.style.backgroundColor = 'var(--bg-color)';
-            } else if (customBgs.appColor) {
-                appCont.style.backgroundImage = 'none';
-                appCont.style.backgroundColor = customBgs.appColor;
-            } else if (stageBg) {
-                appCont.style.backgroundImage = `url(${stageBg})`;
-                appCont.style.backgroundSize = 'cover';
-                appCont.style.backgroundPosition = 'center';
-                appCont.style.backgroundColor = 'var(--bg-color)';
-            } else {
-                appCont.style.backgroundImage = 'none';
-                appCont.style.backgroundColor = 'var(--bg-color)';
-            }
-        }
-
+        // --- 5. בניית הצנצנות והפיזיקה ---
         function buildJars() {
-            slider.innerHTML = '';
+            const s = document.getElementById('jars-slider');
+            if(!s) return;
+            s.innerHTML = '';
             for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) {
                 const slide = document.createElement('div');
-                slide.className = `jar-slide ${i === 0 ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
+                slide.className = `jar-slide ${i === currentDayView ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
-                slide.innerHTML = `
-                    <div class="jar-wrapper" id="jar-wrapper-${i}">
-                        <div class="jar-glass-overlay">
-                            <div class="jar-cap-detail" id="lid-${i}"></div>
-                            <div class="jar-opening"></div>
-                            <div class="jar-neck"></div>
-                            <div class="jar-body"></div>
-                        </div>
-                    </div>`;
-                slider.appendChild(slide);
+                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-neck"></div><div class="jar-body"></div></div></div>`;
+                s.appendChild(slide);
             }
             applyCustomBgs();
         }
-        buildJars();
+        window.buildJars = buildJars;
 
-        const { Engine, Bodies, Composite, Mouse, MouseConstraint } = Matter;
-        const engine = Engine.create(), world = engine.world;
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint } = Matter, engine = Engine.create(), world = engine.world;
         let currentBalls = [];
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
         canvas.width = 340; canvas.height = 480;
-
         const wallOptions = { isStatic: true, friction: 0, frictionStatic: 0, restitution: 0.4 };
         Composite.add(world, [
-            Bodies.rectangle(170, 420, 200, 40, wallOptions),
-            Bodies.rectangle(75, 400, 80, 40, { ...wallOptions, angle: Math.PI / 5 }),
-            Bodies.rectangle(265, 400, 80, 40, { ...wallOptions, angle: -Math.PI / 5 }),
-            Bodies.rectangle(35, 260, 20, 240, wallOptions),
-            Bodies.rectangle(305, 260, 20, 240, wallOptions),
-            Bodies.rectangle(70, 115, 80, 20, { ...wallOptions, angle: -Math.PI / 4.5 }),
-            Bodies.rectangle(270, 115, 80, 20, { ...wallOptions, angle: Math.PI / 4.5 }),
-            Bodies.rectangle(105, 70, 20, 60, wallOptions),
-            Bodies.rectangle(235, 70, 20, 60, wallOptions)
+            Bodies.rectangle(170, 420, 200, 40, wallOptions), Bodies.rectangle(75, 400, 80, 40, { ...wallOptions, angle: Math.PI / 5 }),
+            Bodies.rectangle(265, 400, 80, 40, { ...wallOptions, angle: -Math.PI / 5 }), Bodies.rectangle(35, 260, 20, 240, wallOptions),
+            Bodies.rectangle(305, 260, 20, 240, wallOptions), Bodies.rectangle(70, 115, 80, 20, { ...wallOptions, angle: -Math.PI / 4.5 }),
+            Bodies.rectangle(270, 115, 80, 20, { ...wallOptions, angle: Math.PI / 4.5 }), Bodies.rectangle(105, 70, 20, 60, wallOptions), Bodies.rectangle(235, 70, 20, 60, wallOptions)
         ]);
         Composite.add(world, MouseConstraint.create(engine, { mouse: Mouse.create(canvas), constraint: { stiffness: 0.2, render: { visible: false } } }));
-        document.getElementById('jar-wrapper-0').insertBefore(canvas, document.getElementById('jar-wrapper-0').firstChild);
 
-        const scroller = document.getElementById('habit-scroller');
-        function initScroller() {
-            scroller.innerHTML = '';
-            habitsData.forEach((h, i) => { 
-                const el = document.createElement('div'); el.className = 'habit-item'; el.innerText = h.name; 
-                el.onclick = () => {
-                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
-                    if (currentHabitIndex === i && fm.style.opacity === '0') {
-                        popMarble();
-                    }
-                }; 
-                scroller.appendChild(el); 
-            });
-            renderDots();
-        }
-
-        function renderDots() {
-            const dotsContainer = document.getElementById('picker-dots');
-            dotsContainer.innerHTML = '';
-            habitsData.forEach((_, index) => {
-                const dot = document.createElement('div');
-                dot.className = `dot ${index === currentHabitIndex ? 'active' : ''}`;
-                dotsContainer.appendChild(dot);
-            });
-        }
-        initScroller();
-
-        function updateStatsUI() {
-            if(!habitsData[currentHabitIndex]) return;
-            const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView]?.habits[h.id];
-            const timeEl = document.getElementById('picker-time');
-            if(stats && stats.min > 0) { timeEl.innerText = '+' + h.time; timeEl.style.color = h.color; } 
-            else { timeEl.innerText = h.time; timeEl.style.color = '#94a3b8'; }
+        function moveCanvas(idx) {
+            const wrap = document.getElementById(`jar-wrapper-${idx}`);
+            if(!wrap) return;
+            wrap.insertBefore(canvas, wrap.firstChild);
+            currentBalls.forEach(b => Composite.remove(world, b));
+            currentBalls = []; currentDayView = idx;
+            const stats = userStats.daysData[idx]?.habits || {}, saved = userStats.daysData[idx]?.savedBalls;
+            if (saved && saved.length > 0) {
+                saved.forEach(d => {
+                    const b = Bodies.circle(d.x, d.y, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, angle: d.angle, label:'habit-ball', render:{fillStyle:d.color} });
+                    currentBalls.push(b); Composite.add(world, b);
+                });
+            }
+            document.getElementById('bg-day-indicator').innerText = `${idx + 1}/${getStageInfo(idx).maxDays}`;
+            renderActiveHabit(); applyCustomBgs();
         }
 
         const fm = document.getElementById('floating-marble');
+
+        function drawMarble(c, x, y, r, a, col) {
+            c.save(); c.translate(x, y); c.rotate(a); c.beginPath(); c.arc(0,0,r,0,Math.PI*2);
+            let g = c.createRadialGradient(-r*0.3,-r*0.3,r*0.1,0,0,r); 
+            g.addColorStop(0,'rgba(255,255,255,0.98)'); g.addColorStop(0.5,'rgba(240,240,240,0.85)'); g.addColorStop(1,'rgba(180,180,180,0.5)');
+            c.fillStyle=g; c.fill(); c.save(); c.globalAlpha=0.8; c.beginPath(); c.moveTo(0,r*0.7); 
+            c.quadraticCurveTo(r*0.6,0,0,-r*0.6); c.quadraticCurveTo(-r*0.3,0,0,r*0.7); 
+            c.fillStyle=col; c.fill(); c.restore();
+            c.save(); c.translate(-r*0.35, -r*0.35); c.rotate(-Math.PI / 8); c.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            if (c.roundRect) { c.beginPath(); c.roundRect(-4,-6,4,6,1); c.fill(); c.beginPath(); c.roundRect(1,-6,4,6,1); c.fill(); c.beginPath(); c.roundRect(-4,1,4,6,1); c.fill(); c.beginPath(); c.roundRect(1,1,4,6,1); c.fill(); }
+            c.restore(); c.restore();
+        }
+
         function renderActiveHabit() {
             const h = habitsData[currentHabitIndex]; if(!h) return;
             document.querySelectorAll('.habit-item').forEach((it, i) => it.classList.toggle('active', i === currentHabitIndex));
             const uctx = fm.getContext('2d'); uctx.clearRect(0,0,60,60); 
             drawMarble(uctx, 30, 30, 26, 0, h.color);
-            if(fm.style.display !== 'none' && !isAnimatingJump) {
-                fm.style.display = 'block'; 
-                fm.style.filter = `drop-shadow(0 0 18px ${h.color}77) drop-shadow(0 8px 16px rgba(0,0,0,0.12))`;
+            if(!window.isAnimatingJump && habitsData.length > 0) {
+                fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.visibility = 'visible';
                 updateFloatingPosition();
             }
             updateStatsUI(); renderDots();
         }
 
-        let lastIdx = -1;
-        scroller.addEventListener('scroll', () => {
-            const center = scroller.getBoundingClientRect().left + scroller.offsetWidth/2;
-            let closest = -1, min = Infinity;
-            document.querySelectorAll('.habit-item').forEach((it, i) => { const d = Math.abs(center - (it.getBoundingClientRect().left + it.offsetWidth/2)); if(d < min){ min = d; closest = i; } });
-            if(closest !== -1 && closest !== lastIdx) { lastIdx = closest; currentHabitIndex = closest; popMarble(); }
-        });
+        function updateFloatingPosition() {
+            const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container');
+            if(!dz || !cont || fm.style.display === 'none' || window.isAnimatingJump) return;
+            const r = dz.getBoundingClientRect(), cr = cont.getBoundingClientRect();
+            const fl = (r.left - cr.left + r.width/2 - 30), ft = (r.top - cr.top + r.height/2 - 30);
+            fm.style.left = fl + 'px'; fm.style.top = ft + 'px';
+            const tt = document.getElementById('tutorial-tooltip');
+            if (window.isTutorialMode) { tt.style.display = 'block'; tt.style.left = (fl + 30) + 'px'; tt.style.top = (ft - 55) + 'px'; } else tt.style.display = 'none';
+        }
 
-        function popMarble() {
-            if(fm.style.display === 'none' || isAnimatingJump) return;
+        // --- 6. אונבורדינג אוטומטי ---
+        function checkNewUser() {
+            if (habitsData.length === 0) {
+                document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
+                document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+                document.getElementById('drawer-onboarding-view').classList.add('active');
+                document.getElementById('drawer-onboarding-step1').style.display = 'flex';
+                fm.style.display = 'none';
+            }
+        }
+
+        window.goToOnboardingStep2 = (n) => { window.tmpH = n; document.getElementById('drawer-onboarding-step1').style.display = 'none'; document.getElementById('drawer-onboarding-step2').style.display = 'flex'; };
+        window.changeOnboardingTarget = (d) => { const el = document.getElementById('onboarding-target-display'); let v = parseInt(el.innerText) + d; if(v<1) v=1; el.innerText = v; };
+        window.handleCustomHabit = () => { const val = document.getElementById('custom-habit-input').value.trim(); if(val) window.goToOnboardingStep2(val); };
+        window.finishOnboarding = () => {
+            const t = document.getElementById('onboarding-target-display').innerText;
+            habitsData = [{ id: Date.now(), name: window.tmpH, time: t + ' פעמים ביום', color: '#239B62' }];
+            currentHabitIndex = 0;
+            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-normal-view').classList.add('active');
+            initScroller();
+            window.isTutorialMode = true;
+            window.respawnMarble();
+            window.saveState();
+        };
+
+        function initScroller() {
+            const sc = document.getElementById('habit-scroller'); if(!sc) return;
+            sc.innerHTML = '';
+            habitsData.forEach((h, i) => {
+                const el = document.createElement('div'); el.className = 'habit-item' + (i===currentHabitIndex?' active':''); el.innerText = h.name;
+                el.onclick = () => { el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); if (currentHabitIndex === i && fm.style.display === 'none') window.popMarble(); };
+                sc.appendChild(el);
+            });
+            renderDots();
+        }
+
+        function renderDots() {
+            const dc = document.getElementById('picker-dots'); if(!dc) return;
+            dc.innerHTML = '';
+            habitsData.forEach((_, i) => { const d = document.createElement('div'); d.className = 'dot' + (i===currentHabitIndex?' active':''); dc.appendChild(d); });
+        }
+
+        window.respawnMarble = () => {
             fm.classList.remove('marble-pulse');
-            
-            fm.style.transition = 'transform 0.15s ease-out';
-            fm.style.transform = 'scale(0.6)';
-            
+            fm.style.transition = 'none'; fm.style.transform = 'scale(0)'; 
+            fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.visibility = 'visible';
+            updateFloatingPosition();
+            requestAnimationFrame(() => {
+                renderActiveHabit();
+                fm.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.7, 0.64, 1.1)'; 
+                fm.style.transform = 'scale(1)'; 
+                setTimeout(() => { if(!window.isDrag && !window.isAnimatingJump) fm.classList.add('marble-pulse'); }, 600);
+            });
+        };
+
+        window.popMarble = () => {
+            if(window.isAnimatingJump) return;
+            fm.classList.remove('marble-pulse');
+            fm.style.transition = 'transform 0.15s ease-out'; fm.style.transform = 'scale(0.6)';
             setTimeout(() => {
-                fm.style.visibility = 'visible';
+                fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.visibility = 'visible';
                 fm.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.7, 0.64, 1.1), opacity 0.3s'; 
                 renderActiveHabit(); 
                 fm.style.transform = 'scale(1) translateY(0) rotate(0deg)'; 
-                fm.style.opacity = '1';
-                setTimeout(() => { if(!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); }, 500);
+                setTimeout(() => { if(!window.isDrag && !window.isAnimatingJump) fm.classList.add('marble-pulse'); }, 500);
             }, 150);
-        }
-        window.popMarble = popMarble;
-
-        function respawnMarble() {
-            fm.classList.remove('marble-pulse');
-            fm.style.transition = 'none';
-            fm.style.transform = 'scale(0) translateY(0) rotate(0deg)'; 
-            fm.style.visibility = 'visible';
-            fm.style.opacity = '1';
-            
-            updateFloatingPosition();
-            
-            requestAnimationFrame(() => {
-                renderActiveHabit();
-                fm.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.7, 0.64, 1.1), opacity 0.3s'; 
-                fm.style.transform = 'scale(1) translateY(0) rotate(0deg)'; 
-                
-                setTimeout(() => { 
-                    if(!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); 
-                }, 600);
-            });
-        }
-        window.respawnMarble = respawnMarble;
-
-        function moveCanvas(idx) {
-            if(currentDayView === idx && currentBalls.length > 0) return;
-            
-            if (currentDayView >= 0 && currentBalls.length > 0) {
-                userStats.daysData[currentDayView].savedBalls = currentBalls.map(b => ({
-                    x: b.position.x,
-                    y: b.position.y,
-                    angle: b.angle,
-                    color: b.render.fillStyle
-                }));
-            }
-
-            const wrap = document.getElementById(`jar-wrapper-${idx}`);
-            if(wrap) wrap.insertBefore(canvas, wrap.firstChild);
-            
-            currentBalls.forEach(b => Composite.remove(world, b));
-            currentBalls = [];
-            
-            currentDayView = idx;
-            
-            const stats = userStats.daysData[idx]?.habits || {};
-            const savedBalls = userStats.daysData[idx]?.savedBalls;
-            
-            let expectedBallCount = 0;
-            for (const habitId in stats) {
-                expectedBallCount += stats[habitId].min + stats[habitId].breakthrough;
-            }
-
-            if (savedBalls && savedBalls.length === expectedBallCount && expectedBallCount > 0) {
-                savedBalls.forEach(ballData => {
-                    const b = Bodies.circle(ballData.x, ballData.y, 26, { 
-                        restitution:0.6, friction:0, frictionStatic:0, density:0.04, 
-                        angle: ballData.angle, label:'habit-ball', render:{fillStyle:ballData.color} 
-                    });
-                    currentBalls.push(b);
-                    Composite.add(world, b);
-                });
-            } else {
-                for (const habitId in stats) {
-                    const count = stats[habitId].min + stats[habitId].breakthrough;
-                    const h = habitsData.find(ha => ha.id == parseInt(habitId));
-                    if (h) {
-                        for (let i = 0; i < count; i++) {
-                            const bx = 170 + (Math.random() * 120 - 60); 
-                            const by = 200 + (Math.random() * 180);
-                            const b = Bodies.circle(bx, by, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
-                            currentBalls.push(b);
-                            Composite.add(world, b);
-                        }
-                    }
-                }
-            }
-            
-            const info = getStageInfo(idx);
-            document.getElementById('bg-day-indicator').innerText = `${idx + 1}/${info.maxDays}`;
-            
-            updateStatsUI();
-            updateBackgroundForStage(idx);
-        }
-
-        const obs = new IntersectionObserver(es => es.forEach(e => { 
-            if(e.isIntersecting) {
-                document.querySelectorAll('.jar-slide').forEach(s => s.classList.remove('active-slide'));
-                e.target.classList.add('active-slide');
-                moveCanvas(parseInt(e.target.dataset.index)); 
-            }
-        }), { threshold:0.6, root:slider });
-        function reobserve() { document.querySelectorAll('.jar-slide').forEach(s => obs.observe(s)); }
-        reobserve();
-
-        function updateFloatingPosition() {
-            const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container');
-            if(!dz || !cont || fm.style.display === 'none' || isAnimatingJump) return;
-            const r = dz.getBoundingClientRect(), cr = cont.getBoundingClientRect();
-            
-            const fmLeft = (r.left - cr.left + r.width/2 - 30);
-            const fmTop = (r.top - cr.top + r.height/2 - 30);
-            
-            fm.style.left = fmLeft + 'px';
-            fm.style.top = fmTop + 'px';
-            
-            // עדכון המיקום של בועת ההדרכה (אם פעילה) למרכז מעל הכדור
-            const tt = document.getElementById('tutorial-tooltip');
-            if (window.isTutorialMode) {
-                tt.style.display = 'block';
-                tt.style.left = (fmLeft + 30) + 'px';
-                tt.style.top = (fmTop - 55) + 'px';
-            } else {
-                tt.style.display = 'none';
-            }
-        }
-        window.addEventListener('resize', updateFloatingPosition);
-
-        function handleBackdropClick(e, id) { if(e.target.id === id) closeModal(id); }
-        window.handleBackdropClick = handleBackdropClick;
-        
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        window.closeModal = closeModal;
-
-        function openProfilePopup() {
-            document.getElementById('stat-days-active').innerText = unlockedDays;
-            let total = 0; userStats.daysData.forEach(d => {
-                if (d.habits) Object.values(d.habits).forEach(st => total += st.min + st.breakthrough);
-            });
-            document.getElementById('stat-total-habits').innerText = total;
-            document.getElementById('input-profile-name').value = currentUser.displayName;
-            document.getElementById('admin-dashboard-btn').style.display = (currentUser.email === ADMIN_EMAIL) ? 'block' : 'none';
-            document.getElementById('profile-popup').classList.add('active');
-        }
-        window.openProfilePopup = openProfilePopup;
-        
-        function closeProfilePopup() { closeModal('profile-popup'); }
-        window.closeProfilePopup = closeProfilePopup;
-        
-        function openAdminDashboard() { closeProfilePopup(); document.getElementById('admin-popup').classList.add('active'); }
-        window.openAdminDashboard = openAdminDashboard;
-        
-        function closeAdminDashboard() { closeModal('admin-popup'); }
-        window.closeAdminDashboard = closeAdminDashboard;
-
-        function uploadStageBg(event, stage) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const label = document.getElementById(`label-bg-${stage}`);
-            if(label) label.innerText = 'טוען ומכווץ תמונה...';
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvasTemp = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    let scaleSize = 1;
-                    if (img.width > MAX_WIDTH) {
-                        scaleSize = MAX_WIDTH / img.width;
-                    }
-                    canvasTemp.width = img.width * scaleSize;
-                    canvasTemp.height = img.height * scaleSize;
-
-                    const ctxTemp = canvasTemp.getContext('2d');
-                    ctxTemp.drawImage(img, 0, 0, canvasTemp.width, canvasTemp.height);
-
-                    const dataUrl = canvasTemp.toDataURL('image/jpeg', 0.8);
-                    stageBackgrounds[stage] = dataUrl;
-                    
-                    updateBackgroundForStage(currentDayView);
-                    window.saveState();
-                    
-                    if(label) label.innerText = '✓ התמונה הועלתה בהצלחה';
-                }
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-        window.uploadStageBg = uploadStageBg;
-
-        function saveAllBgs() {
-            updateBackgroundForStage(currentDayView);
-            window.saveState();
-        }
-        window.saveAllBgs = saveAllBgs;
-
-        function updateProfileName(v) { 
-            currentUser.displayName = v.trim() || "שם";
-            window.saveState();
-        }
-        window.updateProfileName = updateProfileName;
-
-        /* --- הוספת מנגנון הסטטיסטיקה וההחלקות --- */
-        function openEditMode() {
-            const h = habitsData[currentHabitIndex]; if(!h) return;
-            document.getElementById('input-habit-name').value = h.name;
-            document.getElementById('input-habit-time').value = h.time;
-            document.getElementById('input-habit-color').value = h.color;
-            document.getElementById('bottom-drawer').className = 'bottom-section edit-mode';
-            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
-            document.getElementById('drawer-edit-view').classList.add('active');
-            fm.style.display = 'none';
-        }
-        window.openEditMode = openEditMode;
-
-        function closeEditMode() {
-            document.getElementById('bottom-drawer').className = 'bottom-section';
-            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
-            document.getElementById('drawer-normal-view').classList.add('active');
-            setTimeout(() => {
-                fm.style.display = 'block';
-                if (document.querySelectorAll('.habit-item')[currentHabitIndex]) { 
-                    document.querySelectorAll('.habit-item')[currentHabitIndex].scrollIntoView({ behavior: 'auto', inline: 'center' }); 
-                    popMarble(); 
-                }
-            }, 10);
-        }
-        window.closeEditMode = closeEditMode;
-
-        function openStatsMode() {
-            const h = habitsData[currentHabitIndex]; if(!h) return;
-            populateStatsData();
-            document.getElementById('bottom-drawer').className = 'bottom-section stats-mode';
-            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
-            document.getElementById('drawer-stats-view').classList.add('active');
-            fm.style.display = 'none';
-        }
-        window.openStatsMode = openStatsMode;
-
-        function closeStatsMode() {
-            document.getElementById('bottom-drawer').className = 'bottom-section';
-            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
-            document.getElementById('drawer-normal-view').classList.add('active');
-            setTimeout(() => {
-                fm.style.display = 'block';
-                if (document.querySelectorAll('.habit-item')[currentHabitIndex]) { 
-                    document.querySelectorAll('.habit-item')[currentHabitIndex].scrollIntoView({ behavior: 'auto', inline: 'center' }); 
-                    popMarble(); 
-                }
-            }, 10);
-        }
-        window.closeStatsMode = closeStatsMode;
-        
-        /* --- סימולציית משתמש חדש (Onboarding) --- */
-        let tempNewHabitName = '';
-
-        window.simulateNewUser = () => {
-            // איפוס נתונים עבור הסימולציה
-            habitsData = [];
-            currentHabitIndex = 0;
-            unlockedDays = 1;
-            window.isTutorialMode = false;
-            userStats = { daysData: [] };
-            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
-
-            currentBalls.forEach(b => Composite.remove(world, b));
-            currentBalls = [];
-
-            document.getElementById('bg-day-indicator').innerText = `1/5`;
-            buildJars();
-            
-            // התיקון: מחזירים את מעקב הגלילה ואת הקנבס של הפיזיקה למקום!
-            reobserve();
-            currentDayView = -1;
-            moveCanvas(0);
-
-            fm.style.display = 'none';
-
-            // שינוי תצוגת המגירה לאונבורדינג
-            document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
-            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
-            document.getElementById('drawer-onboarding-view').classList.add('active');
-
-            document.getElementById('drawer-onboarding-step1').style.display = 'block';
-            document.getElementById('drawer-onboarding-step2').style.display = 'none';
-            document.getElementById('custom-habit-input').value = '';
-            document.getElementById('onboarding-target-input').value = '1';
         };
 
-        window.goToOnboardingStep2 = (name) => {
-            tempNewHabitName = name;
-            document.getElementById('drawer-onboarding-step1').style.display = 'none';
-            document.getElementById('drawer-onboarding-step2').style.display = 'block';
-        };
-
-        window.handleCustomHabit = () => {
-            const val = document.getElementById('custom-habit-input').value.trim();
-            if(val) window.goToOnboardingStep2(val);
-        };
-
-        window.changeOnboardingTarget = (delta) => {
-            const input = document.getElementById('onboarding-target-input');
-            let val = parseInt(input.value) + delta;
-            if(val < 1) val = 1;
-            input.value = val;
-        };
-
-        window.finishOnboarding = () => {
-            const target = document.getElementById('onboarding-target-input').value;
-            habitsData = [{
-                id: 1,
-                name: tempNewHabitName,
-                time: target + ' פעמים ביום',
-                color: '#239B62'
-            }];
-            currentHabitIndex = 0;
-            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
-
-            document.getElementById('bottom-drawer').className = 'bottom-section';
-            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
-            document.getElementById('drawer-normal-view').classList.add('active');
-
-            initScroller();
-            window.respawnMarble(); 
-            
-            // הפעלת ההדרכה למשתמש החדש ברגע שהוא מסיים להגדיר את ההרגל
-            window.isTutorialMode = true;
-            updateFloatingPosition();
-        };
-        /* ------------------------------------------ */
-        
-        function populateStatsData() {
-            const h = habitsData[currentHabitIndex];
-            if(!h) return;
-
-            let total = 0, base = 0, extra = 0, streak = 0;
-            let isStreakActive = true;
-            let last7Days = [];
-
-            for (let i = unlockedDays - 1; i >= 0; i--) {
-                const stats = userStats.daysData[i]?.habits[h.id] || { min: 0, breakthrough: 0 };
-                total += (stats.min + stats.breakthrough);
-                base += stats.min;
-                extra += stats.breakthrough;
-
-                if (stats.min > 0) {
-                    if (isStreakActive) streak++;
-                } else {
-                    isStreakActive = false; 
-                }
-            }
-
-            for (let i = 6; i >= 0; i--) {
-                const dayIdx = (unlockedDays - 1) - i;
-                if (dayIdx >= 0) {
-                    const s = userStats.daysData[dayIdx]?.habits[h.id] || { min: 0, breakthrough: 0 };
-                    last7Days.push(s.min + s.breakthrough);
-                } else {
-                    last7Days.push(0);
-                }
-            }
-
-            document.getElementById('stats-title').innerText = h.name;
-            document.getElementById('stats-title').style.color = h.color;
-            document.getElementById('stats-total').innerText = total;
-            document.getElementById('stats-base').innerText = base;
-            document.getElementById('stats-extra').innerText = extra;
-            document.getElementById('stats-streak').innerText = streak;
-
-            const maxVal = Math.max(...last7Days, 1);
-            const graphHTML = last7Days.map(val => {
-                const pct = (val / maxVal) * 100;
-                return `<div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px;">
-                    <div style="font-size:10px; color:#94a3b8; font-weight:bold;">${val > 0 ? val : ''}</div>
-                    <div style="width:100%; max-width:24px; height:60px; background:#f1f5f9; border-radius:6px; position:relative; overflow:hidden;">
-                        <div style="position:absolute; bottom:0; left:0; width:100%; height:${pct}%; background:${h.color}; border-radius:6px; transition:0.5s;"></div>
-                    </div>
-                </div>`;
-            }).join('');
-            document.getElementById('stats-graph').innerHTML = graphHTML;
-        }
-        window.populateStatsData = populateStatsData;
-
-        function saveHabitChanges() {
-            const h = habitsData[currentHabitIndex];
-            h.name = document.getElementById('input-habit-name').value.trim() || h.name;
-            h.time = document.getElementById('input-habit-time').value.trim() || h.time;
-            h.color = document.getElementById('input-habit-color').value;
-            closeEditMode(); initScroller();
-            window.saveState();
-        }
-        window.saveHabitChanges = saveHabitChanges;
-
-        function deleteCurrentHabit() {
-            if(habitsData.length <= 1) return;
-            if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initScroller(); window.saveState(); }
-        }
-        window.deleteCurrentHabit = deleteCurrentHabit;
-
-        document.addEventListener('pointerdown', e => {
-            const drawer = document.getElementById('bottom-drawer');
-            if (drawer.classList.contains('edit-mode')) {
-                if (!drawer.contains(e.target)) closeEditMode();
-            } else if (drawer.classList.contains('stats-mode')) {
-                if (!drawer.contains(e.target)) closeStatsMode();
-            }
-        });
-
-        const animateLid = (open) => {
-            const lid = document.getElementById(`lid-${currentDayView}`);
-            if (lid) {
-                if (open) lid.classList.add('open');
-                else lid.classList.remove('open');
-            }
-        };
-
-        let isDrag = false, sx, sy, tx=0, ty=0, isAnimatingJump = false;
-
+        // --- 7. לוגיקת משחק ואנימציה ---
         function performNaturalJump(fromX = null, fromY = null) {
-            if (isAnimatingJump) return;
-            isAnimatingJump = true; 
-            fm.classList.remove('marble-pulse');
-            fm.style.transition = 'none'; 
-            
-            const contRect = document.querySelector('.app-container').getBoundingClientRect();
-            const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
-            
-            const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30);
-            const startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
-            
-            const targetX = jr.left - contRect.left + jr.width / 2;
-            const targetY = (jr.top - contRect.top) + 20; 
-            
-            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2));
-            const duration = Math.max(300, Math.min(650, distance * 1.5)); 
-            const startTime = performance.now();
-
-            animateLid(true);
-
+            if (window.isAnimatingJump) return;
+            window.isAnimatingJump = true; fm.classList.remove('marble-pulse'); fm.style.transition = 'none'; 
+            const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
+            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 20; 
+            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(300, Math.min(650, distance * 1.5)), startTime = performance.now();
+            const lid = document.getElementById(`lid-${currentDayView}`); if(lid) lid.classList.add('open');
             function animate(currentTime) {
                 const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
-                
-                const curX = startX + (targetX - startX) * p;
-                
-                const jumpH = Math.min(50, distance * 0.25); 
-                const curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
-                
-                const scale = 1 + Math.sin(p * Math.PI) * 0.1, rot = p * 180;
-                
-                fm.style.left = (curX - 30) + 'px'; 
-                fm.style.top = (curY - 30) + 'px';
-                fm.style.transform = `scale(${scale}) rotate(${rot}deg)`;
-                
+                const curX = startX + (targetX - startX) * p, jumpH = Math.min(50, distance * 0.25), curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
+                fm.style.left = (curX - 30) + 'px'; fm.style.top = (curY - 30) + 'px'; fm.style.transform = `scale(${1 + Math.sin(p * Math.PI) * 0.1}) rotate(${p * 180}deg)`;
                 if (p < 1) requestAnimationFrame(animate);
                 else {
-                    const canvasRect = canvas.getBoundingClientRect();
-                    const physicsX = (contRect.left + targetX) - canvasRect.left;
-                    const physicsY = (contRect.top + targetY) - canvasRect.top;
-                    
-                    fm.style.transition = 'none';
-                    fm.style.opacity = '0'; 
-                    fm.style.visibility = 'hidden';
-                    
-                    dropBall(physicsX, physicsY, { x: 0, y: 7 }); 
-                    
-                    isAnimatingJump = false;
-                    setTimeout(() => animateLid(false), 150);
-                    
-                    setTimeout(() => { 
-                        respawnMarble(); 
-                    }, 400); 
+                    const cr = canvas.getBoundingClientRect(); 
+                    const h = habitsData[currentHabitIndex];
+                    if(!h) return;
+                    const stats = userStats.daysData[currentDayView].habits[h.id];
+                    if(stats.min===0) stats.min=1; else stats.breakthrough++;
+                    const b = Bodies.circle((contRect.left + targetX) - cr.left, (contRect.top + targetY) - cr.top, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
+                    Matter.Body.setVelocity(b, {x:0, y:7}); currentBalls.push(b); Composite.add(world, b); 
+                    fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
+                    window.isAnimatingJump = false; window.saveState();
+                    setTimeout(() => { if(lid) lid.classList.remove('open'); }, 150);
+                    setTimeout(() => window.respawnMarble(), 250); 
                 }
             }
             requestAnimationFrame(animate);
         }
 
         fm.addEventListener('pointerdown', e => { 
-            if(document.getElementById('drawer-edit-view').classList.contains('active') || document.getElementById('drawer-stats-view').classList.contains('active') || document.getElementById('drawer-onboarding-view').classList.contains('active') || isAnimatingJump) return; 
-            
-            // כיבוי והעלמת ההדרכה ברגע שהמשתמש נוגע בכדור
-            if (window.isTutorialMode) {
-                window.isTutorialMode = false;
-                document.getElementById('tutorial-tooltip').style.display = 'none';
-            }
-            
-            isDrag=true; fm.classList.add('dragging'); fm.classList.remove('marble-pulse');
-            fm.style.transition = 'none'; 
+            const bottomDrawer = document.getElementById('bottom-drawer');
+            if(bottomDrawer.classList.contains('edit-mode') || bottomDrawer.classList.contains('stats-mode') || window.isAnimatingJump) return; 
+            if (window.isTutorialMode) { window.isTutorialMode = false; document.getElementById('tutorial-tooltip').style.display = 'none'; }
+            window.isDrag=true; fm.classList.add('dragging'); fm.classList.remove('marble-pulse'); fm.style.transition = 'none'; 
             sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
         });
-
-        fm.addEventListener('pointermove', e => { 
-            if(!isDrag) return; 
-            tx=e.clientX-sx; ty=e.clientY-sy; 
-            fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; 
-            const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
-            if (e.clientY < jr.top + 120) animateLid(true); else animateLid(false);
-        });
-
+        fm.addEventListener('pointermove', e => { if(!window.isDrag) return; tx=e.clientX-sx; ty=e.clientY-sy; fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; });
         fm.addEventListener('pointerup', e => {
-            if(!isDrag) return; isDrag=false; fm.classList.remove('dragging'); fm.releasePointerCapture(e.pointerId);
-            
-            const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
-            const r = fm.getBoundingClientRect();
-            const cx = r.left + 30;
-            const cy = r.top + 30;
-            
-            const contRect = document.querySelector('.app-container').getBoundingClientRect();
-            const isInside = cx > jr.left - 40 && cx < jr.right + 40 && cy < jr.bottom && cy > jr.top - 120;
-            
-            const dist = Math.sqrt(tx * tx + ty * ty);
-            
-            if (dist < 10) {
-                tx = 0; ty = 0;
-                fm.style.transition = 'none'; 
-                fm.style.transform = `translate(0px, 0px) scale(1)`;
-                performNaturalJump();
-            } else if (isInside) {
-                tx = 0; ty = 0;
-                fm.style.transition = 'none'; 
-                performNaturalJump(cx - contRect.left, cy - contRect.top);
-            } else {
-                magnetBack();
-                animateLid(false);
-            }
+            if(!window.isDrag) return; window.isDrag=false; fm.classList.remove('dragging');
+            const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            const r = fm.getBoundingClientRect(), cx = r.left + 30, cy = r.top + 30;
+            if (Math.sqrt(tx*tx+ty*ty) < 10) performNaturalJump();
+            else if (cx > jr.left - 40 && cx < jr.right + 40 && cy < jr.bottom && cy > jr.top - 120) performNaturalJump(cx - contRect.left, cy - contRect.top);
+            else { fm.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; fm.style.transform = 'translate(0,0) scale(1)'; }
         });
 
-        function magnetBack() {
-            fm.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
-            fm.style.transform = 'translate(0,0) scale(1)'; 
-            setTimeout(() => { if (!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); }, 450);
+        // --- 8. לוגיקת ממשק ותפריטים ---
+        window.openEditMode = () => {
+            if(habitsData.length === 0) return;
+            const h = habitsData[currentHabitIndex];
+            document.getElementById('input-habit-name').value = h.name;
+            document.getElementById('input-habit-time').value = h.time;
+            document.getElementById('input-habit-color').value = h.color;
+            document.getElementById('bottom-drawer').className = 'bottom-section edit-mode';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-edit-view').classList.add('active');
+            fm.style.display = 'none';
+        };
+
+        window.closeEditMode = () => {
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-normal-view').classList.add('active');
+            renderActiveHabit(); window.popMarble();
+        };
+
+        window.saveHabitChanges = () => {
+            const h = habitsData[currentHabitIndex]; if(!h) return;
+            h.name = document.getElementById('input-habit-name').value.trim() || h.name;
+            h.time = document.getElementById('input-habit-time').value.trim() || h.time;
+            h.color = document.getElementById('input-habit-color').value;
+            window.closeEditMode(); initScroller(); window.saveState();
+        };
+
+        window.deleteCurrentHabit = () => {
+            if(habitsData.length <= 1) return;
+            if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; window.closeEditMode(); initScroller(); window.saveState(); }
+        };
+
+        window.openStatsMode = () => {
+            populateStatsData();
+            document.getElementById('bottom-drawer').className = 'bottom-section stats-mode';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-stats-view').classList.add('active');
+            fm.style.display = 'none';
+        };
+
+        window.closeStatsMode = () => {
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-normal-view').classList.add('active');
+            renderActiveHabit(); window.popMarble();
+        };
+
+        function populateStatsData() {
+            const h = habitsData[currentHabitIndex]; if(!h) return;
+            let total = 0, base = 0, extra = 0, streak = 0, isStreakActive = true, last7Days = [];
+            for (let i = unlockedDays - 1; i >= 0; i--) {
+                const s = userStats.daysData[i]?.habits[h.id] || { min: 0, breakthrough: 0 };
+                total += (s.min + s.breakthrough); base += s.min; extra += s.breakthrough;
+                if (s.min > 0) { if (isStreakActive) streak++; } else { isStreakActive = false; }
+            }
+            for (let i = 6; i >= 0; i--) {
+                const dayIdx = (unlockedDays - 1) - i;
+                if (dayIdx >= 0) { const s = userStats.daysData[dayIdx]?.habits[h.id] || { min: 0, breakthrough: 0 }; last7Days.push(s.min + s.breakthrough); }
+                else { last7Days.push(0); }
+            }
+            document.getElementById('stats-title').innerText = h.name;
+            document.getElementById('stats-title').style.color = h.color;
+            document.getElementById('stats-total').innerText = total;
+            document.getElementById('stats-base').innerText = base;
+            document.getElementById('stats-extra').innerText = extra;
+            document.getElementById('stats-streak').innerText = streak;
+            const maxVal = Math.max(...last7Days, 1);
+            document.getElementById('stats-graph').innerHTML = last7Days.map(val => `<div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px;"><div style="font-size:10px; color:#94a3b8; font-weight:bold;">${val > 0 ? val : ''}</div><div style="width:100%; max-width:24px; height:60px; background:#f1f5f9; border-radius:6px; position:relative; overflow:hidden;"><div style="position:absolute; bottom:0; left:0; width:100%; height:${(val/maxVal)*100}%; background:${h.color}; border-radius:6px; transition:0.5s;"></div></div></div>`).join('');
         }
 
-        function dropBall(x, y, initialVelocity = { x: 0, y: 7 }) {
-            if(currentDayView >= unlockedDays || !habitsData[currentHabitIndex]) return false;
-            const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
-            if(stats.min===0) stats.min=1; else stats.breakthrough++; updateStatsUI();
-            
-            const b = Bodies.circle(x, y, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
-            Matter.Body.setVelocity(b, initialVelocity);
-            
-            currentBalls.push(b); Composite.add(world, b); 
-            window.saveState();
-            return true;
-        }
+        window.openProfilePopup = () => {
+            document.getElementById('stat-days-active').innerText = unlockedDays;
+            let total = 0; userStats.daysData.forEach(d => { if (d.habits) Object.values(d.habits).forEach(st => total += st.min + st.breakthrough); });
+            document.getElementById('stat-total-habits').innerText = total;
+            updateProfileUI();
+            document.getElementById('profile-popup').classList.add('active');
+        };
 
-        function drawMarble(c, x, y, r, a, col) {
-            c.save(); c.translate(x, y); c.rotate(a);
-            c.beginPath(); c.arc(0,0,r,0,Math.PI*2);
-            let g = c.createRadialGradient(-r*0.3,-r*0.3,r*0.1,0,0,r); 
-            g.addColorStop(0,'rgba(255,255,255,0.98)'); g.addColorStop(0.5,'rgba(240,240,240,0.85)'); g.addColorStop(1,'rgba(180,180,180,0.5)');
-            c.fillStyle=g; c.fill();
-            c.save(); c.globalAlpha=0.8; c.beginPath(); c.moveTo(0,r*0.7); 
-            c.quadraticCurveTo(r*0.6,0,0,-r*0.6); c.quadraticCurveTo(-r*0.3,0,0,r*0.7); 
-            c.fillStyle=col; c.fill(); c.restore();
-            c.lineWidth=1; c.strokeStyle='rgba(255,255,255,0.5)'; c.stroke();
-            
-            c.save();
-            c.translate(-r*0.35, -r*0.35); 
-            c.rotate(-Math.PI / 8); 
-            c.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            const pw = r * 0.15;
-            const ph = r * 0.22;
-            const gap = r * 0.06;
-            
-            if (c.roundRect) {
-                c.beginPath(); c.roundRect(-pw - gap/2, -ph - gap/2, pw, ph, r*0.05); c.fill();
-                c.beginPath(); c.roundRect(gap/2, -ph - gap/2, pw, ph, r*0.05); c.fill();
-                c.beginPath(); c.roundRect(-pw - gap/2, gap/2, pw, ph, r*0.05); c.fill();
-                c.beginPath(); c.roundRect(gap/2, gap/2, pw, ph, r*0.05); c.fill();
-            } else {
-                c.fillRect(-pw - gap/2, -ph - gap/2, pw, ph);
-                c.fillRect(gap/2, -ph - gap/2, pw, ph);
-                c.fillRect(-pw - gap/2, gap/2, pw, ph);
-                c.fillRect(gap/2, gap/2, pw, ph);
-            }
-            c.restore();
-            
-            c.restore();
-        }
+        window.closeProfilePopup = () => document.getElementById('profile-popup').classList.remove('active');
+        window.handleBackdropClick = (e, id) => { if(e.target.id === id) document.getElementById(id).classList.remove('active'); };
 
-        function loop() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            Composite.allBodies(world).forEach(b => { if(b.label==='habit-ball') drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle); });
-            Engine.update(engine, 1000/60); requestAnimationFrame(loop);
-        }
-        loop(); 
+        // --- 9. הפעלה ---
+        function loop() { ctx.clearRect(0,0,canvas.width,canvas.height); Composite.allBodies(world).forEach(b => { if(b.label==='habit-ball') drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle); }); Engine.update(engine, 1000/60); requestAnimationFrame(loop); }
         
-        // --- מנגנון נוחות מתקדם: גרירת סליידר לצדדים והחלקה למעלה לסטטיסטיקה ---
-        const drawerNormalView = document.getElementById('drawer-normal-view');
-        const drawerStatsView = document.getElementById('drawer-stats-view');
-        const bottomDrawer = document.getElementById('bottom-drawer');
-        
-        let isDrawerDragging = false;
-        let drawerStartX = 0;
-        let drawerStartY = 0;
-        let drawerStartScrollLeft = 0;
+        window.onload = () => {
+            updateProfileUI();
+            buildJars();
+            initScroller();
+            const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) { document.querySelectorAll('.jar-slide').forEach(s => s.classList.remove('active-slide')); e.target.classList.add('active-slide'); moveCanvas(parseInt(e.target.dataset.index)); } }), { threshold:0.6, root:document.getElementById('jars-slider') });
+            document.querySelectorAll('.jar-slide').forEach(s => obs.observe(s));
+            moveCanvas(currentDayView);
+            checkNewUser();
+            loop();
+            setTimeout(() => { if(habitsData.length > 0) renderActiveHabit(); }, 200);
+        };
 
-        drawerNormalView.addEventListener('pointerdown', (e) => {
-            if (e.target.closest('.edit-btn') || e.target.closest('#floating-marble') || e.target.closest('.habit-item')) return;
-            
-            isDrawerDragging = true;
-            scroller.style.scrollSnapType = 'none'; 
-            drawerStartX = e.pageX;
-            drawerStartY = e.clientY;
-            drawerStartScrollLeft = scroller.scrollLeft;
-            drawerNormalView.style.cursor = 'grabbing';
+        document.getElementById('drawer-handle').addEventListener('click', () => { 
+            const bd = document.getElementById('bottom-drawer');
+            if (bd.classList.contains('stats-mode')) window.closeStatsMode(); 
+            else if (document.getElementById('drawer-normal-view').classList.contains('active')) window.openStatsMode(); 
         });
 
-        window.addEventListener('pointermove', (e) => {
-            if (!isDrawerDragging) return;
-            e.preventDefault(); 
-            const deltaX = e.pageX - drawerStartX;
-            const deltaY = e.clientY - drawerStartY;
-
-            if (deltaY < -40 && Math.abs(deltaY) > Math.abs(deltaX)) {
-                window.openStatsMode();
-                isDrawerDragging = false;
-                drawerNormalView.style.cursor = '';
-                return;
-            }
-
-            const walk = deltaX * 1.2; 
-            scroller.scrollLeft = drawerStartScrollLeft - walk;
+        const sc = document.getElementById('habit-scroller');
+        let lidx = -1;
+        sc.addEventListener('scroll', () => {
+            const center = sc.getBoundingClientRect().left + sc.offsetWidth/2;
+            let closest = -1, min = Infinity;
+            document.querySelectorAll('.habit-item').forEach((it, i) => { const d = Math.abs(center - (it.getBoundingClientRect().left + it.offsetWidth/2)); if(d < min){ min = d; closest = i; } });
+            if(closest !== -1 && closest !== lidx) { lidx = closest; currentHabitIndex = closest; window.popMarble(); }
         });
 
-        window.addEventListener('pointerup', () => {
-            if (!isDrawerDragging) return;
-            isDrawerDragging = false;
-            drawerNormalView.style.cursor = '';
-            scroller.style.scrollSnapType = 'x mandatory'; 
-            
-            setTimeout(() => {
-                const center = scroller.getBoundingClientRect().left + scroller.offsetWidth / 2;
-                let closest = -1, min = Infinity;
-                document.querySelectorAll('.habit-item').forEach((it, i) => {
-                    const d = Math.abs(center - (it.getBoundingClientRect().left + it.offsetWidth / 2));
-                    if (d < min) { min = d; closest = i; }
-                });
-                if (closest !== -1) {
-                    document.querySelectorAll('.habit-item')[closest].scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                }
-            }, 10);
-        });
-
-        let isStatsDragging = false;
-        let statsStartY = 0;
-
-        drawerStatsView.addEventListener('pointerdown', e => {
-            isStatsDragging = true;
-            statsStartY = e.clientY;
-        });
-
-        window.addEventListener('pointermove', e => {
-            if (!isStatsDragging) return;
-            const deltaY = e.clientY - statsStartY;
-            
-            if (deltaY > 60) {
-                window.closeStatsMode();
-                isStatsDragging = false;
-            }
-        });
-
-        window.addEventListener('pointerup', () => {
-            isStatsDragging = false;
-        });
-        
-        const drawerHandle = document.getElementById('drawer-handle');
-        drawerHandle.addEventListener('click', () => {
-            if (bottomDrawer.classList.contains('stats-mode')) {
-                window.closeStatsMode();
-            } else if (document.getElementById('drawer-normal-view').classList.contains('active')) {
-                window.openStatsMode();
-            }
-        });
-
-        // הגדרה ויזואלית ראשונית בעת עליית הדף
-        document.getElementById('header-streak-pill').innerText = '🔥 ' + unlockedDays;
-        const initialInfo = getStageInfo(0);
-        document.getElementById('bg-day-indicator').innerText = `1/${initialInfo.maxDays}`;
-        
-        setTimeout(() => { scroller.scrollTo({left:0}); lastIdx=1; renderActiveHabit(); fm.classList.add('marble-pulse'); }, 150);
-
+        // --- חיבור לגוגל דמה (ללא שגיאות) ---
+        window.connectGoogle = () => {
+            alert("פונקציית הסנכרון עם גוגל אינה זמינה כרגע. הנתונים נשמרים מקומית במכשיר.");
+        };
     </script>
 </body>
 </html>
