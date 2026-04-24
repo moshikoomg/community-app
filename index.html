@@ -163,6 +163,8 @@
             display: flex; justify-content: center; align-items: center; position: relative; 
             z-index: 1; box-shadow: 0 -4px 15px rgba(0,0,0,0.03); 
         }
+        .active-icon-bg::before { content: ''; position: absolute; bottom: 42px; left: -12px; width: 16px; height: 12px; background: radial-gradient(circle at 0% 0%, transparent 12px, #ffffff 12.5px); z-index: -1; }
+        .active-icon-bg::after { content: ''; position: absolute; bottom: 42px; right: -12px; width: 16px; height: 12px; background: radial-gradient(circle at 100% 0%, transparent 12px, #ffffff 12.5px); z-index: -1; }
 
         #marble-drop-zone { width: 60px; height: 60px; pointer-events: none; }
         
@@ -177,7 +179,7 @@
 
         .habit-scroller { display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; padding: 5px 0; }
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
-        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 22px; color: #cbd5e1; font-weight: 700; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; }
+        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 22px; color: #cbd5e1; font-weight: 700; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; cursor: pointer; }
         .habit-item.active { font-size: 34px; color: var(--text-main); font-weight: 900; }
 
         .dots-container { display: flex; gap: 8px; margin-top: 5px; }
@@ -356,7 +358,12 @@
             scroller.innerHTML = '';
             habitsData.forEach((h, i) => { 
                 const el = document.createElement('div'); el.className = 'habit-item'; el.innerText = h.name; 
-                el.onclick = () => el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
+                el.onclick = () => {
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
+                    if (currentHabitIndex === i && fm.style.opacity === '0') {
+                        popMarble();
+                    }
+                }; 
                 scroller.appendChild(el); 
             });
             renderDots();
@@ -388,7 +395,7 @@
             const uctx = fm.getContext('2d'); uctx.clearRect(0,0,60,60); 
             drawMarble(uctx, 30, 30, 26, 0, h.color);
             if(fm.style.display !== 'none' && !isAnimatingJump) {
-                fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.transform = 'scale(1)';
+                fm.style.display = 'block'; 
                 fm.style.filter = `drop-shadow(0 0 18px ${h.color}77) drop-shadow(0 8px 16px rgba(0,0,0,0.12))`;
                 updateFloatingPosition();
             }
@@ -411,10 +418,33 @@
             fm.style.transform = 'scale(0.6)';
             
             setTimeout(() => {
-                fm.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.7, 0.64, 1.1)'; 
+                fm.style.visibility = 'visible';
+                fm.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.7, 0.64, 1.1), opacity 0.3s'; 
                 renderActiveHabit(); 
+                fm.style.transform = 'scale(1) translateY(0) rotate(0deg)'; 
+                fm.style.opacity = '1';
                 setTimeout(() => { if(!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); }, 500);
             }, 150);
+        }
+
+        function respawnMarble() {
+            fm.classList.remove('marble-pulse');
+            fm.style.transition = 'none';
+            fm.style.transform = 'scale(0) translateY(0) rotate(0deg)'; 
+            fm.style.visibility = 'visible';
+            fm.style.opacity = '1';
+            
+            updateFloatingPosition();
+            
+            requestAnimationFrame(() => {
+                renderActiveHabit();
+                fm.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.7, 0.64, 1.1), opacity 0.3s'; 
+                fm.style.transform = 'scale(1) translateY(0) rotate(0deg)'; 
+                
+                setTimeout(() => { 
+                    if(!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); 
+                }, 600);
+            });
         }
 
         function moveCanvas(idx) {
@@ -510,6 +540,15 @@
             if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initScroller(); }
         }
 
+        document.addEventListener('pointerdown', e => {
+            const drawer = document.getElementById('bottom-drawer');
+            if (drawer.classList.contains('edit-mode')) {
+                if (!drawer.contains(e.target)) {
+                    closeEditMode();
+                }
+            }
+        });
+
         const animateLid = (open) => {
             const lid = document.getElementById(`lid-${currentDayView}`);
             if (lid) {
@@ -532,22 +571,35 @@
             const startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
             
             const targetX = jr.left - contRect.left + jr.width / 2;
-            const targetY = jr.top - contRect.top + 45; 
+            const peakY = jr.top - contRect.top - 15; 
+            const endY = jr.top - contRect.top + 60; 
             
-            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2));
-            const duration = Math.max(300, Math.min(700, distance * 1.5)); 
+            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(endY - startY, 2));
+            const duration = Math.max(450, Math.min(750, distance * 1.5)); 
             const startTime = performance.now();
 
             animateLid(true);
 
             function animate(currentTime) {
-                const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
+                const elapsed = currentTime - startTime;
+                let p = elapsed / duration;
+                if (p > 1) p = 1;
                 
-                const curX = startX + (targetX - startX) * p;
+                const easeX = 1 - Math.pow(1 - p, 2);
+                const curX = startX + (targetX - startX) * easeX;
                 
-                const distY = Math.abs(targetY - startY);
-                const jumpH = Math.max(60, distY * 0.4 + 20);
-                const curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
+                let curY;
+                const upPhase = 0.55; 
+                
+                if (p < upPhase) {
+                    const pUp = p / upPhase;
+                    const easeUp = 1 - Math.pow(1 - pUp, 2); 
+                    curY = startY + (peakY - startY) * easeUp;
+                } else {
+                    const pDown = (p - upPhase) / (1 - upPhase);
+                    const easeDown = pDown * pDown; 
+                    curY = peakY + (endY - peakY) * easeDown;
+                }
                 
                 const rot = p * 360;
                 
@@ -555,23 +607,26 @@
                 fm.style.top = (curY - 30) + 'px';
                 fm.style.transform = `scale(1) rotate(${rot}deg)`;
                 
-                if (p < 1) requestAnimationFrame(animate);
-                else {
+                if (p < 1) {
+                    requestAnimationFrame(animate);
+                } else {
                     const canvasRect = canvas.getBoundingClientRect();
                     const physicsX = (contRect.left + targetX) - canvasRect.left;
-                    const physicsY = (contRect.top + targetY) - canvasRect.top;
+                    const physicsY = (contRect.top + endY) - canvasRect.top;
                     
-                    fm.style.visibility = 'hidden'; 
-                    dropBall(physicsX, physicsY); 
+                    // איפוס אנימציות כדי שההעלמות תהיה חדה ובאפס זמן
+                    fm.style.transition = 'none';
+                    fm.style.opacity = '0'; 
+                    fm.style.visibility = 'hidden';
                     
+                    dropBall(physicsX, physicsY, { x: 0, y: 7 }); 
+                    
+                    isAnimatingJump = false;
                     setTimeout(() => animateLid(false), 150);
                     
                     setTimeout(() => { 
-                        fm.style.transform = 'scale(0)'; 
-                        fm.style.visibility = 'visible';
-                        isAnimatingJump = false;
-                        popMarble(); 
-                    }, 1200);
+                        respawnMarble(); 
+                    }, 400); 
                 }
             }
             requestAnimationFrame(animate);
@@ -589,11 +644,6 @@
             fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; 
             const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             if (e.clientY < jr.top + 120) animateLid(true); else animateLid(false);
-        });
-
-        // סגירת מגירת עריכה בלחיצה מחוצה לה
-        document.getElementById('clickable-top-section').addEventListener('click', () => { 
-            if(document.getElementById('bottom-drawer').classList.contains('edit-mode')) closeEditMode(); 
         });
 
         fm.addEventListener('pointerup', e => {
@@ -628,13 +678,13 @@
             setTimeout(() => { if (!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); }, 450);
         }
 
-        function dropBall(x, y) {
+        function dropBall(x, y, initialVelocity = { x: 0, y: 7 }) {
             if(currentDayView >= unlockedDays || !habitsData[currentHabitIndex]) return false;
             const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
             if(stats.min===0) stats.min=1; else stats.breakthrough++; updateStatsUI();
             
             const b = Bodies.circle(x, y, 26, { restitution:0.6, friction:0.05, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
-            Matter.Body.setVelocity(b, { x: 0, y: 7 });
+            Matter.Body.setVelocity(b, initialVelocity);
             
             currentBalls.push(b); Composite.add(world, b); return true;
         }
