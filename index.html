@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>צנצנת ההרגלים שלי - חוויית זריקה רציפה</title>
+    <title>צנצנת ההרגלים שלי - חוויית זריקה רציפה וסטטיסטיקה</title>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 
@@ -31,7 +31,7 @@
             background-color: var(--bg-color);
             display: flex; flex-direction: column;
             position: relative; overflow: hidden;
-            transition: background 0.4s ease; /* מעבר חלק בהחלפת רקעים */
+            transition: background 0.4s ease; 
         }
 
         @media (min-width: 420px) {
@@ -101,9 +101,7 @@
             transition: opacity 0.5s ease;
             opacity: 0.4; 
         }
-        .jar-slide.active-slide {
-            opacity: 1;
-        }
+        .jar-slide.active-slide { opacity: 1; }
         .jar-slide.locked { filter: grayscale(1); opacity: 0.2; }
         .jar-slide.active-slide.locked { opacity: 0.6; }
 
@@ -112,12 +110,10 @@
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform: scale(0.85); 
         }
-        .jar-slide.active-slide .jar-wrapper {
-            transform: scale(1); 
-        }
+        .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
         canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
-        /* --- Jar Design (זכוכית נקייה ושקופה ללא הילה מפריעה) --- */
+        /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
         .jar-cap-detail {
@@ -159,17 +155,24 @@
             transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
         .bottom-section.edit-mode { height: 400px; }
-        .bottom-section::before {
-            content: ''; position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-            width: 44px; height: 5px; background-color: #f1f5f9; border-radius: 4px;
+        .bottom-section.stats-mode { height: 60vh; }
+        
+        /* אזור הגרירה העליון של המגירה */
+        .drawer-handle {
+            width: 100%; height: 30px; position: absolute; top: 0; left: 0; z-index: 10;
+            display: flex; justify-content: center; align-items: flex-start; padding-top: 12px; cursor: grab;
         }
+        .drawer-handle::after {
+            content: ''; width: 44px; height: 5px; background-color: #e2e8f0; border-radius: 4px; transition: background 0.3s;
+        }
+        .drawer-handle:hover::after { background-color: #cbd5e1; }
 
-        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; }
+        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 25px; touch-action: pan-y; }
         .drawer-view.active { display: flex; }
 
         .edit-btn { position: absolute; top: 25px; right: 25px; color: #cbd5e1; cursor: pointer; padding: 6px; z-index: 110; }
         
-        .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -42px; min-height: 100px; }
+        .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -55px; min-height: 100px; }
         
         .active-icon-bg { 
             width: 84px; height: 84px; background: #ffffff; border-radius: 50%; 
@@ -189,14 +192,34 @@
         @keyframes marblePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
         .marble-pulse { animation: marblePulse 2.8s ease-in-out infinite; }
 
-        .habit-scroller { display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; padding: 5px 0; }
+        .habit-scroller { 
+            display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; 
+            padding: 30px 0; 
+            margin-top: -25px; 
+            margin-bottom: -15px;
+            cursor: grab;
+            position: relative; z-index: 5;
+        }
+        .habit-scroller:active { cursor: grabbing; }
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
         .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 22px; color: #cbd5e1; font-weight: 700; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; cursor: pointer; }
         .habit-item.active { font-size: 34px; color: var(--text-main); font-weight: 900; }
 
-        .dots-container { display: flex; gap: 8px; margin-top: 5px; }
+        .dots-container { display: flex; gap: 8px; margin-top: 5px; position: relative; z-index: 6; }
         .dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; transition: 0.4s; }
         .dot.active { width: 22px; background: var(--text-main); border-radius: 4px; }
+
+        /* --- Stats View --- */
+        #drawer-stats-view { padding: 0 25px; width: 100%; box-sizing: border-box; animation: fadeIn 0.4s; }
+        .stats-header { text-align: center; margin-bottom: 20px; }
+        .stats-title { font-size: 24px; font-weight: 900; color: var(--text-main); }
+        .stats-subtitle { font-size: 12px; color: #94a3b8; font-weight: 700; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 20px; }
+        .stat-box { background: #f8fafc; padding: 15px; border-radius: 16px; text-align: center; border: 1px solid #f1f5f9; }
+        .stat-val { font-size: 28px; font-weight: 900; color: var(--text-main); line-height: 1.1; }
+        .stat-label { font-size: 11px; color: #64748b; font-weight: 700; }
+        .graph-container { display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; margin-bottom: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- Popups --- */
         .popup-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
@@ -204,7 +227,6 @@
         .popup-content { background: #ffffff; width: 90%; max-width: 360px; border-radius: 28px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); max-height: 85vh; overflow-y: auto; position: relative; }
         .close-popup-btn { position: absolute; top: 15px; left: 15px; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         
-        /* --- עיצוב כפתורי העלאת קבצים --- */
         .file-upload-btn { display: block; width: 100%; padding: 12px; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; color: var(--admin-color); font-weight: 700; margin-top: 4px; transition: 0.2s; box-sizing: border-box;}
         .file-upload-btn:hover { background: #f1f5f9; border-color: var(--admin-color); }
         .file-upload-btn input[type="file"] { display: none; }
@@ -236,6 +258,9 @@
 
         <!-- Drawer -->
         <div class="bottom-section" id="bottom-drawer">
+            <div class="drawer-handle" id="drawer-handle"></div>
+            
+            <!-- Normal View -->
             <div id="drawer-normal-view" class="drawer-view active">
                 <div class="edit-btn" onclick="openEditMode()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
                 <div class="picker-top">
@@ -244,10 +269,12 @@
                 </div>
                 <div class="habit-scroller" id="habit-scroller"></div>
                 <div class="dots-container" id="picker-dots"></div>
+                <div style="font-size:10px; color:#cbd5e1; font-weight:700; margin-top:15px; user-select:none;">החלק למעלה לסטטיסטיקות ∧</div>
             </div>
 
+            <!-- Edit View -->
             <div id="drawer-edit-view" class="drawer-view">
-                <div style="padding: 25px; width: 100%; box-sizing: border-box;">
+                <div style="padding: 0 25px; width: 100%; box-sizing: border-box;">
                     <div style="font-size: 18px; font-weight: 900; margin-bottom: 20px; text-align: center;">עריכת הרגל</div>
                     <div style="display:flex; gap:12px; text-align: right;">
                         <div style="flex:3;"><label style="display:block; font-size:12px; margin-bottom:4px;">שם</label><input type="text" id="input-habit-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px;"></div>
@@ -256,6 +283,38 @@
                     <div style="margin-top:15px; text-align: right;"><label style="display:block; font-size:12px; margin-bottom:4px;">יעד</label><input type="text" id="input-habit-time" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px;"></div>
                     <div style="display:flex; gap:12px; margin-top:20px;"><button style="flex:2; background:var(--primary-color); color:white; border:none; padding:15px; border-radius:14px; font-weight:800;" onclick="saveHabitChanges()">שמור</button><button style="flex:1; background:#f1f5f9; border:none; padding:15px; border-radius:14px;" onclick="closeEditMode()">ביטול</button></div>
                     <button style="width:100%; margin-top:15px; color:var(--danger-color); background:none; border:1px solid var(--danger-color); padding:12px; border-radius:12px; font-weight:800;" onclick="deleteCurrentHabit()">מחק הרגל</button>
+                </div>
+            </div>
+
+            <!-- Stats View -->
+            <div id="drawer-stats-view" class="drawer-view">
+                <div class="stats-header">
+                    <div class="stats-title" id="stats-title">שם ההרגל</div>
+                    <div class="stats-subtitle">ביצועים וסטטיסטיקה</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-val" id="stats-total">0</div>
+                        <div class="stat-label">סה״כ זריקות 🏆</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="stats-streak">0</div>
+                        <div class="stat-label">רצף ימים 🔥</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="stats-base">0</div>
+                        <div class="stat-label">בסיס (קליק ראשון) 🎯</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="stats-extra">0</div>
+                        <div class="stat-label">אקסטרה (רפליקות) 🚀</div>
+                    </div>
+                </div>
+
+                <div style="text-align:right; width:100%; font-size:12px; font-weight:800; color:#64748b; margin-bottom:5px;">7 ימים אחרונים</div>
+                <div class="graph-container" id="stats-graph">
+                    <!-- Graph bars injected by JS -->
                 </div>
             </div>
         </div>
@@ -275,19 +334,25 @@
                 
                 <div style="text-align: right;"><label style="font-size:13px; font-weight:700; color:#64748b;">שם תצוגה</label><input type="text" id="input-profile-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;" onkeyup="updateProfileName(this.value)"></div>
                 
-                <!-- אזור עיצוב אישי -->
+                <!-- לחצן התחברות לגוגל לשמירת נתונים מבוססת ענן מובהקת -->
+                <button id="google-sync-btn" onclick="window.connectGoogle()" style="width:100%; margin-top:20px; padding:14px; border-radius:14px; border:none; background:#4285F4; color:white; font-weight:800; display:flex; justify-content:center; align-items:center; gap:10px; cursor:pointer;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    שמור התקדמות בענן (גוגל)
+                </button>
+                <div id="google-sync-status" style="font-size:12px; color:var(--primary-color); font-weight:700; margin-top:15px; display:none; text-align:center;">✅ מחובר ומגובה לענן</div>
+
                 <div style="font-size:16px; font-weight:800; margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">עיצוב אישי</div>
                 
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px; text-align:right;">
                     <div>
-                        <label style="font-size:11px; font-weight:700; color:#64748b;">רקע אפליקציה כללי (צבע / URL)</label>
+                        <label style="font-size:11px; font-weight:700; color:#64748b;">רקע אפליקציה (צבע / URL)</label>
                         <div style="display:flex; gap:8px; margin-top:4px;">
                             <input type="color" id="input-app-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="updateCustomBgs()">
                             <input type="text" id="input-app-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="updateCustomBgs()">
                         </div>
                     </div>
                     <div>
-                        <label style="font-size:11px; font-weight:700; color:#64748b;">רקע פנימי של הצנצנת (צבע / URL)</label>
+                        <label style="font-size:11px; font-weight:700; color:#64748b;">רקע צנצנת (צבע / URL)</label>
                         <div style="display:flex; gap:8px; margin-top:4px;">
                             <input type="color" id="input-jar-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="updateCustomBgs()">
                             <input type="text" id="input-jar-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="updateCustomBgs()">
@@ -304,44 +369,28 @@
             <div class="popup-content" style="max-width:400px;">
                 <button class="close-popup-btn" onclick="closeAdminDashboard()">✕</button>
                 <div style="font-size:22px; font-weight:900; margin-bottom:20px; color:var(--admin-color);">ניהול שלבים</div>
-                
                 <div style="text-align: right; margin-bottom: 15px;">
                     <label style="font-size:13px; font-weight:700;">שלב 1 (ימים 1-5)</label>
-                    <label class="file-upload-btn">
-                        <input type="file" accept="image/*" onchange="uploadStageBg(event, 1)">
-                        <span id="label-bg-1">בחר תמונה מהמכשיר...</span>
-                    </label>
+                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="uploadStageBg(event, 1)"><span id="label-bg-1">בחר תמונה מהמכשיר...</span></label>
                 </div>
-                
                 <div style="text-align: right; margin-bottom: 15px;">
                     <label style="font-size:13px; font-weight:700;">שלב 2 (ימים 5-10)</label>
-                    <label class="file-upload-btn">
-                        <input type="file" accept="image/*" onchange="uploadStageBg(event, 2)">
-                        <span id="label-bg-2">בחר תמונה מהמכשיר...</span>
-                    </label>
+                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="uploadStageBg(event, 2)"><span id="label-bg-2">בחר תמונה מהמכשיר...</span></label>
                 </div>
-                
                 <div style="text-align: right; margin-bottom: 15px;">
                     <label style="font-size:13px; font-weight:700;">שלב 3 (ימים 10-21)</label>
-                    <label class="file-upload-btn">
-                        <input type="file" accept="image/*" onchange="uploadStageBg(event, 3)">
-                        <span id="label-bg-3">בחר תמונה מהמכשיר...</span>
-                    </label>
+                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="uploadStageBg(event, 3)"><span id="label-bg-3">בחר תמונה מהמכשיר...</span></label>
                 </div>
-                
                 <div style="text-align: right; margin-bottom: 15px;">
-                    <label style="font-size:13px; font-weight:700;">שלב 4+ (קפיצות של 21)</label>
-                    <label class="file-upload-btn">
-                        <input type="file" accept="image/*" onchange="uploadStageBg(event, 'generic')">
-                        <span id="label-bg-generic">בחר תמונה מהמכשיר...</span>
-                    </label>
+                    <label style="font-size:13px; font-weight:700;">שלב 4+ (קפיצות 21)</label>
+                    <label class="file-upload-btn"><input type="file" accept="image/*" onchange="uploadStageBg(event, 'generic')"><span id="label-bg-generic">בחר תמונה מהמכשיר...</span></label>
                 </div>
-                
                 <button style="width:100%; background:var(--admin-color); color:white; padding:15px; border-radius:14px; border:none; font-weight:800; margin-top:5px;" onclick="closeAdminDashboard()">סיום</button>
             </div>
         </div>
     </div>
 
+    <!-- טעינת סקריפטים ומנגנון Firebase -->
     <script>
         const STAGE_GAP = 21;
         const TOTAL_DISPLAY_DAYS = 63; 
@@ -357,7 +406,15 @@
             { id: 5, name: 'לשתות', time: '1 כוס', color: '#8e44ad' }
         ];
 
-        let stageBackgrounds = JSON.parse(localStorage.getItem('stage_bgs_v7')) || {};
+        let stageBackgrounds = {};
+        let customBgs = {};
+        let userStats = { daysData: [] };
+
+        function initStats(idx) {
+            if(!userStats.daysData[idx]) userStats.daysData[idx] = { habits: {} };
+            habitsData.forEach(h => { if(!userStats.daysData[idx].habits[h.id]) userStats.daysData[idx].habits[h.id] = { min: 0, breakthrough: 0 }; });
+        }
+        for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
 
         function getStageInfo(day) {
             day = day + 1; 
@@ -369,29 +426,195 @@
             return { stage: stageCount, maxDays: base };
         }
 
-        const userStats = { daysData: [] };
-        function initStats(idx) {
-            if(!userStats.daysData[idx]) userStats.daysData[idx] = { habits: {}, balls: [] };
-            habitsData.forEach(h => { if(!userStats.daysData[idx].habits[h.id]) userStats.daysData[idx].habits[h.id] = { min: 0, breakthrough: 0 }; });
+        // --- מנגנון שמירה וענן חכם (Firebase) ---
+        let db, auth, currentUserUid = null;
+        let _setDoc, _doc;
+
+        // שימוש במשתנה דמה (No-op) עד ש-Firebase נטען לחלוטין
+        window.saveState = async () => {}; 
+
+        import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js").then(async ({ initializeApp }) => {
+            const { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, linkWithPopup, signInWithPopup, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+            const { getFirestore, doc, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+
+            _setDoc = setDoc;
+            _doc = doc;
+
+            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            if (Object.keys(firebaseConfig).length === 0) return; // הרצה ללא שרת ענן
+
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth); // יוצר סשן "קוקיז" וירטואלי בצורה חלקה
+                    }
+                } catch(e) { console.error("שגיאת אימות", e); }
+            };
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUserUid = user.uid;
+                    const isGoogleLinked = user.providerData.some(p => p.providerId === 'google.com');
+                    
+                    if (isGoogleLinked) {
+                        currentUser.displayName = user.displayName || "משתמש";
+                        document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+                        document.getElementById('google-sync-btn').style.display = 'none';
+                        document.getElementById('google-sync-status').style.display = 'block';
+                    }
+                    loadStateFromCloud(getDoc, doc);
+                }
+            });
+
+            window.connectGoogle = async () => {
+                const provider = new GoogleAuthProvider();
+                try {
+                    const result = await linkWithPopup(auth.currentUser, provider);
+                    document.getElementById('google-sync-btn').style.display = 'none';
+                    document.getElementById('google-sync-status').style.display = 'block';
+                    currentUser.displayName = result.user.displayName || "משתמש";
+                    document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+                    window.saveState();
+                } catch (err) {
+                    if (err.code === 'auth/credential-already-in-use') {
+                        try {
+                            const result = await signInWithPopup(auth, provider);
+                            document.getElementById('google-sync-btn').style.display = 'none';
+                            document.getElementById('google-sync-status').style.display = 'block';
+                            currentUser.displayName = result.user.displayName || "משתמש";
+                            document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+                            await loadStateFromCloud(getDoc, doc);
+                        } catch(e) {}
+                    } else {
+                        alert("שגיאה בחיבור לגוגל");
+                    }
+                }
+            };
+
+            initAuth();
+        });
+
+        window.saveState = async () => {
+            if (!db || !currentUserUid || !_setDoc || !_doc) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'habit-jar';
+            const state = { habitsData, userStats, stageBackgrounds, customBgs, unlockedDays, currentDayView, displayName: currentUser.displayName };
+            try {
+                await _setDoc(_doc(db, 'artifacts', appId, 'users', currentUserUid, 'appState', 'main'), state);
+            } catch(e) { console.error(e); }
+        };
+
+        async function loadStateFromCloud(getDoc, doc) {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'habit-jar';
+            try {
+                const snap = await getDoc(doc(db, 'artifacts', appId, 'users', currentUserUid, 'appState', 'main'));
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.habitsData) habitsData = data.habitsData;
+                    if (data.userStats) userStats = data.userStats;
+                    if (data.stageBackgrounds) stageBackgrounds = data.stageBackgrounds;
+                    if (data.customBgs) customBgs = data.customBgs;
+                    if (data.unlockedDays) unlockedDays = data.unlockedDays;
+                    if (data.currentDayView !== undefined) currentDayView = data.currentDayView;
+                    if (data.displayName) {
+                        currentUser.displayName = data.displayName;
+                        document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+                    }
+                    
+                    // הבטחת קיום המבנה
+                    for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
+
+                    buildJars();
+                    initScroller();
+                    applyCustomBgs();
+                    
+                    // רענון פיזי למצב הכדורים החדש
+                    const cdv = currentDayView;
+                    currentDayView = -1;
+                    moveCanvas(cdv);
+                } else {
+                    window.saveState(); 
+                }
+            } catch(e) { console.error(e); }
         }
-        for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
+
+        // --- הגדרת פונקציות העיצוב בצורה תקינה כדי למנוע שגיאות טעינה ---
+        function applyCustomBgs() {
+            if(document.getElementById('input-app-color')) {
+                if(customBgs.appColor) document.getElementById('input-app-color').value = customBgs.appColor;
+                if(customBgs.appUrl) document.getElementById('input-app-bg-url').value = customBgs.appUrl;
+                if(customBgs.jarColor) document.getElementById('input-jar-color').value = customBgs.jarColor;
+                if(customBgs.jarUrl) document.getElementById('input-jar-bg-url').value = customBgs.jarUrl;
+            }
+
+            updateBackgroundForStage(currentDayView);
+
+            document.querySelectorAll('.jar-body').forEach(jar => {
+                if (customBgs.jarUrl) {
+                    jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
+                    jar.style.backgroundSize = 'cover';
+                    jar.style.backgroundPosition = 'center';
+                    jar.style.backgroundColor = 'transparent';
+                } else if (customBgs.jarColor) {
+                    jar.style.backgroundImage = 'none';
+                    jar.style.backgroundColor = customBgs.jarColor + '80'; 
+                } else {
+                    jar.style.backgroundImage = 'none';
+                    jar.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
+                }
+            });
+        }
+        window.applyCustomBgs = applyCustomBgs;
+
+        function updateCustomBgs() {
+            customBgs = {
+                appColor: document.getElementById('input-app-color').value,
+                appUrl: document.getElementById('input-app-bg-url').value,
+                jarColor: document.getElementById('input-jar-color').value,
+                jarUrl: document.getElementById('input-jar-bg-url').value
+            };
+            applyCustomBgs();
+            window.saveState();
+        }
+        window.updateCustomBgs = updateCustomBgs;
+        
+        function resetCustomBgs() {
+            customBgs = {};
+            document.getElementById('input-app-color').value = '#000000';
+            document.getElementById('input-app-bg-url').value = '';
+            document.getElementById('input-jar-color').value = '#000000';
+            document.getElementById('input-jar-bg-url').value = '';
+            
+            updateBackgroundForStage(currentDayView);
+            
+            document.querySelectorAll('.jar-body').forEach(jar => {
+                jar.style.backgroundImage = '';
+                jar.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
+            });
+            window.saveState();
+        }
+        window.resetCustomBgs = resetCustomBgs;
 
         const slider = document.getElementById('jars-slider');
         
         function updateBackgroundForStage(idx) {
             const info = getStageInfo(idx);
             const stageBg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
-            const settings = JSON.parse(localStorage.getItem('custom_bgs_v1') || '{}');
             const appCont = document.querySelector('.app-container');
 
-            if (settings.appUrl) {
-                appCont.style.backgroundImage = `url(${settings.appUrl})`;
+            if (customBgs.appUrl) {
+                appCont.style.backgroundImage = `url(${customBgs.appUrl})`;
                 appCont.style.backgroundSize = 'cover';
                 appCont.style.backgroundPosition = 'center';
                 appCont.style.backgroundColor = 'var(--bg-color)';
-            } else if (settings.appColor) {
+            } else if (customBgs.appColor) {
                 appCont.style.backgroundImage = 'none';
-                appCont.style.backgroundColor = settings.appColor;
+                appCont.style.backgroundColor = customBgs.appColor;
             } else if (stageBg) {
                 appCont.style.backgroundImage = `url(${stageBg})`;
                 appCont.style.backgroundSize = 'cover';
@@ -409,7 +632,6 @@
                 const slide = document.createElement('div');
                 slide.className = `jar-slide ${i === 0 ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
-                // הוסר מכאן הרקע שגרם למסגרות, הרקע מנוהל כעת ברמת המסך השלם
                 slide.innerHTML = `
                     <div class="jar-wrapper" id="jar-wrapper-${i}">
                         <div class="jar-glass-overlay">
@@ -541,16 +763,31 @@
         }
 
         function moveCanvas(idx) {
-            if(currentDayView === idx) return;
+            if(currentDayView === idx && currentBalls.length > 0) return;
             const wrap = document.getElementById(`jar-wrapper-${idx}`);
             if(wrap) wrap.insertBefore(canvas, wrap.firstChild);
-            userStats.daysData[currentDayView].balls = [...currentBalls];
-            currentBalls.forEach(b => Composite.remove(world, b));
-            currentBalls = userStats.daysData[idx].balls || [];
-            currentBalls.forEach(b => Composite.add(world, b));
-            currentDayView = idx;
-            const info = getStageInfo(idx);
             
+            currentBalls.forEach(b => Composite.remove(world, b));
+            currentBalls = [];
+            
+            currentDayView = idx;
+            
+            const stats = userStats.daysData[idx]?.habits || {};
+            for (const habitId in stats) {
+                const count = stats[habitId].min + stats[habitId].breakthrough;
+                const h = habitsData.find(ha => ha.id == parseInt(habitId));
+                if (h) {
+                    for (let i = 0; i < count; i++) {
+                        const bx = 170 + (Math.random() * 120 - 60); 
+                        const by = 200 + (Math.random() * 180);
+                        const b = Bodies.circle(bx, by, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
+                        currentBalls.push(b);
+                        Composite.add(world, b);
+                    }
+                }
+            }
+            
+            const info = getStageInfo(idx);
             document.getElementById('bg-day-indicator').innerText = `${idx + 1}/${info.maxDays}`;
             
             updateStatsUI();
@@ -577,19 +814,31 @@
         window.addEventListener('resize', updateFloatingPosition);
 
         function handleBackdropClick(e, id) { if(e.target.id === id) closeModal(id); }
+        window.handleBackdropClick = handleBackdropClick;
+        
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        window.closeModal = closeModal;
 
         function openProfilePopup() {
             document.getElementById('stat-days-active').innerText = unlockedDays;
-            let total = 0; userStats.daysData.forEach(d => total += d.balls.length);
+            let total = 0; userStats.daysData.forEach(d => {
+                Object.values(d.habits).forEach(st => total += st.min + st.breakthrough);
+            });
             document.getElementById('stat-total-habits').innerText = total;
             document.getElementById('input-profile-name').value = currentUser.displayName;
             document.getElementById('admin-dashboard-btn').style.display = (currentUser.email === ADMIN_EMAIL) ? 'block' : 'none';
             document.getElementById('profile-popup').classList.add('active');
         }
+        window.openProfilePopup = openProfilePopup;
+        
         function closeProfilePopup() { closeModal('profile-popup'); }
+        window.closeProfilePopup = closeProfilePopup;
+        
         function openAdminDashboard() { closeProfilePopup(); document.getElementById('admin-popup').classList.add('active'); }
+        window.openAdminDashboard = openAdminDashboard;
+        
         function closeAdminDashboard() { closeModal('admin-popup'); }
+        window.closeAdminDashboard = closeAdminDashboard;
 
         function uploadStageBg(event, stage) {
             const file = event.target.files[0];
@@ -616,9 +865,9 @@
 
                     const dataUrl = canvasTemp.toDataURL('image/jpeg', 0.8);
                     stageBackgrounds[stage] = dataUrl;
-                    localStorage.setItem('stage_bgs_v7', JSON.stringify(stageBackgrounds));
                     
                     updateBackgroundForStage(currentDayView);
+                    window.saveState();
                     
                     if(label) label.innerText = '✓ התמונה הועלתה בהצלחה';
                 }
@@ -626,80 +875,35 @@
             };
             reader.readAsDataURL(file);
         }
+        window.uploadStageBg = uploadStageBg;
 
         function saveAllBgs() {
             updateBackgroundForStage(currentDayView);
+            window.saveState();
         }
+        window.saveAllBgs = saveAllBgs;
 
         function updateProfileName(v) { 
             currentUser.displayName = v.trim() || "ישראל";
             document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0]; 
+            window.saveState();
         }
-        
-        function updateCustomBgs() {
-            const appColor = document.getElementById('input-app-color').value;
-            const appUrl = document.getElementById('input-app-bg-url').value;
-            const jarColor = document.getElementById('input-jar-color').value;
-            const jarUrl = document.getElementById('input-jar-bg-url').value;
-            
-            const settings = { appColor, appUrl, jarColor, jarUrl };
-            localStorage.setItem('custom_bgs_v1', JSON.stringify(settings));
-            applyCustomBgs();
-        }
+        window.updateProfileName = updateProfileName;
 
-        function applyCustomBgs() {
-            const settings = JSON.parse(localStorage.getItem('custom_bgs_v1') || '{}');
-            
-            if(document.getElementById('input-app-color')) {
-                if(settings.appColor) document.getElementById('input-app-color').value = settings.appColor;
-                if(settings.appUrl) document.getElementById('input-app-bg-url').value = settings.appUrl;
-                if(settings.jarColor) document.getElementById('input-jar-color').value = settings.jarColor;
-                if(settings.jarUrl) document.getElementById('input-jar-bg-url').value = settings.jarUrl;
-            }
-
-            updateBackgroundForStage(currentDayView);
-
-            document.querySelectorAll('.jar-body').forEach(jar => {
-                if (settings.jarUrl) {
-                    jar.style.backgroundImage = `url(${settings.jarUrl})`;
-                    jar.style.backgroundSize = 'cover';
-                    jar.style.backgroundPosition = 'center';
-                    jar.style.backgroundColor = 'transparent';
-                } else if (settings.jarColor) {
-                    jar.style.backgroundImage = 'none';
-                    jar.style.backgroundColor = settings.jarColor + '80'; 
-                } else {
-                    jar.style.backgroundImage = 'none';
-                    jar.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
-                }
-            });
-        }
-        
-        function resetCustomBgs() {
-            localStorage.removeItem('custom_bgs_v1');
-            document.getElementById('input-app-color').value = '#000000';
-            document.getElementById('input-app-bg-url').value = '';
-            document.getElementById('input-jar-color').value = '#000000';
-            document.getElementById('input-jar-bg-url').value = '';
-            
-            updateBackgroundForStage(currentDayView);
-            
-            document.querySelectorAll('.jar-body').forEach(jar => {
-                jar.style.backgroundImage = '';
-                jar.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
-            });
-        }
-
+        /* --- הוספת מנגנון הסטטיסטיקה וההחלקות --- */
         function openEditMode() {
             const h = habitsData[currentHabitIndex]; if(!h) return;
             document.getElementById('input-habit-name').value = h.name;
             document.getElementById('input-habit-time').value = h.time;
             document.getElementById('input-habit-color').value = h.color;
             document.getElementById('bottom-drawer').classList.add('edit-mode');
+            document.getElementById('bottom-drawer').classList.remove('stats-mode');
             document.getElementById('drawer-normal-view').classList.remove('active');
+            document.getElementById('drawer-stats-view').classList.remove('active');
             document.getElementById('drawer-edit-view').classList.add('active');
             fm.style.display = 'none';
         }
+        window.openEditMode = openEditMode;
 
         function closeEditMode() {
             document.getElementById('bottom-drawer').classList.remove('edit-mode');
@@ -713,6 +917,87 @@
                 }
             }, 10);
         }
+        window.closeEditMode = closeEditMode;
+
+        function openStatsMode() {
+            const h = habitsData[currentHabitIndex]; if(!h) return;
+            
+            populateStatsData();
+            
+            document.getElementById('bottom-drawer').classList.add('stats-mode');
+            document.getElementById('bottom-drawer').classList.remove('edit-mode');
+            document.getElementById('drawer-normal-view').classList.remove('active');
+            document.getElementById('drawer-edit-view').classList.remove('active');
+            document.getElementById('drawer-stats-view').classList.add('active');
+            fm.style.display = 'none';
+        }
+        window.openStatsMode = openStatsMode;
+
+        function closeStatsMode() {
+            document.getElementById('bottom-drawer').classList.remove('stats-mode');
+            document.getElementById('drawer-stats-view').classList.remove('active');
+            document.getElementById('drawer-normal-view').classList.add('active');
+            setTimeout(() => {
+                fm.style.display = 'block';
+                if (document.querySelectorAll('.habit-item')[currentHabitIndex]) { 
+                    document.querySelectorAll('.habit-item')[currentHabitIndex].scrollIntoView({ behavior: 'auto', inline: 'center' }); 
+                    popMarble(); 
+                }
+            }, 10);
+        }
+        window.closeStatsMode = closeStatsMode;
+        
+        function populateStatsData() {
+            const h = habitsData[currentHabitIndex];
+            if(!h) return;
+
+            let total = 0, base = 0, extra = 0, streak = 0;
+            let isStreakActive = true;
+            let last7Days = [];
+
+            for (let i = unlockedDays - 1; i >= 0; i--) {
+                const stats = userStats.daysData[i]?.habits[h.id] || { min: 0, breakthrough: 0 };
+                total += (stats.min + stats.breakthrough);
+                base += stats.min;
+                extra += stats.breakthrough;
+
+                if (stats.min > 0) {
+                    if (isStreakActive) streak++;
+                } else {
+                    isStreakActive = false; 
+                }
+            }
+
+            for (let i = 6; i >= 0; i--) {
+                const dayIdx = (unlockedDays - 1) - i;
+                if (dayIdx >= 0) {
+                    const s = userStats.daysData[dayIdx]?.habits[h.id] || { min: 0, breakthrough: 0 };
+                    last7Days.push(s.min + s.breakthrough);
+                } else {
+                    last7Days.push(0);
+                }
+            }
+
+            document.getElementById('stats-title').innerText = h.name;
+            document.getElementById('stats-title').style.color = h.color;
+            document.getElementById('stats-total').innerText = total;
+            document.getElementById('stats-base').innerText = base;
+            document.getElementById('stats-extra').innerText = extra;
+            document.getElementById('stats-streak').innerText = streak;
+
+            const maxVal = Math.max(...last7Days, 1);
+            const graphHTML = last7Days.map(val => {
+                const pct = (val / maxVal) * 100;
+                return `<div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px;">
+                    <div style="font-size:10px; color:#94a3b8; font-weight:bold;">${val > 0 ? val : ''}</div>
+                    <div style="width:100%; max-width:24px; height:60px; background:#f1f5f9; border-radius:6px; position:relative; overflow:hidden;">
+                        <div style="position:absolute; bottom:0; left:0; width:100%; height:${pct}%; background:${h.color}; border-radius:6px; transition:0.5s;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+            document.getElementById('stats-graph').innerHTML = graphHTML;
+        }
+        window.populateStatsData = populateStatsData;
 
         function saveHabitChanges() {
             const h = habitsData[currentHabitIndex];
@@ -720,19 +1005,22 @@
             h.time = document.getElementById('input-habit-time').value.trim() || h.time;
             h.color = document.getElementById('input-habit-color').value;
             closeEditMode(); initScroller();
+            window.saveState();
         }
+        window.saveHabitChanges = saveHabitChanges;
 
         function deleteCurrentHabit() {
             if(habitsData.length <= 1) return;
-            if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initScroller(); }
+            if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initScroller(); window.saveState(); }
         }
+        window.deleteCurrentHabit = deleteCurrentHabit;
 
         document.addEventListener('pointerdown', e => {
             const drawer = document.getElementById('bottom-drawer');
             if (drawer.classList.contains('edit-mode')) {
-                if (!drawer.contains(e.target)) {
-                    closeEditMode();
-                }
+                if (!drawer.contains(e.target)) closeEditMode();
+            } else if (drawer.classList.contains('stats-mode')) {
+                if (!drawer.contains(e.target)) closeStatsMode();
             }
         });
 
@@ -805,7 +1093,7 @@
         }
 
         fm.addEventListener('pointerdown', e => { 
-            if(document.getElementById('drawer-edit-view').classList.contains('active') || isAnimatingJump) return; 
+            if(document.getElementById('drawer-edit-view').classList.contains('active') || document.getElementById('drawer-stats-view').classList.contains('active') || isAnimatingJump) return; 
             isDrag=true; fm.classList.add('dragging'); fm.classList.remove('marble-pulse');
             fm.style.transition = 'none'; 
             sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
@@ -861,7 +1149,9 @@
             const b = Bodies.circle(x, y, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
             Matter.Body.setVelocity(b, initialVelocity);
             
-            currentBalls.push(b); Composite.add(world, b); return true;
+            currentBalls.push(b); Composite.add(world, b); 
+            window.saveState();
+            return true;
         }
 
         function drawMarble(c, x, y, r, a, col) {
@@ -906,13 +1196,94 @@
         }
         loop(); 
         
-        document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+        // --- מנגנון נוחות מתקדם: גרירת סליידר לצדדים והחלקה למעלה לסטטיסטיקה ---
+        const drawerNormalView = document.getElementById('drawer-normal-view');
+        const drawerStatsView = document.getElementById('drawer-stats-view');
+        const bottomDrawer = document.getElementById('bottom-drawer');
         
-        const initialInfo = getStageInfo(0);
-        document.getElementById('bg-day-indicator').innerText = `1/${initialInfo.maxDays}`;
-        applyCustomBgs();
+        let isDrawerDragging = false;
+        let drawerStartX = 0;
+        let drawerStartY = 0;
+        let drawerStartScrollLeft = 0;
+
+        drawerNormalView.addEventListener('pointerdown', (e) => {
+            if (e.target.closest('.edit-btn') || e.target.closest('#floating-marble') || e.target.closest('.habit-item')) return;
+            
+            isDrawerDragging = true;
+            scroller.style.scrollSnapType = 'none'; 
+            drawerStartX = e.pageX;
+            drawerStartY = e.clientY;
+            drawerStartScrollLeft = scroller.scrollLeft;
+            drawerNormalView.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!isDrawerDragging) return;
+            e.preventDefault(); 
+            const deltaX = e.pageX - drawerStartX;
+            const deltaY = e.clientY - drawerStartY;
+
+            if (deltaY < -40 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                openStatsMode();
+                isDrawerDragging = false;
+                drawerNormalView.style.cursor = '';
+                return;
+            }
+
+            const walk = deltaX * 1.2; 
+            scroller.scrollLeft = drawerStartScrollLeft - walk;
+        });
+
+        window.addEventListener('pointerup', () => {
+            if (!isDrawerDragging) return;
+            isDrawerDragging = false;
+            drawerNormalView.style.cursor = '';
+            scroller.style.scrollSnapType = 'x mandatory'; 
+            
+            setTimeout(() => {
+                const center = scroller.getBoundingClientRect().left + scroller.offsetWidth / 2;
+                let closest = -1, min = Infinity;
+                document.querySelectorAll('.habit-item').forEach((it, i) => {
+                    const d = Math.abs(center - (it.getBoundingClientRect().left + it.offsetWidth / 2));
+                    if (d < min) { min = d; closest = i; }
+                });
+                if (closest !== -1) {
+                    document.querySelectorAll('.habit-item')[closest].scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            }, 10);
+        });
+
+        let isStatsDragging = false;
+        let statsStartY = 0;
+
+        drawerStatsView.addEventListener('pointerdown', e => {
+            isStatsDragging = true;
+            statsStartY = e.clientY;
+        });
+
+        window.addEventListener('pointermove', e => {
+            if (!isStatsDragging) return;
+            const deltaY = e.clientY - statsStartY;
+            
+            if (deltaY > 60) {
+                closeStatsMode();
+                isStatsDragging = false;
+            }
+        });
+
+        window.addEventListener('pointerup', () => {
+            isStatsDragging = false;
+        });
         
-        setTimeout(() => { scroller.scrollTo({left:0}); lastIdx=1; renderActiveHabit(); fm.classList.add('marble-pulse'); }, 150);
+        const drawerHandle = document.getElementById('drawer-handle');
+        drawerHandle.addEventListener('click', () => {
+            if (bottomDrawer.classList.contains('stats-mode')) {
+                closeStatsMode();
+            } else if (document.getElementById('drawer-normal-view').classList.contains('active')) {
+                openStatsMode();
+            }
+        });
+
     </script>
 </body>
 </html>
