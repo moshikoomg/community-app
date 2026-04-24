@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>צנצנת ההרגלים שלי</title>
+    <title>צנצנת ההרגלים שלי - שלבים</title>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 
@@ -15,6 +15,7 @@
             --jar-shadow: rgba(0, 0, 0, 0.08);
             --primary-color: #239B62;
             --danger-color: #e86a92;
+            --admin-color: #4a90e2;
         }
 
         body {
@@ -47,32 +48,37 @@
             }
         }
 
-        /* --- פרופיל מינימליסטי --- */
+        /* --- פרופיל --- */
         .profile-header {
             position: absolute; top: 15px; right: 15px;
             z-index: 50; display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.6); padding: 3px 8px 3px 3px;
+            background: rgba(255,255,255,0.7); padding: 4px 10px 4px 4px;
             border-radius: 20px; backdrop-filter: blur(10px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.8);
             cursor: pointer; transition: transform 0.2s;
         }
         .profile-header:active { transform: scale(0.95); }
         .profile-avatar {
-            width: 18px; height: 18px; border-radius: 50%;
+            width: 20px; height: 20px; border-radius: 50%;
             background: linear-gradient(135deg, #e0eafc, #cfdef3);
             display: flex; justify-content: center; align-items: center; color: #555;
         }
-        .profile-name { font-size: 10px; font-weight: 800; color: #444; }
+        .profile-name { font-size: 11px; font-weight: 800; color: #444; }
 
-        /* --- צנצנת - ללא קווים לבנים בכלל --- */
+        /* --- מחוון שלבים ויום --- */
+        .stage-info-container {
+            position: absolute; top: 50px; left: 0; width: 100%;
+            text-align: center; z-index: 5; pointer-events: none;
+        }
+        .stage-label { font-size: 14px; font-weight: 800; color: #777; letter-spacing: 1px; text-transform: uppercase; }
         .bg-day-indicator {
-            position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 110px; font-weight: 800; color: rgba(0, 0, 0, 0.03);
-            z-index: 0; white-space: nowrap; user-select: none; letter-spacing: -2px;
+            font-size: 80px; font-weight: 800; color: rgba(0, 0, 0, 0.04);
+            user-select: none; letter-spacing: -2px; margin-top: -10px;
         }
 
-        .top-section { flex: 1; position: relative; background: radial-gradient(circle at center, #ffffff 0%, #eef1f5 100%); width: 100%; height: 100%; }
+        .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
 
+        /* --- סליידר צנצנות - מרכוז מדויק --- */
         .jars-slider {
             display: flex; width: 100%; height: 100%; overflow-x: auto;
             scroll-snap-type: x mandatory; align-items: center; scrollbar-width: none;
@@ -81,35 +87,74 @@
         .jars-slider::-webkit-scrollbar { display: none; }
 
         .jar-slide { 
-            flex: 0 0 100%; height: 100%; display: flex; justify-content: center; 
+            flex: 0 0 95%; /* 95% רוחב כדי להשאיר 5% הצצה מימין */
+            height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; position: relative; 
-            box-sizing: border-box; padding-bottom: 220px;
+            box-sizing: border-box; padding-bottom: 180px;
+            transition: opacity 0.5s;
+            background-size: cover;
+            background-position: center;
         }
-        .jar-slide.locked { filter: blur(12px) grayscale(80%); opacity: 0.35; }
-        .jar-wrapper { position: relative; width: 340px; height: 480px; direction: rtl; }
+        
+        .jar-slide::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.8) 100%);
+            z-index: 1; pointer-events: none;
+        }
+        
+        .jar-slide.locked { filter: grayscale(100%); opacity: 0.4; }
+        .jar-wrapper { position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; }
 
         canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
+        /* --- עיצוב משופר לצנצנת ולמכסה --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
+        
         .jar-neck {
-            position: absolute; top: 50px; left: 100px; width: 140px; height: 40px;
-            border: none !important; border-radius: 10px 10px 0 0;
-            background: linear-gradient(to right, rgba(255,255,255,0.6), rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.05) 80%, rgba(255,255,255,0.6));
+            position: absolute; top: 50px; left: 100px; width: 140px; height: 50px;
+            border-radius: 12px 12px 0 0;
+            background: linear-gradient(to right, 
+                rgba(255,255,255,0.4) 0%, 
+                rgba(255,255,255,0.1) 20%, 
+                rgba(255,255,255,0.1) 80%, 
+                rgba(255,255,255,0.4) 100%);
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.3);
+            z-index: 19;
         }
+        
+        /* מכסה עם הצללות משופרות */
+        .jar-cap-detail {
+            position: absolute; top: 38px; left: 88px; width: 164px; height: 18px;
+            background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 40%, #dcdcdc 100%);
+            border-radius: 10px;
+            z-index: 23;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.15), 
+                inset 0 -3px 4px rgba(0,0,0,0.1),
+                inset 0 2px 2px rgba(255,255,255,0.8);
+            border-bottom: 1px solid #bbb;
+        }
+
         .jar-body {
             position: absolute; top: 90px; left: 30px; width: 280px; height: 340px;
-            border-radius: 70px 70px 60px 60px; border: none !important;
+            border-radius: 70px 70px 60px 60px;
             box-shadow: 
-                inset 15px 0 30px rgba(255,255,255,0.7), 
-                inset -15px -15px 30px var(--jar-shadow),
-                0 15px 35px rgba(0,0,0,0.06); 
-            background: rgba(255, 255, 255, 0.05);
+                inset 15px 0 35px rgba(255,255,255,0.6), 
+                inset -15px -15px 35px var(--jar-shadow),
+                0 15px 45px rgba(0,0,0,0.08); 
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.2);
         }
+        
         .jar-opening {
-            position: absolute; top: 40px; left: 95px; width: 150px; height: 18px;
-            border-radius: 50%; border: none !important;
-            background: rgba(255, 255, 255, 0.3); z-index: 15;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+            position: absolute; top: 44px; left: 95px; width: 150px; height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4); 
+            z-index: 22;
+            box-shadow: 
+                inset 0 4px 10px rgba(0,0,0,0.1),
+                0 2px 4px rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         /* --- המגירה --- */
@@ -178,7 +223,7 @@
         .btn-secondary { background: #E2DFD9; color: #444; }
         .btn-danger { background: var(--danger-color); color: white; width: 100%; margin-top: 10px; }
 
-        /* --- פופ-אפ פרופיל --- */
+        /* --- פופ-אפ פרופיל וניהול --- */
         .popup-backdrop {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
@@ -189,9 +234,19 @@
         .popup-content {
             background: #FDFBF7; width: 88%; max-width: 340px; border-radius: 28px; padding: 25px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.25); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
+            max-height: 80vh; overflow-y: auto;
         }
         .popup-backdrop.active .popup-content { transform: scale(1); }
         .close-popup-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.05); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;}
+        
+        .admin-section {
+            border-top: 1px solid #eee; margin-top: 20px; padding-top: 20px; display: none;
+        }
+        .admin-section.visible { display: block; }
+        .admin-badge { background: var(--admin-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 800; vertical-align: middle; margin-right: 5px; }
+
+        .stats-grid { display: flex; gap: 10px; margin-bottom: 20px; }
+        .stat-box { flex: 1; background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; text-align: center; }
     </style>
 </head>
 <body>
@@ -204,7 +259,11 @@
         </div>
 
         <div class="top-section" id="clickable-top-section">
-            <div id="bg-day-indicator" class="bg-day-indicator" onclick="advanceDay()">1 / 12</div>
+            <div class="stage-info-container">
+                <div id="stage-label" class="stage-label">שלב 1</div>
+                <div id="bg-day-indicator" class="bg-day-indicator">1 / 5</div>
+            </div>
+            
             <div class="jars-slider" id="jars-slider"></div>
             <canvas id="physics-canvas"></canvas>
         </div>
@@ -239,19 +298,34 @@
         <div class="popup-backdrop" id="profile-popup" onclick="handleBackdropClick(event, 'profile-popup')">
             <div class="popup-content">
                 <button class="close-popup-btn" onclick="closeProfilePopup()">✕</button>
-                <div style="font-size:22px; font-weight:800; margin-bottom:15px;">החשבון שלי</div>
+                <div style="font-size:22px; font-weight:800; margin-bottom:15px;">החשבון שלי <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span></div>
+                
                 <div class="stats-grid">
                     <div class="stat-box"><span style="display:block; font-size:20px; font-weight:800; color:var(--primary-color);" id="stat-days-active">1</span><span style="font-size:11px; color:#999;">ימים</span></div>
-                    <div class="stat-box"><span style="display:block; font-size:20px; font-weight:800; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#999;">בוצעו</span></div>
+                    <div class="stat-box"><span style="display:block; font-size:20px; font-weight:800; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#999;">גולות</span></div>
                 </div>
-                <div class="form-group"><label>שם המשתמש</label><input type="text" id="input-profile-name" class="form-control" value="הפרופיל שלי" onkeyup="updateProfileName(this.value)"></div>
-                <div class="nav-item logout-item" onclick="handleLogout()">🚪 התנתקות</div>
+
+                <div class="form-group"><label>אימייל (לגישת ניהול)</label><input type="email" id="input-profile-email" class="form-control" value="user@example.com" onchange="checkAdminStatus()"></div>
+                <div class="form-group"><label>שם תצוגה</label><input type="text" id="input-profile-name" class="form-control" value="הפרופיל שלי" onkeyup="updateProfileName(this.value)"></div>
+                
+                <div id="admin-panel" class="admin-section">
+                    <div style="font-size:16px; font-weight:800; margin-bottom:10px; color:var(--admin-color);">הגדרות רקע לשלבים</div>
+                    <div class="form-group">
+                        <label id="admin-stage-label">רקע לשלב הנוכחי (1)</label>
+                        <input type="text" id="input-stage-bg" class="form-control" placeholder="הכנס URL של תמונה..." onchange="updateStageBackground()">
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; text-align:center; color:#999; font-size:12px; cursor:pointer;" onclick="location.reload()">🚪 התנתקות</div>
             </div>
         </div>
     </div>
 
     <script>
-        const TOTAL_DAYS = 12;
+        const STAGE_GAP = 21;
+        const TOTAL_DISPLAY_DAYS = 63; 
+        const ADMIN_EMAIL = "mosheally@gmail.com";
+
         let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 1;
         let habitsData = [
             { id: 1, name: 'לנשום', time: '10 דקות', color: '#42b6c7' },
@@ -261,21 +335,53 @@
             { id: 5, name: 'לשתות', time: '1 כוס', color: '#8e44ad' }
         ];
 
+        let stageBackgrounds = JSON.parse(localStorage.getItem('stage_bgs')) || {};
+
+        function getStageInfo(day) {
+            day = day + 1; 
+            if (day <= 5) return { stage: 1, maxDays: 5, start: 1 };
+            if (day <= 10) return { stage: 2, maxDays: 10, start: 6 };
+            if (day <= 21) return { stage: 3, maxDays: 21, start: 11 };
+            
+            let base = 21;
+            let stageCount = 3;
+            while (day > base) {
+                base += STAGE_GAP;
+                stageCount++;
+                if (day <= base) break;
+            }
+            return { stage: stageCount, maxDays: base, start: base - STAGE_GAP + 1 };
+        }
+
         const userStats = { daysData: [] };
         function initStats(idx) {
             if(!userStats.daysData[idx]) userStats.daysData[idx] = { habits: {}, balls: [] };
             habitsData.forEach(h => { if(!userStats.daysData[idx].habits[h.id]) userStats.daysData[idx].habits[h.id] = { min: 0, breakthrough: 0 }; });
         }
-        for(let i=0; i<TOTAL_DAYS; i++) initStats(i);
+        for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
 
         const slider = document.getElementById('jars-slider');
         function buildJars() {
             slider.innerHTML = '';
-            for(let i=0; i<TOTAL_DAYS; i++) {
+            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) {
+                const info = getStageInfo(i);
                 const slide = document.createElement('div');
                 slide.className = `jar-slide ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
-                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-opening"></div><div class="jar-neck"></div><div class="jar-body"></div></div></div>`;
+                
+                if (stageBackgrounds[info.stage]) {
+                    slide.style.backgroundImage = `url('${stageBackgrounds[info.stage]}')`;
+                }
+
+                slide.innerHTML = `
+                    <div class="jar-wrapper" id="jar-wrapper-${i}">
+                        <div class="jar-glass-overlay">
+                            <div class="jar-cap-detail"></div>
+                            <div class="jar-opening"></div>
+                            <div class="jar-neck"></div>
+                            <div class="jar-body"></div>
+                        </div>
+                    </div>`;
                 slider.appendChild(slide);
             }
         }
@@ -387,7 +493,11 @@
             currentBalls = userStats.daysData[idx].balls || [];
             currentBalls.forEach(b => Composite.add(world, b));
             currentDayView = idx;
-            document.getElementById('bg-day-indicator').innerText = `${idx + 1} / 12`;
+
+            const info = getStageInfo(idx);
+            document.getElementById('stage-label').innerText = `שלב ${info.stage}`;
+            document.getElementById('bg-day-indicator').innerText = `${idx + 1} / ${info.maxDays}`;
+            
             updateStatsUI();
         }
 
@@ -395,7 +505,7 @@
         function reobserve() { document.querySelectorAll('.jar-slide').forEach(s => obs.observe(s)); }
         reobserve();
 
-        function advanceDay() { if(unlockedDays < TOTAL_DAYS){ unlockedDays++; buildJars(); reobserve(); const s = document.querySelector(`.jar-slide[data-index="${unlockedDays-1}"]`); s.scrollIntoView({ behavior:'smooth', inline:'center'}); } }
+        function advanceDay() { if(unlockedDays < TOTAL_DISPLAY_DAYS){ unlockedDays++; buildJars(); reobserve(); const s = document.querySelector(`.jar-slide[data-index="${unlockedDays-1}"]`); s.scrollIntoView({ behavior:'smooth', inline:'center'}); } }
 
         function updateFloatingPosition() {
             const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container'), fm = document.getElementById('floating-marble');
@@ -406,19 +516,47 @@
         }
         window.addEventListener('resize', updateFloatingPosition);
 
-        document.getElementById('clickable-top-section').addEventListener('click', () => { if(document.getElementById('drawer-edit-view').classList.contains('active')) closeEditMode(); });
+        document.getElementById('clickable-top-section').addEventListener('click', (e) => { 
+            if(e.target.id === 'clickable-top-section' && document.getElementById('drawer-edit-view').classList.contains('active')) closeEditMode(); 
+        });
+        
         function handleBackdropClick(e, id) { if(e.target.id === id) closeModal(id); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+        function checkAdminStatus() {
+            const email = document.getElementById('input-profile-email').value.trim();
+            const isAdmin = email === ADMIN_EMAIL;
+            document.getElementById('admin-panel').classList.toggle('visible', isAdmin);
+            document.getElementById('admin-badge').style.display = isAdmin ? 'inline-block' : 'none';
+            
+            if (isAdmin) {
+                const info = getStageInfo(currentDayView);
+                document.getElementById('admin-stage-label').innerText = `רקע לשלב הנוכחי (${info.stage})`;
+                document.getElementById('input-stage-bg').value = stageBackgrounds[info.stage] || '';
+            }
+        }
+
+        function updateStageBackground() {
+            const info = getStageInfo(currentDayView);
+            const url = document.getElementById('input-stage-bg').value.trim();
+            if (url) stageBackgrounds[info.stage] = url;
+            else delete stageBackgrounds[info.stage];
+            
+            localStorage.setItem('stage_bgs', JSON.stringify(stageBackgrounds));
+            buildJars(); 
+            reobserve();
+        }
+
         function openProfilePopup() {
             document.getElementById('stat-days-active').innerText = unlockedDays;
-            let hbt = 0; userStats.daysData.forEach(d => { for(let k in d.habits){ hbt += d.habits[k].min; } });
-            document.getElementById('stat-total-habits').innerText = hbt;
+            let totalBalls = 0; 
+            userStats.daysData.forEach(d => totalBalls += d.balls.length);
+            document.getElementById('stat-total-habits').innerText = totalBalls;
+            checkAdminStatus();
             document.getElementById('profile-popup').classList.add('active');
         }
         function closeProfilePopup() { closeModal('profile-popup'); }
         function updateProfileName(v) { document.getElementById('display-profile-name').innerText = v.trim() || "הפרופיל שלי"; }
-        function handleLogout() { if(confirm("להתנתק?")) location.reload(); }
 
         function openEditMode() {
             const h = habitsData[currentHabitIndex]; if(!h) return;
@@ -437,12 +575,7 @@
             document.getElementById('drawer-normal-view').classList.add('active');
             
             const originalIndex = currentHabitIndex;
-            const tempIndex = (originalIndex + 1) % habitsData.length;
             const items = document.querySelectorAll('.habit-item');
-
-            // גלילת בזק לאיפוס המערכת
-            if (items[tempIndex]) items[tempIndex].scrollIntoView({ behavior: 'auto', inline: 'center' });
-            
             setTimeout(() => {
                 document.getElementById('floating-marble').style.display = 'block';
                 if (items[originalIndex]) {
@@ -461,69 +594,47 @@
         }
 
         function deleteCurrentHabit() {
-            if(habitsData.length <= 1) return alert("חייב להישאר לפחות הרגל אחד!");
+            if(habitsData.length <= 1) return;
             if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initScroller(); }
         }
 
         const fm = document.getElementById('floating-marble');
         let isDrag = false, sx, sy, tx=0, ty=0, isAnimatingJump = false;
 
-        // אנימציית הזינוק הפיזיקלית החדשה (Bouncy Jump Logic)
         function performNaturalJump() {
             if (isAnimatingJump) return;
             isAnimatingJump = true;
-            
             const container = document.querySelector('.app-container');
             const contRect = container.getBoundingClientRect();
-            
-            // יעד: פתח הצנצנת
             const targetX = contRect.width / 2;
-            const targetY = 80; // כניסה עמוקה יותר לאשליית צלילה
-
+            const targetY = 80; 
             const currentPosLeft = parseFloat(fm.style.left) + 27.5;
             const currentPosTop = parseFloat(fm.style.top) + 27.5;
-            
-            const duration = 650; // זמן הזינוק
+            const duration = 650; 
             const startTime = performance.now();
-            
-            // שלב 0: דריכה קלה למטה (Squash)
             fm.style.transition = 'transform 0.1s ease-in';
             fm.style.transform = 'scale(0.85, 1.1) translateY(10px)';
             
             setTimeout(() => {
-                fm.style.transition = 'none'; // עוברים ל-JS Animation
+                fm.style.transition = 'none'; 
                 function animate(currentTime) {
                     const elapsed = currentTime - startTime;
                     const progress = Math.min(elapsed / duration, 1);
-                    
-                    // תנועת קשת (פרבולה)
                     const curX = currentPosLeft + (targetX - currentPosLeft) * progress;
-                    // קשת עם גובה זינוק
                     const jumpHeight = 160;
                     const curY = currentPosTop + (targetY - currentPosTop) * progress - Math.sin(progress * Math.PI) * jumpHeight;
-                    
-                    // אפקט גמישות: גדל בזינוק, קטן בצלילה
                     const scale = 1 + Math.sin(progress * Math.PI) * 0.4;
-                    // סיבוב קל בדרך
                     const rot = progress * 120;
-
                     fm.style.left = (curX - 27.5) + 'px';
                     fm.style.top = (curY - 27.5) + 'px';
                     fm.style.transform = `scale(${scale}) rotate(${rot}deg)`;
-
                     if (progress < 1) {
                         requestAnimationFrame(animate);
                     } else {
-                        // המעבר - הכדור הפיזי מופיע בתוך הצנצנת
                         dropBall(170, 50); 
                         fm.style.opacity = '0';
                         isAnimatingJump = false;
-                        
-                        // הכנת הגולה הבאה במגירה
-                        setTimeout(() => {
-                            fm.style.transform = 'scale(0)';
-                            popMarble();
-                        }, 200);
+                        setTimeout(() => { fm.style.transform = 'scale(0)'; popMarble(); }, 200);
                     }
                 }
                 requestAnimationFrame(animate);
@@ -535,9 +646,8 @@
         fm.addEventListener('pointerup', e => {
             if(!isDrag) return; isDrag=false; fm.classList.remove('dragging'); fm.releasePointerCapture(e.pointerId);
             const dist = Math.sqrt(tx*tx+ty*ty);
-            if(dist < 10) { 
-                performNaturalJump(); 
-            } else {
+            if(dist < 10) { performNaturalJump(); } 
+            else {
                 const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
                 const r = fm.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
                 if(cx > jr.left-20 && cx < jr.right+20 && cy > jr.top-80 && cy < jr.bottom){
@@ -584,7 +694,16 @@
             });
             Engine.update(engine, 1000/60); requestAnimationFrame(loop);
         }
-        loop(); setTimeout(() => { scroller.scrollTo({left:0}); lastIdx=1; renderActiveHabit(); }, 100);
+        loop(); 
+        
+        setTimeout(() => { 
+            scroller.scrollTo({left:0}); 
+            lastIdx=1; 
+            renderActiveHabit(); 
+            const info = getStageInfo(0);
+            document.getElementById('stage-label').innerText = `שלב ${info.stage}`;
+            document.getElementById('bg-day-indicator').innerText = `1 / ${info.maxDays}`;
+        }, 100);
     </script>
 </body>
 </html>
