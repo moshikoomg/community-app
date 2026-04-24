@@ -62,28 +62,23 @@
         .user-pill .name { font-weight: 800; font-size: 13px; color: var(--text-main); }
         .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center; }
 
-        .stage-badge {
-            background: var(--text-main); color: white;
-            padding: 3px 10px; border-radius: 10px;
-            font-size: 11px; font-weight: 900;
-        }
-
         /* --- Day Indicator --- */
         .day-display {
-            position: absolute; top: 15px; left: 0; width: 100%;
+            position: absolute; top: 75px; /* ממוקם כעת נמוך יותר, קרוב יותר לצנצנת */
+            left: 0; width: 100%;
             text-align: center; pointer-events: none; z-index: 5;
             display: flex; flex-direction: column; align-items: center;
         }
-        .day-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: -4px; }
         .big-day-number {
-            font-size: 24px; font-weight: 900; color: rgba(0,0,0,0.2);
-            user-select: none; letter-spacing: -1px;
+            font-size: 32px; /* גופן מוגדל */
+            font-weight: 900; color: rgba(255,255,255,0.8); /* צבע בהיר וברור יותר */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1); /* הוספת צל קל לקריאות טובה יותר */
+            user-select: none; letter-spacing: 2px;
         }
-        .day-progress-sub { font-size: 9px; font-weight: 800; color: #cbd5e1; margin-top: -4px; }
 
         .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
 
-        /* --- Slider --- המרכוז המדויק מיושם כאן */
+        /* --- Slider --- */
         .jars-slider {
             display: flex; width: 100%; height: 100%; overflow-x: auto;
             scroll-snap-type: x mandatory; align-items: center; scrollbar-width: none;
@@ -98,14 +93,14 @@
         }
 
         .jar-slide { 
-            flex: 0 0 340px; /* קיבוע רוחב תואם לצנצנת למרכוז מדויק */
+            flex: 0 0 340px; 
             height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
             box-sizing: border-box; padding-bottom: 180px; margin: 0 10px;
             transition: opacity 0.5s ease;
             background-size: cover; background-position: center;
             border-radius: 40px;
-            opacity: 0.5; /* שקיפות לצנצנות הלא-פעילות שמציצות */
+            opacity: 0.5; 
         }
         .jar-slide.active-slide {
             opacity: 1;
@@ -122,10 +117,10 @@
         .jar-wrapper { 
             position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; 
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0.85); /* הקטנה של הצנצנות שמציצות מהצד */
+            transform: scale(0.85); 
         }
         .jar-slide.active-slide .jar-wrapper {
-            transform: scale(1); /* הגדלה רק של הצנצנת שבמרכז הפוקוס */
+            transform: scale(1); 
         }
         canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
@@ -181,16 +176,16 @@
         .edit-btn { position: absolute; top: 25px; right: 25px; color: #cbd5e1; cursor: pointer; padding: 6px; z-index: 110; }
         
         .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -42px; min-height: 100px; }
+        
         .active-icon-bg { 
             width: 84px; height: 84px; background: #ffffff; border-radius: 50%; 
             display: flex; justify-content: center; align-items: center; position: relative; 
             z-index: 1; box-shadow: 0 -4px 15px rgba(0,0,0,0.03); 
         }
-        .active-icon-bg::before { content: ''; position: absolute; bottom: 42px; left: -12px; width: 16px; height: 12px; background: radial-gradient(circle at 0% 0%, transparent 12px, #ffffff 12.5px); z-index: -1; }
-        .active-icon-bg::after { content: ''; position: absolute; bottom: 42px; right: -12px; width: 16px; height: 12px; background: radial-gradient(circle at 100% 0%, transparent 12px, #ffffff 12.5px); z-index: -1; }
 
         #marble-drop-zone { width: 60px; height: 60px; pointer-events: none; }
         
+        /* הכדור */
         #floating-marble { 
             position: absolute; z-index: 1000; cursor: grab; touch-action: none; 
             transform-origin: center center; pointer-events: auto;
@@ -221,7 +216,8 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header-ui">
-            <div id="stage-badge" class="stage-badge">שלב 1</div>
+            <!-- הוסר ה-stage-badge -->
+            <div style="flex: 1;"></div> <!-- אלמנט ריק לשמירה על הרווח -->
             <div class="user-pill" onclick="openProfilePopup()">
                 <div class="name" id="display-profile-name">ישראל</div>
                 <div class="user-avatar">
@@ -232,9 +228,7 @@
 
         <!-- Days Display -->
         <div class="day-display">
-            <div class="day-label">יום</div>
-            <div id="bg-day-indicator" class="big-day-number">1</div>
-            <div id="day-progress-sub" class="day-progress-sub">מתוך 5</div>
+            <div id="bg-day-indicator" class="big-day-number">1/5</div>
         </div>
 
         <div class="top-section" id="clickable-top-section">
@@ -480,9 +474,10 @@
             currentBalls.forEach(b => Composite.add(world, b));
             currentDayView = idx;
             const info = getStageInfo(idx);
-            document.getElementById('stage-badge').innerText = `שלב ${info.stage}`;
-            document.getElementById('bg-day-indicator').innerText = (idx + 1);
-            document.getElementById('day-progress-sub').innerText = `מתוך ${info.maxDays}`;
+            
+            // עדכון מחוון הימים (לדוגמה: 1/5) במקום ה-stage-badge שהוסר
+            document.getElementById('bg-day-indicator').innerText = `${idx + 1}/${info.maxDays}`;
+            
             updateStatsUI();
         }
 
@@ -600,7 +595,7 @@
             const startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
             
             const targetX = jr.left - contRect.left + jr.width / 2;
-            const targetY = 28; 
+            const targetY = (jr.top - contRect.top) + 20; 
             
             const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2));
             const duration = Math.max(300, Math.min(650, distance * 1.5)); 
@@ -613,7 +608,7 @@
                 
                 const curX = startX + (targetX - startX) * p;
                 
-                const jumpH = 40; 
+                const jumpH = 50; 
                 const curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
                 
                 const scale = 1 + Math.sin(p * Math.PI) * 0.1, rot = p * 180;
@@ -723,6 +718,11 @@
         loop(); 
         
         document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+        
+        // הגדרה ראשונית של התצוגה
+        const initialInfo = getStageInfo(0);
+        document.getElementById('bg-day-indicator').innerText = `1/${initialInfo.maxDays}`;
+        
         setTimeout(() => { scroller.scrollTo({left:0}); lastIdx=1; renderActiveHabit(); fm.classList.add('marble-pulse'); }, 150);
     </script>
 </body>
