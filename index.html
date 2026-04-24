@@ -83,6 +83,7 @@
 
         .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
 
+        /* --- Slider --- המרכוז המדויק מיושם כאן */
         .jars-slider {
             display: flex; width: 100%; height: 100%; overflow-x: auto;
             scroll-snap-type: x mandatory; align-items: center; scrollbar-width: none;
@@ -90,20 +91,42 @@
         }
         .jars-slider::-webkit-scrollbar { display: none; }
 
+        .jars-slider::before, .jars-slider::after {
+            content: '';
+            flex: 0 0 calc(max(0px, 50% - 180px));
+            min-width: calc(max(0px, 50% - 180px));
+        }
+
         .jar-slide { 
-            flex: 0 0 95%; height: 100%; display: flex; justify-content: center; 
-            align-items: center; scroll-snap-align: center; position: relative; 
-            box-sizing: border-box; padding-bottom: 180px;
+            flex: 0 0 340px; /* קיבוע רוחב תואם לצנצנת למרכוז מדויק */
+            height: 100%; display: flex; justify-content: center; 
+            align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
+            box-sizing: border-box; padding-bottom: 180px; margin: 0 10px;
             transition: opacity 0.5s ease;
             background-size: cover; background-position: center;
+            border-radius: 40px;
+            opacity: 0.5; /* שקיפות לצנצנות הלא-פעילות שמציצות */
         }
+        .jar-slide.active-slide {
+            opacity: 1;
+        }
+        .jar-slide.locked { filter: grayscale(1); opacity: 0.3; }
+        .jar-slide.active-slide.locked { opacity: 0.6; }
+        
         .jar-slide::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, var(--bg-color) 0%, rgba(248, 250, 252, 0.05) 50%, var(--bg-color) 100%);
-            z-index: 1; pointer-events: none;
+            z-index: 1; pointer-events: none; border-radius: 40px;
         }
 
-        .jar-wrapper { position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; }
+        .jar-wrapper { 
+            position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; 
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.85); /* הקטנה של הצנצנות שמציצות מהצד */
+        }
+        .jar-slide.active-slide .jar-wrapper {
+            transform: scale(1); /* הגדלה רק של הצנצנת שבמרכז הפוקוס */
+        }
         canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
         /* --- Jar Design + Lid Animation --- */
@@ -314,7 +337,7 @@
             for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) {
                 const info = getStageInfo(i);
                 const slide = document.createElement('div');
-                slide.className = `jar-slide ${i >= unlockedDays ? 'locked' : ''}`;
+                slide.className = `jar-slide ${i === 0 ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
                 const bg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
                 if (bg) slide.style.backgroundImage = `url('${bg}')`;
@@ -463,7 +486,13 @@
             updateStatsUI();
         }
 
-        const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) moveCanvas(parseInt(e.target.dataset.index)); }), { threshold:0.6, root:slider });
+        const obs = new IntersectionObserver(es => es.forEach(e => { 
+            if(e.isIntersecting) {
+                document.querySelectorAll('.jar-slide').forEach(s => s.classList.remove('active-slide'));
+                e.target.classList.add('active-slide');
+                moveCanvas(parseInt(e.target.dataset.index)); 
+            }
+        }), { threshold:0.6, root:slider });
         function reobserve() { document.querySelectorAll('.jar-slide').forEach(s => obs.observe(s)); }
         reobserve();
 
@@ -571,50 +600,34 @@
             const startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
             
             const targetX = jr.left - contRect.left + jr.width / 2;
-            const peakY = jr.top - contRect.top - 15; 
-            const endY = jr.top - contRect.top + 60; 
+            const targetY = 28; 
             
-            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(endY - startY, 2));
-            const duration = Math.max(450, Math.min(750, distance * 1.5)); 
+            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2));
+            const duration = Math.max(300, Math.min(650, distance * 1.5)); 
             const startTime = performance.now();
 
             animateLid(true);
 
             function animate(currentTime) {
-                const elapsed = currentTime - startTime;
-                let p = elapsed / duration;
-                if (p > 1) p = 1;
+                const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
                 
-                const easeX = 1 - Math.pow(1 - p, 2);
-                const curX = startX + (targetX - startX) * easeX;
+                const curX = startX + (targetX - startX) * p;
                 
-                let curY;
-                const upPhase = 0.55; 
+                const jumpH = 40; 
+                const curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
                 
-                if (p < upPhase) {
-                    const pUp = p / upPhase;
-                    const easeUp = 1 - Math.pow(1 - pUp, 2); 
-                    curY = startY + (peakY - startY) * easeUp;
-                } else {
-                    const pDown = (p - upPhase) / (1 - upPhase);
-                    const easeDown = pDown * pDown; 
-                    curY = peakY + (endY - peakY) * easeDown;
-                }
-                
-                const rot = p * 360;
+                const scale = 1 + Math.sin(p * Math.PI) * 0.1, rot = p * 180;
                 
                 fm.style.left = (curX - 30) + 'px'; 
                 fm.style.top = (curY - 30) + 'px';
-                fm.style.transform = `scale(1) rotate(${rot}deg)`;
+                fm.style.transform = `scale(${scale}) rotate(${rot}deg)`;
                 
-                if (p < 1) {
-                    requestAnimationFrame(animate);
-                } else {
+                if (p < 1) requestAnimationFrame(animate);
+                else {
                     const canvasRect = canvas.getBoundingClientRect();
                     const physicsX = (contRect.left + targetX) - canvasRect.left;
-                    const physicsY = (contRect.top + endY) - canvasRect.top;
+                    const physicsY = (contRect.top + targetY) - canvasRect.top;
                     
-                    // איפוס אנימציות כדי שההעלמות תהיה חדה ובאפס זמן
                     fm.style.transition = 'none';
                     fm.style.opacity = '0'; 
                     fm.style.visibility = 'hidden';
