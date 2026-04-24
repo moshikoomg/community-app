@@ -47,7 +47,7 @@
             }
         }
 
-        /* --- פרופיל קטן --- */
+        /* --- פרופיל קומפקטי --- */
         .profile-header {
             position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px;
             z-index: 20; display: flex; align-items: center; gap: 6px;
@@ -64,7 +64,7 @@
         }
         .profile-name { font-size: 11px; font-weight: 800; color: #444; }
 
-        /* --- צנצנת ללא קווים לבנים --- */
+        /* --- צנצנת (ללא קווים לבנים) --- */
         .bg-day-indicator {
             position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%);
             font-size: 110px; font-weight: 800; color: rgba(0, 0, 0, 0.03);
@@ -93,13 +93,12 @@
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
         .jar-neck {
             position: absolute; top: 50px; left: 100px; width: 140px; height: 40px;
-            border: none !important; /* הסרה מוחלטת */
-            border-radius: 10px 10px 0 0;
+            border: none !important; border-radius: 10px 10px 0 0;
             background: linear-gradient(to right, rgba(255,255,255,0.6), rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.6));
         }
         .jar-body {
             position: absolute; top: 90px; left: 30px; width: 280px; height: 340px;
-            border-radius: 70px 70px 60px 60px; border: none !important; /* הסרה מוחלטת */
+            border-radius: 70px 70px 60px 60px; border: none !important;
             box-shadow: 
                 inset 15px 0 30px rgba(255,255,255,0.7), 
                 inset -15px -15px 30px var(--jar-shadow),
@@ -108,7 +107,7 @@
         }
         .jar-opening {
             position: absolute; top: 40px; left: 95px; width: 150px; height: 18px;
-            border-radius: 50%; border: none !important; /* הסרה מוחלטת */
+            border-radius: 50%; border: none !important;
             background: rgba(255, 255, 255, 0.4); z-index: 3;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
         }
@@ -120,7 +119,7 @@
             z-index: 100; display: flex; flex-direction: column; align-items: center; 
             position: absolute; bottom: 0; left: 0; width: 100%;
             height: 220px; box-sizing: border-box;
-            transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            transition: height 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
         .bottom-section.edit-mode { height: 380px; }
         .bottom-section::before {
@@ -152,7 +151,8 @@
         
         #floating-marble {
             position: absolute; z-index: 1000; cursor: grab; touch-action: none; transform-origin: center center;
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1.2), opacity 0.2s, filter 0.3s;
+            /* אנימציית הגעה מרהיבה וגמישה */
+            transition: transform 0.6s cubic-bezier(0.34, 1.8, 0.64, 1), opacity 0.4s ease-out, filter 0.5s;
             pointer-events: auto;
         }
         #floating-marble.dragging { transition: none !important; cursor: grabbing; }
@@ -174,8 +174,8 @@
         .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
         .dot.active { width: 22px; background: #333; border-radius: 4px; }
 
-        /* --- כפתורי עריכה --- */
-        .drawer-edit-content { width: 100%; padding: 20px 25px; box-sizing: border-box; }
+        /* --- עריכה --- */
+        .drawer-edit-content { width: 100%; padding: 25px; box-sizing: border-box; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; margin-bottom: 4px; font-weight: 600; color: #666; font-size: 14px; }
         .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; font-size: 15px; font-family: inherit; box-sizing: border-box; background: #fff; }
@@ -249,6 +249,10 @@
             <div class="popup-content">
                 <button class="close-popup-btn" onclick="closeProfilePopup()">✕</button>
                 <div style="font-size:22px; font-weight:800; margin-bottom:15px;">החשבון שלי</div>
+                <div class="stats-grid">
+                    <div class="stat-box"><span style="display:block; font-size:20px; font-weight:800; color:var(--primary-color);" id="stat-days-active">1</span><span style="font-size:11px; color:#999;">ימים</span></div>
+                    <div class="stat-box"><span style="display:block; font-size:20px; font-weight:800; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#999;">בוצעו</span></div>
+                </div>
                 <div class="form-group"><label>שם המשתמש</label><input type="text" id="input-profile-name" class="form-control" value="הפרופיל שלי" onkeyup="updateProfileName(this.value)"></div>
                 <div class="nav-item">⚙️ הגדרות</div>
                 <div class="nav-item logout-item" onclick="handleLogout()">🚪 התנתקות</div>
@@ -354,12 +358,10 @@
             drawMarble(uctx, 27.5, 27.5, 24, 0, h.color);
             
             if(fm.style.display !== 'none') {
-                fm.style.opacity = '1';
-                fm.style.transform = 'scale(1)';
-                fm.style.filter = `drop-shadow(0 0 15px ${h.color}) drop-shadow(0 6px 8px rgba(0,0,0,0.15))`;
+                fm.style.display = 'block';
+                fm.style.filter = `drop-shadow(0 0 20px ${h.color}88) drop-shadow(0 6px 12px rgba(0,0,0,0.15))`;
             }
             
-            // חישוב מיקום מחדש
             updateFloatingPosition();
             updateStatsUI(); 
             renderDots();
@@ -373,17 +375,24 @@
             if(closest !== -1 && closest !== lastIdx) { lastIdx = closest; currentHabitIndex = closest; popMarble(); if(navigator.vibrate) navigator.vibrate(10); }
         });
 
+        // אנימציית הגעה מרהיבה (Spectacular Arrival)
         function popMarble() {
             const fm = document.getElementById('floating-marble');
             if(fm.style.display === 'none') return;
-            fm.style.transition = 'transform 0.05s, opacity 0.05s'; 
-            fm.style.transform = 'scale(0.6)';
-            setTimeout(() => { 
+            
+            // איפוס מיידי למצב "זעיר ושקוף"
+            fm.style.transition = 'none';
+            fm.style.transform = 'scale(0) rotate(-45deg)';
+            fm.style.opacity = '0';
+            
+            // תזמון "הגעה" מרהיבה
+            requestAnimationFrame(() => {
                 renderActiveHabit(); 
-                fm.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1.2), opacity 0.2s'; 
-                fm.style.transform = 'scale(1)'; 
+                // שימוש ב-cubic-bezier שיוצר אפקט קפיצי ורך (Bouncy Elastic)
+                fm.style.transition = 'transform 0.7s cubic-bezier(0.34, 1.85, 0.64, 1), opacity 0.4s ease-out'; 
+                fm.style.transform = 'scale(1) rotate(0deg)'; 
                 fm.style.opacity = '1';
-            }, 60);
+            });
         }
 
         function moveCanvas(idx) {
@@ -421,7 +430,12 @@
         function handleBackdropClick(e, id) { if(e.target.id === id) closeModal(id); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        function openProfilePopup() { document.getElementById('profile-popup').classList.add('active'); }
+        function openProfilePopup() {
+            document.getElementById('stat-days-active').innerText = unlockedDays;
+            let hbt = 0; userStats.daysData.forEach(d => { for(let k in d.habits){ hbt += d.habits[k].min; } });
+            document.getElementById('stat-total-habits').innerText = hbt;
+            document.getElementById('profile-popup').classList.add('active');
+        }
         function closeProfilePopup() { closeModal('profile-popup'); }
         function updateProfileName(v) { document.getElementById('display-profile-name').innerText = v.trim() || "הפרופיל שלי"; }
         function handleLogout() { if(confirm("להתנתק?")) location.reload(); }
@@ -442,13 +456,22 @@
             document.getElementById('drawer-edit-view').classList.remove('active');
             document.getElementById('drawer-normal-view').classList.add('active');
             
-            // השהיה קטנה כדי להבטיח שה-DOM התעדכן והמימדים נכונים
+            const fm = document.getElementById('floating-marble');
+            fm.style.display = 'block';
+            
+            // "גלילת בזק" מהירה לריענון המערכת
+            const originalIndex = currentHabitIndex;
+            const tempIndex = (originalIndex + 1) % habitsData.length;
+            const items = document.querySelectorAll('.habit-item');
+
+            if (items[tempIndex]) items[tempIndex].scrollIntoView({ behavior: 'auto', inline: 'center' });
+
             setTimeout(() => {
-                const fm = document.getElementById('floating-marble'); 
-                fm.style.display = 'block'; 
-                fm.style.opacity = '0';
-                renderActiveHabit();
-            }, 50);
+                if (items[originalIndex]) {
+                    items[originalIndex].scrollIntoView({ behavior: 'auto', inline: 'center' });
+                    popMarble(); // אנימציית הגעה מרהיבה
+                }
+            }, 10);
         }
 
         function saveHabitChanges() {
@@ -457,32 +480,36 @@
             h.time = document.getElementById('input-habit-time').value.trim() || h.time;
             h.color = document.getElementById('input-habit-color').value;
             closeEditMode(); initScroller();
-            setTimeout(() => { document.querySelectorAll('.habit-item')[currentHabitIndex].scrollIntoView({ inline:'center'}); renderActiveHabit(); }, 150);
         }
 
         function deleteCurrentHabit() {
-            if(habitsData.length <= 1) return alert("חייב להישאר הרגל אחד!");
-            if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initScroller(); setTimeout(() => { renderActiveHabit(); }, 150); }
+            if(habitsData.length <= 1) return alert("חייב להישאר לפחות הרגל אחד!");
+            if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initScroller(); }
         }
 
         const fm = document.getElementById('floating-marble');
         let isDrag = false, sx, sy, tx=0, ty=0;
         fm.addEventListener('pointerdown', e => { if(document.getElementById('drawer-edit-view').classList.contains('active')) return; isDrag=true; fm.classList.add('dragging'); sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); });
-        fm.addEventListener('pointermove', e => { if(!isDrag) return; tx=e.clientX-sx; ty=e.clientY-sy; fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.1)`; });
+        fm.addEventListener('pointermove', e => { if(!isDrag) return; tx=e.clientX-sx; ty=e.clientY-sy; fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.15)`; });
         fm.addEventListener('pointerup', e => {
             if(!isDrag) return; isDrag=false; fm.classList.remove('dragging'); fm.releasePointerCapture(e.pointerId);
             const dist = Math.sqrt(tx*tx+ty*ty);
             if(dist < 10) { 
-                if(dropBall()){ fm.style.opacity='0'; setTimeout(() => { renderActiveHabit(); }, 700); } 
-                else fm.style.transform='scale(1)'; 
+                if(dropBall()){ 
+                    fm.style.transition = 'transform 0.2s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.2s';
+                    fm.style.transform = 'scale(0)';
+                    fm.style.opacity = '0';
+                    setTimeout(popMarble, 750); 
+                } else fm.style.transform='scale(1)'; 
             } else {
                 const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
                 const r = fm.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
                 if(cx > jr.left-20 && cx < jr.right+20 && cy > jr.top-80 && cy < jr.bottom){
                     const cr = canvas.getBoundingClientRect(); 
                     if(dropBall(cx-cr.left, cy-cr.top)){ 
-                        fm.style.transition='none'; fm.style.opacity='0'; fm.style.transform='scale(0)'; 
-                        setTimeout(() => { fm.style.transition='0.3s'; renderActiveHabit(); }, 700); 
+                        fm.style.transition='transform 0.15s ease-in, opacity 0.1s'; 
+                        fm.style.opacity='0'; fm.style.transform='scale(0)'; 
+                        setTimeout(popMarble, 750); 
                     } else fm.style.transform='scale(1)';
                 } else { 
                     fm.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)'; 
