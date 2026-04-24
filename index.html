@@ -156,6 +156,7 @@
         }
         .bottom-section.edit-mode { height: 400px; }
         .bottom-section.stats-mode { height: 60vh; }
+        .bottom-section.onboarding-mode { height: 380px; }
         
         /* אזור הגרירה העליון של המגירה */
         .drawer-handle {
@@ -165,7 +166,6 @@
         .drawer-handle::after {
             content: ''; width: 44px; height: 5px; background-color: transparent; border-radius: 4px; transition: background 0.3s;
         }
-        /* הפס יופיע רק כשהמגירה פתוחה לסטטיסטיקה או עריכה */
         .bottom-section.stats-mode .drawer-handle::after,
         .bottom-section.edit-mode .drawer-handle::after {
             background-color: #e2e8f0;
@@ -229,6 +229,12 @@
         .graph-container { display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; margin-bottom: 10px; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* --- Onboarding View --- */
+        #drawer-onboarding-view { padding: 0 25px; width: 100%; box-sizing: border-box; }
+        .onboarding-step { animation: fadeIn 0.4s; width: 100%; }
+        .preset-btn { background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 12px; border-radius: 12px; font-weight: 700; color: var(--text-main); cursor: pointer; transition: 0.2s; font-size: 14px; text-align: center; }
+        .preset-btn:hover { border-color: var(--primary-color); color: var(--primary-color); background: #f1f8f5; }
+
         /* --- Popups --- */
         .popup-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
         .popup-backdrop.active { opacity: 1; pointer-events: all; }
@@ -238,6 +244,31 @@
         .file-upload-btn { display: block; width: 100%; padding: 12px; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; color: var(--admin-color); font-weight: 700; margin-top: 4px; transition: 0.2s; box-sizing: border-box;}
         .file-upload-btn:hover { background: #f1f5f9; border-color: var(--admin-color); }
         .file-upload-btn input[type="file"] { display: none; }
+        
+        /* --- Tutorial Tooltip --- */
+        #tutorial-tooltip {
+            position: absolute;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 8px 20px rgba(35, 155, 98, 0.4);
+            pointer-events: none;
+            display: none;
+            white-space: nowrap;
+        }
+        #tutorial-tooltip::after {
+            content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+            border-width: 6px 6px 0; border-style: solid; border-color: var(--primary-color) transparent transparent transparent;
+        }
+        .tutorial-bounce { animation: tutorialBounce 1.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite; }
+        @keyframes tutorialBounce {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -10px); }
+        }
     </style>
 </head>
 <body>
@@ -245,6 +276,11 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header-ui">
+            <!-- כפתור לסימולציית משתמש חדש -->
+            <div class="user-pill" onclick="window.simulateNewUser()" style="background: rgba(255, 255, 255, 0.9); border: 1.5px dashed var(--primary-color);">
+                <div class="name" style="color: var(--primary-color);">טסט משתמש חדש</div>
+            </div>
+            
             <div style="flex: 1;"></div> 
             <div class="user-pill" onclick="window.openProfilePopup()">
                 <div class="name" id="display-profile-name">ישראל</div>
@@ -325,7 +361,42 @@
                     <!-- Graph bars injected by JS -->
                 </div>
             </div>
+
+            <!-- Onboarding View (New User) -->
+            <div id="drawer-onboarding-view" class="drawer-view">
+                <div id="drawer-onboarding-step1" class="onboarding-step active">
+                    <div style="font-size:22px; font-weight:900; text-align:center; margin-bottom:5px; color:var(--text-main);">איזה הרגל נוסיף לצנצנת שלך?</div>
+                    <div style="font-size:12px; font-weight:700; color:var(--danger-color); text-align:center; margin-bottom:20px;">* ההרגל חייב להיות קטן כל כך שקשה לסרב לו</div>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לשתות כוס מים')">💧 לשתות כוס מים</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לנשום עמוק')">🌬️ לנשום עמוק</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לקרוא עמוד אחד')">📖 לקרוא עמוד אחד</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לעשות מתיחות')">🧘‍♂️ לעשות מתיחות</button>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="custom-habit-input" placeholder="או כתוב הרגל בעצמך..." style="flex:1; padding:12px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:'Heebo';">
+                        <button onclick="window.handleCustomHabit()" style="background:var(--primary-color); color:white; border:none; padding:0 20px; border-radius:12px; font-weight:800; cursor:pointer;">המשך</button>
+                    </div>
+                </div>
+
+                <div id="drawer-onboarding-step2" class="onboarding-step" style="display:none;">
+                    <div style="font-size:22px; font-weight:900; text-align:center; margin-bottom:15px; margin-top:20px; color:var(--text-main);">כמה ממנו אתה מתחייב לעשות בכל יום?</div>
+                    
+                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:40px; gap:20px;">
+                        <button onclick="window.changeOnboardingTarget(-1)" style="width:50px; height:50px; border-radius:50%; border:none; background:#f1f5f9; color:var(--text-main); font-size:24px; font-weight:bold; cursor:pointer;">-</button>
+                        <input type="number" id="onboarding-target-input" value="1" min="1" style="width:80px; font-size:40px; font-weight:900; text-align:center; border:none; background:transparent; outline:none; color:var(--primary-color);">
+                        <button onclick="window.changeOnboardingTarget(1)" style="width:50px; height:50px; border-radius:50%; border:none; background:#f1f5f9; color:var(--text-main); font-size:24px; font-weight:bold; cursor:pointer;">+</button>
+                    </div>
+                    
+                    <button onclick="window.finishOnboarding()" style="width:100%; background:var(--primary-color); color:white; padding:18px; border-radius:16px; border:none; font-size:16px; font-weight:900; cursor:pointer;">המשך לסיום</button>
+                </div>
+            </div>
         </div>
+
+        <!-- Tooltip הדרכה -->
+        <div id="tutorial-tooltip" class="tutorial-bounce">גרור אותי לצנצנת! 👆</div>
 
         <canvas id="floating-marble" width="60" height="60"></canvas>
 
@@ -409,6 +480,7 @@
         let lastActionDate = Date.now();
         
         let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 1;
+        window.isTutorialMode = false; // משתנה הדרכה גלובלי
         let habitsData = [
             { id: 1, name: 'לנשום', time: '10 דקות', color: '#42b6c7' },
             { id: 2, name: 'לרוץ', time: '5 דקות', color: '#e86a92' },
@@ -753,7 +825,7 @@
 
         function updateStatsUI() {
             if(!habitsData[currentHabitIndex]) return;
-            const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
+            const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView]?.habits[h.id];
             const timeEl = document.getElementById('picker-time');
             if(stats && stats.min > 0) { timeEl.innerText = '+' + h.time; timeEl.style.color = h.color; } 
             else { timeEl.innerText = h.time; timeEl.style.color = '#94a3b8'; }
@@ -797,6 +869,7 @@
                 setTimeout(() => { if(!isDrag && !isAnimatingJump) fm.classList.add('marble-pulse'); }, 500);
             }, 150);
         }
+        window.popMarble = popMarble;
 
         function respawnMarble() {
             fm.classList.remove('marble-pulse');
@@ -817,11 +890,11 @@
                 }, 600);
             });
         }
+        window.respawnMarble = respawnMarble;
 
         function moveCanvas(idx) {
             if(currentDayView === idx && currentBalls.length > 0) return;
             
-            // שמירת המיקומים המדויקים של הצנצנת שאנחנו עוזבים כעת
             if (currentDayView >= 0 && currentBalls.length > 0) {
                 userStats.daysData[currentDayView].savedBalls = currentBalls.map(b => ({
                     x: b.position.x,
@@ -847,7 +920,6 @@
                 expectedBallCount += stats[habitId].min + stats[habitId].breakthrough;
             }
 
-            // שחזור כדורים - אם יש מיקומים שמורים נשתמש בהם, אחרת נזרוק באקראיות
             if (savedBalls && savedBalls.length === expectedBallCount && expectedBallCount > 0) {
                 savedBalls.forEach(ballData => {
                     const b = Bodies.circle(ballData.x, ballData.y, 26, { 
@@ -878,7 +950,6 @@
             
             updateStatsUI();
             updateBackgroundForStage(idx);
-            window.saveState(); // שמירה על המעבר
         }
 
         const obs = new IntersectionObserver(es => es.forEach(e => { 
@@ -895,8 +966,22 @@
             const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container');
             if(!dz || !cont || fm.style.display === 'none' || isAnimatingJump) return;
             const r = dz.getBoundingClientRect(), cr = cont.getBoundingClientRect();
-            fm.style.left = (r.left - cr.left + r.width/2 - 30) + 'px';
-            fm.style.top = (r.top - cr.top + r.height/2 - 30) + 'px';
+            
+            const fmLeft = (r.left - cr.left + r.width/2 - 30);
+            const fmTop = (r.top - cr.top + r.height/2 - 30);
+            
+            fm.style.left = fmLeft + 'px';
+            fm.style.top = fmTop + 'px';
+            
+            // עדכון המיקום של בועת ההדרכה (אם פעילה) למרכז מעל הכדור
+            const tt = document.getElementById('tutorial-tooltip');
+            if (window.isTutorialMode) {
+                tt.style.display = 'block';
+                tt.style.left = (fmLeft + 30) + 'px';
+                tt.style.top = (fmTop - 55) + 'px';
+            } else {
+                tt.style.display = 'none';
+            }
         }
         window.addEventListener('resize', updateFloatingPosition);
 
@@ -909,7 +994,7 @@
         function openProfilePopup() {
             document.getElementById('stat-days-active').innerText = unlockedDays;
             let total = 0; userStats.daysData.forEach(d => {
-                Object.values(d.habits).forEach(st => total += st.min + st.breakthrough);
+                if (d.habits) Object.values(d.habits).forEach(st => total += st.min + st.breakthrough);
             });
             document.getElementById('stat-total-habits').innerText = total;
             document.getElementById('input-profile-name').value = currentUser.displayName;
@@ -983,18 +1068,16 @@
             document.getElementById('input-habit-name').value = h.name;
             document.getElementById('input-habit-time').value = h.time;
             document.getElementById('input-habit-color').value = h.color;
-            document.getElementById('bottom-drawer').classList.add('edit-mode');
-            document.getElementById('bottom-drawer').classList.remove('stats-mode');
-            document.getElementById('drawer-normal-view').classList.remove('active');
-            document.getElementById('drawer-stats-view').classList.remove('active');
+            document.getElementById('bottom-drawer').className = 'bottom-section edit-mode';
+            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
             document.getElementById('drawer-edit-view').classList.add('active');
             fm.style.display = 'none';
         }
         window.openEditMode = openEditMode;
 
         function closeEditMode() {
-            document.getElementById('bottom-drawer').classList.remove('edit-mode');
-            document.getElementById('drawer-edit-view').classList.remove('active');
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
             document.getElementById('drawer-normal-view').classList.add('active');
             setTimeout(() => {
                 fm.style.display = 'block';
@@ -1008,21 +1091,17 @@
 
         function openStatsMode() {
             const h = habitsData[currentHabitIndex]; if(!h) return;
-            
             populateStatsData();
-            
-            document.getElementById('bottom-drawer').classList.add('stats-mode');
-            document.getElementById('bottom-drawer').classList.remove('edit-mode');
-            document.getElementById('drawer-normal-view').classList.remove('active');
-            document.getElementById('drawer-edit-view').classList.remove('active');
+            document.getElementById('bottom-drawer').className = 'bottom-section stats-mode';
+            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
             document.getElementById('drawer-stats-view').classList.add('active');
             fm.style.display = 'none';
         }
         window.openStatsMode = openStatsMode;
 
         function closeStatsMode() {
-            document.getElementById('bottom-drawer').classList.remove('stats-mode');
-            document.getElementById('drawer-stats-view').classList.remove('active');
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
             document.getElementById('drawer-normal-view').classList.add('active');
             setTimeout(() => {
                 fm.style.display = 'block';
@@ -1033,6 +1112,84 @@
             }, 10);
         }
         window.closeStatsMode = closeStatsMode;
+        
+        /* --- סימולציית משתמש חדש (Onboarding) --- */
+        let tempNewHabitName = '';
+
+        window.simulateNewUser = () => {
+            // איפוס נתונים עבור הסימולציה
+            habitsData = [];
+            currentHabitIndex = 0;
+            unlockedDays = 1;
+            window.isTutorialMode = false;
+            userStats = { daysData: [] };
+            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
+
+            currentBalls.forEach(b => Composite.remove(world, b));
+            currentBalls = [];
+
+            document.getElementById('bg-day-indicator').innerText = `1/5`;
+            buildJars();
+            
+            // התיקון: מחזירים את מעקב הגלילה ואת הקנבס של הפיזיקה למקום!
+            reobserve();
+            currentDayView = -1;
+            moveCanvas(0);
+
+            fm.style.display = 'none';
+
+            // שינוי תצוגת המגירה לאונבורדינג
+            document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
+            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
+            document.getElementById('drawer-onboarding-view').classList.add('active');
+
+            document.getElementById('drawer-onboarding-step1').style.display = 'block';
+            document.getElementById('drawer-onboarding-step2').style.display = 'none';
+            document.getElementById('custom-habit-input').value = '';
+            document.getElementById('onboarding-target-input').value = '1';
+        };
+
+        window.goToOnboardingStep2 = (name) => {
+            tempNewHabitName = name;
+            document.getElementById('drawer-onboarding-step1').style.display = 'none';
+            document.getElementById('drawer-onboarding-step2').style.display = 'block';
+        };
+
+        window.handleCustomHabit = () => {
+            const val = document.getElementById('custom-habit-input').value.trim();
+            if(val) window.goToOnboardingStep2(val);
+        };
+
+        window.changeOnboardingTarget = (delta) => {
+            const input = document.getElementById('onboarding-target-input');
+            let val = parseInt(input.value) + delta;
+            if(val < 1) val = 1;
+            input.value = val;
+        };
+
+        window.finishOnboarding = () => {
+            const target = document.getElementById('onboarding-target-input').value;
+            habitsData = [{
+                id: 1,
+                name: tempNewHabitName,
+                time: target + ' פעמים ביום',
+                color: '#239B62'
+            }];
+            currentHabitIndex = 0;
+            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
+
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(el => el.classList.remove('active'));
+            document.getElementById('drawer-normal-view').classList.add('active');
+
+            initScroller();
+            window.respawnMarble(); 
+            
+            // הפעלת ההדרכה למשתמש החדש ברגע שהוא מסיים להגדיר את ההרגל
+            window.isTutorialMode = true;
+            updateFloatingPosition();
+        };
+        /* ------------------------------------------ */
         
         function populateStatsData() {
             const h = habitsData[currentHabitIndex];
@@ -1180,7 +1337,14 @@
         }
 
         fm.addEventListener('pointerdown', e => { 
-            if(document.getElementById('drawer-edit-view').classList.contains('active') || document.getElementById('drawer-stats-view').classList.contains('active') || isAnimatingJump) return; 
+            if(document.getElementById('drawer-edit-view').classList.contains('active') || document.getElementById('drawer-stats-view').classList.contains('active') || document.getElementById('drawer-onboarding-view').classList.contains('active') || isAnimatingJump) return; 
+            
+            // כיבוי והעלמת ההדרכה ברגע שהמשתמש נוגע בכדור
+            if (window.isTutorialMode) {
+                window.isTutorialMode = false;
+                document.getElementById('tutorial-tooltip').style.display = 'none';
+            }
+            
             isDrag=true; fm.classList.add('dragging'); fm.classList.remove('marble-pulse');
             fm.style.transition = 'none'; 
             sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
