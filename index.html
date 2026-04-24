@@ -77,7 +77,7 @@
             user-select: none; letter-spacing: 2px;
         }
 
-        .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
+        .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding-bottom: 220px; }
 
         /* --- Slider --- */
         .jars-slider {
@@ -97,9 +97,17 @@
             flex: 0 0 340px; 
             height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
-            box-sizing: border-box; padding-bottom: 180px; margin: 0 10px;
+            box-sizing: border-box; padding-bottom: 0; margin: 0 10px;
             transition: opacity 0.5s ease;
             opacity: 0.4; 
+        }
+
+        @media (max-height: 740px) {
+            .jar-slide { padding-bottom: 0; }
+            .jar-wrapper { transform: scale(0.6) !important; }
+            .jar-slide.active-slide .jar-wrapper { transform: scale(0.75) !important; }
+            .day-display { top: 50px; }
+            .big-day-number { font-size: 24px; }
         }
         .jar-slide.active-slide { opacity: 1; }
         .jar-slide.locked { filter: grayscale(1); opacity: 0.2; }
@@ -108,9 +116,9 @@
         .jar-wrapper { 
             position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; 
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0.85); 
+            transform: scale(0.75); 
         }
-        .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
+        .jar-slide.active-slide .jar-wrapper { transform: scale(0.9); }
         canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
         /* --- Jar Design --- */
@@ -197,8 +205,8 @@
         }
         #floating-marble.dragging { cursor: grabbing; animation: none !important; }
         
-        @keyframes marblePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-        .marble-pulse { animation: marblePulse 2.8s ease-in-out infinite; }
+        @keyframes marblePulse { 0% { transform: scale(1); } 14% { transform: scale(1.25); } 28% { transform: scale(1); } 42% { transform: scale(1.15); } 70% { transform: scale(1); } }
+        .marble-pulse { animation: marblePulse 1.8s ease-in-out infinite; }
 
         .habit-scroller { 
             display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; 
@@ -276,16 +284,11 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header-ui">
-            <!-- כפתור לסימולציית משתמש חדש -->
-            <div class="user-pill" onclick="window.simulateNewUser()" style="background: rgba(255, 255, 255, 0.9); border: 1.5px dashed var(--primary-color);">
-                <div class="name" style="color: var(--primary-color);">טסט משתמש חדש</div>
-            </div>
-            
             <div style="flex: 1;"></div> 
             <div class="user-pill" onclick="window.openProfilePopup()">
-                <div class="name" id="display-profile-name">ישראל</div>
-                <div class="user-avatar">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <div class="name" id="header-streak-pill">🔥 1</div>
+                <div class="user-avatar" style="overflow: hidden;">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Luck" alt="Avatar" style="width: 100%; height: 100%;">
                 </div>
             </div>
         </div>
@@ -473,9 +476,9 @@
     <script>
         const STAGE_GAP = 21;
         const TOTAL_DISPLAY_DAYS = 63; 
-        const ADMIN_EMAIL = "mosheally@gmail.com";
+        const ADMIN_EMAIL = "admin@email.com";
         
-        let currentUser = { displayName: "משה עלי", email: "mosheally@gmail.com" };
+        let currentUser = { displayName: "שם", email: "" };
         let appStartDate = Date.now();
         let lastActionDate = Date.now();
         
@@ -612,7 +615,7 @@
                     document.getElementById('google-sync-btn').style.display = 'none';
                     document.getElementById('google-sync-status').style.display = 'block';
                     currentUser.displayName = result.user.displayName || currentUser.displayName;
-                    document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+                    document.getElementById('header-streak-pill').innerText = '🔥 ' + unlockedDays;
                     window.saveState(); // עכשיו דוחף את כל המידע המקומי לענן!
                 } catch (err) {
                     if (err.code === 'auth/credential-already-in-use') {
@@ -1056,8 +1059,7 @@
         window.saveAllBgs = saveAllBgs;
 
         function updateProfileName(v) { 
-            currentUser.displayName = v.trim() || "ישראל";
-            document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0]; 
+            currentUser.displayName = v.trim() || "שם";
             window.saveState();
         }
         window.updateProfileName = updateProfileName;
@@ -1536,7 +1538,7 @@
         });
 
         // הגדרה ויזואלית ראשונית בעת עליית הדף
-        document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
+        document.getElementById('header-streak-pill').innerText = '🔥 ' + unlockedDays;
         const initialInfo = getStageInfo(0);
         document.getElementById('bg-day-indicator').innerText = `1/${initialInfo.maxDays}`;
         
