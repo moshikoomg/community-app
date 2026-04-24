@@ -31,6 +31,7 @@
             background-color: var(--bg-color);
             display: flex; flex-direction: column;
             position: relative; overflow: hidden;
+            transition: background 0.4s ease; /* מעבר חלק בהחלפת רקעים */
         }
 
         @media (min-width: 420px) {
@@ -64,15 +65,15 @@
 
         /* --- Day Indicator --- */
         .day-display {
-            position: absolute; top: 75px; /* ממוקם כעת נמוך יותר, קרוב יותר לצנצנת */
+            position: absolute; top: 75px; 
             left: 0; width: 100%;
             text-align: center; pointer-events: none; z-index: 5;
             display: flex; flex-direction: column; align-items: center;
         }
         .big-day-number {
-            font-size: 32px; /* גופן מוגדל */
-            font-weight: 900; color: rgba(255,255,255,0.8); /* צבע בהיר וברור יותר */
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1); /* הוספת צל קל לקריאות טובה יותר */
+            font-size: 32px; 
+            font-weight: 900; color: rgba(255,255,255,0.8); 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1); 
             user-select: none; letter-spacing: 2px;
         }
 
@@ -98,21 +99,13 @@
             align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
             box-sizing: border-box; padding-bottom: 180px; margin: 0 10px;
             transition: opacity 0.5s ease;
-            background-size: cover; background-position: center;
-            border-radius: 40px;
-            opacity: 0.5; 
+            opacity: 0.4; 
         }
         .jar-slide.active-slide {
             opacity: 1;
         }
-        .jar-slide.locked { filter: grayscale(1); opacity: 0.3; }
+        .jar-slide.locked { filter: grayscale(1); opacity: 0.2; }
         .jar-slide.active-slide.locked { opacity: 0.6; }
-        
-        .jar-slide::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, var(--bg-color) 0%, rgba(248, 250, 252, 0.05) 50%, var(--bg-color) 100%);
-            z-index: 1; pointer-events: none; border-radius: 40px;
-        }
 
         .jar-wrapper { 
             position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; 
@@ -124,7 +117,7 @@
         }
         canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
 
-        /* --- Jar Design + Lid Animation --- */
+        /* --- Jar Design (זכוכית נקייה ושקופה ללא הילה מפריעה) --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
         .jar-cap-detail {
@@ -139,20 +132,21 @@
 
         .jar-opening {
             position: absolute; top: 44px; left: 92px; width: 156px; height: 24px;
-            border-radius: 50%; background: rgba(255, 255, 255, 0.6); z-index: 24;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.08); border: 1.5px solid rgba(255,255,255,0.4);
+            border-radius: 50%; background: rgba(255, 255, 255, 0.15); z-index: 24;
+            box-shadow: inset 0 2px 8px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
         }
         .jar-neck {
             position: absolute; top: 50px; left: 100px; width: 140px; height: 50px;
             border-radius: 8px 8px 0 0;
-            background: linear-gradient(to right, rgba(255,255,255,0.5), rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.5));
-            box-shadow: inset 0 0 20px rgba(255,255,255,0.3); z-index: 19;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.1); z-index: 19;
+            border-left: 1px solid rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.3);
         }
         .jar-body {
             position: absolute; top: 90px; left: 30px; width: 280px; height: 340px;
             border-radius: 70px 70px 65px 65px;
-            box-shadow: inset 20px 0 40px rgba(255,255,255,0.6), inset -20px -20px 40px var(--jar-shadow), 0 20px 50px rgba(0,0,0,0.08); 
-            background: rgba(255, 255, 255, 0.02); border: 1.5px solid rgba(255,255,255,0.25);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.15), 0 10px 30px rgba(0,0,0,0.05); 
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.3);
         }
 
         /* --- Drawer --- */
@@ -209,6 +203,11 @@
         .popup-backdrop.active { opacity: 1; pointer-events: all; }
         .popup-content { background: #ffffff; width: 90%; max-width: 360px; border-radius: 28px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); max-height: 85vh; overflow-y: auto; position: relative; }
         .close-popup-btn { position: absolute; top: 15px; left: 15px; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        /* --- עיצוב כפתורי העלאת קבצים --- */
+        .file-upload-btn { display: block; width: 100%; padding: 12px; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; color: var(--admin-color); font-weight: 700; margin-top: 4px; transition: 0.2s; box-sizing: border-box;}
+        .file-upload-btn:hover { background: #f1f5f9; border-color: var(--admin-color); }
+        .file-upload-btn input[type="file"] { display: none; }
     </style>
 </head>
 <body>
@@ -216,8 +215,7 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header-ui">
-            <!-- הוסר ה-stage-badge -->
-            <div style="flex: 1;"></div> <!-- אלמנט ריק לשמירה על הרווח -->
+            <div style="flex: 1;"></div> 
             <div class="user-pill" onclick="openProfilePopup()">
                 <div class="name" id="display-profile-name">ישראל</div>
                 <div class="user-avatar">
@@ -269,11 +267,35 @@
             <div class="popup-content">
                 <button class="close-popup-btn" onclick="closeProfilePopup()">✕</button>
                 <div style="font-size:22px; font-weight:900; margin-bottom:20px;">החשבון שלי</div>
-                <div style="display:flex; gap:12px; margin-bottom:25px;">
+                
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
                     <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-days-active">1</span><span style="font-size:11px; color:#94a3b8;">ימים</span></div>
                     <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#94a3b8;">גולות</span></div>
                 </div>
+                
                 <div style="text-align: right;"><label style="font-size:13px; font-weight:700; color:#64748b;">שם תצוגה</label><input type="text" id="input-profile-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;" onkeyup="updateProfileName(this.value)"></div>
+                
+                <!-- אזור עיצוב אישי -->
+                <div style="font-size:16px; font-weight:800; margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">עיצוב אישי</div>
+                
+                <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px; text-align:right;">
+                    <div>
+                        <label style="font-size:11px; font-weight:700; color:#64748b;">רקע אפליקציה כללי (צבע / URL)</label>
+                        <div style="display:flex; gap:8px; margin-top:4px;">
+                            <input type="color" id="input-app-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="updateCustomBgs()">
+                            <input type="text" id="input-app-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="updateCustomBgs()">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:11px; font-weight:700; color:#64748b;">רקע פנימי של הצנצנת (צבע / URL)</label>
+                        <div style="display:flex; gap:8px; margin-top:4px;">
+                            <input type="color" id="input-jar-color" style="width:40px; height:36px; border-radius:8px; border:1px solid #e2e8f0; padding:2px;" onchange="updateCustomBgs()">
+                            <input type="text" id="input-jar-bg-url" placeholder="הדבק כתובת תמונה..." style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;" onchange="updateCustomBgs()">
+                        </div>
+                    </div>
+                    <button style="margin-top:5px; background:none; border:none; color:var(--danger-color); font-size:12px; font-weight:700; cursor:pointer; text-align:right; padding:0;" onclick="resetCustomBgs()">אפס עיצוב אישי</button>
+                </div>
+
                 <button id="admin-dashboard-btn" style="display:none; width:100%; margin-top:20px; padding:14px; border-radius:14px; border:1.5px solid var(--admin-color); color:var(--admin-color); background:none; font-weight:800;" onclick="openAdminDashboard()">ניהול שלבים</button>
             </div>
         </div>
@@ -282,11 +304,40 @@
             <div class="popup-content" style="max-width:400px;">
                 <button class="close-popup-btn" onclick="closeAdminDashboard()">✕</button>
                 <div style="font-size:22px; font-weight:900; margin-bottom:20px; color:var(--admin-color);">ניהול שלבים</div>
-                <div style="text-align: right;"><label style="font-size:12px;">שלב 1 (1-5)</label><input type="text" id="bg-url-1" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px;" onchange="saveAllBgs()"></div>
-                <div style="text-align: right;"><label style="font-size:12px;">שלב 2 (5-10)</label><input type="text" id="bg-url-2" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px;" onchange="saveAllBgs()"></div>
-                <div style="text-align: right;"><label style="font-size:12px;">שלב 3 (10-21)</label><input type="text" id="bg-url-3" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px;" onchange="saveAllBgs()"></div>
-                <div style="text-align: right;"><label style="font-size:12px;">שלב 4+ (קפיצות 21)</label><input type="text" id="bg-url-generic" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px;" onchange="saveAllBgs()"></div>
-                <button style="width:100%; background:var(--admin-color); color:white; padding:15px; border-radius:14px; border:none; font-weight:800; margin-top:10px;" onclick="closeAdminDashboard()">סיום</button>
+                
+                <div style="text-align: right; margin-bottom: 15px;">
+                    <label style="font-size:13px; font-weight:700;">שלב 1 (ימים 1-5)</label>
+                    <label class="file-upload-btn">
+                        <input type="file" accept="image/*" onchange="uploadStageBg(event, 1)">
+                        <span id="label-bg-1">בחר תמונה מהמכשיר...</span>
+                    </label>
+                </div>
+                
+                <div style="text-align: right; margin-bottom: 15px;">
+                    <label style="font-size:13px; font-weight:700;">שלב 2 (ימים 5-10)</label>
+                    <label class="file-upload-btn">
+                        <input type="file" accept="image/*" onchange="uploadStageBg(event, 2)">
+                        <span id="label-bg-2">בחר תמונה מהמכשיר...</span>
+                    </label>
+                </div>
+                
+                <div style="text-align: right; margin-bottom: 15px;">
+                    <label style="font-size:13px; font-weight:700;">שלב 3 (ימים 10-21)</label>
+                    <label class="file-upload-btn">
+                        <input type="file" accept="image/*" onchange="uploadStageBg(event, 3)">
+                        <span id="label-bg-3">בחר תמונה מהמכשיר...</span>
+                    </label>
+                </div>
+                
+                <div style="text-align: right; margin-bottom: 15px;">
+                    <label style="font-size:13px; font-weight:700;">שלב 4+ (קפיצות של 21)</label>
+                    <label class="file-upload-btn">
+                        <input type="file" accept="image/*" onchange="uploadStageBg(event, 'generic')">
+                        <span id="label-bg-generic">בחר תמונה מהמכשיר...</span>
+                    </label>
+                </div>
+                
+                <button style="width:100%; background:var(--admin-color); color:white; padding:15px; border-radius:14px; border:none; font-weight:800; margin-top:5px;" onclick="closeAdminDashboard()">סיום</button>
             </div>
         </div>
     </div>
@@ -326,15 +377,39 @@
         for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
 
         const slider = document.getElementById('jars-slider');
+        
+        function updateBackgroundForStage(idx) {
+            const info = getStageInfo(idx);
+            const stageBg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
+            const settings = JSON.parse(localStorage.getItem('custom_bgs_v1') || '{}');
+            const appCont = document.querySelector('.app-container');
+
+            if (settings.appUrl) {
+                appCont.style.backgroundImage = `url(${settings.appUrl})`;
+                appCont.style.backgroundSize = 'cover';
+                appCont.style.backgroundPosition = 'center';
+                appCont.style.backgroundColor = 'var(--bg-color)';
+            } else if (settings.appColor) {
+                appCont.style.backgroundImage = 'none';
+                appCont.style.backgroundColor = settings.appColor;
+            } else if (stageBg) {
+                appCont.style.backgroundImage = `url(${stageBg})`;
+                appCont.style.backgroundSize = 'cover';
+                appCont.style.backgroundPosition = 'center';
+                appCont.style.backgroundColor = 'var(--bg-color)';
+            } else {
+                appCont.style.backgroundImage = 'none';
+                appCont.style.backgroundColor = 'var(--bg-color)';
+            }
+        }
+
         function buildJars() {
             slider.innerHTML = '';
             for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) {
-                const info = getStageInfo(i);
                 const slide = document.createElement('div');
                 slide.className = `jar-slide ${i === 0 ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
-                const bg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
-                if (bg) slide.style.backgroundImage = `url('${bg}')`;
+                // הוסר מכאן הרקע שגרם למסגרות, הרקע מנוהל כעת ברמת המסך השלם
                 slide.innerHTML = `
                     <div class="jar-wrapper" id="jar-wrapper-${i}">
                         <div class="jar-glass-overlay">
@@ -346,6 +421,7 @@
                     </div>`;
                 slider.appendChild(slide);
             }
+            applyCustomBgs();
         }
         buildJars();
 
@@ -355,7 +431,7 @@
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
         canvas.width = 340; canvas.height = 480;
 
-        const wallOptions = { isStatic: true, friction: 0.1, restitution: 0.4 };
+        const wallOptions = { isStatic: true, friction: 0, frictionStatic: 0, restitution: 0.4 };
         Composite.add(world, [
             Bodies.rectangle(170, 420, 200, 40, wallOptions),
             Bodies.rectangle(75, 400, 80, 40, { ...wallOptions, angle: Math.PI / 5 }),
@@ -475,10 +551,10 @@
             currentDayView = idx;
             const info = getStageInfo(idx);
             
-            // עדכון מחוון הימים (לדוגמה: 1/5) במקום ה-stage-badge שהוסר
             document.getElementById('bg-day-indicator').innerText = `${idx + 1}/${info.maxDays}`;
             
             updateStatsUI();
+            updateBackgroundForStage(idx);
         }
 
         const obs = new IntersectionObserver(es => es.forEach(e => { 
@@ -515,16 +591,103 @@
         function openAdminDashboard() { closeProfilePopup(); document.getElementById('admin-popup').classList.add('active'); }
         function closeAdminDashboard() { closeModal('admin-popup'); }
 
+        function uploadStageBg(event, stage) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const label = document.getElementById(`label-bg-${stage}`);
+            if(label) label.innerText = 'טוען ומכווץ תמונה...';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvasTemp = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    let scaleSize = 1;
+                    if (img.width > MAX_WIDTH) {
+                        scaleSize = MAX_WIDTH / img.width;
+                    }
+                    canvasTemp.width = img.width * scaleSize;
+                    canvasTemp.height = img.height * scaleSize;
+
+                    const ctxTemp = canvasTemp.getContext('2d');
+                    ctxTemp.drawImage(img, 0, 0, canvasTemp.width, canvasTemp.height);
+
+                    const dataUrl = canvasTemp.toDataURL('image/jpeg', 0.8);
+                    stageBackgrounds[stage] = dataUrl;
+                    localStorage.setItem('stage_bgs_v7', JSON.stringify(stageBackgrounds));
+                    
+                    updateBackgroundForStage(currentDayView);
+                    
+                    if(label) label.innerText = '✓ התמונה הועלתה בהצלחה';
+                }
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function saveAllBgs() {
-            for(let i=1; i<=3; i++) stageBackgrounds[i] = document.getElementById(`bg-url-${i}`).value;
-            stageBackgrounds['generic'] = document.getElementById('bg-url-generic').value;
-            localStorage.setItem('stage_bgs_v7', JSON.stringify(stageBackgrounds));
-            buildJars(); reobserve();
+            updateBackgroundForStage(currentDayView);
         }
 
         function updateProfileName(v) { 
             currentUser.displayName = v.trim() || "ישראל";
             document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0]; 
+        }
+        
+        function updateCustomBgs() {
+            const appColor = document.getElementById('input-app-color').value;
+            const appUrl = document.getElementById('input-app-bg-url').value;
+            const jarColor = document.getElementById('input-jar-color').value;
+            const jarUrl = document.getElementById('input-jar-bg-url').value;
+            
+            const settings = { appColor, appUrl, jarColor, jarUrl };
+            localStorage.setItem('custom_bgs_v1', JSON.stringify(settings));
+            applyCustomBgs();
+        }
+
+        function applyCustomBgs() {
+            const settings = JSON.parse(localStorage.getItem('custom_bgs_v1') || '{}');
+            
+            if(document.getElementById('input-app-color')) {
+                if(settings.appColor) document.getElementById('input-app-color').value = settings.appColor;
+                if(settings.appUrl) document.getElementById('input-app-bg-url').value = settings.appUrl;
+                if(settings.jarColor) document.getElementById('input-jar-color').value = settings.jarColor;
+                if(settings.jarUrl) document.getElementById('input-jar-bg-url').value = settings.jarUrl;
+            }
+
+            updateBackgroundForStage(currentDayView);
+
+            document.querySelectorAll('.jar-body').forEach(jar => {
+                if (settings.jarUrl) {
+                    jar.style.backgroundImage = `url(${settings.jarUrl})`;
+                    jar.style.backgroundSize = 'cover';
+                    jar.style.backgroundPosition = 'center';
+                    jar.style.backgroundColor = 'transparent';
+                } else if (settings.jarColor) {
+                    jar.style.backgroundImage = 'none';
+                    jar.style.backgroundColor = settings.jarColor + '80'; 
+                } else {
+                    jar.style.backgroundImage = 'none';
+                    jar.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
+                }
+            });
+        }
+        
+        function resetCustomBgs() {
+            localStorage.removeItem('custom_bgs_v1');
+            document.getElementById('input-app-color').value = '#000000';
+            document.getElementById('input-app-bg-url').value = '';
+            document.getElementById('input-jar-color').value = '#000000';
+            document.getElementById('input-jar-bg-url').value = '';
+            
+            updateBackgroundForStage(currentDayView);
+            
+            document.querySelectorAll('.jar-body').forEach(jar => {
+                jar.style.backgroundImage = '';
+                jar.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
+            });
         }
 
         function openEditMode() {
@@ -587,6 +750,7 @@
             if (isAnimatingJump) return;
             isAnimatingJump = true; 
             fm.classList.remove('marble-pulse');
+            fm.style.transition = 'none'; 
             
             const contRect = document.querySelector('.app-container').getBoundingClientRect();
             const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
@@ -608,7 +772,7 @@
                 
                 const curX = startX + (targetX - startX) * p;
                 
-                const jumpH = 50; 
+                const jumpH = Math.min(50, distance * 0.25); 
                 const curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
                 
                 const scale = 1 + Math.sin(p * Math.PI) * 0.1, rot = p * 180;
@@ -643,6 +807,7 @@
         fm.addEventListener('pointerdown', e => { 
             if(document.getElementById('drawer-edit-view').classList.contains('active') || isAnimatingJump) return; 
             isDrag=true; fm.classList.add('dragging'); fm.classList.remove('marble-pulse');
+            fm.style.transition = 'none'; 
             sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
         });
 
@@ -669,10 +834,12 @@
             
             if (dist < 10) {
                 tx = 0; ty = 0;
+                fm.style.transition = 'none'; 
                 fm.style.transform = `translate(0px, 0px) scale(1)`;
                 performNaturalJump();
             } else if (isInside) {
                 tx = 0; ty = 0;
+                fm.style.transition = 'none'; 
                 performNaturalJump(cx - contRect.left, cy - contRect.top);
             } else {
                 magnetBack();
@@ -691,7 +858,7 @@
             const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
             if(stats.min===0) stats.min=1; else stats.breakthrough++; updateStatsUI();
             
-            const b = Bodies.circle(x, y, 26, { restitution:0.6, friction:0.05, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
+            const b = Bodies.circle(x, y, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
             Matter.Body.setVelocity(b, initialVelocity);
             
             currentBalls.push(b); Composite.add(world, b); return true;
@@ -707,7 +874,29 @@
             c.quadraticCurveTo(r*0.6,0,0,-r*0.6); c.quadraticCurveTo(-r*0.3,0,0,r*0.7); 
             c.fillStyle=col; c.fill(); c.restore();
             c.lineWidth=1; c.strokeStyle='rgba(255,255,255,0.5)'; c.stroke();
-            c.beginPath(); c.arc(-r*0.3,-r*0.3,r*0.2,0,Math.PI*2); c.fillStyle='rgba(255,255,255,0.7)'; c.fill(); c.restore();
+            
+            c.save();
+            c.translate(-r*0.35, -r*0.35); 
+            c.rotate(-Math.PI / 8); 
+            c.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            const pw = r * 0.15;
+            const ph = r * 0.22;
+            const gap = r * 0.06;
+            
+            if (c.roundRect) {
+                c.beginPath(); c.roundRect(-pw - gap/2, -ph - gap/2, pw, ph, r*0.05); c.fill();
+                c.beginPath(); c.roundRect(gap/2, -ph - gap/2, pw, ph, r*0.05); c.fill();
+                c.beginPath(); c.roundRect(-pw - gap/2, gap/2, pw, ph, r*0.05); c.fill();
+                c.beginPath(); c.roundRect(gap/2, gap/2, pw, ph, r*0.05); c.fill();
+            } else {
+                c.fillRect(-pw - gap/2, -ph - gap/2, pw, ph);
+                c.fillRect(gap/2, -ph - gap/2, pw, ph);
+                c.fillRect(-pw - gap/2, gap/2, pw, ph);
+                c.fillRect(gap/2, gap/2, pw, ph);
+            }
+            c.restore();
+            
+            c.restore();
         }
 
         function loop() {
@@ -719,9 +908,9 @@
         
         document.getElementById('display-profile-name').innerText = currentUser.displayName.split(' ')[0];
         
-        // הגדרה ראשונית של התצוגה
         const initialInfo = getStageInfo(0);
         document.getElementById('bg-day-indicator').innerText = `1/${initialInfo.maxDays}`;
+        applyCustomBgs();
         
         setTimeout(() => { scroller.scrollTo({left:0}); lastIdx=1; renderActiveHabit(); fm.classList.add('marble-pulse'); }, 150);
     </script>
