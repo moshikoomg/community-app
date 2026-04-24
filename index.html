@@ -15,6 +15,7 @@
             --jar-shadow: rgba(0, 0, 0, 0.1);
             --jar-border: rgba(255, 255, 255, 0.15); 
             --primary-color: #239B62;
+            --danger-color: #e86a92;
         }
 
         body {
@@ -51,25 +52,31 @@
             }
         }
 
-        /* --- פרופיל --- */
+        /* --- פרופיל קטן יותר --- */
         .profile-header {
-            position: absolute; top: max(25px, env(safe-area-inset-top)); right: 25px;
-            z-index: 20; display: flex; align-items: center; gap: 12px;
-            background: rgba(255,255,255,0.6); padding: 6px 14px 6px 6px;
-            border-radius: 30px; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.8);
-            cursor: pointer; transition: transform 0.2s;
+            position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px;
+            z-index: 20; display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.7); padding: 4px 10px 4px 4px;
+            border-radius: 25px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.8);
+            cursor: pointer; transition: all 0.2s;
         }
         .profile-header:active { transform: scale(0.95); }
 
         .profile-avatar {
-            width: 34px; height: 34px; border-radius: 50%;
+            width: 28px; height: 28px; border-radius: 50%;
             background: linear-gradient(135deg, #e0eafc, #cfdef3);
             display: flex; justify-content: center; align-items: center; color: #555;
         }
 
+        .profile-name {
+            font-size: 13px; font-weight: 800; color: #444;
+            max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* --- צנצנת במרכז --- */
         .bg-day-indicator {
-            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
             font-size: 110px; font-weight: 800; color: rgba(0, 0, 0, 0.04);
             z-index: 0; white-space: nowrap; user-select: none; cursor: pointer; letter-spacing: -2px;
         }
@@ -86,7 +93,7 @@
         .jar-slide { 
             flex: 0 0 100%; height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; position: relative; 
-            box-sizing: border-box; 
+            box-sizing: border-box; padding-bottom: 200px; /* מפנה מקום למגירה שצפה בתחתית */
         }
         .jar-slide.locked { filter: blur(8px) grayscale(40%); opacity: 0.5; }
         .jar-wrapper { position: relative; width: 340px; height: 480px; direction: rtl; }
@@ -110,19 +117,16 @@
             border-radius: 50%; border: 4px solid var(--jar-border); background: rgba(255, 255, 255, 0.5); z-index: 3;
         }
 
-        /* --- המגירה - כשכבה עליונה צפה בלבד --- */
+        /* --- המגירה --- */
         .bottom-section {
             background: #FDFBF7; border-radius: 30px 30px 0 0; 
             box-shadow: 0 -10px 30px rgba(0,0,0,0.08); 
             z-index: 100; display: flex; flex-direction: column; align-items: center; 
             position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 220px; /* גובה קבוע */
-            box-sizing: border-box;
+            height: 220px; box-sizing: border-box;
             transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .bottom-section.edit-mode {
-            height: 340px; /* גדל מעט רק במצב עריכה */
-        }
+        .bottom-section.edit-mode { height: 360px; }
         .bottom-section::before {
             content: ''; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
             width: 40px; height: 4px; background-color: #E2DFD9; border-radius: 4px;
@@ -181,33 +185,53 @@
         .btn-primary, .btn-secondary, .btn-danger { flex: 1; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; transition: 0.1s; }
         .btn-primary { background: var(--primary-color); color: white; }
         .btn-secondary { background: #E2DFD9; color: #444; }
-        .btn-danger { background: #e86a92; color: white; width: 100%; margin-top: 10px; }
+        .btn-danger { background: var(--danger-color); color: white; width: 100%; margin-top: 10px; }
 
-        /* --- פופ-אפ פרופיל --- */
+        /* --- פופ-אפ פרופיל מועשר --- */
         .popup-backdrop {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             z-index: 2000; display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: 0.3s;
+            opacity: 0; pointer-events: none; transition: all 0.3s;
         }
         .popup-backdrop.active { opacity: 1; pointer-events: all; }
         .popup-content {
-            background: #FDFBF7; width: 85%; max-width: 320px; border-radius: 24px; padding: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: scale(0.9); transition: 0.3s; position: relative;
+            background: #FDFBF7; width: 88%; max-width: 340px; border-radius: 28px; padding: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
+            max-height: 85vh; overflow-y: auto;
         }
         .popup-backdrop.active .popup-content { transform: scale(1); }
-        .close-popup-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.05); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+        .close-popup-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.05); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;}
+        
+        .profile-section { margin-top: 10px; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .profile-section-title { font-size: 12px; font-weight: 800; color: #999; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; }
+        
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 0;
+            color: #444; text-decoration: none; cursor: pointer; transition: 0.2s;
+            border-bottom: 1px solid #f9f9f9;
+        }
+        .nav-item:last-child { border-bottom: none; }
+        .nav-item:active { opacity: 0.6; }
+        .nav-icon { width: 32px; height: 32px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #eee; }
+        .nav-label { font-size: 16px; font-weight: 600; flex: 1; }
+        .logout-item { color: var(--danger-color); margin-top: 10px; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 16px; text-align: center; }
+        .stat-box-val { display: block; font-size: 20px; font-weight: 800; color: var(--primary-color); }
+        .stat-box-label { font-size: 11px; color: #999; font-weight: 600; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
+        <!-- פרופיל קטן יותר -->
         <div class="profile-header" onclick="openProfilePopup()">
             <div class="profile-name" id="display-profile-name">הפרופיל שלי</div>
-            <div class="profile-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+            <div class="profile-avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
         </div>
 
-        <!-- הצנצנת עכשיו לוקחת את כל השטח והמגירה צפה מעליה -->
         <div class="top-section" id="clickable-top-section">
             <div id="bg-day-indicator" class="bg-day-indicator" onclick="advanceDay()">1 / 12</div>
             <div class="jars-slider" id="jars-slider"></div>
@@ -242,11 +266,52 @@
 
         <canvas id="floating-marble" width="55" height="55"></canvas>
 
+        <!-- פופ-אפ פרופיל מועשר -->
         <div class="popup-backdrop" id="profile-popup" onclick="handleBackdropClick(event, 'profile-popup')">
             <div class="popup-content">
                 <button class="close-popup-btn" onclick="closeProfilePopup()">✕</button>
-                <div style="font-size:22px; font-weight:800; margin-bottom:15px;">אזור אישי</div>
-                <div class="form-group"><label>שם המשתמש</label><input type="text" id="input-profile-name" class="form-control" value="הפרופיל שלי" onkeyup="updateProfileName(this.value)"></div>
+                
+                <div style="font-size:24px; font-weight:800; margin-bottom:20px;">החשבון שלי</div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-box-val" id="stat-days-active">1</span>
+                        <span class="stat-box-label">ימים פעילים</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-box-val" id="stat-total-habits">0</span>
+                        <span class="stat-box-label">הרגלים שבוצעו</span>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-section-title">פרטים אישיים</div>
+                    <div class="form-group">
+                        <label>שם המשתמש</label>
+                        <input type="text" id="input-profile-name" class="form-control" value="הפרופיל שלי" onkeyup="updateProfileName(this.value)">
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-section-title">הגדרות ואבטחה</div>
+                    <div class="nav-item">
+                        <div class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+                        <div class="nav-label">התראות</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+                        <div class="nav-label">שינוי סיסמה</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div>
+                        <div class="nav-label">עזרה ותמיכה</div>
+                    </div>
+                </div>
+
+                <div class="nav-item logout-item" onclick="handleLogout()">
+                    <div class="nav-icon" style="border-color: #ffe4e9;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--danger-color);"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></div>
+                    <div class="nav-label">התנתקות מהמערכת</div>
+                </div>
             </div>
         </div>
     </div>
@@ -389,14 +454,20 @@
         }
         window.addEventListener('resize', updateFloatingPosition);
 
-        // Click Outside Logic
         document.getElementById('clickable-top-section').addEventListener('click', () => { if(document.getElementById('drawer-edit-view').classList.contains('active')) closeEditMode(); });
         function handleBackdropClick(e, id) { if(e.target.id === id) closeModal(id); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        function openProfilePopup() { document.getElementById('profile-popup').classList.add('active'); }
+        function openProfilePopup() {
+            document.getElementById('stat-days-active').innerText = unlockedDays;
+            let hbt = 0;
+            userStats.daysData.forEach(d => { for(let k in d.habits){ hbt += d.habits[k].min; } });
+            document.getElementById('stat-total-habits').innerText = hbt;
+            document.getElementById('profile-popup').classList.add('active');
+        }
         function closeProfilePopup() { closeModal('profile-popup'); }
         function updateProfileName(v) { document.getElementById('display-profile-name').innerText = v.trim() || "הפרופיל שלי"; }
+        function handleLogout() { if(confirm("האם אתה בטוח שברצונך להתנתק?")) { location.reload(); } }
 
         function openEditMode() {
             const h = habitsData[currentHabitIndex]; if(!h) return;
@@ -428,7 +499,6 @@
             if(confirm("למחוק את ההרגל?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; closeEditMode(); initHabitScroller(); setTimeout(() => { document.querySelectorAll('.habit-item')[0].scrollIntoView({ inline:'center'}); renderActiveHabit(); }, 50); }
         }
 
-        // Physics
         const fm = document.getElementById('floating-marble');
         let isDrag = false, sx, sy, tx=0, ty=0;
         fm.addEventListener('pointerdown', e => { if(document.getElementById('drawer-edit-view').classList.contains('active')) return; isDrag=true; fm.classList.add('dragging'); sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); });
@@ -436,49 +506,26 @@
         fm.addEventListener('pointerup', e => {
             if(!isDrag) return; isDrag=false; fm.classList.remove('dragging'); fm.releasePointerCapture(e.pointerId);
             const dist = Math.sqrt(tx*tx+ty*ty);
-            
-            if(dist < 10) { 
-                // קליק - הפלה אוטומטית (תמיד לצנצנת)
-                if(dropBall()){ 
-                    fm.style.opacity='0'; 
-                    setTimeout(() => { fm.style.opacity='1'; fm.style.transform='scale(1)'; updateFloatingPosition(); }, 500); 
-                } else {
-                    fm.style.transform='scale(1)';
-                }
-            }
+            if(dist < 10) { if(dropBall()){ fm.style.opacity='0'; setTimeout(() => { fm.style.opacity='1'; fm.style.transform='scale(1)'; updateFloatingPosition(); }, 500); } else fm.style.transform='scale(1)'; }
             else {
-                // גרירה - בדיקה אם שוחרר מעל הצנצנת
                 const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
                 const r = fm.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
-                
-                // תנאי: שוחרר בתוך גבולות הצנצנת (עם שולי ביטחון)
                 if(cx > jr.left-20 && cx < jr.right+20 && cy > jr.top-80 && cy < jr.bottom){
                     const cr = canvas.getBoundingClientRect(); 
                     if(dropBall(cx-cr.left, cy-cr.top)){ 
                         fm.style.transition='none'; fm.style.opacity='0'; fm.style.transform='scale(0)'; 
                         setTimeout(() => { fm.style.transition='0.2s'; fm.style.opacity='1'; fm.style.transform='scale(1)'; updateFloatingPosition(); }, 500); 
-                    } else {
-                        fm.style.transform='scale(1)'; 
-                    }
-                } else {
-                    // שוחרר מחוץ לצנצנת - חזרה למקום ללא ספירה
-                    fm.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                    fm.style.transform='scale(1)'; 
-                }
+                    } else fm.style.transform='scale(1)';
+                } else { fm.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)'; fm.style.transform='scale(1)'; }
             }
         });
 
         function dropBall(x=170+(Math.random()*40-20), y=-30) {
             if(currentDayView >= unlockedDays || !habitsData[currentHabitIndex]) return false;
             const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView].habits[h.id];
-            
-            // רק כאן הנתון נספר
-            if(stats.min===0) stats.min=1; else stats.breakthrough++; 
-            updateStatsUI();
-            
+            if(stats.min===0) stats.min=1; else stats.breakthrough++; updateStatsUI();
             const b = Bodies.circle(x, y, 22, { restitution:0.6, friction:0.05, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
-            currentBalls.push(b); Composite.add(world, b); 
-            return true;
+            currentBalls.push(b); Composite.add(world, b); return true;
         }
 
         function drawMarble(c, x, y, r, a, col) {
