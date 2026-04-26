@@ -153,7 +153,7 @@
         /* Onboarding Redesign Styles */
         .onboarding-scroll-area {
             width: 100%;
-            max-height: 240px;
+            max-height: 190px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
             padding: 4px;
@@ -340,7 +340,7 @@
             flex: 0 0 340px; 
             height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
-            box-sizing: border-box; padding-bottom: 180px; margin: 0 10px;
+            box-sizing: border-box; padding-bottom: 155px; margin: 0 10px;
             transition: opacity 0.5s ease;
             opacity: 0.4; 
         }
@@ -537,19 +537,20 @@
 
         /* --- Drawer --- */
         .bottom-section {
-            background: #ffffff; border-radius: 36px 36px 0 0; 
-            box-shadow: 0 -12px 40px rgba(0,0,0,0.06); 
+            background: #ffffff; border-radius: 32px 32px 0 0; 
+            box-shadow: 0 -12px 40px rgba(0,0,0,0.08); 
             z-index: 100; display: flex; flex-direction: column; align-items: center; 
             position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 220px; box-sizing: border-box;
+            height: 105px; box-sizing: border-box;
             transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            overflow: hidden;
         }
-        .bottom-section.edit-mode { height: 400px; }
-        .bottom-section.stats-mode { height: 60vh; }
-        .bottom-section.onboarding-mode { height: 440px; }
+        .bottom-section.edit-mode { height: 360px; }
+        .bottom-section.stats-mode { height: 55vh; }
+        .bottom-section.onboarding-mode { height: 390px; }
         
         .drawer-handle {
-            width: 100%; height: 36px; position: absolute; top: 0; left: 0; z-index: 10;
+            width: 100%; height: 28px; position: absolute; top: 0; left: 0; z-index: 10;
             display: flex; justify-content: center; align-items: center; cursor: grab;
         }
         .drawer-handle::after {
@@ -572,7 +573,7 @@
             width: 50px;
         }
 
-        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 25px; touch-action: pan-y; }
+        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 8px; touch-action: pan-y; }
         .drawer-view.active { display: flex; }
 
         .edit-btn { color: #cbd5e1; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 50%; } .edit-btn:hover { background: #f8fafc; color: #94a3b8 !important; }
@@ -638,8 +639,8 @@
             position: relative;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 0;
+            gap: 8px;
+            padding: 0;
             background: transparent !important;
             box-shadow: none !important;
             border: none !important;
@@ -684,17 +685,16 @@
         .habit-scroller-outer {
             position: relative;
             width: 100%;
-            margin-top: 5px;
+            margin-top: 0px;
             display: flex;
             align-items: center;
         }
 
         .habit-scroller {
             display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%;
-            padding: 30px 0 20px 0; -webkit-overflow-scrolling: touch;
+            padding: 0; -webkit-overflow-scrolling: touch;
             cursor: grab;
             position: relative; z-index: 5;
-            /* Reduced fade mask to make more text visible */
             mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
             -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
         }
@@ -704,7 +704,7 @@
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
         .habit-item {
             flex: 0 0 auto; scroll-snap-align: center; 
-            padding: 12px 24px; font-size: 16px; color: #cbd5e1; font-weight: 800;
+            padding: 8px 24px; font-size: 16px; color: #cbd5e1; font-weight: 800;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap; cursor: pointer;
             border: none !important; background: none !important; box-shadow: none !important;
@@ -714,7 +714,7 @@
             gap: 2px;
         }
         .habit-item.active {
-            font-size: 28px;
+            font-size: 23px;
             transform: scale(1.0);
             filter: blur(0);
             display: flex;
@@ -744,17 +744,17 @@
             pointer-events: auto;
         }
 
-        .dots-container { display: flex; gap: 8px; margin-top: 5px; position: relative; z-index: 6; }
+        .dots-container { display: flex; gap: 6px; margin-bottom: 2px; position: relative; z-index: 6; }
         .dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; transition: 0.4s; }
         .dot.active { width: 22px; background: var(--text-main); border-radius: 4px; }
 
         /* --- Stats View --- */
         #drawer-stats-view { padding: 0 25px; width: 100%; box-sizing: border-box; animation: fadeIn 0.4s; }
-        .stats-header { text-align: center; margin-bottom: 20px; }
+        .stats-header { text-align: center; margin-bottom: 12px; }
         .stats-title { font-size: 24px; font-weight: 900; color: var(--text-main); }
         .stats-subtitle { font-size: 12px; color: #94a3b8; font-weight: 700; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 20px; }
-        .stat-box { background: #f8fafc; padding: 15px; border-radius: 16px; text-align: center; border: 1px solid #f1f5f9; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 15px; }
+        .stat-box { background: #f8fafc; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #f1f5f9; }
         .stat-val { font-size: 28px; font-weight: 900; color: var(--text-main); line-height: 1.1; }
         .stat-label { font-size: 11px; color: #64748b; font-weight: 700; }
         .graph-container { display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; margin-bottom: 10px; }
@@ -816,13 +816,13 @@
             transition: height 0.3s ease-out;
         }
         
-        .onboarding-title { font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; text-align: center; }
-        .onboarding-sub { font-size: 13px; font-weight: 600; color: #64748b; text-align: center; margin-bottom: 24px; max-width: 250px; line-height: 1.4; }
+        .onboarding-title { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 4px; text-align: center; }
+        .onboarding-sub { font-size: 12px; font-weight: 600; color: #64748b; text-align: center; margin-bottom: 12px; max-width: 230px; line-height: 1.3; }
         .onboarding-sub span { color: var(--danger-color); }
 
         .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 20px; }
         .preset-btn { 
-            background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 18px 12px; border-radius: 18px; 
+            background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 12px 8px; border-radius: 18px; 
             font-weight: 800; color: var(--text-main); cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
             font-size: 15px; text-align: center;
         }
@@ -959,7 +959,7 @@
         /* --- Reward Popup --- */
         .reward-popup-close {
             position: absolute;
-            top: 18px;
+            top: 14px;
             right: 18px;
             width: 32px;
             height: 32px;
@@ -1137,14 +1137,14 @@
             <div id="drawer-normal-view" class="drawer-view active">
                 <!-- Left Side Actions: Magnet & Manage -->
                 <!-- Left Corner: Magnet Toggle -->
-                <div style="position: absolute; top: 18px; left: 12px; z-index: 115;">
+                <div style="position: absolute; top: 12px; left: 12px; z-index: 115;">
                     <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     </div>
                 </div>
 
                 <!-- Management Section (Slightly more inward) -->
-                <div style="position: absolute; top: 18px; left: 56px; z-index: 110;">
+                <div style="position: absolute; top: 12px; left: 56px; z-index: 110;">
                     <div id="management-buttons-container" style="display: flex; align-items: center; gap: 4px;">
                         <div class="add-btn" id="main-add-button" onclick="event.stopPropagation(); window.openAddMode()" title="הוספת הרגל">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -1156,7 +1156,7 @@
                 </div>
 
                 <!-- Right Side Info: Stats -->
-                <div style="position: absolute; top: 18px; right: 20px; display: flex; align-items: center; gap: 8px; z-index: 110;">
+                <div style="position: absolute; top: 12px; right: 20px; display: flex; align-items: center; gap: 8px; z-index: 110;">
                     <div class="drawer-info-pill">
                         <span class="day-label" id="drawer-day-label">יום 1</span>
                         <div class="divider" style="width:1.5px; height:14px; background:#f1f5f9; transition: opacity 0.4s;"></div>
@@ -1172,15 +1172,9 @@
                     <div id="marble-drop-zone" style="width: 60px; height: 60px; position: absolute; top: -30px; left: 0; pointer-events: none;"></div>
                 </div>
 
+                <div class="dots-container" id="picker-dots"></div>
                 <div class="habit-scroller-outer">
                     <div class="habit-scroller" id="habit-scroller"></div>
-                </div>
-                
-                <div class="dots-container" id="picker-dots"></div>
-                
-                <div id="stats-expand-hint" style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 15px; cursor: pointer; transition: transform 0.3s ease;" onclick="event.stopPropagation(); window.openStatsMode()">
-                    <div style="font-size: 11px; color: #94a3b8; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">מידע וסטטיסטיקה</div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-top: -2px;"><path d="m18 15-6-6-6 6"/></svg>
                 </div>
             </div>
 
@@ -1289,9 +1283,7 @@
         <canvas id="floating-marble" width="60" height="60"></canvas>
 
         <!-- Dev Tools -->
-    <div id="dev-tools-panel">
-        <button class="dev-btn" onclick="currentBalls.forEach(b => Matter.Composite.remove(world, b)); currentBalls = [];">🧹 נקה צנצנת</button>
-    </div>
+    
 
     <!-- Popups -->
         <!-- Reward Popup -->
@@ -2477,10 +2469,9 @@
                         fb.style.textAlign = 'center';
                         
                         if (stats.breakthrough > 0) {
-                            // Swapped Hierarchy: Large breakthrough count first, Small base count second
                             fb.innerHTML = `
-                                <span style="font-size: 1.4em; font-weight: 900;">+${stats.breakthrough}</span>
-                                <span style="font-size: 0.5em; opacity: 0.7; font-weight: 800; margin-right: 6px; vertical-align: middle;">${stats.min}</span>
+                                <span style="font-size: 0.6em; opacity: 0.5; font-weight: 800; align-self: baseline; padding-bottom: 2px;">${stats.min}</span>
+                                <span style="font-size: 1.6em; font-weight: 900; margin-left: 2px;">+${stats.breakthrough}</span>
                             `;
                         } else {
                             fb.innerText = stats.min;
