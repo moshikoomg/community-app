@@ -10,21 +10,24 @@
     <style>
         #marble-glow-aura {
             position: absolute;
-            width: 100px;
-            height: 100px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
-            z-index: 998;
+            z-index: 999; /* מתחת לגולה (1000) */
             pointer-events: none;
             filter: blur(20px);
-            opacity: 0.45;
-            transition: background 0.4s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+            opacity: 0.35;
+            transition: color 0.4s ease, opacity 0.4s ease, transform 0.1s linear;
             transform: translate(-50%, -50%);
+            /* הילה עם ליבה רכה */
+            background: radial-gradient(circle, currentColor 0%, transparent 70%);
+            box-shadow: 0 0 30px currentColor;
         }
         #marble-glow-aura.active-yellow {
-            background: #fbbf24 !important;
-            opacity: 0.9;
+            color: #fbbf24 !important;
+            opacity: 0.6;
             transform: translate(-50%, -50%) scale(1.1);
-            box-shadow: 0 0 40px #fbbf24;
+            box-shadow: inset 0 0 0 12px currentColor, 0 0 25px currentColor;
         }
 
         :root {
@@ -76,20 +79,22 @@
 
         .user-pill {
             background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            padding: 5px 12px 5px 6px;
-            border-radius: 20px;
-            display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255,255,255,0.7);
+            backdrop-filter: blur(12px);
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1.5px solid #ffffff;
             pointer-events: auto; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .user-pill .name { font-weight: 800; font-size: 13px; color: var(--text-main); }
+        .user-pill:active { transform: scale(0.9); }
+        .user-pill .name { display: none; }
         .user-avatar { 
-            width: 26px; height: 26px; border-radius: 50%; 
+            width: 36px; height: 36px; border-radius: 50%; 
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0); 
             display: flex; align-items: center; justify-content: center; 
-            overflow: hidden; border: 1px solid #e2e8f0;
+            overflow: hidden; border: 1px solid #f1f5f9;
         }
         .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -141,14 +146,14 @@
             transform: scale(0.85); 
         }
         .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
-        canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 21; touch-action: none; }
+        canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 26; touch-action: none; }
 
         /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
         .jar-cap-detail {
             will-change: transform;
-            position: absolute; top: 28px; left: 85px; width: 170px; height: 20px;
+            position: absolute; top: 22px; left: 85px; width: 170px; height: 32px;
             background: linear-gradient(to right, 
                 #1e293b 0%, 
                 #475569 15%, 
@@ -157,26 +162,28 @@
                 #94a3b8 65%, 
                 #475569 85%, 
                 #1e293b 100%);
-            border-radius: 5px 5px 2px 2px; z-index: 25;
+            /* אפקט אחיזה - קווים אנכיים */
+            background-image: 
+                repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(0,0,0,0.15) 4px, rgba(0,0,0,0.15) 6px), 
+                linear-gradient(to right, #1e293b, #f1f5f9, #1e293b);
+            border-radius: 8px 8px 4px 4px; z-index: 30;
             box-shadow: 
-                0 4px 8px rgba(0,0,0,0.3), 
-                0 12px 20px rgba(0,0,0,0.1), 
-                inset 0 -2px 4px rgba(0,0,0,0.4),
-                inset 0 2px 2px rgba(255,255,255,0.6);
+                0 4px 8px rgba(0,0,0,0.25), 
+                inset 0 2px 3px rgba(255,255,255,0.6);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform-origin: left center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: none;
             overflow: hidden;
         }
         .jar-cap-detail::before {
             content: ''; position: absolute; top: 0; left: 0; width: 200%; height: 100%;
             background: repeating-linear-gradient(90deg, 
                 rgba(0,0,0,0) 0px, 
-                rgba(0,0,0,0) 6px, 
-                rgba(0,0,0,0.15) 7px, 
-                rgba(255,255,255,0.1) 8px);
+                rgba(0,0,0,0) 10px, 
+                rgba(0,0,0,0.1) 11px, 
+                rgba(255,255,255,0.05) 12px);
             transition: transform 0.5s ease-in-out;
-            opacity: 0.6;
+            opacity: 0.4;
         }
         .jar-cap-detail::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 40%;
@@ -190,41 +197,118 @@
         .jar-cap-detail.open { transform: translateY(-50px) rotate(-30deg); }
 
         .jar-opening {
-            position: absolute; top: 46px; left: 92px; width: 156px; height: 18px;
-            border-radius: 50%; background: rgba(255, 255, 255, 0.1); z-index: 24;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.1); border: 1.5px solid rgba(255,255,255,0.4);
+            position: absolute; top: 46px; left: 92px; width: 156px; height: 16px;
+            border-radius: 50%; background: rgba(255, 255, 255, 0.1); z-index: 15;
+            box-shadow: 
+                inset 0 0 10px rgba(0,0,0,0.2);
+            border: 1.5px solid rgba(255,255,255,0.1);
+        }
+        .jar-opening-front {
+            position: absolute; top: 54px; left: 92px; width: 156px; height: 8px;
+            border-radius: 0 0 100px 100px; z-index: 25;
+            border-bottom: 2px solid rgba(255,255,255,0.4);
+            pointer-events: none;
         }
         .jar-neck {
-            position: absolute; top: 48px; left: 95px; width: 150px; height: 55px;
+            position: absolute; top: 48px; left: 92px; width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
-            background: linear-gradient(90deg, 
-                rgba(255,255,255,0.05) 0%, 
-                rgba(255,255,255,0.2) 20%, 
-                rgba(255,255,255,0.05) 50%, 
-                rgba(255,255,255,0.2) 80%, 
-                rgba(255,255,255,0.05) 100%);
-            box-shadow: inset 0 10px 15px -5px rgba(0,0,0,0.1), inset 0 0 10px rgba(255,255,255,0.2);
-            z-index: 18;
-            border-left: 1.5px solid rgba(255,255,255,0.4); 
-            border-right: 1.5px solid rgba(255,255,255,0.4);
+            background: 
+                linear-gradient(to right, 
+                    rgba(0,0,0,0.1) 0%, 
+                    rgba(255,255,255,0.02) 40%, 
+                    rgba(255,255,255,0.02) 60%, 
+                    rgba(0,0,0,0.15) 100%);
+            z-index: 14;
+            border: none;
+        }
+        .jar-neck-front {
+            position: absolute; top: 48px; left: 92px; width: 156px; height: 50px;
+            border-radius: 12px 12px 0 0;
+            background: 
+                repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 13px),
+                linear-gradient(to right, 
+                    rgba(255,255,255,0.2) 0%, 
+                    transparent 30%, 
+                    transparent 70%, 
+                    rgba(0,0,0,0.05) 100%);
+            box-shadow: 
+                inset 10px 0 8px -6px rgba(255,255,255,0.3),
+                inset -10px 0 8px -6px rgba(0,0,0,0.05);
+            z-index: 24;
+            pointer-events: none;
             backdrop-filter: blur(2px);
         }
+        
         .jar-body::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.2) 55%, transparent 70%);
-            pointer-events: none; z-index: 23; opacity: 0.6;
+            background: 
+                linear-gradient(110deg, 
+                    transparent 35%, 
+                    rgba(255,255,255,0.35) 48%, 
+                    rgba(255,255,255,0.4) 50%, 
+                    rgba(255,255,255,0.35) 52%, 
+                    transparent 65%),
+                linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.15) 100%);
+            pointer-events: none; z-index: 23; opacity: 0.8;
         }
         .jar-body::before {
-            content: ''; position: absolute; top: 10%; left: 10%; width: 25%; height: 60%;
-            background: linear-gradient(to right, rgba(255,255,255,0.4), transparent);
-            border-radius: 40px; pointer-events: none; z-index: 22;
-            filter: blur(4px);
+            content: ''; position: absolute; top: 5%; left: 6%; width: 30%; height: 85%;
+            background: linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.05) 40%, transparent 100%);
+            border-radius: 60px 20px 20px 60px; pointer-events: none; z-index: 22;
+            filter: blur(8px);
+            opacity: 0.7;
         }
-        .jar-body { z-index: 1;
-            position: absolute; top: 96px; left: 30px; width: 280px; height: 334px;
-            border-radius: 70px 70px 65px 65px;
-            box-shadow: inset 0 0 40px rgba(255,255,255,0.3), inset -10px -10px 25px rgba(0,0,0,0.05), 0 25px 50px -12px rgba(0,0,0,0.25); 
-            background: linear-gradient(160deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(0, 0, 0, 0.02) 100%); border: 1.5px solid var(--glass-border); backdrop-filter: blur(8px) brightness(1.1); overflow: hidden; box-shadow: inset 0 20px 40px rgba(255,255,255,0.4), inset 0 -10px 30px rgba(0,0,0,0.05), 0 30px 60px rgba(0,0,0,0.15), 0 0 40px var(--glow-color); transition: box-shadow 0.5s ease;
+        .jar-reflection {
+            position: absolute;
+            top: 97px; left: 30px; width: 280px; height: 333px;
+            border-radius: 40px 40px 85px 85px;
+            pointer-events: none;
+            z-index: 28; /* מעל הקנבס של הפיזיקה */
+            overflow: hidden;
+            opacity: 0.7;
+        }
+        /* הלומת אור מרכזית - השתקפות חלון */
+        .jar-reflection::before {
+            content: '';
+            position: absolute;
+            top: 10%; left: 15%;
+            width: 35px; height: 120px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 100%);
+            border-radius: 20px;
+            filter: blur(4px);
+            transform: rotate(5deg);
+        }
+        /* הלומת אור משנית - פס אנכי */
+        .jar-reflection::after {
+            content: '';
+            position: absolute;
+            top: 15%; left: 60px;
+            width: 12px; height: 80px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            filter: blur(3px);
+            transform: rotate(5deg);
+        }
+
+        .jar-body { z-index: 20;
+            position: absolute; top: 97px; left: 30px; width: 280px; height: 333px;
+            border-radius: 40px 40px 85px 85px;
+            background: linear-gradient(145deg, 
+                rgba(255, 255, 255, 0.15) 0%, 
+                rgba(255, 255, 255, 0.02) 50%, 
+                rgba(0, 0, 0, 0.1) 100%);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px) brightness(1.05);
+            overflow: hidden;
+            box-shadow: 
+                /* חיבור רך לחלק העליון */
+                inset 0 30px 40px -10px rgba(255,255,255,0.4), 
+                inset 0 -25px 50px rgba(0,0,0,0.15), 
+                inset 25px 0 35px -15px rgba(255,255,255,0.15),
+                inset -25px 0 35px -15px rgba(0,0,0,0.08),
+                0 35px 75px rgba(0,0,0,0.18), 
+                0 0 45px var(--glow-color);
+            transition: box-shadow 0.5s ease;
         }
 
         /* --- Drawer --- */
@@ -271,15 +355,15 @@
         #floating-marble {
             position: absolute; z-index: 1000; cursor: grab; touch-action: none;
             transform-origin: center center; pointer-events: auto;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.22));
         }
         #floating-marble.dragging { cursor: grabbing; animation: none !important; }
         
         @keyframes heartbeat { 0% { transform: scale(1); } 10% { transform: scale(1.18); } 20% { transform: scale(1.05); } 35% { transform: scale(1.3); } 60% { transform: scale(1); } 100% { transform: scale(1); } }
         @keyframes subtleRotate { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
         @keyframes auraPulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.45; filter: blur(20px); }
-            35% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.7; filter: blur(12px); }
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; filter: blur(15px); }
+            35% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.45; filter: blur(10px); }
         }
         .marble-pulse { animation: heartbeat 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
         .aura-pulse { animation: auraPulse 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
@@ -294,7 +378,8 @@
         }
         .habit-scroller:active { cursor: grabbing; }
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
-        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 22px; color: #cbd5e1; font-weight: 700; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; cursor: pointer; }
+        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 25px; font-size: 22px; color: #cbd5e1; font-weight: 700; transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; cursor: pointer; opacity: 0.5; filter: blur(0.5px); }
+        .habit-item.active { font-size: 36px; color: var(--text-main); font-weight: 900; opacity: 1; filter: blur(0); }
         .habit-item.active { font-size: 34px; color: var(--text-main); font-weight: 900; }
 
         .dots-container { display: flex; gap: 8px; margin-top: 5px; position: relative; z-index: 6; }
@@ -414,10 +499,10 @@
         <div class="header-ui">
             <div style="flex: 1;"></div> 
             <div class="user-pill" onclick="window.openProfilePopup()">
-                <div class="admin-indicator" style="color: #cbd5e1; margin-left: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
-                <div class="name" id="display-profile-name">שם משתמש</div>
+                <div class="admin-indicator" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+                <div class="name" id="display-profile-name" style="display:none;"></div>
                 <div class="user-avatar" id="header-avatar">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" alt="פרופיל" style="width:100%; height:100%; object-fit:cover;">
                 </div>
             </div>
         </div>
@@ -481,10 +566,14 @@
                     <div class="onboarding-sub">בחר הרגל קטן שתוכל להתמיד בו. <span>זכור: פחות זה יותר.</span></div>
                     
                     <div class="preset-grid">
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לשתות כוס מים')">לשתות כוס מים</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לנשום עמוק')">לנשום עמוק</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לקרוא עמוד אחד')">לקרוא עמוד אחד</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לעשות מתיחות')">לעשות מתיחות</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לשתות מים', '#3b82f6')">לשתות מים 💧</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לנשום עמוק', '#2dd4bf')">לנשום עמוק 🌬️</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לקרוא עמוד', '#f59e0b')">לקרוא עמוד 📖</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('מתיחות', '#fb923c')">לעשות מתיחות 🧘</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('מדיטציה', '#a855f7')">מדיטציה 🧘‍♂️</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לישון בזמן', '#6366f1')">לישון בזמן 🌙</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לסדר חדר', '#94a3b8')">לסדר חדר ✨</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לאכול פרי', '#ef4444')">לאכול פרי 🍎</button>
                     </div>
                     
                     <div class="custom-input-group">
@@ -526,7 +615,7 @@
                 
                 <label class="profile-img-upload" onclick="document.getElementById('input-profile-img').click()">
                     <div id="profile-img-preview" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" alt="פרופיל" style="width:100%; height:100%; object-fit:cover;">
                     </div>
                     <div class="overlay">עריכה</div>
                     <input type="file" id="input-profile-img" hidden accept="image/*" onchange="window.updateProfileImage(event)">
@@ -573,7 +662,7 @@
     <script>
         // --- 1. משתנים גלובליים ---
         const STAGE_GAP = 21, TOTAL_DISPLAY_DAYS = 63;
-        let currentUser = { displayName: "שם משתמש", profileImage: null };
+        let currentUser = { displayName: "שם משתמש", profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" };
         let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0;
         let habitsData = [];
         let stageBackgrounds = {}, customBgs = {}, userStats = { daysData: [] };
@@ -592,7 +681,7 @@
                 const d = localStorage.getItem('habit_jar_local_state_v2');
                 if (d) {
                     const data = JSON.parse(d);
-                    habitsData = data.habitsData || [];
+                    habitsData = data.habitsData && data.habitsData.length > 0 ? data.habitsData : habitsData;
                     userStats = data.userStats || { daysData: [] };
                     stageBackgrounds = data.stageBackgrounds || {};
                     customBgs = data.customBgs || {};
@@ -637,9 +726,9 @@
                 headerAvatar.innerHTML = imgTag;
                 previewAvatar.innerHTML = imgTag;
             } else {
-                const svg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-                headerAvatar.innerHTML = svg;
-                previewAvatar.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                const defaultImg = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" alt="פרופיל">`;
+                headerAvatar.innerHTML = defaultImg;
+                previewAvatar.innerHTML = defaultImg;
             }
         }
 
@@ -683,7 +772,7 @@
             else if (stageBg) appCont.style.backgroundImage = `url(${stageBg})`;
             else appCont.style.backgroundImage = 'none';
 
-            document.querySelectorAll('.jar-body').forEach(jar => {
+            document.querySelectorAll('.jar-body, .jar-reflection').forEach(jar => {
                 if (customBgs.jarUrl) jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
                 else if (customBgs.jarColor) jar.style.backgroundColor = customBgs.jarColor + '80';
                 else jar.style.backgroundColor = 'rgba(255,255,255,0.02)';
@@ -711,7 +800,7 @@
                 const slide = document.createElement('div');
                 slide.className = `jar-slide ${i === currentDayView ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
-                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-neck"></div><div class="jar-body"></div></div></div>`;
+                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"></div><div class="jar-reflection"></div></div></div>`;
                 s.appendChild(slide);
             }
             applyCustomBgs();
@@ -754,40 +843,64 @@
             c.save();
             c.translate(x, y);
 
-            // 1. Base Sphere Lighting (Fixed - Top Left Light Source)
-            c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2);
-            let g = c.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.1, 0, 0, r);
-            g.addColorStop(0, 'rgba(255,255,255,1)');
-            g.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-            g.addColorStop(0.6, 'rgba(200,200,200,0.3)');
-            g.addColorStop(1, 'rgba(0,0,0,0.1)');
-            c.shadowBlur = 12; c.shadowColor = col + '50';
-            c.fillStyle = g; c.fill(); c.shadowBlur = 0;
+            // 1. Sharp Outer Boundary
+            c.beginPath();
+            c.arc(0, 0, r, 0, Math.PI * 2);
+            c.clip();
 
-            // 2. Specular Highlights (Fixed position, ignores rotation 'a')
-            c.save();
-            c.translate(-r * 0.42, -r * 0.42);
-            c.rotate(-Math.PI / 10);
-            c.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            if (c.roundRect) {
-                c.beginPath(); c.roundRect(-3, -5, 3.5, 5.5, 1); c.fill();
-                c.beginPath(); c.roundRect(2, -5, 3.5, 5.5, 1); c.fill();
-                c.beginPath(); c.roundRect(-3, 1.5, 3.5, 5.5, 1); c.fill();
-                c.beginPath(); c.roundRect(2, 1.5, 3.5, 5.5, 1); c.fill();
-            }
-            c.restore();
+            // 2. Base Depth Gradient (High Contrast)
+            let g = c.createRadialGradient(-r * 0.4, -r * 0.4, 0, 0, 0, r * 1.2);
+            g.addColorStop(0, '#ffffff');
+            g.addColorStop(0.1, '#f8fafc');
+            g.addColorStop(0.4, 'rgba(226, 232, 240, 0.2)');
+            g.addColorStop(0.85, 'rgba(15, 23, 42, 0.15)');
+            g.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+            c.fillStyle = g;
+            c.fill();
 
-            // 3. Internal Texture / Swirl (Rotates with 'a')
+            // 3. Rim Light (Definition)
+            c.beginPath();
+            c.arc(0, 0, r - 0.5, 0, Math.PI * 2);
+            c.strokeStyle = 'rgba(255,255,255,0.45)';
+            c.lineWidth = 1;
+            c.stroke();
+
+            // 4. Internal Swirl (Sharp Definition)
             c.save();
             c.rotate(a);
-            c.globalAlpha = 0.75;
+            let swirlG = c.createLinearGradient(0, -r, 0, r);
+            swirlG.addColorStop(0, col);
+            swirlG.addColorStop(1, col + '99');
+            c.fillStyle = swirlG;
+            c.globalAlpha = 0.85;
             c.beginPath();
-            c.moveTo(0, r * 0.7);
-            c.quadraticCurveTo(r * 0.6, 0, 0, -r * 0.6);
-            c.quadraticCurveTo(-r * 0.3, 0, 0, r * 0.7);
-            c.fillStyle = col;
+            c.moveTo(0, r * 0.8);
+            c.bezierCurveTo(r * 0.7, r * 0.2, -r * 0.7, -r * 0.2, 0, -r * 0.8);
+            c.bezierCurveTo(-r * 0.3, -r * 0.2, r * 0.3, r * 0.2, 0, r * 0.8);
             c.fill();
             c.restore();
+
+            // 5. Ultra Sharp Specular Highlight (The Window Effect)
+            c.save();
+            c.translate(-r * 0.45, -r * 0.45);
+            c.rotate(-Math.PI / 8);
+            c.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            // Main bright spark
+            c.beginPath();
+            c.ellipse(0, 0, r * 0.18, r * 0.1, 0, 0, Math.PI * 2);
+            c.fill();
+            // Secondary secondary reflection
+            c.beginPath();
+            c.globalAlpha = 0.4;
+            c.ellipse(r * 0.2, r * 0.3, r * 0.08, r * 0.04, 0, 0, Math.PI * 2);
+            c.fill();
+            c.restore();
+
+            // 6. Subtle bottom bounce light
+            c.beginPath();
+            c.ellipse(0, r * 0.7, r * 0.5, r * 0.2, 0, 0, Math.PI * 2);
+            c.fillStyle = 'rgba(255,255,255,0.2)';
+            c.fill();
 
             c.restore();
         }
@@ -801,7 +914,7 @@
                 fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.visibility = 'visible';
                 const aura = document.getElementById('marble-glow-aura');
                 if (aura) {
-                    aura.style.background = h.color;
+                    aura.style.color = h.color;
                     aura.style.display = 'block';
                 }
                 updateFloatingPosition();
@@ -844,8 +957,10 @@
             } else {
                 // Calculate distance to shrink aura as ball moves away
                 const dist = Math.sqrt(tx * tx + ty * ty);
-                const scale = Math.max(0, 1 - (dist / 120));
-                aura.style.opacity = (0.45 * scale).toString();
+                // לוגיקה הפוכה: ההילה קטנה וחדה יותר ככל שמתקרבים למרכז (אפקט פוקוס)
+                const scale = 0.4 + Math.min(1.2, dist / 150);
+                const opacity = Math.max(0.1, 0.7 - (dist / 250));
+                aura.style.opacity = opacity.toString();
                 aura.style.transform = `translate(-50%, -50%) scale(${scale})`;
             }
 
@@ -869,12 +984,12 @@
             }
         }
 
-        window.goToOnboardingStep2 = (n) => { window.tmpH = n; document.getElementById('drawer-onboarding-step1').style.display = 'none'; document.getElementById('drawer-onboarding-step2').style.display = 'flex'; };
+        window.goToOnboardingStep2 = (n, c = '#239B62') => { window.tmpH = n; window.tmpColor = c; document.getElementById('drawer-onboarding-step1').style.display = 'none'; document.getElementById('drawer-onboarding-step2').style.display = 'flex'; };
         window.changeOnboardingTarget = (d) => { const el = document.getElementById('onboarding-target-display'); let v = parseInt(el.innerText) + d; if(v<1) v=1; el.innerText = v; };
         window.handleCustomHabit = () => { const val = document.getElementById('custom-habit-input').value.trim(); if(val) window.goToOnboardingStep2(val); };
         window.finishOnboarding = () => {
             const t = document.getElementById('onboarding-target-display').innerText;
-            habitsData = [{ id: Date.now(), name: window.tmpH, time: t + ' פעמים ביום', color: '#239B62' }];
+            habitsData = [{ id: Date.now(), name: window.tmpH, time: t + ' פעמים ביום', color: window.tmpColor || '#239B62' }];
             currentHabitIndex = 0;
             for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
             document.getElementById('bottom-drawer').className = 'bottom-section';
@@ -904,19 +1019,27 @@
         }
 
         window.respawnMarble = () => {
+            const isDrawerNormal = document.getElementById('drawer-normal-view').classList.contains('active');
+            if (!isDrawerNormal) return; // לא להנפיש אם אנחנו במצב עריכה/סטטיסטיקה
+
             marbleInteractionCount = 0;
             const aura = document.getElementById('marble-glow-aura');
             if(aura) aura.classList.remove('active-yellow');
             fm.classList.remove('marble-pulse');
-            aura.classList.remove('aura-pulse');
+            if(aura) aura.classList.remove('aura-pulse');
+            
             fm.style.transition = 'none'; 
-            fm.style.transform = 'translateY(50px) scale(0.4)'; 
+            // צמיחה מתוך המגירה (Dispenser feel)
+            fm.style.transform = 'translateY(30px) scale(0.1)'; 
             fm.style.opacity = '0';
-            fm.style.display = 'block'; fm.style.visibility = 'visible';
+            fm.style.display = 'block'; 
+            fm.style.visibility = 'visible';
+            
             updateFloatingPosition();
+            
             requestAnimationFrame(() => {
                 renderActiveHabit();
-                fm.style.transition = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'; 
+                fm.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1.2), opacity 0.3s ease-out'; 
                 fm.style.transform = 'translateY(0) scale(1)'; 
                 fm.style.opacity = '1';
                 setTimeout(() => {
@@ -925,7 +1048,7 @@
                         const aura = document.getElementById('marble-glow-aura');
                         if(aura) aura.classList.add('aura-pulse');
                     }
-                }, 800);
+                }, 600);
             });
         };
 
@@ -1155,8 +1278,20 @@
             }
             const hasFallingBall = currentBalls.some(b => b.position.y > 0 && b.position.y < 120);
             if (hasFallingBall) openFactor = 1;
-            lid.style.transition = (window.isDrag && !hasFallingBall) ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
-            lid.style.transform = `translateY(${openFactor * -55}px) rotate(${openFactor * -32}deg)`;
+            lid.style.transition = (window.isDrag && !hasFallingBall) ? 'none' : 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            
+            // סימולציית פתיחה בסיבוב (Screw action)
+            const screwRotation = openFactor * -25;
+            const lift = openFactor * -65;
+            const slideOut = openFactor * -20;
+            
+            lid.style.transform = `translate(${slideOut}px, ${lift}px) rotate(${screwRotation}deg)`;
+            
+            // אפקט פתיחת הברגה - תנועה מהירה מצד לצד בתחילת הפתיחה
+            if (openFactor > 0.05 && openFactor < 0.3) {
+                const jitter = Math.sin(Date.now() * 0.1) * 2;
+                lid.style.transform += ` translateX(${jitter}px)`;
+            }
         }
 
         function loop() {
