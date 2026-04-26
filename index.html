@@ -8,27 +8,97 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 
     <style>
-        #marble-glow-aura {
-            position: absolute;
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            z-index: 999; /* מתחת לגולה (1000) */
-            pointer-events: none;
-            filter: blur(20px);
-            opacity: 0.35;
-            transition: color 0.4s ease, opacity 0.4s ease, transform 0.1s linear;
-            transform: translate(-50%, -50%);
-            /* הילה עם ליבה רכה */
-            background: radial-gradient(circle, currentColor 0%, transparent 70%);
-            box-shadow: 0 0 30px currentColor;
+        /* Added Onboarding Animations */
+        @keyframes bounceDown {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(5px);}
+            60% {transform: translateY(3px);}
         }
-        #marble-glow-aura.active-yellow {
-            color: #fbbf24 !important;
-            opacity: 0.6;
-            transform: translate(-50%, -50%) scale(1.1);
-            box-shadow: inset 0 0 0 12px currentColor, 0 0 25px currentColor;
+        .scroll-hint {
+            font-size: 11px;
+            font-weight: 800;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 12px;
+            animation: bounceDown 2s infinite;
         }
+        /* Onboarding Redesign Styles */
+        .onboarding-scroll-area {
+            width: 100%;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+        }
+        .onboarding-scroll-area::-webkit-scrollbar { display: none; }
+
+        .habit-category-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #94a3b8;
+            margin: 15px 0 10px 0;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .habit-category-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #f1f5f9;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .preset-btn {
+            background: #f1f5f9;
+            border: none;
+            padding: 12px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none;
+        }
+        .preset-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: #f0fdf4;
+            transform: translateY(-2px);
+        }
+
+        .custom-habit-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: #64748b;
+            width: 100%;
+            text-align: right;
+            margin-bottom: 6px;
+        }
+
+        .custom-input-group {
+            background: #ffffff;
+            border: 2px solid #f1f5f9;
+            transition: border-color 0.3s;
+        }
+        .custom-input-group:focus-within {
+            border-color: var(--primary-color);
+        }
+        
 
         :root {
             --glow-color: rgba(35, 155, 98, 0.3);
@@ -47,7 +117,7 @@
         body {
             margin: 0; padding: 0;
             font-family: 'Heebo', sans-serif;
-            background-color: #cbd5e1;
+            background-color: #e2e8f0; /* Neutral screen background */
             display: flex; justify-content: center; align-items: center;
             height: 100dvh; overflow: hidden;
             touch-action: manipulation;
@@ -55,10 +125,14 @@
 
         .app-container {
             width: 100%; height: 100%;
-            background: radial-gradient(circle at var(--light-pos-x) var(--light-pos-y), #ffffff 0%, var(--bg-color) 60%);
+            background-color: #f8fafc;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             display: flex; flex-direction: column;
             position: relative; overflow: hidden;
-            transition: background 0.4s ease; 
+            transition: background 0.4s ease, background-image 0.4s ease;
+            backdrop-filter: saturate(1.2);
         }
 
         @media (min-width: 420px) {
@@ -99,17 +173,8 @@
         .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         /* --- Day Indicator --- */
-        .day-display {
-            position: absolute; top: 75px; 
-            left: 0; width: 100%;
-            text-align: center; pointer-events: none; z-index: 5;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .big-day-number {
-            font-size: 32px; 
-            font-weight: 900; color: rgba(255,255,255,0.8); 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-            user-select: none; letter-spacing: 2px;
+        .lid-day-badge {
+            display: none;
         }
 
         .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
@@ -153,7 +218,7 @@
         
         .jar-cap-detail {
             will-change: transform;
-            position: absolute; top: 22px; left: 85px; width: 170px; height: 32px;
+            position: absolute; top: 22px; left: 85px; width: 170px; height: 36px;
             background: linear-gradient(to right, 
                 #1e293b 0%, 
                 #475569 15%, 
@@ -162,14 +227,14 @@
                 #94a3b8 65%, 
                 #475569 85%, 
                 #1e293b 100%);
-            /* אפקט אחיזה - קווים אנכיים */
             background-image: 
-                repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(0,0,0,0.15) 4px, rgba(0,0,0,0.15) 6px), 
-                linear-gradient(to right, #1e293b, #f1f5f9, #1e293b);
-            border-radius: 8px 8px 4px 4px; z-index: 30;
+                repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(0,0,0,0.1) 4px, rgba(0,0,0,0.1) 6px), 
+                linear-gradient(to right, #334155, #cbd5e1, #334155);
+            border-radius: 10px 10px 4px 4px; z-index: 30;
             box-shadow: 
-                0 4px 8px rgba(0,0,0,0.25), 
-                inset 0 2px 3px rgba(255,255,255,0.6);
+                0 6px 12px rgba(0,0,0,0.3), 
+                inset 0 2px 4px rgba(255,255,255,0.7),
+                inset 0 -4px 6px rgba(0,0,0,0.2);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform-origin: left center;
             border: none;
@@ -290,25 +355,24 @@
             transform: rotate(5deg);
         }
 
-        .jar-body { z-index: 20;
-            position: absolute; top: 97px; left: 30px; width: 280px; height: 333px;
+        .jar-body {
+            z-index: 20;
+            position: absolute;
+            top: 97px; left: 30px; width: 280px; height: 333px;
             border-radius: 40px 40px 85px 85px;
-            background: linear-gradient(145deg, 
-                rgba(255, 255, 255, 0.15) 0%, 
-                rgba(255, 255, 255, 0.02) 50%, 
-                rgba(0, 0, 0, 0.1) 100%);
-            border: 1.5px solid rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px) brightness(1.05);
+            /* Fully transparent background */
+            background: transparent;
+            border: none;
+            /* Removed blur to ensure looking through the glass is clear */
+            backdrop-filter: none;
             overflow: hidden;
             box-shadow: 
-                /* חיבור רך לחלק העליון */
-                inset 0 30px 40px -10px rgba(255,255,255,0.4), 
-                inset 0 -25px 50px rgba(0,0,0,0.15), 
-                inset 25px 0 35px -15px rgba(255,255,255,0.15),
-                inset -25px 0 35px -15px rgba(0,0,0,0.08),
-                0 35px 75px rgba(0,0,0,0.18), 
-                0 0 45px var(--glow-color);
-            transition: box-shadow 0.5s ease;
+                /* Minimal reflections for glass edges without opaque background */
+                inset 0 30px 40px -10px rgba(255,255,255,0.25), 
+                inset 0 -25px 50px rgba(0,0,0,0.05), 
+                inset 2px 2px 10px rgba(255,255,255,0.2),
+                0 35px 75px rgba(0,0,0,0.12);
+            transition: box-shadow 0.5s ease, background 0.4s ease;
         }
 
         /* --- Drawer --- */
@@ -341,13 +405,34 @@
         .drawer-view.active { display: flex; }
 
         .edit-btn { position: absolute; top: 25px; right: 25px; color: #cbd5e1; cursor: pointer; padding: 6px; z-index: 110; }
+        .add-btn { position: absolute; top: 25px; left: 25px; color: #cbd5e1; cursor: pointer; padding: 6px; z-index: 110; }
         
         .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -55px; min-height: 100px; }
         
         .active-icon-bg { 
-            width: 84px; height: 84px; background: #ffffff; border-radius: 50%; 
+            width: 90px; height: 40px; 
             display: flex; justify-content: center; align-items: center; position: relative; 
-            z-index: 1; box-shadow: 0 -4px 15px rgba(0,0,0,0.03); 
+            z-index: 1; 
+            background: transparent;
+        }
+
+        #marble-glow {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, var(--glow-color-solid) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(14px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), filter 0.6s ease;
+            transform-origin: center center;
+            pointer-events: none;
+        }
+
+        #floating-marble:not([style*="display: none"]) ~ #marble-glow {
+            opacity: 0.35;
         }
 
         #marble-drop-zone { width: 60px; height: 60px; pointer-events: none; }
@@ -355,32 +440,57 @@
         #floating-marble {
             position: absolute; z-index: 1000; cursor: grab; touch-action: none;
             transform-origin: center center; pointer-events: auto;
-            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.22));
         }
         #floating-marble.dragging { cursor: grabbing; animation: none !important; }
         
         @keyframes heartbeat { 0% { transform: scale(1); } 10% { transform: scale(1.18); } 20% { transform: scale(1.05); } 35% { transform: scale(1.3); } 60% { transform: scale(1); } 100% { transform: scale(1); } }
         @keyframes subtleRotate { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
-        @keyframes auraPulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; filter: blur(15px); }
-            35% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.45; filter: blur(10px); }
-        }
-        .marble-pulse { animation: heartbeat 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-        .aura-pulse { animation: auraPulse 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        .marble-pulse { animation: organicFloat 6s ease-in-out infinite; }
 
-        .habit-scroller { 
-            display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; 
-            padding: 30px 0; -webkit-overflow-scrolling: touch;
-            margin-top: -25px; 
-            margin-bottom: -15px;
+        @keyframes organicFloat {
+            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+            /* Phase 1: Gentle Lift */
+            10% { transform: translateY(-8px) scale(1.05) rotate(2deg); }
+            /* Phase 2: The Pump (Heartbeat) */
+            18% { transform: translateY(-14px) scale(1.25) rotate(0deg); }
+            22% { transform: translateY(-12px) scale(1.0) rotate(0deg); }
+            /* Phase 3: Bell Swing Right */
+            40% { transform: translateY(-18px) scale(1.05) rotate(14deg); }
+            /* Phase 4: Bell Swing Left */
+            55% { transform: translateY(-15px) scale(1.05) rotate(-14deg); }
+            /* Phase 5: Return with small pulse */
+            75% { transform: translateY(-18px) scale(1.15) rotate(0deg); }
+            85% { transform: translateY(-6px) scale(1) rotate(0deg); }
+        }
+
+        .habit-scroller {
+            display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%;
+            padding: 30px 0 20px 0; -webkit-overflow-scrolling: touch;
+            margin-top: -15px;
             cursor: grab;
             position: relative; z-index: 5;
+            mask-image: linear-gradient(to right, transparent, black 30%, black 70%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 30%, black 70%, transparent);
         }
         .habit-scroller:active { cursor: grabbing; }
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
-        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 25px; font-size: 22px; color: #cbd5e1; font-weight: 700; transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; cursor: pointer; opacity: 0.5; filter: blur(0.5px); }
-        .habit-item.active { font-size: 36px; color: var(--text-main); font-weight: 900; opacity: 1; filter: blur(0); }
-        .habit-item.active { font-size: 34px; color: var(--text-main); font-weight: 900; }
+        .habit-item {
+            flex: 0 0 auto; scroll-snap-align: center; 
+            padding: 12px 24px; font-size: 16px; color: #94a3b8; font-weight: 800;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap; cursor: pointer;
+            border-radius: 100px;
+            margin: 0 5px;
+            display: flex; align-items: center; justify-content: center;
+            letter-spacing: -0.2px;
+        }
+        .habit-item.active {
+            font-size: 24px;
+            background: transparent;
+            box-shadow: none;
+            transform: scale(1.15);
+            filter: blur(0);
+        }
 
         .dots-container { display: flex; gap: 8px; margin-top: 5px; position: relative; z-index: 6; }
         .dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; transition: 0.4s; }
@@ -497,6 +607,9 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header-ui">
+            <div class="user-pill" onclick="window.resetAppState()" style="color: #ef4444;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </div>
             <div style="flex: 1;"></div> 
             <div class="user-pill" onclick="window.openProfilePopup()">
                 <div class="admin-indicator" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
@@ -507,10 +620,7 @@
             </div>
         </div>
 
-        <!-- Days Display -->
-        <div class="day-display">
-            <div id="bg-day-indicator" class="big-day-number">1/5</div>
-        </div>
+        <!-- Days Display Removed from top -->
 
         <div class="top-section" id="clickable-top-section">
             <div class="jars-slider" id="jars-slider"></div>
@@ -522,14 +632,21 @@
             <div class="drawer-handle" id="drawer-handle"></div>
             
             <div id="drawer-normal-view" class="drawer-view active">
-                <div class="edit-btn" onclick="window.openEditMode()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
+                <div class="edit-btn" onclick="window.openEditMode()" style="top: 20px; right: 20px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
+                <div class="add-btn" onclick="window.openAddMode()" style="top: 20px; left: 20px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                
                 <div class="picker-top">
-                    <div class="active-icon-bg"><div id="marble-drop-zone"></div></div>
-                    <div id="picker-time" style="color:#94a3b8; font-size:13px; font-weight:700; margin-top:2px;"></div>
+                    <div class="active-icon-bg">
+                        <div id="marble-drop-zone"></div>
+                    </div>
+                    <div id="picker-time" style="color:#94a3b8; font-size:12px; font-weight:800; margin-top:10px; background: #f8fafc; padding: 4px 12px; border-radius: 20px;"></div>
                 </div>
+
                 <div class="habit-scroller" id="habit-scroller"></div>
+                
                 <div class="dots-container" id="picker-dots"></div>
-                <div style="font-size:10px; color:#cbd5e1; font-weight:700; margin-top:15px; user-select:none;">החלק למעלה לסטטיסטיקות ∧</div>
+                
+                <div style="font-size:10px; color:#cbd5e1; font-weight:800; margin-top:12px; user-select:none; letter-spacing: 0.5px;">מידע וסטטיסטיקה ∧</div>
             </div>
 
             <div id="drawer-edit-view" class="drawer-view">
@@ -562,22 +679,46 @@
 
             <div id="drawer-onboarding-view" class="drawer-view">
                 <div id="drawer-onboarding-step1" class="onboarding-step active">
-                    <div class="onboarding-title">מה ההרגל שלך?</div>
-                    <div class="onboarding-sub">בחר הרגל קטן שתוכל להתמיד בו. <span>זכור: פחות זה יותר.</span></div>
+                    <div class="onboarding-title">מה המטרה שלך?</div>
+                    <div class="onboarding-sub">בחר הרגל מהרשימה או צור אחד אישי. <span>התמדה היא הסוד.</span></div>
                     
-                    <div class="preset-grid">
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לשתות מים', '#3b82f6')">לשתות מים 💧</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לנשום עמוק', '#2dd4bf')">לנשום עמוק 🌬️</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לקרוא עמוד', '#f59e0b')">לקרוא עמוד 📖</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('מתיחות', '#fb923c')">לעשות מתיחות 🧘</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('מדיטציה', '#a855f7')">מדיטציה 🧘‍♂️</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לישון בזמן', '#6366f1')">לישון בזמן 🌙</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לסדר חדר', '#94a3b8')">לסדר חדר ✨</button>
-                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לאכול פרי', '#ef4444')">לאכול פרי 🍎</button>
+                    <div class="scroll-hint">גלה את כל האפשרויות ⌄</div>
+
+                    <div class="onboarding-scroll-area">
+                        <div class="habit-category-title">הכי פופולריים</div>
+                        <div class="preset-grid">
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('לשתות מים', '#3b82f6')">לשתות מים</button>
+                            <button class="preset-btn" style="background: #e2e8f0;" onclick="document.getElementById('custom-habit-input').focus();">משהו אישי...</button>
+                        </div>
+
+                        <div class="habit-category-title">בריאות וגוף</div>
+                        <div class="preset-grid">
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('לאכול פרי', '#ef4444')">לאכול פרי</button>
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('מתיחות', '#fb923c')">מתיחות בבוקר</button>
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('צעידה', '#84cc16')">הליכה קצרה</button>
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('שינה עמוקה', '#1e293b')">7 שעות שינה</button>
+                        </div>
+
+                        <div class="habit-category-title">שקט נפשי</div>
+                        <div class="preset-grid">
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('לנשום עמוק', '#2dd4bf')">לנשום עמוק</button>
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('מדיטציה', '#a855f7')">מדיטציה</button>
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('ניתוק מסכים', '#6366f1')">שעה בלי טלפון</button>
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('הכרת תודה', '#ec4899')">תודה יומית</button>
+                        </div>
+
+                        <div class="habit-category-title">למידה וסדר</div>
+                        <div class="preset-grid">
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('לקרוא עמוד', '#f59e0b')">לקרוא עמוד</button>
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('לסדר חדר', '#94a3b8')">לסדר 5 דק'</button>
+                            <button class="preset-btn" onclick="window.goToOnboardingStep2('למידת שפה', '#0d9488')">מילה חדשה</button>
+                            <button class="preset-btn" style="background: #fff1f2; color: #e11d48;" onclick="document.getElementById('custom-habit-input').focus();">צור הרגל אישי</button>
+                        </div>
                     </div>
                     
+                    <div class="custom-habit-label">צור הרגל אישי משלך:</div>
                     <div class="custom-input-group">
-                        <input type="text" id="custom-habit-input" placeholder="או כתוב הרגל משלך...">
+                        <input type="text" id="custom-habit-input" placeholder="לדוגמה: לנגן בגיטרה...">
                         <button onclick="window.handleCustomHabit()">המשך</button>
                     </div>
                 </div>
@@ -598,7 +739,7 @@
         </div>
 
         <div id="tutorial-tooltip" class="tutorial-bounce">גרור אותי לצנצנת! 👆</div>
-        <div id="marble-glow-aura"></div>
+        <div id="marble-glow" class="marble-pulse"></div>
         <canvas id="floating-marble" width="60" height="60"></canvas>
 
         <!-- Popups -->
@@ -630,21 +771,42 @@
                 </div>
                     <div id="view-design" class="view-section">
                         <div style="font-size:18px; font-weight:900; margin-bottom:15px; text-align:right;">עיצוב אישי</div>
-                        <label style="font-size:12px; font-weight:800; color:#64748b; display:block; text-align:right; margin-bottom:8px;">בחר רקע מוכן</label>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                            <label style="display: block; width: 100%; cursor: pointer; text-align: center; background: var(--primary-color); color: white; padding: 12px; border-radius: 14px; font-weight: 800; font-size: 14px; transition: 0.2s;">
+                                📤 העלה רקע מהמכשיר
+                                <input type="file" accept="image/*" hidden onchange="window.handleAppBgUpload(event)">
+                            </label>
+                        </div>
+
+                        <label style="font-size:12px; font-weight:800; color:#64748b; display:block; text-align:right; margin-bottom:8px;">או בחר רקע מוכן</label>
                         <div class="design-grid">
                             <div class="bg-preset" style="background-color:#f1f5f9;" onclick="window.applyPresetBg('#f1f5f9')"></div>
                             <div class="bg-preset" style="background-image:url('https://images.unsplash.com/photo-1557683316-973673baf926?w=200');" onclick="window.applyPresetBg('https://images.unsplash.com/photo-1557683316-973673baf926?w=800')"></div>
                             <div class="bg-preset" style="background-image:url('https://images.unsplash.com/photo-1519750783846-e3a23028301c?w=200');" onclick="window.applyPresetBg('https://images.unsplash.com/photo-1519750783846-e3a23028301c?w=800')"></div>
                         </div>
+                        
                         <div style="margin-top:20px; text-align:right;">
-                            <label style="font-size:12px; font-weight:800; color:#64748b;">כתובת תמונה מותאמת (URL)</label>
+                            <label style="font-size:12px; font-weight:800; color:#64748b;">כתובת תמונה מרחוק (URL)</label>
                             <input type="text" id="input-app-bg-url" onchange="window.updateCustomBgs()" placeholder="https://..." style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px; font-size:13px;">
                         </div>
+
+                        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+
                         <div style="margin-top:15px; text-align:right;">
                             <label style="font-size:12px; font-weight:800; color:#64748b;">צבע צנצנת</label>
                             <input type="color" id="input-jar-color" onchange="window.updateCustomBgs()" style="width:100%; height:44px; border-radius:12px; border:1.5px solid #e2e8f0; margin-top:5px;">
                         </div>
-                        <button onclick="window.resetCustomBgs()" style="width:100%; margin-top:20px; background:#f1f5f9; border:none; padding:12px; border-radius:12px; font-weight:800; color:var(--danger-color);">שחזר הגדרות יצרן</button>
+
+                        <div style="margin-top:15px; text-align:right;">
+                            <label style="display: block; cursor: pointer; text-align: center; background: #f8fafc; border: 1.5px solid #e2e8f0; color: #64748b; padding: 10px; border-radius: 12px; font-weight: 800; font-size: 13px;">
+                                🏺 העלה טקסטורה לצנצנת
+                                <input type="file" accept="image/*" hidden onchange="window.handleJarBgUpload(event)">
+                            </label>
+                        </div>
+
+                        <button onclick="window.resetCustomBgs()" style="width:100%; margin-top:20px; background:#f1f5f9; border:none; padding:12px; border-radius:12px; font-weight:800; color:var(--text-main);">שחזר עיצוב מקורי</button>
+                        <button onclick="window.resetAppState()" style="width:100%; margin-top:10px; background:#fef2f2; border:1px solid #fee2e2; padding:12px; border-radius:12px; font-weight:900; color:var(--danger-color);">איפוס אפליקציה כללי ⚠️</button>
                     </div>
                     <div id="view-admin" class="view-section">
                         <div style="font-size:18px; font-weight:900; margin-bottom:15px; text-align:right;">כניסת צוות</div>
@@ -665,6 +827,12 @@
         let currentUser = { displayName: "שם משתמש", profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" };
         let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0;
         let habitsData = [];
+        const HABIT_PALETTE = ['#239B62', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#2dd4bf', '#fb923c', '#6366f1', '#ec4899', '#84cc16'];
+        window.getNextUniqueColor = () => {
+            const usedColors = habitsData.map(h => h.color.toLowerCase());
+            const available = HABIT_PALETTE.filter(c => !usedColors.includes(c.toLowerCase()));
+            return available.length > 0 ? available[0] : HABIT_PALETTE[habitsData.length % HABIT_PALETTE.length];
+        };
         let stageBackgrounds = {}, customBgs = {}, userStats = { daysData: [] };
         window.isAnimatingJump = false;
         window.isTutorialMode = false;
@@ -695,7 +863,8 @@
         loadLocalState();
 
         window.saveState = async () => {
-            if (typeof currentBalls !== 'undefined' && currentDayView >= 0 && currentBalls.length > 0) {
+            if (typeof currentBalls !== 'undefined' && currentDayView >= 0) {
+                // Always sync the saved balls array with the current physics world state
                 userStats.daysData[currentDayView].savedBalls = currentBalls.map(b => ({
                     x: b.position.x, y: b.position.y, angle: b.angle, color: b.render.fillStyle
                 }));
@@ -767,27 +936,75 @@
             const stageBg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
             const appCont = document.querySelector('.app-container');
 
-            if (customBgs.appUrl) appCont.style.backgroundImage = `url(${customBgs.appUrl})`;
-            else if (customBgs.appColor) appCont.style.backgroundColor = customBgs.appColor;
-            else if (stageBg) appCont.style.backgroundImage = `url(${stageBg})`;
-            else appCont.style.backgroundImage = 'none';
+            // Ensure background properties are reset to default behavior
+            appCont.style.backgroundSize = 'cover';
+            appCont.style.backgroundPosition = 'center';
+            appCont.style.backgroundRepeat = 'no-repeat';
+
+            // Apply background ONLY to the app-container, keeping body neutral
+            if (customBgs.appUrl) {
+                appCont.style.backgroundImage = `url(${customBgs.appUrl})`;
+                appCont.style.backgroundColor = 'transparent';
+                // Force 100% overlap if user wants exact fit
+                appCont.style.backgroundSize = '100% 100%';
+            } else if (customBgs.appColor) {
+                appCont.style.backgroundColor = customBgs.appColor;
+                appCont.style.backgroundImage = 'none';
+            } else if (stageBg) {
+                appCont.style.backgroundImage = `url(${stageBg})`;
+                appCont.style.backgroundColor = 'transparent';
+            } else {
+                appCont.style.backgroundImage = 'none';
+                appCont.style.background = `radial-gradient(circle at var(--light-pos-x) var(--light-pos-y), #ffffff 0%, #f8fafc 60%)`;
+            }
 
             document.querySelectorAll('.jar-body, .jar-reflection').forEach(jar => {
-                if (customBgs.jarUrl) jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
-                else if (customBgs.jarColor) jar.style.backgroundColor = customBgs.jarColor + '80';
-                else jar.style.backgroundColor = 'rgba(255,255,255,0.02)';
+                if (customBgs.jarUrl) {
+                    jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
+                    jar.style.backgroundColor = 'transparent';
+                } else if (customBgs.jarColor) {
+                    jar.style.backgroundColor = (customBgs.jarColor || '#ffffff') + '40';
+                    jar.style.backgroundImage = 'none';
+                } else {
+                    jar.style.backgroundColor = 'transparent';
+                    jar.style.backgroundImage = 'none';
+                }
             });
         }
         window.applyCustomBgs = applyCustomBgs;
 
         window.updateCustomBgs = () => {
             customBgs = {
-                appColor: document.getElementById('input-app-color').value,
                 appUrl: document.getElementById('input-app-bg-url').value,
                 jarColor: document.getElementById('input-jar-color').value,
-                jarUrl: document.getElementById('input-jar-bg-url').value
+                ...customBgs
             };
             applyCustomBgs(); window.saveState();
+        };
+
+        window.handleAppBgUpload = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                customBgs.appUrl = e.target.result;
+                document.getElementById('input-app-bg-url').value = "";
+                applyCustomBgs(); 
+                window.saveState();
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.handleJarBgUpload = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                customBgs.jarUrl = e.target.result;
+                applyCustomBgs(); 
+                window.saveState();
+            };
+            reader.readAsDataURL(file);
         };
         window.resetCustomBgs = () => { customBgs = {}; applyCustomBgs(); window.saveState(); };
 
@@ -800,6 +1017,7 @@
                 const slide = document.createElement('div');
                 slide.className = `jar-slide ${i === currentDayView ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
+                const info = getStageInfo(i);
                 slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"></div><div class="jar-reflection"></div></div></div>`;
                 s.appendChild(slide);
             }
@@ -808,33 +1026,87 @@
         window.buildJars = buildJars;
 
         const { Engine, Bodies, Composite, Mouse, MouseConstraint } = Matter, engine = Engine.create(), world = engine.world;
+        engine.positionIterations = 10;
+        engine.velocityIterations = 10;
         let currentBalls = [];
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
         canvas.width = 340; canvas.height = 480;
-        const wallOptions = { isStatic: true, friction: 0, frictionStatic: 0, restitution: 0.4 };
+        const wallOptions = { isStatic: true, friction: 0.1, frictionStatic: 0.5, restitution: 0.2, render: { visible: false } };
+        // Create a massive physics ceiling to prevent any upward escapes
+        const physicsLid = Bodies.rectangle(170, 40, 300, 100, { ...wallOptions, label: 'physics-lid' });
         Composite.add(world, [
-            Bodies.rectangle(170, 420, 200, 40, wallOptions), Bodies.rectangle(75, 400, 80, 40, { ...wallOptions, angle: Math.PI / 5 }),
-            Bodies.rectangle(265, 400, 80, 40, { ...wallOptions, angle: -Math.PI / 5 }), Bodies.rectangle(35, 260, 20, 240, wallOptions),
-            Bodies.rectangle(305, 260, 20, 240, wallOptions), Bodies.rectangle(70, 115, 80, 20, { ...wallOptions, angle: -Math.PI / 4.5 }),
-            Bodies.rectangle(270, 115, 80, 20, { ...wallOptions, angle: Math.PI / 4.5 }), Bodies.rectangle(105, 70, 20, 60, wallOptions), Bodies.rectangle(235, 70, 20, 60, wallOptions)
+            // Thick Floor
+            Bodies.rectangle(170, 460, 400, 100, wallOptions),
+            // Slanted Bottom Corners (Thickened to block tunneling)
+            Bodies.rectangle(55, 420, 120, 80, { ...wallOptions, angle: Math.PI / 5 }),
+            Bodies.rectangle(285, 420, 120, 80, { ...wallOptions, angle: -Math.PI / 5 }),
+            // Side Walls (Extremely thick to keep balls inside the glass area)
+            Bodies.rectangle(-20, 250, 100, 600, wallOptions), 
+            Bodies.rectangle(360, 250, 100, 600, wallOptions),
+            // Neck narrowers - Blocking the shoulders of the jar
+            Bodies.rectangle(60, 110, 120, 80, { ...wallOptions, angle: -Math.PI / 4.5 }),
+            Bodies.rectangle(280, 110, 120, 80, { ...wallOptions, angle: Math.PI / 4.5 }),
+            // Internal Neck walls - Tighter vertical barriers
+            Bodies.rectangle(88, 50, 30, 150, wallOptions),
+            Bodies.rectangle(252, 50, 30, 150, wallOptions),
+            physicsLid
         ]);
         Composite.add(world, MouseConstraint.create(engine, { mouse: Mouse.create(canvas), constraint: { stiffness: 0.2, render: { visible: false } } }));
+
+        function getScaleFactor(count) {
+            const threshold = 12;
+            if (count <= threshold) return 1.0;
+            // Shrink by 1.5% for each ball above threshold, minimum 65% size
+            return Math.max(0.65, 1.0 - (count - threshold) * 0.015);
+        }
 
         function moveCanvas(idx) {
             const wrap = document.getElementById(`jar-wrapper-${idx}`);
             if(!wrap) return;
             wrap.insertBefore(canvas, wrap.firstChild);
+            
             currentBalls.forEach(b => Composite.remove(world, b));
-            currentBalls = []; currentDayView = idx;
-            const stats = userStats.daysData[idx]?.habits || {}, saved = userStats.daysData[idx]?.savedBalls;
-            if (saved && saved.length > 0) {
-                saved.forEach(d => {
-                    const b = Bodies.circle(d.x, d.y, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, angle: d.angle, label:'habit-ball', render:{fillStyle:d.color} });
-                    currentBalls.push(b); Composite.add(world, b);
-                });
+            currentBalls = []; 
+            currentDayView = idx;
+
+            const dayData = userStats.daysData[idx];
+            const stats = dayData?.habits || {};
+            let saved = dayData?.savedBalls || [];
+
+            // Calculate exactly how many balls should be in the jar based on stats
+            let totalExpected = 0;
+            Object.values(stats).forEach(s => { totalExpected += (s.min + s.breakthrough); });
+
+            // Synchronize visual count: If saved data length doesn't match stats, we reconcile
+            if (saved.length !== totalExpected) {
+                if (saved.length > totalExpected) {
+                    saved = saved.slice(0, totalExpected);
+                } else {
+                    // Add missing balls at random top positions if they exist in the stats but not physics cache
+                    const diff = totalExpected - saved.length;
+                    const defaultColor = habitsData[currentHabitIndex]?.color || '#239B62';
+                    for(let i=0; i<diff; i++) {
+                        saved.push({
+                            x: 100 + Math.random() * 140,
+                            y: 100 + Math.random() * 100,
+                            angle: Math.random() * Math.PI,
+                            color: defaultColor
+                        });
+                    }
+                }
+                if (dayData) dayData.savedBalls = saved;
             }
-            document.getElementById('bg-day-indicator').innerText = `${idx + 1}/${getStageInfo(idx).maxDays}`;
-            renderActiveHabit(); applyCustomBgs();
+
+            const scale = getScaleFactor(saved.length);
+            saved.forEach(d => {
+                const b = Bodies.circle(d.x, d.y, 26 * scale, { restitution:0.5, friction:0.1, frictionStatic:0.1, density:0.04, angle: d.angle, label:'habit-ball', render:{fillStyle:d.color} });
+                currentBalls.push(b);
+                Composite.add(world, b);
+            });
+
+            // Day indicator now handled per lid in buildJars
+            renderActiveHabit(); 
+            applyCustomBgs();
         }
 
         const fm = document.getElementById('floating-marble');
@@ -850,33 +1122,38 @@
 
             // 2. Base Depth Gradient (High Contrast)
             let g = c.createRadialGradient(-r * 0.4, -r * 0.4, 0, 0, 0, r * 1.2);
-            g.addColorStop(0, '#ffffff');
-            g.addColorStop(0.1, '#f8fafc');
-            g.addColorStop(0.4, 'rgba(226, 232, 240, 0.2)');
-            g.addColorStop(0.85, 'rgba(15, 23, 42, 0.15)');
-            g.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+            g.addColorStop(0, "#ffffff");
+            g.addColorStop(0.1, "#f8fafc");
+            g.addColorStop(0.4, "rgba(226, 232, 240, 0.2)");
+            g.addColorStop(0.85, "rgba(15, 23, 42, 0.15)");
+            g.addColorStop(1, "rgba(0, 0, 0, 0.35)");
             c.fillStyle = g;
             c.fill();
 
             // 3. Rim Light (Definition)
             c.beginPath();
             c.arc(0, 0, r - 0.5, 0, Math.PI * 2);
-            c.strokeStyle = 'rgba(255,255,255,0.45)';
+            c.strokeStyle = "rgba(255,255,255,0.45)";
             c.lineWidth = 1;
             c.stroke();
 
             // 4. Internal Swirl (Sharp Definition)
+            // Logic: As scale decreases (r < 26), widthFactor increases to expand the internal swirl
+            const baseR = 26;
+            const scale = r / baseR;
+            const widthFactor = 1.0 + (1.0 - scale) * 2.2; 
+
             c.save();
             c.rotate(a);
             let swirlG = c.createLinearGradient(0, -r, 0, r);
             swirlG.addColorStop(0, col);
-            swirlG.addColorStop(1, col + '99');
+            swirlG.addColorStop(1, col + "99");
             c.fillStyle = swirlG;
             c.globalAlpha = 0.85;
             c.beginPath();
             c.moveTo(0, r * 0.8);
-            c.bezierCurveTo(r * 0.7, r * 0.2, -r * 0.7, -r * 0.2, 0, -r * 0.8);
-            c.bezierCurveTo(-r * 0.3, -r * 0.2, r * 0.3, r * 0.2, 0, r * 0.8);
+            c.bezierCurveTo(r * 0.7 * widthFactor, r * 0.2, -r * 0.7 * widthFactor, -r * 0.2, 0, -r * 0.8);
+            c.bezierCurveTo(-r * 0.3 * widthFactor, -r * 0.2, r * 0.3 * widthFactor, r * 0.2, 0, r * 0.8);
             c.fill();
             c.restore();
 
@@ -912,59 +1189,51 @@
             drawMarble(uctx, 30, 30, 26, 0, h.color);
             if(!window.isAnimatingJump && habitsData.length > 0) {
                 fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.visibility = 'visible';
-                const aura = document.getElementById('marble-glow-aura');
-                if (aura) {
-                    aura.style.color = h.color;
-                    aura.style.display = 'block';
-                }
+                document.getElementById('marble-glow').style.opacity = '0.35';
+                document.getElementById('marble-glow').style.opacity = '0.35';
                 updateFloatingPosition();
             }
             updateStatsUI(); renderDots();
             document.documentElement.style.setProperty('--glow-color', h.color + '40');
+            document.documentElement.style.setProperty('--glow-color-solid', h.color);
         }
 
         let marbleInteractionCount = 0;
+        let hasEverInteracted = false;
         function updateFloatingPosition() {
             const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container');
+            const gl = document.getElementById('marble-glow');
             if(!dz || !cont) return;
             const r = dz.getBoundingClientRect(), cr = cont.getBoundingClientRect();
-            const aura = document.getElementById('marble-glow-aura');
             const tt = document.getElementById('tutorial-tooltip');
             
-            // Aura stays centered in the drop zone
             const centerX = (r.left - cr.left + r.width / 2);
             const centerY = (r.top - cr.top + r.height / 2);
-            aura.style.left = centerX + 'px';
-            aura.style.top = centerY + 'px';
-
-            // If ball is gone or jumping, hide aura completely
-            if (fm.style.display === 'none' || fm.style.visibility === 'hidden' || window.isAnimatingJump) {
-                aura.style.opacity = '0';
-                aura.style.transform = 'translate(-50%, -50%) scale(0)';
-                if (tt) tt.style.display = 'none';
-                return;
-            }
-
-            const fl = centerX - 30;
-            const ft = centerY - 30;
-
-            if (!window.isDrag) {
-                // When NOT dragging, keep ball at home and aura full
-                fm.style.left = fl + 'px'; 
-                fm.style.top = ft + 'px';
-                aura.style.opacity = '0.45';
-                aura.style.transform = 'translate(-50%, -50%) scale(1)';
+            
+            // Position marble at base only when not being dragged or jumping
+            if (!window.isDrag && !window.isAnimatingJump) {
+                const currentLeft = centerX - 30;
+                const currentTop = centerY - 40;
+                fm.style.left = currentLeft + 'px';
+                fm.style.top = currentTop + 'px';
+                if(gl) {
+                    gl.style.left = (centerX - 60) + 'px';
+                    gl.style.top = (centerY - 70) + 'px';
+                    gl.style.opacity = '0.35';
+                    gl.style.filter = 'blur(14px)';
+                    gl.style.transform = 'scale(1)';
+                }
             } else {
-                // Calculate distance to shrink aura as ball moves away
-                const dist = Math.sqrt(tx * tx + ty * ty);
-                // לוגיקה הפוכה: ההילה קטנה וחדה יותר ככל שמתקרבים למרכז (אפקט פוקוס)
-                const scale = 0.4 + Math.min(1.2, dist / 150);
-                const opacity = Math.max(0.1, 0.7 - (dist / 250));
-                aura.style.opacity = opacity.toString();
-                aura.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                // When leaving the base (drag or jump), the glow disperses and fades
+                if(gl) {
+                    gl.style.opacity = '0';
+                    gl.style.transform = 'scale(2.2)';
+                    gl.style.filter = 'blur(30px)';
+                }
             }
 
-            if (window.isTutorialMode && !window.isDrag) {
+            // Tutorial Tooltip logic
+            if (window.isTutorialMode && !window.isDrag && !window.isAnimatingJump && fm.style.display !== 'none') {
                 tt.style.display = 'block'; 
                 tt.style.left = centerX + 'px'; 
                 tt.style.top = (centerY - 85) + 'px';
@@ -974,30 +1243,91 @@
         }
 
         // --- 6. אונבורדינג אוטומטי ---
+        function filterExistingPresets() {
+            const existingNames = habitsData.map(h => h.name);
+            const presets = document.querySelectorAll('.onboarding-scroll-area .preset-btn');
+            
+            presets.forEach(btn => {
+                const name = btn.innerText.trim();
+                const isSpecial = name.includes('...') || name.includes('אישי');
+                if (!isSpecial && existingNames.includes(name)) {
+                    btn.style.display = 'none';
+                } else {
+                    btn.style.display = 'flex';
+                }
+            });
+
+            document.querySelectorAll('.habit-category-title').forEach(title => {
+                const grid = title.nextElementSibling;
+                if (grid && grid.classList.contains('preset-grid')) {
+                    const visibleCount = Array.from(grid.querySelectorAll('.preset-btn')).filter(b => b.style.display !== 'none').length;
+                    title.style.display = visibleCount === 0 ? 'none' : 'flex';
+                    grid.style.display = visibleCount === 0 ? 'none' : 'grid';
+                }
+            });
+        }
+
         function checkNewUser() {
             if (habitsData.length === 0) {
+                filterExistingPresets();
                 document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
                 document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
                 document.getElementById('drawer-onboarding-view').classList.add('active');
                 document.getElementById('drawer-onboarding-step1').style.display = 'flex';
                 fm.style.display = 'none';
+            document.getElementById('marble-glow').style.opacity = '0';
             }
         }
 
-        window.goToOnboardingStep2 = (n, c = '#239B62') => { window.tmpH = n; window.tmpColor = c; document.getElementById('drawer-onboarding-step1').style.display = 'none'; document.getElementById('drawer-onboarding-step2').style.display = 'flex'; };
+        window.goToOnboardingStep2 = (n, c = null) => { 
+            window.tmpH = n; 
+            const usedColors = habitsData.map(h => h.color.toLowerCase());
+            // If color is not provided or already taken by another habit, find a unique one
+            if (!c || usedColors.includes(c.toLowerCase())) {
+                window.tmpColor = window.getNextUniqueColor();
+            } else {
+                window.tmpColor = c;
+            }
+            document.getElementById('drawer-onboarding-step1').style.display = 'none'; 
+            document.getElementById('drawer-onboarding-step2').style.display = 'flex'; 
+        };
         window.changeOnboardingTarget = (d) => { const el = document.getElementById('onboarding-target-display'); let v = parseInt(el.innerText) + d; if(v<1) v=1; el.innerText = v; };
-        window.handleCustomHabit = () => { const val = document.getElementById('custom-habit-input').value.trim(); if(val) window.goToOnboardingStep2(val); };
+        window.handleCustomHabit = () => { 
+            const val = document.getElementById('custom-habit-input').value.trim(); 
+            if(val) {
+                // Automatically assign the next available unique color
+                window.goToOnboardingStep2(val, window.getNextUniqueColor());
+            }
+        };
+        window.openAddMode = () => {
+            filterExistingPresets();
+            document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-onboarding-view').classList.add('active');
+            document.getElementById('drawer-onboarding-step1').style.display = 'flex';
+            document.getElementById('drawer-onboarding-step2').style.display = 'none';
+            document.getElementById('custom-habit-input').value = '';
+            fm.style.display = 'none';
+        };
+
         window.finishOnboarding = () => {
             const t = document.getElementById('onboarding-target-display').innerText;
-            habitsData = [{ id: Date.now(), name: window.tmpH, time: t + ' פעמים ביום', color: window.tmpColor || '#239B62' }];
-            currentHabitIndex = 0;
+            // Fallback to palette if no color provided
+            const finalColor = window.tmpColor || HABIT_PALETTE[habitsData.length % HABIT_PALETTE.length];
+            const newHabit = { id: Date.now(), name: window.tmpH, time: t + ' פעמים ביום', color: finalColor };
+            habitsData.push(newHabit);
+            currentHabitIndex = habitsData.length - 1;
             for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
             document.getElementById('bottom-drawer').className = 'bottom-section';
             document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
             document.getElementById('drawer-normal-view').classList.add('active');
             initScroller();
-            window.isTutorialMode = true;
-            window.respawnMarble();
+            setTimeout(() => {
+                const items = document.querySelectorAll('.habit-item');
+                items[currentHabitIndex].scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                window.isTutorialMode = true;
+                window.respawnMarble();
+            }, 100);
             window.saveState();
         };
 
@@ -1020,54 +1350,58 @@
 
         window.respawnMarble = () => {
             const isDrawerNormal = document.getElementById('drawer-normal-view').classList.contains('active');
-            if (!isDrawerNormal) return; // לא להנפיש אם אנחנו במצב עריכה/סטטיסטיקה
+            if (!isDrawerNormal) return;
 
-            marbleInteractionCount = 0;
-            const aura = document.getElementById('marble-glow-aura');
-            if(aura) aura.classList.remove('active-yellow');
+            // Sync cleanup
             fm.classList.remove('marble-pulse');
-            if(aura) aura.classList.remove('aura-pulse');
             
-            fm.style.transition = 'none'; 
-            // צמיחה מתוך המגירה (Dispenser feel)
-            fm.style.transform = 'translateY(30px) scale(0.1)'; 
+            // Sync initial hidden state
+            const initTrans = 'none';
+            fm.style.transition = initTrans;
+            fm.style.transform = 'scale(0.1)';
             fm.style.opacity = '0';
-            fm.style.display = 'block'; 
+            fm.style.display = 'block';
             fm.style.visibility = 'visible';
-            
+
             updateFloatingPosition();
             
             requestAnimationFrame(() => {
                 renderActiveHabit();
-                fm.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1.2), opacity 0.3s ease-out'; 
-                fm.style.transform = 'translateY(0) scale(1)'; 
+                const spawnTrans = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1.1), opacity 0.5s ease-out';
+                fm.style.transition = spawnTrans;
+                fm.style.transform = 'scale(1)';
                 fm.style.opacity = '1';
+
                 setTimeout(() => {
                     if(!window.isDrag && !window.isAnimatingJump) {
+                        // Apply base transform for animation to build upon
+                        fm.style.transform = 'translateY(0)';
                         fm.classList.add('marble-pulse');
-                        const aura = document.getElementById('marble-glow-aura');
-                        if(aura) aura.classList.add('aura-pulse');
                     }
-                }, 600);
+                }, 800);
             });
         };
 
         window.popMarble = () => {
             if(window.isAnimatingJump) return;
             fm.classList.remove('marble-pulse');
-            const aura = document.getElementById('marble-glow-aura');
-            if(aura) aura.classList.remove('aura-pulse');
-            // Smooth dip before gliding up
+            
+            // Shrink to center before popping back for a more "organic" spawn
             fm.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s';
-            fm.style.transform = 'translateY(40px) scale(0.6)';
-            fm.style.opacity = '0.5';
+            fm.style.transform = 'scale(0.3)';
+            fm.style.opacity = '0.3';
             setTimeout(() => {
                 fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.visibility = 'visible';
-                fm.style.transition = 'transform 0.7s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s'; 
+                fm.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s'; 
                 renderActiveHabit(); 
-                fm.style.transform = 'translateY(0) scale(1) rotate(0deg)'; 
+                fm.style.transform = 'scale(1) rotate(0deg)'; 
                 fm.style.opacity = '1';
-                setTimeout(() => { if(!window.isDrag && !window.isAnimatingJump) fm.classList.add('marble-pulse'); }, 700);
+                setTimeout(() => { 
+                    if(!window.isDrag && !window.isAnimatingJump) {
+                        fm.style.transform = 'translateY(0)';
+                        fm.classList.add('marble-pulse'); 
+                    }
+                }, 600);
             }, 180);
         };
 
@@ -1079,11 +1413,14 @@
             const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
             const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 20; 
             const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(300, Math.min(650, distance * 1.5)), startTime = performance.now();
-            // Lid state managed by isAnimatingJump flag
             function animate(currentTime) {
                 const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
                 const curX = startX + (targetX - startX) * p, jumpH = Math.min(50, distance * 0.25), curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
                 fm.style.left = (curX - 30) + 'px'; fm.style.top = (curY - 30) + 'px'; fm.style.transform = `scale(${1 + Math.sin(p * Math.PI) * 0.1}) rotate(${p * 180}deg)`;
+                const gl = document.getElementById('marble-glow');
+                if(gl) {
+                    // Glow visibility handled by updateFloatingPosition dispersion logic
+                }
                 if (p < 1) requestAnimationFrame(animate);
                 else {
                     const cr = canvas.getBoundingClientRect(); 
@@ -1091,11 +1428,43 @@
                     if(!h) return;
                     const stats = userStats.daysData[currentDayView].habits[h.id];
                     if(stats.min===0) stats.min=1; else stats.breakthrough++;
-                    const b = Bodies.circle((contRect.left + targetX) - cr.left, (contRect.top + targetY) - cr.top, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
+                    
+                    const newTotal = currentBalls.length + 1;
+                    const targetScale = getScaleFactor(newTotal);
+                    const currentRadius = 26 * targetScale;
+
+                    // Update existing balls to new scale if needed
+                    currentBalls.forEach(ball => {
+                        const s = targetScale / (ball.circleRadius / 26);
+                        if (Math.abs(s - 1) > 0.01) {
+                            Matter.Body.scale(ball, s, s);
+                        }
+                    });
+
+                    const b = Bodies.circle((contRect.left + targetX) - cr.left, 120, currentRadius, { restitution:0.2, friction:0.1, frictionStatic:0.5, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
                     Matter.Body.setVelocity(b, {x:0, y:7}); currentBalls.push(b); Composite.add(world, b); 
                     fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
-                    const aura = document.getElementById('marble-glow-aura');
-                    if(aura) aura.style.display = 'none';
+                    const gl = document.getElementById('marble-glow'); if(gl) gl.style.opacity = '0';
+
+                    // Compression Effect: Push existing balls down and towards center
+                    currentBalls.forEach(ball => {
+                        const dx = 170 - ball.position.x;
+                        Matter.Body.applyForce(ball, ball.position, {
+                            x: dx * 0.0008,
+                            y: 0.05 * ball.mass 
+                        });
+                    });
+
+                    // Visual Jar Impact Shake
+                    const jarWrapper = document.getElementById(`jar-wrapper-${currentDayView}`);
+                    if(jarWrapper) {
+                        jarWrapper.style.transition = 'transform 0.1s ease-out';
+                        jarWrapper.style.transform = 'scale(0.98) translateY(5px)';
+                        setTimeout(() => {
+                            jarWrapper.style.transform = 'scale(1) translateY(0)';
+                        }, 100);
+                    }
+
                     window.isAnimatingJump = false; window.saveState();
                     // Lid closes automatically when flag turns false
                     setTimeout(() => window.respawnMarble(), 250); 
@@ -1108,15 +1477,11 @@
             const bottomDrawer = document.getElementById('bottom-drawer');
             if(bottomDrawer.classList.contains('edit-mode') || bottomDrawer.classList.contains('stats-mode') || window.isAnimatingJump) return; 
             
+            hasEverInteracted = true;
             marbleInteractionCount++;
-            const aura = document.getElementById('marble-glow-aura');
-            if (marbleInteractionCount >= 2 && aura) {
-                aura.classList.add('active-yellow');
-            } 
             if (window.isTutorialMode) { window.isTutorialMode = false; document.getElementById('tutorial-tooltip').style.display = 'none'; }
             window.isDrag=true; fm.classList.add('dragging'); 
             fm.classList.remove('marble-pulse'); 
-            if(aura) aura.classList.remove('aura-pulse');
             fm.style.transition = 'none'; 
             sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
         });
@@ -1125,6 +1490,10 @@
             tx=e.clientX-sx; ty=e.clientY-sy; 
             const rot = tx * 0.2; 
             fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.15) rotate(${rot}deg)`;
+            const gl = document.getElementById('marble-glow');
+            if(gl) {
+                // Logic now handled globally in updateFloatingPosition to ensure dispersion
+            }
             
             // Dynamic Lid Logic
             const lid = document.getElementById(`lid-${currentDayView}`);
@@ -1152,6 +1521,10 @@
             else {
                 fm.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.45s, top 0.45s'; 
                 fm.style.transform = 'translate(0,0) scale(1)';
+                const gl = document.getElementById('marble-glow'); if(gl) {
+                    gl.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    gl.style.transform = 'translate(0,0) scale(1)';
+                }
                 const lid = document.getElementById(`lid-${currentDayView}`);
                 if(lid) {
                     lid.style.transition = 'transform 0.4s ease';
@@ -1182,9 +1555,21 @@
 
         window.saveHabitChanges = () => {
             const h = habitsData[currentHabitIndex]; if(!h) return;
-            h.name = document.getElementById('input-habit-name').value.trim() || h.name;
-            h.time = document.getElementById('input-habit-time').value.trim() || h.time;
-            h.color = document.getElementById('input-habit-color').value;
+            const newName = document.getElementById('input-habit-name').value.trim() || h.name;
+            const newTime = document.getElementById('input-habit-time').value.trim() || h.time;
+            const newColor = document.getElementById('input-habit-color').value.toLowerCase();
+
+            // Enforce global uniqueness: check if color is taken by any OTHER habit
+            const isColorTaken = habitsData.some((item, idx) => idx !== currentHabitIndex && item.color.toLowerCase() === newColor);
+
+            if (isColorTaken) {
+                alert("צבע זה כבר נמצא בשימוש עבור הרגל אחר. בחר צבע ייחודי.");
+                return;
+            }
+
+            h.name = newName;
+            h.time = newTime;
+            h.color = newColor;
             window.closeEditMode(); initScroller(); window.saveState();
         };
 
@@ -1263,33 +1648,86 @@
         };
         window.handleBackdropClick = (e, id) => { if(e.target.id === id) document.getElementById(id).classList.remove('active'); };
 
+        window.resetAppState = () => {
+            if (confirm("להתחיל מחדש? כל ההרגלים, ההתקדמות והגולות יימחקו לצמיתות.")) {
+                // 1. Wipe Physics
+                currentBalls.forEach(b => Composite.remove(world, b));
+                currentBalls = [];
+                Matter.Composite.clear(world, false);
+                
+                // 2. Clear Storage
+                localStorage.removeItem('habit_jar_local_state_v2');
+
+                // 3. Reset Variables
+                habitsData = [];
+                userStats = { daysData: [] };
+                unlockedDays = 1;
+                currentDayView = 0;
+                currentHabitIndex = 0;
+                customBgs = {};
+
+                // 4. Force UI Update
+                fm.style.display = 'none';
+                const appCont = document.querySelector('.app-container');
+                appCont.style.backgroundImage = 'none';
+                appCont.style.backgroundColor = '#f8fafc';
+
+                // 5. Re-initialize empty state
+                buildJars();
+                initScroller();
+                
+                // 6. Trigger Onboarding
+                document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
+                document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+                document.getElementById('drawer-onboarding-view').classList.add('active');
+                document.getElementById('drawer-onboarding-step1').style.display = 'flex';
+                
+                // Move to first jar
+                const slider = document.getElementById('jars-slider');
+                if (slider) slider.scrollTo({ left: 0, behavior: 'smooth' });
+                
+                // Optional: Force reload to ensure a 100% clean memory state
+                window.location.reload();
+            }
+        };
+
         // --- 9. הפעלה ---
         function updateLidProximity() {
             const lid = document.getElementById(`lid-${currentDayView}`);
             if (!lid) return;
             let openFactor = 0;
+
+            // Reset lid transition style by default
+            lid.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+            // 1. If currently animating the 'jump' into the jar, lid is fully open
             if (window.isAnimatingJump) {
                 openFactor = 1;
-            } else if (window.isDrag) {
+            } 
+            // 2. If dragging the marble, calculate proximity to open lid dynamically
+            else if (window.isDrag) {
                 const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
                 const r = fm.getBoundingClientRect();
+                // Calculate distance between floating marble center and jar mouth center
                 const dist = Math.sqrt(Math.pow((r.left + 30) - (jr.left + jr.width / 2), 2) + Math.pow((r.top + 30) - (jr.top + 50), 2));
-                openFactor = Math.max(0, Math.min(1, 1 - (dist - 60) / 180));
+                
+                // Open lid as marble gets closer than 240px, fully open at 80px
+                openFactor = Math.max(0, Math.min(1, 1 - (dist - 80) / 160));
+                
+                // Disable transition during active drag for 1:1 response
+                lid.style.transition = 'none';
             }
-            const hasFallingBall = currentBalls.some(b => b.position.y > 0 && b.position.y < 120);
-            if (hasFallingBall) openFactor = 1;
-            lid.style.transition = (window.isDrag && !hasFallingBall) ? 'none' : 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            
-            // סימולציית פתיחה בסיבוב (Screw action)
+
+            // Apply visual transformations
             const screwRotation = openFactor * -25;
-            const lift = openFactor * -65;
-            const slideOut = openFactor * -20;
+            const lift = openFactor * -70;
+            const slideOut = openFactor * -25;
             
             lid.style.transform = `translate(${slideOut}px, ${lift}px) rotate(${screwRotation}deg)`;
             
-            // אפקט פתיחת הברגה - תנועה מהירה מצד לצד בתחילת הפתיחה
-            if (openFactor > 0.05 && openFactor < 0.3) {
-                const jitter = Math.sin(Date.now() * 0.1) * 2;
+            // Add a small 'rattle' effect when the lid is just starting to unscrew
+            if (openFactor > 0.02 && openFactor < 0.3) {
+                const jitter = Math.sin(Date.now() * 0.2) * 1.2;
                 lid.style.transform += ` translateX(${jitter}px)`;
             }
         }
@@ -1297,7 +1735,17 @@
         function loop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             Composite.allBodies(world).forEach(b => {
-                if (b.label === 'habit-ball') drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle);
+                if (b.label === 'habit-ball') {
+                    // Settle jitter and compression force
+                    const isFull = currentBalls.length > 15;
+                    const forceMag = isFull ? 0.0001 : 0.00001;
+                    Matter.Body.applyForce(b, b.position, { 
+                        x: (170 - b.position.x) * forceMag, 
+                        y: 0.0006 * b.mass 
+                    });
+                    
+                    drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle);
+                }
             });
             updateFloatingPosition();
             updateLidProximity();
@@ -1334,10 +1782,46 @@
         const sc = document.getElementById('habit-scroller');
         let lidx = -1;
         sc.addEventListener('scroll', () => {
-            const center = sc.getBoundingClientRect().left + sc.offsetWidth/2;
-            let closest = -1, min = Infinity;
-            document.querySelectorAll('.habit-item').forEach((it, i) => { const d = Math.abs(center - (it.getBoundingClientRect().left + it.offsetWidth/2)); if(d < min){ min = d; closest = i; } });
-            if(closest !== -1 && closest !== lidx) { lidx = closest; currentHabitIndex = closest; window.popMarble(); }
+            const scRect = sc.getBoundingClientRect();
+            const scCenter = scRect.left + scRect.width / 2;
+            const items = sc.querySelectorAll('.habit-item');
+            let closest = -1, minDistance = Infinity;
+            
+            items.forEach((item, i) => {
+                const itemRect = item.getBoundingClientRect();
+                const itemCenter = itemRect.left + itemRect.width / 2;
+                const offset = itemCenter - scCenter;
+                const dist = Math.abs(offset);
+                
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closest = i;
+                }
+
+                const maxDist = 150; 
+                let progress = Math.max(0, 1 - (dist / maxDist));
+                const scale = 0.85 + (0.15 * progress);
+                
+                item.style.transform = `scale(${scale})`;
+                item.style.opacity = 0.4 + (0.6 * progress);
+                
+                if (progress > 0.85) {
+                    item.style.color = habitsData[i].color;
+                    item.classList.add('active');
+                } else {
+                    item.style.color = "#94a3b8";
+                    item.classList.remove('active');
+                }
+            });
+            
+            if(closest !== -1 && closest !== lidx) {
+                if (lidx !== -1 && typeof window.navigator.vibrate === 'function') window.navigator.vibrate(5);
+                lidx = closest;
+                currentHabitIndex = closest;
+                renderDots();
+                updateStatsUI();
+                window.popMarble();
+            }
         });
 
         // --- חיבור לגוגל דמה (ללא שגיאות) ---
