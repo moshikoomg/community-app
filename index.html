@@ -1952,23 +1952,68 @@
         };
 
         // --- 7. לוגיקת משחק ואנימציה ---
+        function createMotionGhost(x, y, color, scale, angle) {
+            const ghost = document.createElement('div');
+            ghost.style.position = 'absolute';
+            ghost.style.left = (x - 26) + 'px';
+            ghost.style.top = (y - 26) + 'px';
+            ghost.style.width = '52px';
+            ghost.style.height = '52px';
+            ghost.style.borderRadius = '50%';
+            ghost.style.background = `radial-gradient(circle at 30% 30%, ${color}ee, ${color}66)`;
+            ghost.style.filter = 'blur(6px)';
+            ghost.style.opacity = '0.5';
+            ghost.style.zIndex = '999';
+            ghost.style.pointerEvents = 'none';
+            ghost.style.transform = `scale(${scale}) rotate(${angle}deg)`;
+            document.querySelector('.app-container').appendChild(ghost);
+            
+            ghost.animate([
+                { opacity: 0.5, transform: `scale(${scale}) rotate(${angle}deg)` },
+                { opacity: 0, transform: `scale(${scale * 0.4}) rotate(${angle + 20}deg)` }
+            ], { duration: 250, easing: 'ease-out' }).onfinish = () => ghost.remove();
+        }
+
         function performNaturalJump(fromX = null, fromY = null) {
             if (window.isAnimatingJump) return;
             window.isAnimatingJump = true; fm.classList.remove('marble-pulse'); fm.style.transition = 'none'; 
+            const h = habitsData[currentHabitIndex];
+            const color = h ? h.color : '#239B62';
             const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
             const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 20; 
-            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(300, Math.min(650, distance * 1.5)), startTime = performance.now();
+            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(200, Math.min(400, distance * 0.7)), startTime = performance.now();
+            
+            let lastX = startX, lastY = startY;
+
             function animate(currentTime) {
                 const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
                 const curX = startX + (targetX - startX) * p, jumpH = Math.min(50, distance * 0.25), curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
-                fm.style.left = (curX - 30) + 'px'; fm.style.top = (curY - 30) + 'px'; fm.style.transform = `scale(${1 + Math.sin(p * Math.PI) * 0.1}) rotate(${p * 180}deg)`;
-                const gl = document.getElementById('marble-glow');
-                if(gl) {
-                    // Glow visibility handled by updateFloatingPosition dispersion logic
-                }
+                
+                // Calculate momentary velocity and angle for smear effect
+                const vx = curX - lastX, vy = curY - lastY;
+                const speed = Math.sqrt(vx*vx + vy*vy);
+                const angle = Math.atan2(vy, vx) * (180 / Math.PI);
+                
+                // Color Smear Ghosts
+                if (Math.random() > 0.3) createMotionGhost(curX, curY, color, 1 + Math.sin(p * Math.PI) * 0.1, p * 180);
+
+                fm.style.left = (curX - 30) + 'px'; 
+                fm.style.top = (curY - 30) + 'px'; 
+                
+                // Motion Stretch + Rotation + Blur
+                const stretch = 1 + (speed * 0.05); 
+                const scale = 1 + Math.sin(p * Math.PI) * 0.1;
+                const blurVal = Math.min(4, speed * 0.3);
+                
+                fm.style.transform = `rotate(${angle}deg) scale(${scale * stretch}, ${scale / stretch}) rotate(${-angle + p * 180}deg)`;
+                fm.style.filter = `blur(${blurVal}px)`;
+
+                lastX = curX; lastY = curY;
+
                 if (p < 1) requestAnimationFrame(animate);
                 else {
+                    fm.style.filter = 'none';
                     const cr = canvas.getBoundingClientRect(); 
                     const h = habitsData[currentHabitIndex];
                     if(!h) return;
