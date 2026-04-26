@@ -8,6 +8,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 
     <style>
+        /* Onboarding Minimalist Overrides */
+        .onboarding-hero-icon { display: none !important; }
+        .preset-btn {
+            border: none !important;
+            box-shadow: none !important;
+            background: #f8fafc !important;
+            padding: 12px !important;
+            border-radius: 16px !important;
+        }
+        .preset-btn:hover {
+            background: #f1f5f9 !important;
+            transform: translateY(-2px) !important;
+        }
+        .custom-input-group {
+            border: none !important;
+            background: #f1f5f9 !important;
+            box-shadow: none !important;
+        }
+        .onboarding-title {
+            margin-top: 10px;
+        }
+
         /* Dev Tools Styling */
         #mode-switcher-container {
             position: relative;
@@ -102,8 +124,8 @@
             border-radius: 50%;
         }
         .magnet-eye-btn.active {
-            color: var(--primary-color);
-            background: #f0fdf4;
+            color: #1e293b;
+            background: transparent;
         }
         .magnet-eye-btn svg {
             width: 20px;
@@ -127,66 +149,66 @@
             40% {transform: translateY(5px);}
             60% {transform: translateY(3px);}
         }
-        .scroll-hint {
-            font-size: 11px;
-            font-weight: 800;
-            color: #94a3b8;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 12px;
-            animation: bounceDown 2s infinite;
-        }
+        .scroll-hint { display: none; }
         /* Onboarding Redesign Styles */
         .onboarding-scroll-area {
             width: 100%;
             max-height: 240px;
-            transition: max-height 0.4s ease, opacity 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
-            padding-right: 4px;
-            margin-bottom: 20px;
+            padding: 4px;
+            margin-bottom: 24px;
             scrollbar-width: none;
         }
         .onboarding-scroll-area::-webkit-scrollbar { display: none; }
 
-        .habit-category-title {
-            font-size: 13px;
-            font-weight: 800;
-            color: #94a3b8;
-            margin: 15px 0 10px 0;
-            text-align: right;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .habit-category-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #f1f5f9;
-        }
+        .habit-category-title { display: none; }
 
         .preset-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 10px;
         }
 
         .preset-btn {
-            background: #f1f5f9;
-            border: none;
-            padding: 12px 10px;
-            border-radius: 12px;
-            font-weight: 700;
+            background: #ffffff;
+            border: 1.5px solid #f1f5f9;
+            padding: 18px 12px;
+            border-radius: 22px;
+            font-weight: 800;
             color: #475569;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            box-shadow: none;
+            gap: 6px;
+            box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        .preset-btn::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--btn-accent, var(--primary-color));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .preset-btn:hover::after { opacity: 1; }
+        .preset-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: #f0fdf4;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -8px rgba(35, 155, 98, 0.2);
+        }
+        .preset-btn .icon {
+            font-size: 24px;
+            margin-bottom: 2px;
         }
         .preset-btn:hover {
             border-color: var(--primary-color);
@@ -553,10 +575,10 @@
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 25px; touch-action: pan-y; }
         .drawer-view.active { display: flex; }
 
-        .edit-btn { position: absolute; top: 25px; right: 25px; color: #cbd5e1; cursor: pointer; padding: 6px; z-index: 110; }
-        .add-btn { position: absolute; top: 25px; left: 25px; color: #cbd5e1; cursor: pointer; padding: 6px; z-index: 110; }
+        .edit-btn { color: #cbd5e1; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 50%; } .edit-btn:hover { background: #f8fafc; color: #94a3b8 !important; }
+        .add-btn { color: #cbd5e1; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 50%; } .add-btn:hover { background: #f0fdf4; color: var(--primary-color) !important; }
         
-        .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -55px; min-height: 100px; }
+        .picker-top { display: none; }
         
         .active-icon-bg { 
             width: 90px; height: 40px; 
@@ -567,17 +589,17 @@
 
         #marble-glow {
             position: absolute;
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle, var(--glow-color-solid) 0%, transparent 70%);
+            width: 130px;
+            height: 130px;
+            background: radial-gradient(circle, var(--glow-color-solid) 0%, transparent 65%);
             border-radius: 50%;
-            filter: blur(14px);
+            filter: blur(18px);
             opacity: 0;
             pointer-events: none;
-            z-index: 999;
-            transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), filter 0.6s ease;
+            z-index: 900; /* Behind the marble (1000) */
+            transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.165, 0.84, 0.44, 1), filter 0.7s ease;
             transform-origin: center center;
-            pointer-events: none;
+            mix-blend-mode: soft-light;
         }
 
         #floating-marble:not([style*="display: none"]) ~ #marble-glow {
@@ -612,10 +634,57 @@
             85% { transform: translateY(-6px) scale(1) rotate(0deg); }
         }
 
+        .drawer-info-pill {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            z-index: 110;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .drawer-info-pill.activated {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .drawer-info-pill .day-label {
+            font-size: 14px;
+            font-weight: 900;
+            color: #cbd5e1;
+            white-space: nowrap;
+            transition: color 0.4s;
+        }
+        .drawer-info-pill.activated .day-label {
+            color: #1e293b;
+        }
+        .drawer-info-pill .divider {
+            width: 1.5px;
+            height: 14px;
+            background: #f1f5f9;
+        }
+        .drawer-info-pill .count-label {
+            font-size: 14px;
+            font-weight: 900;
+            color: #cbd5e1;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            transition: color 0.4s;
+        }
+        .drawer-info-pill.activated .count-label {
+            color: var(--habit-active-color, var(--primary-color));
+        }
+
         .habit-scroller-outer {
             position: relative;
             width: 100%;
-            margin-top: -15px;
+            margin-top: 5px;
             display: flex;
             align-items: center;
         }
@@ -635,20 +704,44 @@
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
         .habit-item {
             flex: 0 0 auto; scroll-snap-align: center; 
-            padding: 12px 24px; font-size: 16px; color: #94a3b8; font-weight: 800;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 12px 24px; font-size: 16px; color: #cbd5e1; font-weight: 800;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap; cursor: pointer;
-            border-radius: 100px;
+            border: none !important; background: none !important; box-shadow: none !important;
             margin: 0 5px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             letter-spacing: -0.2px;
+            gap: 2px;
         }
         .habit-item.active {
-            font-size: 24px;
-            background: transparent;
-            box-shadow: none;
-            transform: scale(1.15);
+            font-size: 28px;
+            transform: scale(1.0);
             filter: blur(0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0px;
+            color: #94a3b8; /* Default inactive color */
+        }
+        .habit-item.activated.active {
+            color: var(--habit-active-color, var(--text-main));
+        }
+        .habit-goal-tag {
+            display: none !important;
+        }
+
+        #management-buttons-container {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .bottom-section.stats-mode #management-buttons-container,
+        .bottom-section.onboarding-mode #management-buttons-container {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
         }
 
         .dots-container { display: flex; gap: 8px; margin-top: 5px; position: relative; z-index: 6; }
@@ -670,6 +763,16 @@
         /* --- Onboarding View --- */
         #drawer-onboarding-view { padding: 0 25px; width: 100%; box-sizing: border-box; }
         .onboarding-step { animation: fadeIn 0.4s; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .onboarding-hero-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+            animation: floatHero 3s ease-in-out infinite;
+        }
+        @keyframes floatHero {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
         
         /* Custom Flow Logic */
         .onboarding-step.custom-flow-active .onboarding-scroll-area,
@@ -680,6 +783,7 @@
         }
 
         .onboarding-step.custom-flow-active .custom-habit-label {
+            display: block !important;
             font-size: 16px;
             text-align: center;
             margin-bottom: 12px;
@@ -689,7 +793,9 @@
         .onboarding-step.custom-flow-active .custom-input-group {
             background: #ffffff;
             border: 2px solid var(--primary-color);
-            padding: 8px;
+            padding: 10px;
+            box-shadow: 0 10px 25px -5px rgba(35, 155, 98, 0.15);
+            transform: translateY(-5px);
         }
 
         .onboarding-step.custom-flow-active .onboarding-target-inner {
@@ -698,6 +804,16 @@
             align-items: center;
             width: 100%;
             animation: fadeIn 0.5s ease-out;
+        }
+
+        .onboarding-step.custom-flow-active .onboarding-hero-icon {
+            display: none !important;
+        }
+
+        /* Adjusting for mobile keyboard */
+        .app-container:has(.custom-flow-active) .bottom-section.onboarding-mode {
+            height: 480px; 
+            transition: height 0.3s ease-out;
         }
         
         .onboarding-title { font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; text-align: center; }
@@ -744,6 +860,77 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
+        /* --- Score Feedback --- */
+        .score-feedback {
+            position: absolute;
+            font-weight: 900;
+            font-size: 32px;
+            z-index: 2000;
+            pointer-events: none;
+            text-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            direction: ltr;
+            text-align: center;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: blur(0px);
+            transform-origin: center center;
+        }
+        .app-container:has(.bottom-section.stats-mode) .score-feedback,
+        .app-container:has(.bottom-section.edit-mode) .score-feedback,
+        .app-container:has(.bottom-section.onboarding-mode) .score-feedback {
+            bottom: 450px;
+        }
+        .score-anim {
+            animation: scorePopUp 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.35) forwards;
+        }
+        @keyframes scorePopUp {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 0; filter: blur(6px); }
+            25% { transform: translate(15px, -40px) scale(1.8); opacity: 1; filter: blur(0px); }
+            100% { transform: translate(30px, -180px) scale(2.5); opacity: 0; filter: blur(15px); }
+        }
+        .drawer-info-pill.pulse-active {
+            transform: scale(1.1);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .count-feedback-pop {
+            position: absolute;
+            pointer-events: none;
+            font-weight: 900;
+            font-size: 32px;
+            z-index: 120;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            line-height: 1;
+            gap: 2px;
+        }
+
+        .count-pop-anim {
+            animation: countFloatUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes countFloatUp {
+            0% {
+                transform: translate(0, 0) scale(0.6);
+                opacity: 0;
+                filter: blur(6px);
+            }
+            30% {
+                transform: translate(15px, -50px) scale(1.6);
+                opacity: 1;
+                filter: blur(0px);
+            }
+            100% {
+                transform: translate(35px, -200px) scale(2.5);
+                opacity: 0;
+                filter: blur(12px);
+            }
+        }
+
         /* --- Tutorial Tooltip --- */
         #tutorial-tooltip {
             position: absolute;
@@ -770,6 +957,48 @@
         }
 
         /* --- Reward Popup --- */
+        .reward-popup-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+        .reward-popup-close:active { transform: scale(0.9); }
+        .reward-timer-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 32px;
+            height: 32px;
+            transform: rotate(-90deg);
+            pointer-events: none;
+        }
+        .reward-timer-circle {
+            fill: none;
+            stroke: var(--primary-color);
+            stroke-width: 2.5;
+            stroke-dasharray: 88;
+            stroke-dashoffset: 88;
+            stroke-linecap: round;
+        }
+        @keyframes timerProgress {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: 88; }
+        }
+        .reward-popup.active .reward-timer-circle {
+            animation: timerProgress 3.5s linear forwards;
+        }
+
         .reward-popup {
             position: fixed;
             top: 45%;
@@ -906,24 +1135,41 @@
             <div class="drawer-handle" id="drawer-handle"></div>
             
             <div id="drawer-normal-view" class="drawer-view active">
-                <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 110;">
-                    <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" onmouseover="this.style.color='#94a3b8'" onmouseout="if(!this.classList.contains('active')) this.style.color='#cbd5e1'">
+                <!-- Left Side Actions: Magnet & Manage -->
+                <!-- Left Corner: Magnet Toggle -->
+                <div style="position: absolute; top: 18px; left: 12px; z-index: 115;">
+                    <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     </div>
-                    <div class="edit-btn" onclick="event.stopPropagation(); window.openEditMode()" style="position: static; color: #cbd5e1; cursor: pointer; padding: 6px; transition: color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </div>
+
+                <!-- Management Section (Slightly more inward) -->
+                <div style="position: absolute; top: 18px; left: 56px; z-index: 110;">
+                    <div id="management-buttons-container" style="display: flex; align-items: center; gap: 4px;">
+                        <div class="add-btn" id="main-add-button" onclick="event.stopPropagation(); window.openAddMode()" title="הוספת הרגל">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </div>
+                        <div class="edit-btn" onclick="event.stopPropagation(); window.openEditMode()" title="עריכת הרגל">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </div>
                     </div>
                 </div>
-                <div style="position: absolute; top: 20px; left: 20px; display: flex; gap: 12px; z-index: 110;">
-                    <div class="add-btn" onclick="event.stopPropagation(); window.openAddMode()" style="position: static; color: #cbd5e1; cursor: pointer; padding: 6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
-                    
+
+                <!-- Right Side Info: Stats -->
+                <div style="position: absolute; top: 18px; right: 20px; display: flex; align-items: center; gap: 8px; z-index: 110;">
+                    <div class="drawer-info-pill">
+                        <span class="day-label" id="drawer-day-label">יום 1</span>
+                        <div class="divider" style="width:1.5px; height:14px; background:#f1f5f9; transition: opacity 0.4s;"></div>
+                        <div class="count-label">
+                            <span id="drawer-current-count">0</span>
+                            <span style="opacity: 0.2; margin: 0 1px; font-weight: 400;">/</span>
+                            <span id="drawer-goal-count">1</span>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="picker-top">
-                    <div class="active-icon-bg" onclick="event.stopPropagation(); if(fm.style.display === 'none') window.popMarble(event);">
-                        <div id="marble-drop-zone"></div>
-                    </div>
-                    <div id="picker-time" style="color:#94a3b8; font-size:12px; font-weight:800; margin-top:10px; background: #f8fafc; padding: 4px 12px; border-radius: 20px;"></div>
+                <div id="marble-drop-zone-container" style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 60px; height: 10px; z-index: 1000;">
+                    <div id="marble-drop-zone" style="width: 60px; height: 60px; position: absolute; top: -30px; left: 0; pointer-events: none;"></div>
                 </div>
 
                 <div class="habit-scroller-outer">
@@ -985,45 +1231,29 @@
             <div id="drawer-onboarding-view" class="drawer-view">
                 <div id="drawer-onboarding-step1" class="onboarding-step active">
                     <div class="back-onboarding-btn" onclick="window.deactivateCustomFlow()" style="position: absolute; top: 18px; left: 20px; color: #cbd5e1; cursor: pointer; display: none; padding: 8px; transition: all 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></div>
-                    <div class="onboarding-title">מה המטרה שלך?</div>
-                    <div class="onboarding-sub">בחר הרגל מהרשימה או צור אחד אישי. <span>התמדה היא הסוד.</span></div>
                     
-                    <div class="scroll-hint">גלה את כל האפשרויות ⌄</div>
+                    <div class="onboarding-title">מה המטרה הבאה?</div>
+                    <div class="onboarding-sub">בחירה אחת קטנה היום היא שינוי גדול מחר.</div>
 
                     <div class="onboarding-scroll-area">
-                        <div class="habit-category-title">הכי פופולריים</div>
                         <div class="preset-grid">
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לשתות מים', '#3b82f6', 'כוסות', 3, ['ליטר', 'פעמים'])">לשתות מים</button>
-                            <button class="preset-btn" style="background: #e2e8f0;" onclick="window.activateCustomFlow()">משהו אישי...</button>
-                        </div>
-
-                        <div class="habit-category-title">בריאות וגוף</div>
-                        <div class="preset-grid">
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לאכול פרי', '#ef4444', 'פעמים', 1, ['פעמים'])">לאכול פרי</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('מתיחות', '#fb923c', 'דקות', 3, ['דקות', 'פעמים'])">מתיחות בבוקר</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('צעידה', '#84cc16', 'ק״מ', 3, ['צעדים', 'ק״מ', 'דקות'])">הליכה קצרה</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('שינה עמוקה', '#1e293b', 'פעמים', 1, ['דקות', 'פעמים'])">שינה טובה</button>
-                        </div>
-
-                        <div class="habit-category-title">שקט נפשי</div>
-                        <div class="preset-grid">
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לנשום עמוק', '#2dd4bf', 'פעמים', 3, ['פעמים', 'דקות'])">לנשום עמוק</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('מדיטציה', '#a855f7', 'דקות', 3, ['דקות', 'פעמים'])">מדיטציה</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('ניתוק מסכים', '#6366f1', 'שעות', 1, ['דקות', 'שעות'])">שעה בלי טלפון</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('הכרת תודה', '#ec4899', 'פעמים', 3, ['פעמים'])">הכרת תודה</button>
-                        </div>
-
-                        <div class="habit-category-title">למידה וסדר</div>
-                        <div class="preset-grid">
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לקרוא עמוד', '#f59e0b', 'עמודים', 3, ['עמודים', 'דקות', 'פעמים'])">לקרוא עמוד</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לסדר חדר', '#94a3b8', 'דקות', 3, ['דקות', 'פעמים'])">לסדר 3 דק'</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('למידת שפה', '#0d9488', 'פעמים', 3, ['פעמים', 'דקות'])">מילה חדשה</button>
-                            <button class="preset-btn" style="background: #fff1f2; color: #e11d48;" onclick="window.activateCustomFlow()">צור הרגל אישי</button>
+                            <button class="preset-btn" style="--btn-accent: #3b82f6;" onclick="window.activateCustomFlow('לשתות מים', '#3b82f6', 'ליטר', 2, ['ליטר', 'פעמים', 'כוסות'])">
+                                <span>לשתות מים</span>
+                            </button>
+                            <button class="preset-btn" style="--btn-accent: #84cc16;" onclick="window.activateCustomFlow('צעידה', '#84cc16', 'פעמים', 3, ['צעדים', 'ק״מ', 'דקות', 'פעמים'])">
+                                <span>צעידה יומית</span>
+                            </button>
+                            <button class="preset-btn" style="--btn-accent: #a855f7;" onclick="window.activateCustomFlow('מדיטציה', '#a855f7', 'פעמים', 1, ['דקות', 'פעמים'])">
+                                <span>מדיטציה</span>
+                            </button>
+                            <button class="preset-btn" style="--btn-accent: #6366f1; box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.35); border: 1.5px solid #c7d2fe; background: linear-gradient(to bottom, #ffffff, #f5f3ff);" onclick="window.activateCustomFlow('', '#6366f1', 'פעמים', 1, [])">
+                                <span>עיצוב אישי</span>
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="custom-habit-label">צור הרגל אישי משלך:</div>
-                    <div class="custom-input-group">
+                    <div class="custom-habit-label" id="onboarding-typing-label" style="display:none; margin-top: 10px; font-size: 16px; color: var(--primary-color);">מה ההרגל החדש שלך?</div>
+                    <div class="custom-input-group" style="display:none;">
                         <input type="text" id="custom-habit-input" placeholder="לדוגמה: לנגן בגיטרה..." oninput="window.onInputHabit()">
                         <button id="custom-flow-trigger-btn" onclick="window.handleCustomHabit()">המשך</button>
                     </div>
@@ -1066,6 +1296,12 @@
     <!-- Popups -->
         <!-- Reward Popup -->
     <div id="reward-popup" class="reward-popup">
+        <button class="reward-popup-close" onclick="window.dismissRewardPopup()">
+            <svg class="reward-timer-svg">
+                <circle class="reward-timer-circle" cx="16" cy="16" r="14"></circle>
+            </svg>
+            <span style="font-size: 14px; font-weight: 900; color: #64748b; position: relative; z-index: 2; margin-top: -1px;">✕</span>
+        </button>
         <div class="reward-glow-bg"></div>
         <div class="reward-icon-anim">🎁</div>
         <h2>יצאנו לדרך!</h2>
@@ -1154,7 +1390,7 @@
         // --- 1. משתנים גלובליים ---
         const STAGE_GAP = 21, TOTAL_DISPLAY_DAYS = 63;
         let currentUser = { displayName: "שם משתמש", profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" };
-        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false, hasSeenTutorial = false;
+        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false, hasSeenTutorial = false, sessionActivated = false;
         let habitsData = [];
         const HABIT_PALETTE = ['#239B62', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#2dd4bf', '#fb923c', '#6366f1', '#ec4899', '#84cc16'];
         window.getNextUniqueColor = () => {
@@ -1255,12 +1491,48 @@
 
         function updateStatsUI() {
             if(!habitsData[currentHabitIndex]) return;
-            const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView]?.habits[h.id];
-            const timeEl = document.getElementById('picker-time');
-            if(!timeEl) return;
-            const fullText = `${h.amount || 1} ${h.unit || 'פעמים'}`;
-            if(stats && stats.min > 0) { timeEl.innerText = '+' + fullText; timeEl.style.color = h.color; } 
-            else { timeEl.innerText = fullText; timeEl.style.color = '#94a3b8'; }
+            const h = habitsData[currentHabitIndex];
+            const stats = userStats.daysData[currentDayView]?.habits[h.id];
+            
+            const dayLabel = document.getElementById('drawer-day-label');
+            const countCur = document.getElementById('drawer-current-count');
+            const countGoal = document.getElementById('drawer-goal-count');
+            const infoPill = document.querySelector('.drawer-info-pill');
+            
+            if(dayLabel) dayLabel.innerText = `יום ${currentDayView + 1}`;
+            if(countCur && countGoal) {
+                const currentCount = currentBalls.filter(b => b.habitId === h.id && !b.isGift).length;
+                const isActivated = currentCount > 0;
+
+                countCur.innerText = currentCount;
+                countGoal.innerText = `${h.amount || 1} ${h.unit || 'פעמים'}`;
+
+                if (infoPill) infoPill.classList.toggle('activated', isActivated);
+                
+                if (isActivated) {
+                    countCur.style.color = h.color;
+                    countGoal.style.color = h.color;
+                } else {
+                    countCur.style.color = '#cbd5e1';
+                    countGoal.style.color = '#cbd5e1';
+                }
+            }
+
+            const items = document.querySelectorAll('.habit-item');
+            const currentEl = items[currentHabitIndex];
+            if(!currentEl) return;
+            
+            const goalTag = currentEl.querySelector('.habit-goal-tag');
+            if(goalTag) {
+                const fullText = `${h.amount || 1} ${h.unit || 'פעמים'}`;
+                if(stats && stats.min > 0) {
+                    goalTag.innerText = '+' + fullText;
+                    currentEl.style.setProperty('--habit-color-soft', h.color + '20');
+                } else {
+                    goalTag.innerText = fullText;
+                    currentEl.style.setProperty('--habit-color-soft', 'rgba(0,0,0,0.05)');
+                }
+            }
         }
         window.updateStatsUI = updateStatsUI;
 
@@ -1468,7 +1740,11 @@
             c.arc(0, 0, r, 0, Math.PI * 2);
             c.clip();
 
-            // Golden Base
+            // 1. Solid White Base (No border, no shadow)
+            c.fillStyle = '#ffffff';
+            c.fill();
+
+            // 2. Golden Base
             let g = c.createRadialGradient(-r * 0.4, -r * 0.4, 0, 0, 0, r * 1.2);
             g.addColorStop(0, "#fff9c4");
             g.addColorStop(0.2, "#fdd835");
@@ -1503,12 +1779,22 @@
             c.globalAlpha = alpha;
             c.translate(x, y);
 
+            // 0. Explicit White Underlay (Ensures perfectly opaque base exactly behind the ball)
+            c.beginPath();
+            c.arc(0, 0, r, 0, Math.PI * 2);
+            c.fillStyle = '#ffffff';
+            c.fill();
+
             // 1. Sharp Outer Boundary
             c.beginPath();
             c.arc(0, 0, r, 0, Math.PI * 2);
             c.clip();
 
-            // 2. Base Depth Gradient
+            // 2. Depth Base (Slightly grayed towards edges for dimension)
+            c.fillStyle = '#ffffff';
+            c.fill();
+
+            // 3. Base Depth Gradient
             let g = c.createRadialGradient(-r * 0.4, -r * 0.4, 0, 0, 0, r * 1.2);
             g.addColorStop(0, "#ffffff");
             g.addColorStop(0.1, "#f8fafc");
@@ -1572,24 +1858,33 @@
 
         function renderActiveHabit(isSilent = false) {
             const h = habitsData[currentHabitIndex]; if(!h) return;
-            document.querySelectorAll('.habit-item').forEach((it, i) => it.classList.toggle('active', i === currentHabitIndex));
+            document.querySelectorAll('.habit-item').forEach((it, i) => {
+                it.classList.toggle('active', i === currentHabitIndex);
+                it.classList.toggle('activated', sessionActivated);
+                if (i === currentHabitIndex) {
+                    it.style.setProperty('--habit-active-color', sessionActivated ? h.color : '#94a3b8');
+                }
+            });
             const uctx = fm.getContext('2d'); uctx.clearRect(0,0,60,60); 
             drawMarble(uctx, 30, 30, 26, 0, h.color);
             
             if(!window.isAnimatingJump && habitsData.length > 0) {
-                // If we are just scrolling, don't trigger the hide/show logic which causes 'jumps'
                 if (fm.style.display === 'none') {
                     fm.style.display = 'block';
                     fm.style.opacity = '1';
                     fm.style.visibility = 'visible';
                 }
                 const glow = document.getElementById('marble-glow');
-                if (glow) glow.style.opacity = '0.35';
+                if (glow) {
+                    glow.style.opacity = '0.6';
+                    glow.style.background = `radial-gradient(circle, ${h.color} 0%, transparent 70%)`;
+                }
                 updateFloatingPosition();
             }
             updateStatsUI(); renderDots();
             document.documentElement.style.setProperty('--glow-color', h.color + '40');
             document.documentElement.style.setProperty('--glow-color-solid', h.color);
+            document.documentElement.style.setProperty('--habit-active-color', h.color);
         }
 
         let marbleInteractionCount = 0;
@@ -1607,14 +1902,14 @@
             // Position marble at base only when not being dragged or jumping
             if (!window.isDrag && !window.isAnimatingJump) {
                 const currentLeft = centerX - 30;
-                const currentTop = centerY - 40;
+                const currentTop = centerY - 30;
                 fm.style.left = currentLeft + 'px';
                 fm.style.top = currentTop + 'px';
                 if(gl) {
-                    gl.style.left = (centerX - 60) + 'px';
-                    gl.style.top = (centerY - 70) + 'px';
-                    gl.style.opacity = '0.35';
-                    gl.style.filter = 'blur(14px)';
+                    gl.style.left = (centerX - 65) + 'px'; // Center 130px width
+                    gl.style.top = (centerY - 65) + 'px';
+                    gl.style.opacity = '0.6';
+                    gl.style.filter = 'blur(18px)';
                     gl.style.transform = 'scale(1)';
                 }
             } else {
@@ -1677,6 +1972,20 @@
             const step1 = document.getElementById('drawer-onboarding-step1');
             step1.classList.add('custom-flow-active');
             document.querySelector('.back-onboarding-btn').style.display = 'block';
+            
+            const inputField = document.getElementById('custom-habit-input');
+            const typingLabel = document.getElementById('onboarding-typing-label');
+            const inputGroup = document.querySelector('.custom-input-group');
+
+            // Show typing interface immediately
+            typingLabel.style.display = 'block';
+            inputGroup.style.display = 'flex';
+
+            // Smooth focus for keyboard activation
+            setTimeout(() => {
+                inputField.focus();
+                inputField.setSelectionRange(inputField.value.length, inputField.value.length);
+            }, 100);
             if (n) {
                 document.getElementById('custom-habit-input').value = n;
                 window.tmpH = n;
@@ -1709,12 +2018,13 @@
             }
 
             if (defaultAmount) {
-                document.getElementById('onboarding-target-display').innerText = defaultAmount;
+                // Constraint: Highest suggested amount is 3
+                const suggestedAmount = Math.min(3, defaultAmount);
+                document.getElementById('onboarding-target-display').innerText = suggestedAmount;
             } else {
                 document.getElementById('onboarding-target-display').innerText = '1';
             }
 
-            document.getElementById('custom-habit-input').focus();
             document.querySelector('.onboarding-target-inner').style.display = 'flex';
             document.getElementById('custom-flow-trigger-btn').style.display = 'none';
 
@@ -1739,7 +2049,11 @@
         };
 
         window.onInputHabit = () => {
-            const val = document.getElementById('custom-habit-input').value;
+            const input = document.getElementById('custom-habit-input');
+            const val = input.value;
+            window.tmpH = val.trim();
+            input.style.borderColor = val.trim() ? "var(--primary-color)" : "#cbd5e1";
+            
             if (val.length > 0) {
                 const step1 = document.getElementById('drawer-onboarding-step1');
                 if (!step1.classList.contains('custom-flow-active')) {
@@ -1823,65 +2137,62 @@
                 customInput.style.display = 'none';
             }
         };
-        window.triggerFirstHabitReward = () => {
-            // Reset current balls if testing to see the effect clearly
-            if(habitsData.length === 0) {
-                habitsData.push({ id: 999, name: 'הרגל בדיקה', amount: 1, unit: 'פעמים', color: '#239B62' });
-                currentHabitIndex = 0;
-                initScroller();
-            }
+        let rewardTimeout = null;
+        window.dismissRewardPopup = () => {
+            const popup = document.getElementById('reward-popup');
+            if (!popup.classList.contains('active')) return;
+            popup.classList.remove('active');
+            if (rewardTimeout) clearTimeout(rewardTimeout);
             
+            // Visual logic: Drop 3 "fiofi" balls (Gift marbles) that aren't counted in stats
+            setTimeout(() => {
+                window.isAnimatingJump = true; 
+                for(let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const h = habitsData[0];
+                        const scale = getScaleFactor(currentBalls.length + 1);
+                        const spawnX = 170 + (Math.random() * 20 - 10);
+                        const b = Bodies.circle(spawnX, 40, 26 * scale, {
+                            restitution: 0.5, friction: 0.01, density: 0.05,
+                            label: 'habit-ball', render: { fillStyle: h ? h.color : '#239B62' } 
+                        });
+                        b.isGift = true;
+                        b.habitId = h ? h.id : 0;
+                        Matter.Body.setPosition(physicsLid, { x: 170, y: -200 });
+                        currentBalls.push(b);
+                        Composite.add(world, b);
+                        Matter.Body.setVelocity(b, {x: (Math.random() - 0.5) * 2, y: 10});
+                        if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
+                        if (i === 2) setTimeout(() => { window.isAnimatingJump = false; window.saveState(); }, 1500);
+                    }, i * 500);
+                }
+            }, 500);
+        };
+
+        window.triggerFirstHabitReward = () => {
+            if(habitsData.length === 0) return;
             const popup = document.getElementById('reward-popup');
             popup.classList.add('active');
-            
             if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate([100, 50, 100]);
-
-            setTimeout(() => {
-                popup.classList.remove('active');
-                
-                // Visual logic: Drop 3 "fiofi" balls (Gift marbles) that aren't counted in stats
-                setTimeout(() => {
-                    // Visual flag to open the lid
-                    window.isAnimatingJump = true; 
-                    
-                    for(let i = 0; i < 3; i++) {
-                        setTimeout(() => {
-                            const h = habitsData[0];
-                            const scale = getScaleFactor(currentBalls.length + 1);
-                            const spawnX = 170 + (Math.random() * 20 - 10);
-                            
-                            const b = Bodies.circle(spawnX, 40, 26 * scale, {
-                                restitution: 0.5, friction: 0.01, density: 0.05,
-                                label: 'habit-ball', 
-                                render: { fillStyle: h ? h.color : '#239B62' } 
-                            });
-                            
-                            b.isGift = true;
-                            b.habitId = h ? h.id : 0;
-                            
-                            // Move lid barrier away
-                            Matter.Body.setPosition(physicsLid, { x: 170, y: -200 });
-                            
-                            currentBalls.push(b);
-                            Composite.add(world, b);
-                            Matter.Body.setVelocity(b, {x: (Math.random() - 0.5) * 2, y: 10});
-                            
-                            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
-                            
-                            // On the last ball, reset the lid flag after a delay
-                            if (i === 2) {
-                                setTimeout(() => { 
-                                    window.isAnimatingJump = false; 
-                                    window.saveState();
-                                }, 1500);
-                            }
-                        }, i * 500);
-                    }
-                }, 500);
-            }, 3500);
+            rewardTimeout = setTimeout(() => window.dismissRewardPopup(), 3500);
         };
 
         window.finishOnboarding = () => {
+            const input = document.getElementById('custom-habit-input');
+            const nameVal = (window.tmpH || "").trim();
+
+            if (!nameVal) {
+                input.style.borderColor = "var(--danger-color)";
+                input.animate([
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(-10px)' },
+                    { transform: 'translateX(10px)' },
+                    { transform: 'translateX(0)' }
+                ], { duration: 300, iterations: 1 });
+                input.focus();
+                return;
+            }
+
             document.querySelector('.back-onboarding-btn').style.display = 'none';
             const amt = parseInt(document.getElementById('onboarding-target-display').innerText);
             let unit = window.currentUnit || 'פעמים';
@@ -1890,7 +2201,7 @@
                 unit = customVal || 'יחידות';
             }
             const finalColor = window.tmpColor || HABIT_PALETTE[habitsData.length % HABIT_PALETTE.length];
-            const newHabit = { id: Date.now(), name: window.tmpH, amount: amt, unit: unit, color: finalColor };
+            const newHabit = { id: Date.now(), name: nameVal, amount: amt, unit: unit, color: finalColor };
             habitsData.push(newHabit);
             currentHabitIndex = habitsData.length - 1;
             for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
@@ -1917,8 +2228,15 @@
             const sc = document.getElementById('habit-scroller'); if(!sc) return;
             sc.innerHTML = '';
             habitsData.forEach((h, i) => {
-                const el = document.createElement('div'); el.className = 'habit-item' + (i===currentHabitIndex?' active':''); el.innerText = h.name;
-                el.onclick = (e) => { e.stopPropagation(); el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); if (currentHabitIndex === i && fm.style.display === 'none') window.popMarble(); };
+                const el = document.createElement('div'); 
+                el.className = 'habit-item' + (i===currentHabitIndex?' active':''); 
+                // Amount tag placed above habit name
+                el.innerHTML = `<span class="habit-goal-tag">${h.amount || 1} ${h.unit || 'פעמים'}</span><span>${h.name}</span>`;
+                el.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
+                    if (currentHabitIndex === i && fm.style.display === 'none') window.popMarble(); 
+                };
                 sc.appendChild(el);
             });
             renderDots();
@@ -1968,7 +2286,8 @@
             
             requestAnimationFrame(() => {
                 renderActiveHabit();
-                const spawnTrans = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1.1), opacity 0.5s ease-out';
+                // Faster, smoother entry to maintain continuity
+                const spawnTrans = 'transform 0.6s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.4s ease-out';
                 fm.style.transition = spawnTrans;
                 fm.style.transform = 'scale(1)';
                 fm.style.opacity = '1';
@@ -2083,7 +2402,14 @@
                     const h = habitsData[currentHabitIndex];
                     if(!h) return;
                     const stats = userStats.daysData[currentDayView].habits[h.id];
-                    if(stats.min===0) stats.min=1; else stats.breakthrough++;
+                    const prevTotal = stats.min + stats.breakthrough;
+                    
+                    // Increment stats based on base goal
+                    if (stats.min < (h.amount || 1)) {
+                        stats.min++;
+                    } else {
+                        stats.breakthrough++;
+                    }
                     
                     const newTotal = currentBalls.length + 1;
                     const targetScale = getScaleFactor(newTotal);
@@ -2115,6 +2441,12 @@
                     Composite.add(world, b); 
                     fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
                     const gl = document.getElementById('marble-glow'); if(gl) gl.style.opacity = '0';
+                    
+                    // Activate session colors upon first throw
+                    if (!sessionActivated) {
+                        sessionActivated = true;
+                        renderActiveHabit();
+                    }
 
                     // Compression Effect: Push existing balls down and towards center
                     currentBalls.forEach(ball => {
@@ -2127,9 +2459,46 @@
 
                     // Visual stability: Jar impact shake removed as requested
 
-                    window.isAnimatingJump = false; window.saveState();
-                    // Lid closes automatically when flag turns false
-                    setTimeout(() => window.respawnMarble(), 250); 
+                    window.isAnimatingJump = false; 
+                    window.saveState();
+                    
+                    // Single Unified Score Feedback: Emerging from the floating marble base, growing and fading away
+                    const marbleBase = document.getElementById('marble-drop-zone');
+                    if (marbleBase) {
+                        const mRect = marbleBase.getBoundingClientRect();
+                        const cRect = contRect; // Uses contRect from parent scope
+                        
+                        const fb = document.createElement('div');
+                        fb.className = 'count-feedback-pop count-pop-anim';
+                        fb.style.color = h.color;
+                        fb.style.left = (mRect.left - cRect.left + mRect.width / 2 - 20) + 'px';
+                        fb.style.top = (mRect.top - cRect.top - 20) + 'px';
+                        fb.style.width = '160px';
+                        fb.style.textAlign = 'center';
+                        
+                        if (stats.breakthrough > 0) {
+                            // Swapped Hierarchy: Large breakthrough count first, Small base count second
+                            fb.innerHTML = `
+                                <span style="font-size: 1.4em; font-weight: 900;">+${stats.breakthrough}</span>
+                                <span style="font-size: 0.5em; opacity: 0.7; font-weight: 800; margin-right: 6px; vertical-align: middle;">${stats.min}</span>
+                            `;
+                        } else {
+                            fb.innerText = stats.min;
+                        }
+                        
+                        document.querySelector('.app-container').appendChild(fb);
+                        setTimeout(() => fb.remove(), 800);
+                    }
+
+                    // Pulse the UI Pill for haptic-visual feedback
+                    const infoPill = document.querySelector('.drawer-info-pill');
+                    if (infoPill) {
+                        infoPill.classList.add('pulse-active');
+                        setTimeout(() => infoPill.classList.remove('pulse-active'), 300);
+                    }
+                    
+                    // Seamless respawn
+                    setTimeout(() => window.respawnMarble(), 150);
                 }
             }
             requestAnimationFrame(animate);
@@ -2673,6 +3042,10 @@
             
             if(closest !== -1 && closest !== lidx) {
                 if (lidx !== -1 && typeof window.navigator.vibrate === 'function') window.navigator.vibrate(5);
+                
+                // Deactivate magnet mode if switching habits
+                if (isMagnetMode) window.toggleMagnet();
+                
                 lidx = closest;
                 currentHabitIndex = closest;
                 // Smoothly update marble visuals without 'popping' it in/out
