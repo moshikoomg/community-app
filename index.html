@@ -10,38 +10,29 @@
     <style>
         /* Magnet Eye Styling */
         .magnet-eye-btn {
-            position: absolute;
-            bottom: 235px;
-            right: 25px;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-            z-index: 150;
             cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            color: #94a3b8;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #cbd5e1;
             pointer-events: auto;
+            background: transparent;
+            border-radius: 50%;
         }
         .magnet-eye-btn.active {
             color: var(--primary-color);
-            border-color: var(--primary-color);
-            transform: scale(1.1);
-            box-shadow: 0 0 20px var(--glow-color);
+            background: #f0fdf4;
         }
         .magnet-eye-btn svg {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             transition: transform 0.3s ease;
         }
         .magnet-eye-btn.active svg {
-            transform: scale(1.1) rotate(180deg);
+            transform: rotate(180deg);
         }
 
         .app-container:has(.bottom-section.edit-mode) .magnet-eye-btn,
@@ -457,8 +448,8 @@
         .bottom-section.onboarding-mode { height: 440px; }
         
         .drawer-handle {
-            width: 100%; height: 30px; position: absolute; top: 0; left: 0; z-index: 10;
-            display: flex; justify-content: center; align-items: flex-start; padding-top: 12px; cursor: grab;
+            width: 100%; height: 36px; position: absolute; top: 0; left: 0; z-index: 10;
+            display: flex; justify-content: center; align-items: center; cursor: grab;
         }
         .drawer-handle::after {
             content: ''; width: 48px; height: 5px; background-color: #cbd5e1; border-radius: 10px; 
@@ -476,7 +467,8 @@
         .bottom-section.onboarding-mode .drawer-handle::after {
             background-color: #94a3b8;
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(2px);
+            width: 50px;
         }
 
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 25px; touch-action: pan-y; }
@@ -541,15 +533,25 @@
             85% { transform: translateY(-6px) scale(1) rotate(0deg); }
         }
 
+        .habit-scroller-outer {
+            position: relative;
+            width: 100%;
+            margin-top: -15px;
+            display: flex;
+            align-items: center;
+        }
+
         .habit-scroller {
             display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%;
             padding: 30px 0 20px 0; -webkit-overflow-scrolling: touch;
-            margin-top: -15px;
             cursor: grab;
             position: relative; z-index: 5;
-            mask-image: linear-gradient(to right, transparent, black 30%, black 70%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, black 30%, black 70%, transparent);
+            /* Reduced fade mask to make more text visible */
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
         }
+
+        
         .habit-scroller:active { cursor: grabbing; }
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
         .habit-item {
@@ -722,9 +724,6 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header-ui">
-            <div class="user-pill" onclick="window.resetAppState()" style="color: #ef4444;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </div>
             <div style="flex: 1;"></div> 
             <div class="user-pill" onclick="window.openProfilePopup()">
                 <div class="admin-indicator" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
@@ -743,17 +742,13 @@
         </div>
 
         <!-- Drawer -->
-        <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-        </div>
-
         <div class="bottom-section" id="bottom-drawer">
             <div class="drawer-handle" id="drawer-handle"></div>
             
             <div id="drawer-normal-view" class="drawer-view active">
                 <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 110;">
-                    <div class="view-btn" onclick="event.stopPropagation(); window.openStatsMode()" style="color: #cbd5e1; cursor: pointer; padding: 10px; transition: color 0.2s; pointer-events: auto;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                    <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" onmouseover="this.style.color='#94a3b8'" onmouseout="if(!this.classList.contains('active')) this.style.color='#cbd5e1'">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     </div>
                     <div class="edit-btn" onclick="event.stopPropagation(); window.openEditMode()" style="position: static; color: #cbd5e1; cursor: pointer; padding: 6px; transition: color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -771,7 +766,9 @@
                     <div id="picker-time" style="color:#94a3b8; font-size:12px; font-weight:800; margin-top:10px; background: #f8fafc; padding: 4px 12px; border-radius: 20px;"></div>
                 </div>
 
-                <div class="habit-scroller" id="habit-scroller"></div>
+                <div class="habit-scroller-outer">
+                    <div class="habit-scroller" id="habit-scroller"></div>
+                </div>
                 
                 <div class="dots-container" id="picker-dots"></div>
                 
@@ -782,8 +779,11 @@
             </div>
 
             <div id="drawer-edit-view" class="drawer-view">
-                <div style="padding: 0 25px; width: 100%; box-sizing: border-box;">
-                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 20px; text-align: center;">עריכת הרגל</div>
+                <div onclick="window.closeEditMode()" style="position: absolute; top: 18px; left: 20px; color: #cbd5e1; cursor: pointer; padding: 8px; transition: all 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </div>
+                <div style="padding: 15px 25px 0; width: 100%; box-sizing: border-box;">
+                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 20px; text-align: center; color: #1e293b;">עריכת הרגל</div>
                     <div style="display:flex; gap:12px; text-align: right;">
                         <div style="flex:3;"><label style="display:block; font-size:12px; margin-bottom:4px;">שם</label><input type="text" id="input-habit-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px;"></div>
                         <div style="flex:1.2;"><label style="display:block; font-size:12px; margin-bottom:4px;">צבע</label><input type="color" id="input-habit-color" style="width:100%; height:48px; border-radius:12px; border:1.5px solid #e2e8f0; padding:2px;"></div>
@@ -824,7 +824,7 @@
 
             <div id="drawer-onboarding-view" class="drawer-view">
                 <div id="drawer-onboarding-step1" class="onboarding-step active">
-                    <div class="back-onboarding-btn" onclick="window.deactivateCustomFlow()" style="position: absolute; top: -10px; right: 0; color: #94a3b8; cursor: pointer; display: none; padding: 10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+                    <div class="back-onboarding-btn" onclick="window.deactivateCustomFlow()" style="position: absolute; top: 18px; left: 20px; color: #cbd5e1; cursor: pointer; display: none; padding: 8px; transition: all 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></div>
                     <div class="onboarding-title">מה המטרה שלך?</div>
                     <div class="onboarding-sub">בחר הרגל מהרשימה או צור אחד אישי. <span>התמדה היא הסוד.</span></div>
                     
@@ -833,31 +833,31 @@
                     <div class="onboarding-scroll-area">
                         <div class="habit-category-title">הכי פופולריים</div>
                         <div class="preset-grid">
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לשתות מים', '#3b82f6')">לשתות מים</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('לשתות מים', '#3b82f6', 'כוסות', 3, ['ליטר', 'פעמים'])">לשתות מים</button>
                             <button class="preset-btn" style="background: #e2e8f0;" onclick="window.activateCustomFlow()">משהו אישי...</button>
                         </div>
 
                         <div class="habit-category-title">בריאות וגוף</div>
                         <div class="preset-grid">
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לאכול פרי', '#ef4444')">לאכול פרי</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('מתיחות', '#fb923c')">מתיחות בבוקר</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('צעידה', '#84cc16')">הליכה קצרה</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('שינה עמוקה', '#1e293b')">7 שעות שינה</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('לאכול פרי', '#ef4444', 'פעמים', 1, ['פעמים'])">לאכול פרי</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('מתיחות', '#fb923c', 'דקות', 3, ['דקות', 'פעמים'])">מתיחות בבוקר</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('צעידה', '#84cc16', 'ק״מ', 3, ['צעדים', 'ק״מ', 'דקות'])">הליכה קצרה</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('שינה עמוקה', '#1e293b', 'פעמים', 1, ['דקות', 'פעמים'])">שינה טובה</button>
                         </div>
 
                         <div class="habit-category-title">שקט נפשי</div>
                         <div class="preset-grid">
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לנשום עמוק', '#2dd4bf')">לנשום עמוק</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('מדיטציה', '#a855f7')">מדיטציה</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('ניתוק מסכים', '#6366f1')">שעה בלי טלפון</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('הכרת תודה', '#ec4899')">תודה יומית</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('לנשום עמוק', '#2dd4bf', 'פעמים', 3, ['פעמים', 'דקות'])">לנשום עמוק</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('מדיטציה', '#a855f7', 'דקות', 3, ['דקות', 'פעמים'])">מדיטציה</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('ניתוק מסכים', '#6366f1', 'שעות', 1, ['דקות', 'שעות'])">שעה בלי טלפון</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('הכרת תודה', '#ec4899', 'פעמים', 3, ['פעמים'])">הכרת תודה</button>
                         </div>
 
                         <div class="habit-category-title">למידה וסדר</div>
                         <div class="preset-grid">
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לקרוא עמוד', '#f59e0b')">לקרוא עמוד</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('לסדר חדר', '#94a3b8')">לסדר 5 דק'</button>
-                            <button class="preset-btn" onclick="window.activateCustomFlow('למידת שפה', '#0d9488')">מילה חדשה</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('לקרוא עמוד', '#f59e0b', 'עמודים', 3, ['עמודים', 'דקות', 'פעמים'])">לקרוא עמוד</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('לסדר חדר', '#94a3b8', 'דקות', 3, ['דקות', 'פעמים'])">לסדר 3 דק'</button>
+                            <button class="preset-btn" onclick="window.activateCustomFlow('למידת שפה', '#0d9488', 'פעמים', 3, ['פעמים', 'דקות'])">מילה חדשה</button>
                             <button class="preset-btn" style="background: #fff1f2; color: #e11d48;" onclick="window.activateCustomFlow()">צור הרגל אישי</button>
                         </div>
                     </div>
@@ -981,7 +981,7 @@
         // --- 1. משתנים גלובליים ---
         const STAGE_GAP = 21, TOTAL_DISPLAY_DAYS = 63;
         let currentUser = { displayName: "שם משתמש", profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" };
-        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false;
+        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false, hasSeenTutorial = false;
         let habitsData = [];
         const HABIT_PALETTE = ['#239B62', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#2dd4bf', '#fb923c', '#6366f1', '#ec4899', '#84cc16'];
         window.getNextUniqueColor = () => {
@@ -1011,6 +1011,7 @@
                     stageBackgrounds = data.stageBackgrounds || {};
                     customBgs = data.customBgs || {};
                     unlockedDays = data.unlockedDays || 1;
+                    hasSeenTutorial = data.hasSeenTutorial || false;
                     currentDayView = data.currentDayView !== undefined ? data.currentDayView : 0;
                     currentUser = data.currentUser || { displayName: "שם משתמש", profileImage: null };
                 }
@@ -1028,7 +1029,7 @@
                     x: b.position.x, y: b.position.y, angle: b.angle, color: b.render.fillStyle, habitId: b.habitId
                 }));
             }
-            const s = { habitsData, userStats, stageBackgrounds, customBgs, unlockedDays, currentDayView, currentUser };
+            const s = { habitsData, userStats, stageBackgrounds, customBgs, unlockedDays, currentDayView, currentUser, hasSeenTutorial };
             localStorage.setItem('habit_jar_local_state_v2', JSON.stringify(s));
         };
 
@@ -1460,7 +1461,7 @@
             }
         }
 
-        window.activateCustomFlow = (n = null, c = null) => {
+        window.activateCustomFlow = (n = null, c = null, defaultUnit = null, defaultAmount = null, allowedUnits = []) => {
             const step1 = document.getElementById('drawer-onboarding-step1');
             step1.classList.add('custom-flow-active');
             document.querySelector('.back-onboarding-btn').style.display = 'block';
@@ -1471,9 +1472,58 @@
             if (c) window.tmpColor = c;
             else window.tmpColor = window.getNextUniqueColor();
 
+            // Auto-fill logic for presets
+            if (defaultUnit) {
+                window.currentUnit = defaultUnit;
+                const customUnitInput = document.getElementById('onboarding-custom-unit-input');
+                
+                // Check if it's a standard unit or needs the custom field
+                const standardUnits = ['פעמים', 'דקות', 'ליטר', 'עמודים', 'צעדים', 'ק״מ'];
+                const isStandard = standardUnits.includes(defaultUnit);
+                
+                document.querySelectorAll('.unit-chip').forEach(chip => {
+                    const isTarget = chip.innerText === defaultUnit;
+                    chip.classList.toggle('selected', isTarget);
+                });
+
+                if (!isStandard) {
+                    document.getElementById('unit-chip-custom').classList.add('selected');
+                    customUnitInput.style.display = 'block';
+                    customUnitInput.value = defaultUnit;
+                } else {
+                    customUnitInput.style.display = 'none';
+                    customUnitInput.value = '';
+                }
+            }
+
+            if (defaultAmount) {
+                document.getElementById('onboarding-target-display').innerText = defaultAmount;
+            } else {
+                document.getElementById('onboarding-target-display').innerText = '1';
+            }
+
             document.getElementById('custom-habit-input').focus();
             document.querySelector('.onboarding-target-inner').style.display = 'flex';
             document.getElementById('custom-flow-trigger-btn').style.display = 'none';
+
+            // Logic to filter units based on relevance
+            const chips = document.querySelectorAll('.unit-chip');
+            chips.forEach(chip => {
+                const unitText = chip.innerText;
+                const isCustomChip = chip.id === 'unit-chip-custom';
+                
+                if (allowedUnits.length > 0) {
+                    // If specific units provided, show only them + custom
+                    if (allowedUnits.includes(unitText) || isCustomChip) {
+                        chip.style.display = 'block';
+                    } else {
+                        chip.style.display = 'none';
+                    }
+                } else {
+                    // Default behavior for custom habits: show all
+                    chip.style.display = 'block';
+                }
+            });
         };
 
         window.onInputHabit = () => {
@@ -1581,7 +1631,10 @@
             setTimeout(() => {
                 const items = document.querySelectorAll('.habit-item');
                 items[currentHabitIndex].scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                window.isTutorialMode = true;
+                // Only show tutorial if they haven't seen it in a previous session
+                if (!hasSeenTutorial) {
+                   window.isTutorialMode = true;
+                }
                 window.respawnMarble();
             }, 100);
             window.saveState();
@@ -1599,9 +1652,28 @@
         }
 
         function renderDots() {
-            const dc = document.getElementById('picker-dots'); if(!dc) return;
+            const dc = document.getElementById('picker-dots'); 
+            const mt = document.getElementById('magnet-toggle');
+            if(!dc) return;
+            
+            // Logic: Only show dots and magnet eye if there are 2 or more habits
+            if (habitsData.length < 2) {
+                dc.style.display = 'none';
+                if (mt) mt.style.display = 'none';
+                // Reset magnet mode if it was active
+                if (isMagnetMode) window.toggleMagnet();
+                return;
+            } else {
+                dc.style.display = 'flex';
+                if (mt) mt.style.display = 'flex';
+            }
+            
             dc.innerHTML = '';
-            habitsData.forEach((_, i) => { const d = document.createElement('div'); d.className = 'dot' + (i===currentHabitIndex?' active':''); dc.appendChild(d); });
+            habitsData.forEach((_, i) => { 
+                const d = document.createElement('div'); 
+                d.className = 'dot' + (i === currentHabitIndex ? ' active' : ''); 
+                dc.appendChild(d); 
+            });
         }
 
         window.respawnMarble = () => {
@@ -1745,6 +1817,10 @@
             if(bottomDrawer.classList.contains('edit-mode') || bottomDrawer.classList.contains('stats-mode') || window.isAnimatingJump) return; 
             
             hasEverInteracted = true;
+            if (!hasSeenTutorial) {
+                hasSeenTutorial = true;
+                window.saveState();
+            }
             marbleInteractionCount++;
             if (window.isTutorialMode) { window.isTutorialMode = false; document.getElementById('tutorial-tooltip').style.display = 'none'; }
             window.isDrag=true; fm.classList.add('dragging'); 
