@@ -1,418 +1,1214 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Send, 
-  Code, 
-  Smartphone, 
-  Sparkles, 
-  Copy, 
-  Check, 
-  RefreshCw, 
-  Zap, 
-  MousePointer2, 
-  X, 
-  Ruler, 
-  Grid3X3, 
-  MonitorSmartphone, 
-  ArrowDown, 
-  RotateCcw, 
-  History, 
-  Menu, 
-  Eye, 
-  EyeOff, 
-  ZoomIn, 
-  ZoomOut,
-  Clock,
-  ChevronRight,
-  ArrowLeftRight,
-  Layout,
-  Box,
-  Undo2
-} from 'lucide-react';
-
-const API_KEY = ""; // המערכת מזריקה את המפתח בזמן אמת
-const MODEL = "gemini-2.5-flash-preview-09-2025";
-
-const DEVICE_PRESETS = {
-  iphone15: { name: 'iPhone 15', width: 393, height: 852 },
-  pixel8: { name: 'Pixel 8', width: 412, height: 915 },
-  small: { name: 'Small Mobile', width: 320, height: 568 }
-};
-
-const App = () => {
-  const [code, setCode] = useState(`<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>צנצנת ההרגלים שלי - חוויית זריקה רציפה וסטטיסטיקה</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
     <style>
-        body { font-family: 'Assistant', sans-serif; margin: 0; overflow-x: hidden; }
-        .full-page { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; text-align: center; padding: 2rem; }
-        .jar-container { position: relative; width: 150px; height: 200px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 1rem 1rem 3rem 3rem; backdrop-filter: blur(5px); transition: all 0.5s ease; }
+        #marble-glow-aura {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            z-index: 998;
+            pointer-events: none;
+            filter: blur(20px);
+            opacity: 0.45;
+            transition: background 0.4s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+            transform: translate(-50%, -50%);
+        }
+        #marble-glow-aura.active-yellow {
+            background: #fbbf24 !important;
+            opacity: 0.9;
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 40px #fbbf24;
+        }
+
+        :root {
+            --glow-color: rgba(35, 155, 98, 0.3);
+            --light-pos-x: 50%;
+            --light-pos-y: 30%;
+            --bg-color: #f8fafc;
+            --primary-color: #239B62;
+            --danger-color: #ef4444;
+            --admin-color: #3b82f6;
+            --text-main: #1e293b;
+            --jar-shadow: rgba(0, 0, 0, 0.12);
+            --glass-shine: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Heebo', sans-serif;
+            background-color: #cbd5e1;
+            display: flex; justify-content: center; align-items: center;
+            height: 100dvh; overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .app-container {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at var(--light-pos-x) var(--light-pos-y), #ffffff 0%, var(--bg-color) 60%);
+            display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+            transition: background 0.4s ease; 
+        }
+
+        @media (min-width: 420px) {
+            .app-container {
+                width: 390px; height: 844px; max-height: 92vh; 
+                border-radius: 48px; 
+                box-shadow: 0 40px 80px rgba(0,0,0,0.25), inset 0 0 1px 1px rgba(255,255,255,0.1); 
+            }
+        }
+
+        /* --- Header UI --- */
+        .header-ui {
+            position: absolute; top: 0; left: 0; width: 100%;
+            padding: 15px 20px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 70; pointer-events: none;
+        }
+
+        .user-pill {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 5px 12px 5px 6px;
+            border-radius: 20px;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.7);
+            pointer-events: auto; cursor: pointer;
+        }
+        .user-pill .name { font-weight: 800; font-size: 13px; color: var(--text-main); }
+        .user-avatar { 
+            width: 26px; height: 26px; border-radius: 50%; 
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0); 
+            display: flex; align-items: center; justify-content: center; 
+            overflow: hidden; border: 1px solid #e2e8f0;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- Day Indicator --- */
+        .day-display {
+            position: absolute; top: 75px; 
+            left: 0; width: 100%;
+            text-align: center; pointer-events: none; z-index: 5;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .big-day-number {
+            font-size: 32px; 
+            font-weight: 900; color: rgba(255,255,255,0.8); 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            user-select: none; letter-spacing: 2px;
+        }
+
+        .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+        /* --- Slider --- */
+        .jars-slider {
+            display: flex; width: 100%; height: 100%; overflow-x: auto;
+            scroll-snap-type: x mandatory; align-items: center; scrollbar-width: none;
+            direction: ltr; scroll-behavior: smooth;
+        }
+        .jars-slider::-webkit-scrollbar { display: none; }
+
+        .jars-slider::before, .jars-slider::after {
+            content: '';
+            flex: 0 0 calc(max(0px, 50% - 180px));
+            min-width: calc(max(0px, 50% - 180px));
+        }
+
+        .jar-slide { 
+            flex: 0 0 340px; 
+            height: 100%; display: flex; justify-content: center; 
+            align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
+            box-sizing: border-box; padding-bottom: 180px; margin: 0 10px;
+            transition: opacity 0.5s ease;
+            opacity: 0.4; 
+        }
+        .jar-slide.active-slide { opacity: 1; }
+        .jar-slide.locked { filter: grayscale(1); opacity: 0.2; }
+        .jar-slide.active-slide.locked { opacity: 0.6; }
+
+        .jar-wrapper { 
+            position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; 
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.85); 
+        }
+        .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
+        canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 21; touch-action: none; }
+
+        /* --- Jar Design --- */
+        .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
+        .jar-cap-detail {
+            will-change: transform;
+            position: absolute; top: 28px; left: 85px; width: 170px; height: 20px;
+            background: linear-gradient(to right, 
+                #1e293b 0%, 
+                #475569 15%, 
+                #94a3b8 35%, 
+                #f1f5f9 50%, 
+                #94a3b8 65%, 
+                #475569 85%, 
+                #1e293b 100%);
+            border-radius: 5px 5px 2px 2px; z-index: 25;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.3), 
+                0 12px 20px rgba(0,0,0,0.1), 
+                inset 0 -2px 4px rgba(0,0,0,0.4),
+                inset 0 2px 2px rgba(255,255,255,0.6);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: left center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        .jar-cap-detail::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 200%; height: 100%;
+            background: repeating-linear-gradient(90deg, 
+                rgba(0,0,0,0) 0px, 
+                rgba(0,0,0,0) 6px, 
+                rgba(0,0,0,0.15) 7px, 
+                rgba(255,255,255,0.1) 8px);
+            transition: transform 0.5s ease-in-out;
+            opacity: 0.6;
+        }
+        .jar-cap-detail::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 40%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+        .jar-cap-detail.unscrewing::before { transform: translateX(-40px); }
+        .jar-cap-detail.screwing::before { transform: translateX(0); }
+        .jar-cap-detail.open { transform: translateY(-50px) rotate(-35deg); }
+            /* Cleaned duplicate block */
+        .jar-cap-detail.open { transform: translateY(-50px) rotate(-30deg); }
+
+        .jar-opening {
+            position: absolute; top: 46px; left: 92px; width: 156px; height: 18px;
+            border-radius: 50%; background: rgba(255, 255, 255, 0.1); z-index: 24;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.1); border: 1.5px solid rgba(255,255,255,0.4);
+        }
+        .jar-neck {
+            position: absolute; top: 48px; left: 95px; width: 150px; height: 55px;
+            border-radius: 12px 12px 0 0;
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0.05) 0%, 
+                rgba(255,255,255,0.2) 20%, 
+                rgba(255,255,255,0.05) 50%, 
+                rgba(255,255,255,0.2) 80%, 
+                rgba(255,255,255,0.05) 100%);
+            box-shadow: inset 0 10px 15px -5px rgba(0,0,0,0.1), inset 0 0 10px rgba(255,255,255,0.2);
+            z-index: 18;
+            border-left: 1.5px solid rgba(255,255,255,0.4); 
+            border-right: 1.5px solid rgba(255,255,255,0.4);
+            backdrop-filter: blur(2px);
+        }
+        .jar-body::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.2) 55%, transparent 70%);
+            pointer-events: none; z-index: 23; opacity: 0.6;
+        }
+        .jar-body::before {
+            content: ''; position: absolute; top: 10%; left: 10%; width: 25%; height: 60%;
+            background: linear-gradient(to right, rgba(255,255,255,0.4), transparent);
+            border-radius: 40px; pointer-events: none; z-index: 22;
+            filter: blur(4px);
+        }
+        .jar-body { z-index: 1;
+            position: absolute; top: 96px; left: 30px; width: 280px; height: 334px;
+            border-radius: 70px 70px 65px 65px;
+            box-shadow: inset 0 0 40px rgba(255,255,255,0.3), inset -10px -10px 25px rgba(0,0,0,0.05), 0 25px 50px -12px rgba(0,0,0,0.25); 
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(0, 0, 0, 0.02) 100%); border: 1.5px solid var(--glass-border); backdrop-filter: blur(8px) brightness(1.1); overflow: hidden; box-shadow: inset 0 20px 40px rgba(255,255,255,0.4), inset 0 -10px 30px rgba(0,0,0,0.05), 0 30px 60px rgba(0,0,0,0.15), 0 0 40px var(--glow-color); transition: box-shadow 0.5s ease;
+        }
+
+        /* --- Drawer --- */
+        .bottom-section {
+            background: #ffffff; border-radius: 36px 36px 0 0; 
+            box-shadow: 0 -12px 40px rgba(0,0,0,0.06); 
+            z-index: 100; display: flex; flex-direction: column; align-items: center; 
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 220px; box-sizing: border-box;
+            transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+        .bottom-section.edit-mode { height: 400px; }
+        .bottom-section.stats-mode { height: 60vh; }
+        .bottom-section.onboarding-mode { height: 440px; }
+        
+        .drawer-handle {
+            width: 100%; height: 30px; position: absolute; top: 0; left: 0; z-index: 10;
+            display: flex; justify-content: center; align-items: flex-start; padding-top: 12px; cursor: grab;
+        }
+        .drawer-handle::after {
+            content: ''; width: 44px; height: 5px; background-color: transparent; border-radius: 4px; transition: background 0.3s;
+        }
+        .bottom-section.stats-mode .drawer-handle::after,
+        .bottom-section.edit-mode .drawer-handle::after,
+        .bottom-section.onboarding-mode .drawer-handle::after {
+            background-color: #e2e8f0;
+        }
+
+        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 25px; touch-action: pan-y; }
+        .drawer-view.active { display: flex; }
+
+        .edit-btn { position: absolute; top: 25px; right: 25px; color: #cbd5e1; cursor: pointer; padding: 6px; z-index: 110; }
+        
+        .picker-top { display: flex; flex-direction: column; align-items: center; user-select: none; margin-top: -55px; min-height: 100px; }
+        
+        .active-icon-bg { 
+            width: 84px; height: 84px; background: #ffffff; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; position: relative; 
+            z-index: 1; box-shadow: 0 -4px 15px rgba(0,0,0,0.03); 
+        }
+
+        #marble-drop-zone { width: 60px; height: 60px; pointer-events: none; }
+        
+        #floating-marble {
+            position: absolute; z-index: 1000; cursor: grab; touch-action: none;
+            transform-origin: center center; pointer-events: auto;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+        }
+        #floating-marble.dragging { cursor: grabbing; animation: none !important; }
+        
+        @keyframes heartbeat { 0% { transform: scale(1); } 10% { transform: scale(1.18); } 20% { transform: scale(1.05); } 35% { transform: scale(1.3); } 60% { transform: scale(1); } 100% { transform: scale(1); } }
+        @keyframes subtleRotate { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+        @keyframes auraPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.45; filter: blur(20px); }
+            35% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.7; filter: blur(12px); }
+        }
+        .marble-pulse { animation: heartbeat 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        .aura-pulse { animation: auraPulse 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+        .habit-scroller { 
+            display: flex; align-items: center; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; 
+            padding: 30px 0; -webkit-overflow-scrolling: touch;
+            margin-top: -25px; 
+            margin-bottom: -15px;
+            cursor: grab;
+            position: relative; z-index: 5;
+        }
+        .habit-scroller:active { cursor: grabbing; }
+        .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
+        .habit-item { flex: 0 0 auto; scroll-snap-align: center; padding: 10px 20px; font-size: 22px; color: #cbd5e1; font-weight: 700; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; cursor: pointer; }
+        .habit-item.active { font-size: 34px; color: var(--text-main); font-weight: 900; }
+
+        .dots-container { display: flex; gap: 8px; margin-top: 5px; position: relative; z-index: 6; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; transition: 0.4s; }
+        .dot.active { width: 22px; background: var(--text-main); border-radius: 4px; }
+
+        /* --- Stats View --- */
+        #drawer-stats-view { padding: 0 25px; width: 100%; box-sizing: border-box; animation: fadeIn 0.4s; }
+        .stats-header { text-align: center; margin-bottom: 20px; }
+        .stats-title { font-size: 24px; font-weight: 900; color: var(--text-main); }
+        .stats-subtitle { font-size: 12px; color: #94a3b8; font-weight: 700; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 20px; }
+        .stat-box { background: #f8fafc; padding: 15px; border-radius: 16px; text-align: center; border: 1px solid #f1f5f9; }
+        .stat-val { font-size: 28px; font-weight: 900; color: var(--text-main); line-height: 1.1; }
+        .stat-label { font-size: 11px; color: #64748b; font-weight: 700; }
+        .graph-container { display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; margin-bottom: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Onboarding View --- */
+        #drawer-onboarding-view { padding: 0 25px; width: 100%; box-sizing: border-box; }
+        .onboarding-step { animation: fadeIn 0.4s; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        
+        .onboarding-title { font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; text-align: center; }
+        .onboarding-sub { font-size: 13px; font-weight: 600; color: #64748b; text-align: center; margin-bottom: 24px; max-width: 250px; line-height: 1.4; }
+        .onboarding-sub span { color: var(--danger-color); }
+
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 20px; }
+        .preset-btn { 
+            background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 18px 12px; border-radius: 18px; 
+            font-weight: 800; color: var(--text-main); cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-size: 15px; text-align: center;
+        }
+        .preset-btn:hover { border-color: var(--primary-color); background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-2px); }
+
+        .custom-input-group { display: flex; width: 100%; gap: 8px; background: #f1f5f9; padding: 6px; border-radius: 16px; }
+        .custom-input-group input { 
+            flex: 1; border: none; background: transparent; padding: 12px 15px; font-family: inherit; font-weight: 700; 
+            font-size: 14px; outline: none; color: var(--text-main); 
+        }
+        .custom-input-group button { 
+            background: var(--primary-color); color: white; border: none; padding: 0 20px; border-radius: 12px; 
+            font-weight: 900; cursor: pointer; transition: 0.2s; 
+        }
+
+        .target-selector { display: flex; align-items: center; gap: 30px; margin: 30px 0; }
+        .target-btn { 
+            width: 64px; height: 64px; border-radius: 20px; border: 1.5px solid #e2e8f0; 
+            background: #ffffff; color: var(--text-main); font-size: 28px; font-weight: 900; 
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .target-display { font-size: 64px; font-weight: 900; color: var(--primary-color); min-width: 60px; text-align: center; letter-spacing: -2px; }
+
+        .finish-btn { 
+            width: 100%; background: var(--text-main); color: white; padding: 20px; border-radius: 20px; 
+            border: none; font-size: 17px; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* --- Tutorial Tooltip --- */
+        #tutorial-tooltip {
+            position: absolute;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 8px 20px rgba(35, 155, 98, 0.4);
+            pointer-events: none;
+            display: none;
+            white-space: nowrap;
+        }
+        #tutorial-tooltip::after {
+            content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+            border-width: 6px 6px 0; border-style: solid; border-color: var(--primary-color) transparent transparent transparent;
+        }
+        .tutorial-bounce { animation: tutorialBounce 1.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite; }
+        @keyframes tutorialBounce {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -10px); }
+        }
+
+        /* --- Popups --- */
+        .popup-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .popup-backdrop.active { opacity: 1; pointer-events: all; }
+        .popup-content { background: #ffffff; width: 92%; max-width: 380px; border-radius: 32px; padding: 0; box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: scale(0.9); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .popup-nav { display: flex; border-bottom: 1px solid #f1f5f9; padding: 10px 20px; gap: 15px; }
+        .nav-item { padding: 10px 0; font-size: 14px; font-weight: 800; color: #94a3b8; cursor: pointer; position: relative; }
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--primary-color); border-radius: 10px; }
+        .popup-body { padding: 25px; overflow-y: auto; flex: 1; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        .design-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .bg-preset { aspect-ratio: 1; border-radius: 12px; border: 2px solid transparent; cursor: pointer; background-size: cover; background-position: center; }
+        .bg-preset.selected { border-color: var(--primary-color); }
+        .admin-btn { position: absolute; top: 15px; right: 15px; background: #f8fafc; border: 1px solid #e2e8f0; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #64748b; cursor: pointer; z-index: 10; }
+        .close-popup-btn { position: absolute; top: 15px; left: 15px; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        .profile-img-upload {
+            width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; 
+            margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+            position: relative; cursor: pointer; overflow: hidden; border: 2px solid #e2e8f0;
+        }
+        .profile-img-upload img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-img-upload .overlay {
+            position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.4);
+            color: white; font-size: 10px; padding: 2px 0; text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="full-page" id="page-wrapper">
-        <div id="jar" class="jar-container mb-8 flex items-center justify-center">
-            <div id="ball" class="w-12 h-12 bg-indigo-500 rounded-full shadow-lg animate-bounce"></div>
-        </div>
-        <h1 id="main-title" class="text-4xl font-black mb-4">מעבדת העיצוב שלך</h1>
-        <p id="main-desc" class="text-slate-400 mb-8 max-w-md">בחר אלמנט, בקש שינוי, ונהל את כל הגרסאות שלך בצורה חזותית.</p>
-        <button id="main-btn" class="px-10 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all">שדרג את האתר</button>
-    </div>
-</body>
-</html>`);
 
-  // ניהול היסטוריה ללא הגבלה עם מזהים ייחודיים באמת
-  const [versionHistory, setVersionHistory] = useState([]); 
-  
-  const [prompt, setPrompt] = useState("");
-  const [bubblePrompt, setBubblePrompt] = useState("");
-  const [selectedElement, setSelectedElement] = useState(null); 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState('code'); // 'code' | 'history'
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState("");
-
-  const iframeRef = useRef(null);
-  const bubbleInputRef = useRef(null);
-
-  // סנכרון התצוגה המרכזית
-  useEffect(() => {
-    const inspectorScript = `
-      <script>
-        let selectedEl = null;
-        window.addEventListener('message', (e) => {
-          if (e.data.type === 'TOGGLE_EDIT_MODE') {
-            window.isEditEnabled = e.data.enabled;
-            document.body.style.cursor = e.data.enabled ? 'crosshair' : 'default';
-            if (!e.data.enabled && selectedEl) {
-              selectedEl.style.outline = 'none';
-              selectedEl = null;
-            }
-          }
-        });
-
-        window.addEventListener('click', (e) => {
-          if (!window.isEditEnabled) return;
-          e.preventDefault(); e.stopPropagation();
-          if (selectedEl) selectedEl.style.outline = 'none';
-          selectedEl = e.target;
-          selectedEl.style.outline = '3px solid #6366f1';
-          selectedEl.style.outlineOffset = '2px';
-          
-          if (!selectedEl.id) {
-            selectedEl.id = 'el-' + Math.random().toString(36).substr(2, 4);
-          }
-          
-          const rect = selectedEl.getBoundingClientRect();
-          window.parent.postMessage({
-            type: 'ELEMENT_SELECTED',
-            id: selectedEl.id,
-            tagName: selectedEl.tagName.toLowerCase(),
-            outerHTML: selectedEl.outerHTML,
-            rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
-          }, '*');
-        }, true);
-      </script>
-    `;
-    const docToRender = code.replace('</body>', inspectorScript + '</body>');
-    setPreviewDoc(docToRender);
-  }, [code]);
-
-  useEffect(() => {
-    const handleMessage = (e) => {
-      if (e.data.type === 'ELEMENT_SELECTED') {
-        setSelectedElement(e.data);
-        setTimeout(() => bubbleInputRef.current?.focus(), 100);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
-
-  // שחזור גרסה חכם - החלפה מדויקת של קטעי קוד
-  const restoreVersion = (version) => {
-    const { newHTML, oldHTML } = version;
-    
-    if (code.includes(newHTML)) {
-        const updatedCode = code.replace(newHTML, oldHTML);
-        setCode(updatedCode);
-        
-        // הוספת פעולת שחזור להיסטוריה כדי שגם אותה יהיה ניתן לבטל
-        const restoreLog = {
-            id: `restore-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-            timestamp: Date.now(),
-            label: `שחזור: ${version.label}`,
-            elementId: version.elementId,
-            tagName: version.tagName,
-            oldHTML: newHTML,
-            newHTML: oldHTML,
-            isRestore: true
-        };
-        setVersionHistory(prev => [restoreLog, ...prev]);
-    }
-  };
-
-  const handleCopy = () => {
-    const textArea = document.createElement("textarea");
-    textArea.value = code;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
-    document.body.removeChild(textArea);
-  };
-
-  const callAI = async (userPrompt, isFromBubble = false) => {
-    const finalPrompt = isFromBubble ? bubblePrompt : userPrompt;
-    if (!finalPrompt.trim()) return;
-
-    // ניקוי מיידי של שדה הטקסט כדי לאפשר כתיבת הבקשה הבאה (Quick Fire)
-    if (isFromBubble) setBubblePrompt("");
-    else setPrompt("");
-
-    setIsLoading(true);
-    
-    const context = selectedElement 
-      ? `Target Element ID: "${selectedElement.id}". Current HTML: ${selectedElement.outerHTML}. User Request: ${finalPrompt}`
-      : `General Website Update Request: ${finalPrompt}`;
-
-    const systemInstruction = `
-      You are an Expert Visual Web Architect.
-      ALWAYS return the FULL updated HTML of the element including its ID.
-      Return JSON ONLY: { "explanation": "Short name for this version in Hebrew", "updates": [{ "search": "old html to replace", "replace": "new html" }] }
-      Example explanation: "כדור ירוק זוהר", "כותרת עם צל מעוגל".
-    `;
-
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Current Code:\n${code}\n\nTask: ${context}` }] }],
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          generationConfig: { responseMimeType: "application/json" }
-        })
-      });
-      const data = await response.json();
-      const aiResponse = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || "{}");
-
-      if (aiResponse.updates) {
-        let newCode = code;
-        const newVersions = [];
-        
-        aiResponse.updates.forEach((u, index) => {
-          if (newCode.includes(u.search)) {
-            // יצירת גרסה עם מזהה ייחודי באמת למניעת שגיאת React Keys
-            const newVersion = {
-                id: `v-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
-                timestamp: Date.now(),
-                label: aiResponse.explanation || finalPrompt,
-                elementId: selectedElement?.id || 'global',
-                tagName: selectedElement?.tagName || 'site',
-                oldHTML: u.search,
-                newHTML: u.replace
-            };
-            newVersions.push(newVersion);
-            newCode = newCode.replace(u.search, u.replace);
-          }
-        });
-
-        if (newVersions.length > 0) {
-          setVersionHistory(prev => [...newVersions, ...prev]);
-          setCode(newCode);
-        }
-      }
-    } catch (e) {
-      console.error("AI Communication Error:", e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="relative w-screen h-screen bg-slate-900 overflow-hidden font-sans select-none">
-      
-      {/* פריביו רקע (100%) */}
-      <div className="absolute inset-0 z-0">
-        <iframe ref={iframeRef} title="Full Preview" srcDoc={previewDoc} className="w-full h-full border-none pointer-events-auto" />
-      </div>
-
-      {/* שכבת ממשק משתמש */}
-      <div className={`absolute inset-0 pointer-events-none z-50 transition-opacity duration-500 ${isPreviewMode ? 'opacity-0' : 'opacity-100'}`}>
-        
-        {/* תפריט צד משולב (קוד + היסטוריה חזותית) */}
-        <div className={`absolute top-0 right-0 h-full w-[480px] bg-white/95 backdrop-blur-xl shadow-[-20px_0_80px_rgba(0,0,0,0.3)] transition-transform duration-500 ease-in-out pointer-events-auto flex flex-col ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="flex border-b border-slate-100 bg-slate-50/50">
-             <button onClick={() => setSidebarTab('code')} className={`flex-1 py-6 text-xs font-black uppercase tracking-widest transition-all ${sidebarTab === 'code' ? 'text-indigo-600 border-b-4 border-indigo-600 bg-white' : 'text-slate-400 hover:text-slate-600'}`}>קוד מקור</button>
-             <button onClick={() => setSidebarTab('history')} className={`flex-1 py-6 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 ${sidebarTab === 'history' ? 'text-indigo-600 border-b-4 border-indigo-600 bg-white' : 'text-slate-400 hover:text-slate-600'}`}>
-                היסטוריית גרסאות
-                <span className="bg-indigo-600 text-white text-[10px] px-2.5 py-0.5 rounded-full shadow-lg">{versionHistory.length}</span>
-             </button>
-             <button onClick={() => setIsSidebarOpen(false)} className="p-6 text-slate-300 hover:text-red-500 transition-colors"><X /></button>
-          </div>
-
-          <div className="flex-1 overflow-hidden p-6 flex flex-col">
-            {sidebarTab === 'code' ? (
-              <div className="flex-1 flex flex-col gap-4">
-                 <div className="flex justify-between items-center px-2">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Live Architecture</span>
-                    </div>
-                    <button onClick={handleCopy} className="text-[10px] font-black text-indigo-600 hover:underline flex items-center gap-1">
-                        {copySuccess ? <Check className="w-3 h-3"/> : <Copy className="w-3 h-3"/>}
-                        {copySuccess ? 'הועתק!' : 'העתק הכל'}
-                    </button>
-                 </div>
-                 <textarea value={code} onChange={(e) => setCode(e.target.value)} dir="ltr" spellCheck="false" className="flex-1 w-full bg-slate-900 text-indigo-100/90 p-8 font-mono text-[13px] leading-relaxed rounded-[3.5rem] border border-slate-800 shadow-2xl outline-none resize-none" />
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar pr-3">
-                {versionHistory.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4 opacity-40">
-                    <Clock className="w-16 h-16" />
-                    <p className="text-sm font-black uppercase tracking-widest text-center">אין גרסאות שמורות.<br/>התחל לשדרג!</p>
-                  </div>
-                ) : (
-                  versionHistory.map((v) => (
-                    <div key={v.id} className="group bg-white border border-slate-200 rounded-[2.5rem] p-6 hover:border-indigo-400 hover:shadow-xl transition-all relative overflow-hidden">
-                        
-                        {/* תצוגה מקדימה קטנה (האלמנט המשופר) */}
-                        <div className="w-full h-32 bg-slate-950 rounded-2xl mb-4 overflow-hidden relative border border-slate-800 flex items-center justify-center group-hover:bg-slate-900 transition-colors shadow-inner">
-                           <div className="absolute top-2 left-2 flex gap-1 opacity-40">
-                              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                           </div>
-                           <div className="transform scale-[0.55] pointer-events-none origin-center" dangerouslySetInnerHTML={{ __html: v.newHTML }} />
-                        </div>
-
-                        <div className="flex items-center justify-between mb-2">
-                           <div className="flex items-center gap-2">
-                              <Box className="w-3.5 h-3.5 text-indigo-500" />
-                              <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{v.tagName} #{v.elementId}</span>
-                           </div>
-                           <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{new Date(v.timestamp).toLocaleTimeString()}</span>
-                        </div>
-                        
-                        <h3 className="text-[13px] font-black text-slate-700 mb-5 leading-tight text-right">"{v.label}"</h3>
-                        
-                        <button 
-                             onClick={() => restoreVersion(v)} 
-                             className="w-full bg-indigo-600 text-white py-3 rounded-xl text-[11px] font-black hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
-                        >
-                             <RotateCcw className="w-4 h-4" />
-                             שחזר לגרסה זו
-                        </button>
-                    </div>
-                  ))
-                )}
-                <div className="h-20 w-full opacity-0">spacer</div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* --- FLOATING CONTROLS (HUD) --- */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-5xl px-8 flex flex-col gap-6 items-center">
-            
-            {/* בועת עריכה מרחפת */}
-            {selectedElement && !isPreviewMode && (
-                <div className="pointer-events-auto animate-in" style={{ position: 'fixed', top: Math.max(20, selectedElement.rect.top - 160), left: Math.max(20, Math.min(window.innerWidth - 380, selectedElement.rect.left + (selectedElement.rect.width / 2) - 190)), width: '380px' }}>
-                    <div className="bg-white border border-white shadow-[0_40px_120px_rgba(0,0,0,0.5)] rounded-[3rem] p-6 flex flex-col gap-5 relative">
-                        <div className="flex items-center justify-between px-2 text-right">
-                            <div className="flex items-center gap-3">
-                               <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full animate-pulse shadow-lg shadow-indigo-200"></div>
-                               <span className="text-[11px] font-black text-slate-800 uppercase tracking-widest">עורך פריט: {selectedElement.tagName}</span>
-                            </div>
-                            <button onClick={() => setSelectedElement(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X className="w-4 h-4 text-slate-400" /></button>
-                        </div>
-                        <div className="relative group">
-                            <input ref={bubbleInputRef} type="text" value={bubblePrompt} onChange={(e) => setBubblePrompt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && callAI("", true)} placeholder="מה תרצה לשנות בפריט זה?" className="w-full px-8 py-5 bg-slate-50 border-2 border-transparent rounded-full text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-indigo-600 transition-all text-right" />
-                            <button onClick={() => callAI("", true)} disabled={isLoading} className="absolute left-2.5 top-1/2 -translate-y-1/2 p-3.5 bg-indigo-600 text-white rounded-full shadow-xl hover:bg-indigo-700 transition-all active:scale-90">
-                                {isLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                            </button>
-                        </div>
-                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-white drop-shadow-2xl"><ArrowDown className="w-12 h-12" /></div>
-                    </div>
-                </div>
-            )}
-
-            {/* סרגל ראשי מרחף */}
-            <div className="w-full flex items-center gap-4 pointer-events-auto">
-                <div className="flex gap-2 p-3 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.15)] rounded-[3rem] border border-white/50 backdrop-blur-xl">
-                    <button onClick={() => { setIsSidebarOpen(true); setSidebarTab('history'); }} className="p-4.5 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 rounded-[2rem] transition-all relative group">
-                      <History className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                      {versionHistory.length > 0 && (
-                        <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-indigo-600 text-white text-[9px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-lg">
-                            {versionHistory.length}
-                        </span>
-                      )}
-                    </button>
-                    <div className="w-px h-10 bg-slate-100 my-auto mx-1"></div>
-                    <button onClick={() => { setIsSidebarOpen(true); setSidebarTab('code'); }} className="p-4.5 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 rounded-[2rem] transition-all" title="קוד מקור">
-                        <Code className="w-6 h-6" />
-                    </button>
-                </div>
-
-                <div className="flex-1 relative">
-                    <input 
-                        type="text" 
-                        value={prompt} 
-                        onChange={(e) => setPrompt(e.target.value)} 
-                        onKeyDown={(e) => e.key === 'Enter' && callAI(prompt)}
-                        placeholder="תאר שינוי גלובלי או בחר אלמנט ספציפי..." 
-                        className="w-full pl-12 pr-24 py-8 bg-white shadow-[0_40px_100px_rgba(0,0,0,0.2)] border border-white/50 rounded-full text-xl font-black outline-none focus:ring-[15px] focus:ring-indigo-600/5 transition-all text-indigo-950 placeholder:text-slate-300 text-right" 
-                    />
-                    <button onClick={() => callAI(prompt)} disabled={isLoading || !prompt.trim()} className="absolute right-4 top-1/2 -translate-y-1/2 p-6 bg-indigo-600 text-white rounded-full shadow-[0_15px_40px_rgba(79,70,229,0.4)] active:scale-95 transition-all hover:bg-indigo-700 hover:scale-105">
-                        {isLoading ? <RefreshCw className="w-7 h-7 animate-spin" /> : <Send className="w-7 h-7" />}
-                    </button>
-                </div>
-
-                <div className="flex gap-2 p-3 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.15)] rounded-[3rem] border border-white/50 backdrop-blur-xl">
-                    <button onClick={() => setIsPreviewMode(true)} className="p-4.5 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 rounded-[2rem] transition-all" title="תצוגה מקדימה">
-                        <Eye className="w-6 h-6" />
-                    </button>
-                    <div className="w-px h-10 bg-slate-100 my-auto mx-1"></div>
-                    <button 
-                        onClick={() => {
-                            const ns = !isEditMode;
-                            setIsEditMode(ns);
-                            if(!ns) setSelectedElement(null);
-                            iframeRef.current?.contentWindow.postMessage({ type: 'TOGGLE_EDIT_MODE', enabled: ns }, '*');
-                        }} 
-                        className={`p-4.5 rounded-[2rem] transition-all active:scale-95 ${isEditMode ? 'bg-indigo-600 text-white shadow-xl ring-4 ring-indigo-100' : 'text-slate-500 hover:bg-slate-50'}`}
-                        title="בחירה חזותית"
-                    >
-                        <MousePointer2 className="w-6 h-6" />
-                    </button>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header-ui">
+            <div style="flex: 1;"></div> 
+            <div class="user-pill" onclick="window.openProfilePopup()">
+                <div class="admin-indicator" style="color: #cbd5e1; margin-left: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+                <div class="name" id="display-profile-name">שם משתמש</div>
+                <div class="user-avatar" id="header-avatar">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
             </div>
         </div>
-      </div>
 
-      {/* כפתור חזרה מתצוגה מלאה */}
-      {isPreviewMode && (
-        <button onClick={() => setIsPreviewMode(false)} className="fixed top-12 left-12 z-[200] p-7 bg-indigo-600 text-white rounded-full shadow-2xl border-4 border-white pointer-events-auto hover:scale-110 active:scale-90 transition-all animate-in fade-in slide-in-from-top-12"><EyeOff className="w-8 h-8" /></button>
-      )}
+        <!-- Days Display -->
+        <div class="day-display">
+            <div id="bg-day-indicator" class="big-day-number">1/5</div>
+        </div>
 
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 20px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-        .animate-in { animation: animateIn 0.3s ease-out forwards; }
-        @keyframes animateIn {
-          from { opacity: 0; transform: scale(0.95) translateY(10px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `}</style>
+        <div class="top-section" id="clickable-top-section">
+            <div class="jars-slider" id="jars-slider"></div>
+            <canvas id="physics-canvas"></canvas>
+        </div>
+
+        <!-- Drawer -->
+        <div class="bottom-section" id="bottom-drawer">
+            <div class="drawer-handle" id="drawer-handle"></div>
+            
+            <div id="drawer-normal-view" class="drawer-view active">
+                <div class="edit-btn" onclick="window.openEditMode()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
+                <div class="picker-top">
+                    <div class="active-icon-bg"><div id="marble-drop-zone"></div></div>
+                    <div id="picker-time" style="color:#94a3b8; font-size:13px; font-weight:700; margin-top:2px;"></div>
+                </div>
+                <div class="habit-scroller" id="habit-scroller"></div>
+                <div class="dots-container" id="picker-dots"></div>
+                <div style="font-size:10px; color:#cbd5e1; font-weight:700; margin-top:15px; user-select:none;">החלק למעלה לסטטיסטיקות ∧</div>
+            </div>
+
+            <div id="drawer-edit-view" class="drawer-view">
+                <div style="padding: 0 25px; width: 100%; box-sizing: border-box;">
+                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 20px; text-align: center;">עריכת הרגל</div>
+                    <div style="display:flex; gap:12px; text-align: right;">
+                        <div style="flex:3;"><label style="display:block; font-size:12px; margin-bottom:4px;">שם</label><input type="text" id="input-habit-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px;"></div>
+                        <div style="flex:1.2;"><label style="display:block; font-size:12px; margin-bottom:4px;">צבע</label><input type="color" id="input-habit-color" style="width:100%; height:48px; border-radius:12px; border:1.5px solid #e2e8f0; padding:2px;"></div>
+                    </div>
+                    <div style="margin-top:15px; text-align: right;"><label style="display:block; font-size:12px; margin-bottom:4px;">יעד</label><input type="text" id="input-habit-time" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px;"></div>
+                    <div style="display:flex; gap:12px; margin-top:20px;"><button style="flex:2; background:var(--primary-color); color:white; border:none; padding:15px; border-radius:14px; font-weight:800;" onclick="window.saveHabitChanges()">שמור</button><button style="flex:1; background:#f1f5f9; border:none; padding:15px; border-radius:14px;" onclick="window.closeEditMode()">ביטול</button></div>
+                    <button style="width:100%; margin-top:15px; color:var(--danger-color); background:none; border:1px solid var(--danger-color); padding:12px; border-radius:12px; font-weight:800;" onclick="window.deleteCurrentHabit()">מחק הרגל</button>
+                </div>
+            </div>
+
+            <div id="drawer-stats-view" class="drawer-view">
+                <div class="stats-header">
+                    <div class="stats-title" id="stats-title">שם ההרגל</div>
+                    <div class="stats-subtitle">ביצועים וסטטיסטיקה</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="stat-val" id="stats-total">0</div><div class="stat-label">סה״כ זריקות 🏆</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stats-streak">0</div><div class="stat-label">רצף ימים 🔥</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stats-base">0</div><div class="stat-label">בסיס 🎯</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stats-extra">0</div><div class="stat-label">אקסטרה 🚀</div></div>
+                </div>
+                <div style="text-align:right; width:100%; font-size:12px; font-weight:800; color:#64748b; margin-bottom:5px;">7 ימים אחרונים</div>
+                <div class="graph-container" id="stats-graph"></div>
+            </div>
+
+            <div id="drawer-onboarding-view" class="drawer-view">
+                <div id="drawer-onboarding-step1" class="onboarding-step active">
+                    <div class="onboarding-title">מה ההרגל שלך?</div>
+                    <div class="onboarding-sub">בחר הרגל קטן שתוכל להתמיד בו. <span>זכור: פחות זה יותר.</span></div>
+                    
+                    <div class="preset-grid">
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לשתות כוס מים')">לשתות כוס מים</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לנשום עמוק')">לנשום עמוק</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לקרוא עמוד אחד')">לקרוא עמוד אחד</button>
+                        <button class="preset-btn" onclick="window.goToOnboardingStep2('לעשות מתיחות')">לעשות מתיחות</button>
+                    </div>
+                    
+                    <div class="custom-input-group">
+                        <input type="text" id="custom-habit-input" placeholder="או כתוב הרגל משלך...">
+                        <button onclick="window.handleCustomHabit()">המשך</button>
+                    </div>
+                </div>
+
+                <div id="drawer-onboarding-step2" class="onboarding-step" style="display:none;">
+                    <div class="onboarding-title">כמה פעמים ביום?</div>
+                    <div class="onboarding-sub">התחייבות יומית להצלחה.</div>
+                    
+                    <div class="target-selector">
+                        <button class="target-btn" onclick="window.changeOnboardingTarget(-1)">-</button>
+                        <div class="target-display" id="onboarding-target-display">1</div>
+                        <button class="target-btn" onclick="window.changeOnboardingTarget(1)">+</button>
+                    </div>
+                    
+                    <button class="finish-btn" onclick="window.finishOnboarding()">יאללה, מתחילים!</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tutorial-tooltip" class="tutorial-bounce">גרור אותי לצנצנת! 👆</div>
+        <div id="marble-glow-aura"></div>
+        <canvas id="floating-marble" width="60" height="60"></canvas>
+
+        <!-- Popups -->
+        <div class="popup-backdrop" id="profile-popup" onclick="window.handleBackdropClick(event, 'profile-popup')">
+            <div class="popup-content">
+                <button class="close-popup-btn" onclick="window.closeProfilePopup()">✕</button>
+                <div class="popup-nav">
+                    <div class="nav-item active" onclick="window.switchPopupView('view-profile', this)">פרופיל</div>
+                    <div class="nav-item" onclick="window.switchPopupView('view-design', this)">עיצוב</div>
+                    <div class="nav-item" onclick="window.switchPopupView('view-admin', this)">ניהול</div>
+                </div>
+                <div class="popup-body">
+                    <div id="view-profile" class="view-section active">
+                
+                <label class="profile-img-upload" onclick="document.getElementById('input-profile-img').click()">
+                    <div id="profile-img-preview" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div class="overlay">עריכה</div>
+                    <input type="file" id="input-profile-img" hidden accept="image/*" onchange="window.updateProfileImage(event)">
+                </label>
+
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-days-active">1</span><span style="font-size:11px; color:#94a3b8;">ימים</span></div>
+                    <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#94a3b8;">גולות</span></div>
+                </div>
+                <div style="text-align: right;"><label style="font-size:13px; font-weight:700; color:#64748b;">שם תצוגה</label><input type="text" id="input-profile-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;" onkeyup="window.updateProfileName(this.value)"></div>
+                
+                </div>
+                    <div id="view-design" class="view-section">
+                        <div style="font-size:18px; font-weight:900; margin-bottom:15px; text-align:right;">עיצוב אישי</div>
+                        <label style="font-size:12px; font-weight:800; color:#64748b; display:block; text-align:right; margin-bottom:8px;">בחר רקע מוכן</label>
+                        <div class="design-grid">
+                            <div class="bg-preset" style="background-color:#f1f5f9;" onclick="window.applyPresetBg('#f1f5f9')"></div>
+                            <div class="bg-preset" style="background-image:url('https://images.unsplash.com/photo-1557683316-973673baf926?w=200');" onclick="window.applyPresetBg('https://images.unsplash.com/photo-1557683316-973673baf926?w=800')"></div>
+                            <div class="bg-preset" style="background-image:url('https://images.unsplash.com/photo-1519750783846-e3a23028301c?w=200');" onclick="window.applyPresetBg('https://images.unsplash.com/photo-1519750783846-e3a23028301c?w=800')"></div>
+                        </div>
+                        <div style="margin-top:20px; text-align:right;">
+                            <label style="font-size:12px; font-weight:800; color:#64748b;">כתובת תמונה מותאמת (URL)</label>
+                            <input type="text" id="input-app-bg-url" onchange="window.updateCustomBgs()" placeholder="https://..." style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px; font-size:13px;">
+                        </div>
+                        <div style="margin-top:15px; text-align:right;">
+                            <label style="font-size:12px; font-weight:800; color:#64748b;">צבע צנצנת</label>
+                            <input type="color" id="input-jar-color" onchange="window.updateCustomBgs()" style="width:100%; height:44px; border-radius:12px; border:1.5px solid #e2e8f0; margin-top:5px;">
+                        </div>
+                        <button onclick="window.resetCustomBgs()" style="width:100%; margin-top:20px; background:#f1f5f9; border:none; padding:12px; border-radius:12px; font-weight:800; color:var(--danger-color);">שחזר הגדרות יצרן</button>
+                    </div>
+                    <div id="view-admin" class="view-section">
+                        <div style="font-size:18px; font-weight:900; margin-bottom:15px; text-align:right;">כניסת צוות</div>
+                        <div style="text-align:right; margin-bottom:20px;">
+                            <label style="font-size:12px; font-weight:800; color:#64748b;">סיסמת אדמין</label>
+                            <input type="password" id="admin-pass" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;">
+                        </div>
+                        <button onclick="window.handleAdminLogin()" style="width:100%; background:var(--text-main); color:white; border:none; padding:15px; border-radius:14px; font-weight:800;">התחבר</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  );
-};
 
-export default App;
+    <script>
+        // --- 1. משתנים גלובליים ---
+        const STAGE_GAP = 21, TOTAL_DISPLAY_DAYS = 63;
+        let currentUser = { displayName: "שם משתמש", profileImage: null };
+        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0;
+        let habitsData = [];
+        let stageBackgrounds = {}, customBgs = {}, userStats = { daysData: [] };
+        window.isAnimatingJump = false;
+        window.isTutorialMode = false;
+        window.isDrag = false;
+
+        // --- 2. ליבת נתונים ושחזור ---
+        function initStats(idx) {
+            if(!userStats.daysData[idx]) userStats.daysData[idx] = { habits: {}, savedBalls: [] };
+            habitsData.forEach(h => { if(!userStats.daysData[idx].habits[h.id]) userStats.daysData[idx].habits[h.id] = { min: 0, breakthrough: 0 }; });
+        }
+
+        function loadLocalState() {
+            try {
+                const d = localStorage.getItem('habit_jar_local_state_v2');
+                if (d) {
+                    const data = JSON.parse(d);
+                    habitsData = data.habitsData || [];
+                    userStats = data.userStats || { daysData: [] };
+                    stageBackgrounds = data.stageBackgrounds || {};
+                    customBgs = data.customBgs || {};
+                    unlockedDays = data.unlockedDays || 1;
+                    currentDayView = data.currentDayView !== undefined ? data.currentDayView : 0;
+                    currentUser = data.currentUser || { displayName: "שם משתמש", profileImage: null };
+                }
+            } catch (e) {}
+            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
+        }
+        loadLocalState();
+
+        window.saveState = async () => {
+            if (typeof currentBalls !== 'undefined' && currentDayView >= 0 && currentBalls.length > 0) {
+                userStats.daysData[currentDayView].savedBalls = currentBalls.map(b => ({
+                    x: b.position.x, y: b.position.y, angle: b.angle, color: b.render.fillStyle
+                }));
+            }
+            const s = { habitsData, userStats, stageBackgrounds, customBgs, unlockedDays, currentDayView, currentUser };
+            localStorage.setItem('habit_jar_local_state_v2', JSON.stringify(s));
+        };
+
+        // --- 3. פונקציות עזר ו-UI ---
+        function getStageInfo(day) {
+            const d = day + 1; 
+            if (d <= 5) return { stage: 1, maxDays: 5 };
+            if (d <= 10) return { stage: 2, maxDays: 10 };
+            if (d <= 21) return { stage: 3, maxDays: 21 };
+            let base = 21, stageCount = 3;
+            while (d > base) { base += STAGE_GAP; stageCount++; if (d <= base) break; }
+            return { stage: stageCount, maxDays: base };
+        }
+
+        function updateProfileUI() {
+            const shortName = currentUser.displayName.split(' ')[0];
+            document.getElementById('display-profile-name').innerText = shortName;
+            document.getElementById('input-profile-name').value = currentUser.displayName;
+            const headerAvatar = document.getElementById('header-avatar');
+            const previewAvatar = document.getElementById('profile-img-preview');
+            if (currentUser.profileImage) {
+                const imgTag = `<img src="${currentUser.profileImage}" alt="פרופיל">`;
+                headerAvatar.innerHTML = imgTag;
+                previewAvatar.innerHTML = imgTag;
+            } else {
+                const svg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                headerAvatar.innerHTML = svg;
+                previewAvatar.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+            }
+        }
+
+        window.updateProfileName = (v) => { currentUser.displayName = v.trim() || "שם משתמש"; updateProfileUI(); window.saveState(); };
+        window.updateProfileImage = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const cvs = document.createElement('canvas');
+                    cvs.width = 150; cvs.height = 150;
+                    cvs.getContext('2d').drawImage(img, 0, 0, 150, 150);
+                    currentUser.profileImage = cvs.toDataURL('image/jpeg', 0.7);
+                    updateProfileUI(); window.saveState();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function updateStatsUI() {
+            if(!habitsData[currentHabitIndex]) return;
+            const h = habitsData[currentHabitIndex], stats = userStats.daysData[currentDayView]?.habits[h.id];
+            const timeEl = document.getElementById('picker-time');
+            if(!timeEl) return;
+            if(stats && stats.min > 0) { timeEl.innerText = '+' + h.time; timeEl.style.color = h.color; } 
+            else { timeEl.innerText = h.time; timeEl.style.color = '#94a3b8'; }
+        }
+        window.updateStatsUI = updateStatsUI;
+
+        // --- 4. ניהול עיצוב ורקעים ---
+        function applyCustomBgs() {
+            const info = getStageInfo(currentDayView);
+            const stageBg = stageBackgrounds[info.stage] || stageBackgrounds['generic'];
+            const appCont = document.querySelector('.app-container');
+
+            if (customBgs.appUrl) appCont.style.backgroundImage = `url(${customBgs.appUrl})`;
+            else if (customBgs.appColor) appCont.style.backgroundColor = customBgs.appColor;
+            else if (stageBg) appCont.style.backgroundImage = `url(${stageBg})`;
+            else appCont.style.backgroundImage = 'none';
+
+            document.querySelectorAll('.jar-body').forEach(jar => {
+                if (customBgs.jarUrl) jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
+                else if (customBgs.jarColor) jar.style.backgroundColor = customBgs.jarColor + '80';
+                else jar.style.backgroundColor = 'rgba(255,255,255,0.02)';
+            });
+        }
+        window.applyCustomBgs = applyCustomBgs;
+
+        window.updateCustomBgs = () => {
+            customBgs = {
+                appColor: document.getElementById('input-app-color').value,
+                appUrl: document.getElementById('input-app-bg-url').value,
+                jarColor: document.getElementById('input-jar-color').value,
+                jarUrl: document.getElementById('input-jar-bg-url').value
+            };
+            applyCustomBgs(); window.saveState();
+        };
+        window.resetCustomBgs = () => { customBgs = {}; applyCustomBgs(); window.saveState(); };
+
+        // --- 5. בניית הצנצנות והפיזיקה ---
+        function buildJars() {
+            const s = document.getElementById('jars-slider');
+            if(!s) return;
+            s.innerHTML = '';
+            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) {
+                const slide = document.createElement('div');
+                slide.className = `jar-slide ${i === currentDayView ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
+                slide.dataset.index = i;
+                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-neck"></div><div class="jar-body"></div></div></div>`;
+                s.appendChild(slide);
+            }
+            applyCustomBgs();
+        }
+        window.buildJars = buildJars;
+
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint } = Matter, engine = Engine.create(), world = engine.world;
+        let currentBalls = [];
+        const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
+        canvas.width = 340; canvas.height = 480;
+        const wallOptions = { isStatic: true, friction: 0, frictionStatic: 0, restitution: 0.4 };
+        Composite.add(world, [
+            Bodies.rectangle(170, 420, 200, 40, wallOptions), Bodies.rectangle(75, 400, 80, 40, { ...wallOptions, angle: Math.PI / 5 }),
+            Bodies.rectangle(265, 400, 80, 40, { ...wallOptions, angle: -Math.PI / 5 }), Bodies.rectangle(35, 260, 20, 240, wallOptions),
+            Bodies.rectangle(305, 260, 20, 240, wallOptions), Bodies.rectangle(70, 115, 80, 20, { ...wallOptions, angle: -Math.PI / 4.5 }),
+            Bodies.rectangle(270, 115, 80, 20, { ...wallOptions, angle: Math.PI / 4.5 }), Bodies.rectangle(105, 70, 20, 60, wallOptions), Bodies.rectangle(235, 70, 20, 60, wallOptions)
+        ]);
+        Composite.add(world, MouseConstraint.create(engine, { mouse: Mouse.create(canvas), constraint: { stiffness: 0.2, render: { visible: false } } }));
+
+        function moveCanvas(idx) {
+            const wrap = document.getElementById(`jar-wrapper-${idx}`);
+            if(!wrap) return;
+            wrap.insertBefore(canvas, wrap.firstChild);
+            currentBalls.forEach(b => Composite.remove(world, b));
+            currentBalls = []; currentDayView = idx;
+            const stats = userStats.daysData[idx]?.habits || {}, saved = userStats.daysData[idx]?.savedBalls;
+            if (saved && saved.length > 0) {
+                saved.forEach(d => {
+                    const b = Bodies.circle(d.x, d.y, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, angle: d.angle, label:'habit-ball', render:{fillStyle:d.color} });
+                    currentBalls.push(b); Composite.add(world, b);
+                });
+            }
+            document.getElementById('bg-day-indicator').innerText = `${idx + 1}/${getStageInfo(idx).maxDays}`;
+            renderActiveHabit(); applyCustomBgs();
+        }
+
+        const fm = document.getElementById('floating-marble');
+
+        function drawMarble(c, x, y, r, a, col) {
+            c.save();
+            c.translate(x, y);
+
+            // 1. Base Sphere Lighting (Fixed - Top Left Light Source)
+            c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2);
+            let g = c.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.1, 0, 0, r);
+            g.addColorStop(0, 'rgba(255,255,255,1)');
+            g.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+            g.addColorStop(0.6, 'rgba(200,200,200,0.3)');
+            g.addColorStop(1, 'rgba(0,0,0,0.1)');
+            c.shadowBlur = 12; c.shadowColor = col + '50';
+            c.fillStyle = g; c.fill(); c.shadowBlur = 0;
+
+            // 2. Specular Highlights (Fixed position, ignores rotation 'a')
+            c.save();
+            c.translate(-r * 0.42, -r * 0.42);
+            c.rotate(-Math.PI / 10);
+            c.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            if (c.roundRect) {
+                c.beginPath(); c.roundRect(-3, -5, 3.5, 5.5, 1); c.fill();
+                c.beginPath(); c.roundRect(2, -5, 3.5, 5.5, 1); c.fill();
+                c.beginPath(); c.roundRect(-3, 1.5, 3.5, 5.5, 1); c.fill();
+                c.beginPath(); c.roundRect(2, 1.5, 3.5, 5.5, 1); c.fill();
+            }
+            c.restore();
+
+            // 3. Internal Texture / Swirl (Rotates with 'a')
+            c.save();
+            c.rotate(a);
+            c.globalAlpha = 0.75;
+            c.beginPath();
+            c.moveTo(0, r * 0.7);
+            c.quadraticCurveTo(r * 0.6, 0, 0, -r * 0.6);
+            c.quadraticCurveTo(-r * 0.3, 0, 0, r * 0.7);
+            c.fillStyle = col;
+            c.fill();
+            c.restore();
+
+            c.restore();
+        }
+
+        function renderActiveHabit() {
+            const h = habitsData[currentHabitIndex]; if(!h) return;
+            document.querySelectorAll('.habit-item').forEach((it, i) => it.classList.toggle('active', i === currentHabitIndex));
+            const uctx = fm.getContext('2d'); uctx.clearRect(0,0,60,60); 
+            drawMarble(uctx, 30, 30, 26, 0, h.color);
+            if(!window.isAnimatingJump && habitsData.length > 0) {
+                fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.visibility = 'visible';
+                const aura = document.getElementById('marble-glow-aura');
+                if (aura) {
+                    aura.style.background = h.color;
+                    aura.style.display = 'block';
+                }
+                updateFloatingPosition();
+            }
+            updateStatsUI(); renderDots();
+            document.documentElement.style.setProperty('--glow-color', h.color + '40');
+        }
+
+        let marbleInteractionCount = 0;
+        function updateFloatingPosition() {
+            const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container');
+            if(!dz || !cont) return;
+            const r = dz.getBoundingClientRect(), cr = cont.getBoundingClientRect();
+            const aura = document.getElementById('marble-glow-aura');
+            const tt = document.getElementById('tutorial-tooltip');
+            
+            // Aura stays centered in the drop zone
+            const centerX = (r.left - cr.left + r.width / 2);
+            const centerY = (r.top - cr.top + r.height / 2);
+            aura.style.left = centerX + 'px';
+            aura.style.top = centerY + 'px';
+
+            // If ball is gone or jumping, hide aura completely
+            if (fm.style.display === 'none' || fm.style.visibility === 'hidden' || window.isAnimatingJump) {
+                aura.style.opacity = '0';
+                aura.style.transform = 'translate(-50%, -50%) scale(0)';
+                if (tt) tt.style.display = 'none';
+                return;
+            }
+
+            const fl = centerX - 30;
+            const ft = centerY - 30;
+
+            if (!window.isDrag) {
+                // When NOT dragging, keep ball at home and aura full
+                fm.style.left = fl + 'px'; 
+                fm.style.top = ft + 'px';
+                aura.style.opacity = '0.45';
+                aura.style.transform = 'translate(-50%, -50%) scale(1)';
+            } else {
+                // Calculate distance to shrink aura as ball moves away
+                const dist = Math.sqrt(tx * tx + ty * ty);
+                const scale = Math.max(0, 1 - (dist / 120));
+                aura.style.opacity = (0.45 * scale).toString();
+                aura.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            }
+
+            if (window.isTutorialMode && !window.isDrag) {
+                tt.style.display = 'block'; 
+                tt.style.left = centerX + 'px'; 
+                tt.style.top = (centerY - 85) + 'px';
+            } else if (tt) {
+                tt.style.display = 'none';
+            }
+        }
+
+        // --- 6. אונבורדינג אוטומטי ---
+        function checkNewUser() {
+            if (habitsData.length === 0) {
+                document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
+                document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+                document.getElementById('drawer-onboarding-view').classList.add('active');
+                document.getElementById('drawer-onboarding-step1').style.display = 'flex';
+                fm.style.display = 'none';
+            }
+        }
+
+        window.goToOnboardingStep2 = (n) => { window.tmpH = n; document.getElementById('drawer-onboarding-step1').style.display = 'none'; document.getElementById('drawer-onboarding-step2').style.display = 'flex'; };
+        window.changeOnboardingTarget = (d) => { const el = document.getElementById('onboarding-target-display'); let v = parseInt(el.innerText) + d; if(v<1) v=1; el.innerText = v; };
+        window.handleCustomHabit = () => { const val = document.getElementById('custom-habit-input').value.trim(); if(val) window.goToOnboardingStep2(val); };
+        window.finishOnboarding = () => {
+            const t = document.getElementById('onboarding-target-display').innerText;
+            habitsData = [{ id: Date.now(), name: window.tmpH, time: t + ' פעמים ביום', color: '#239B62' }];
+            currentHabitIndex = 0;
+            for(let i=0; i<TOTAL_DISPLAY_DAYS; i++) initStats(i);
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-normal-view').classList.add('active');
+            initScroller();
+            window.isTutorialMode = true;
+            window.respawnMarble();
+            window.saveState();
+        };
+
+        function initScroller() {
+            const sc = document.getElementById('habit-scroller'); if(!sc) return;
+            sc.innerHTML = '';
+            habitsData.forEach((h, i) => {
+                const el = document.createElement('div'); el.className = 'habit-item' + (i===currentHabitIndex?' active':''); el.innerText = h.name;
+                el.onclick = () => { el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); if (currentHabitIndex === i && fm.style.display === 'none') window.popMarble(); };
+                sc.appendChild(el);
+            });
+            renderDots();
+        }
+
+        function renderDots() {
+            const dc = document.getElementById('picker-dots'); if(!dc) return;
+            dc.innerHTML = '';
+            habitsData.forEach((_, i) => { const d = document.createElement('div'); d.className = 'dot' + (i===currentHabitIndex?' active':''); dc.appendChild(d); });
+        }
+
+        window.respawnMarble = () => {
+            marbleInteractionCount = 0;
+            const aura = document.getElementById('marble-glow-aura');
+            if(aura) aura.classList.remove('active-yellow');
+            fm.classList.remove('marble-pulse');
+            aura.classList.remove('aura-pulse');
+            fm.style.transition = 'none'; 
+            fm.style.transform = 'translateY(50px) scale(0.4)'; 
+            fm.style.opacity = '0';
+            fm.style.display = 'block'; fm.style.visibility = 'visible';
+            updateFloatingPosition();
+            requestAnimationFrame(() => {
+                renderActiveHabit();
+                fm.style.transition = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'; 
+                fm.style.transform = 'translateY(0) scale(1)'; 
+                fm.style.opacity = '1';
+                setTimeout(() => {
+                    if(!window.isDrag && !window.isAnimatingJump) {
+                        fm.classList.add('marble-pulse');
+                        const aura = document.getElementById('marble-glow-aura');
+                        if(aura) aura.classList.add('aura-pulse');
+                    }
+                }, 800);
+            });
+        };
+
+        window.popMarble = () => {
+            if(window.isAnimatingJump) return;
+            fm.classList.remove('marble-pulse');
+            const aura = document.getElementById('marble-glow-aura');
+            if(aura) aura.classList.remove('aura-pulse');
+            // Smooth dip before gliding up
+            fm.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s';
+            fm.style.transform = 'translateY(40px) scale(0.6)';
+            fm.style.opacity = '0.5';
+            setTimeout(() => {
+                fm.style.display = 'block'; fm.style.opacity = '1'; fm.style.visibility = 'visible';
+                fm.style.transition = 'transform 0.7s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s'; 
+                renderActiveHabit(); 
+                fm.style.transform = 'translateY(0) scale(1) rotate(0deg)'; 
+                fm.style.opacity = '1';
+                setTimeout(() => { if(!window.isDrag && !window.isAnimatingJump) fm.classList.add('marble-pulse'); }, 700);
+            }, 180);
+        };
+
+        // --- 7. לוגיקת משחק ואנימציה ---
+        function performNaturalJump(fromX = null, fromY = null) {
+            if (window.isAnimatingJump) return;
+            window.isAnimatingJump = true; fm.classList.remove('marble-pulse'); fm.style.transition = 'none'; 
+            const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
+            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 20; 
+            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(300, Math.min(650, distance * 1.5)), startTime = performance.now();
+            // Lid state managed by isAnimatingJump flag
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
+                const curX = startX + (targetX - startX) * p, jumpH = Math.min(50, distance * 0.25), curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
+                fm.style.left = (curX - 30) + 'px'; fm.style.top = (curY - 30) + 'px'; fm.style.transform = `scale(${1 + Math.sin(p * Math.PI) * 0.1}) rotate(${p * 180}deg)`;
+                if (p < 1) requestAnimationFrame(animate);
+                else {
+                    const cr = canvas.getBoundingClientRect(); 
+                    const h = habitsData[currentHabitIndex];
+                    if(!h) return;
+                    const stats = userStats.daysData[currentDayView].habits[h.id];
+                    if(stats.min===0) stats.min=1; else stats.breakthrough++;
+                    const b = Bodies.circle((contRect.left + targetX) - cr.left, (contRect.top + targetY) - cr.top, 26, { restitution:0.6, friction:0, frictionStatic:0, density:0.04, label:'habit-ball', render:{fillStyle:h.color} });
+                    Matter.Body.setVelocity(b, {x:0, y:7}); currentBalls.push(b); Composite.add(world, b); 
+                    fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
+                    const aura = document.getElementById('marble-glow-aura');
+                    if(aura) aura.style.display = 'none';
+                    window.isAnimatingJump = false; window.saveState();
+                    // Lid closes automatically when flag turns false
+                    setTimeout(() => window.respawnMarble(), 250); 
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        fm.addEventListener('pointerdown', e => { 
+            const bottomDrawer = document.getElementById('bottom-drawer');
+            if(bottomDrawer.classList.contains('edit-mode') || bottomDrawer.classList.contains('stats-mode') || window.isAnimatingJump) return; 
+            
+            marbleInteractionCount++;
+            const aura = document.getElementById('marble-glow-aura');
+            if (marbleInteractionCount >= 2 && aura) {
+                aura.classList.add('active-yellow');
+            } 
+            if (window.isTutorialMode) { window.isTutorialMode = false; document.getElementById('tutorial-tooltip').style.display = 'none'; }
+            window.isDrag=true; fm.classList.add('dragging'); 
+            fm.classList.remove('marble-pulse'); 
+            if(aura) aura.classList.remove('aura-pulse');
+            fm.style.transition = 'none'; 
+            sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
+        });
+        fm.addEventListener('pointermove', e => {
+            if(!window.isDrag) return; 
+            tx=e.clientX-sx; ty=e.clientY-sy; 
+            const rot = tx * 0.2; 
+            fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.15) rotate(${rot}deg)`;
+            
+            // Dynamic Lid Logic
+            const lid = document.getElementById(`lid-${currentDayView}`);
+            const contRect = document.querySelector('.app-container').getBoundingClientRect();
+            const jarRect = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            const mR = fm.getBoundingClientRect();
+            const mX = mR.left + 30, mY = mR.top + 30;
+            const lX = jarRect.left + jarRect.width / 2, lY = jarRect.top + 50;
+            const dist = Math.sqrt(Math.pow(mX - lX, 2) + Math.pow(mY - lY, 2));
+            
+            const maxDist = 220, minDist = 60;
+            let openness = 1 - (dist - minDist) / (maxDist - minDist);
+            openness = Math.max(0, Math.min(1, openness));
+            
+            if(lid && !window.isAnimatingJump) {
+                // Lid handled by global loop
+            }
+        });
+        fm.addEventListener('pointerup', e => {
+            if(!window.isDrag) return; window.isDrag=false; fm.classList.remove('dragging');
+            const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            const r = fm.getBoundingClientRect(), cx = r.left + 30, cy = r.top + 30;
+            if (Math.sqrt(tx*tx+ty*ty) < 10) performNaturalJump();
+            else if (cx > jr.left - 40 && cx < jr.right + 40 && cy < jr.bottom && cy > jr.top - 120) performNaturalJump(cx - contRect.left, cy - contRect.top);
+            else {
+                fm.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.45s, top 0.45s'; 
+                fm.style.transform = 'translate(0,0) scale(1)';
+                const lid = document.getElementById(`lid-${currentDayView}`);
+                if(lid) {
+                    lid.style.transition = 'transform 0.4s ease';
+                    lid.style.transform = '';
+                }
+            }
+        });
+
+        // --- 8. לוגיקת ממשק ותפריטים ---
+        window.openEditMode = () => {
+            if(habitsData.length === 0) return;
+            const h = habitsData[currentHabitIndex];
+            document.getElementById('input-habit-name').value = h.name;
+            document.getElementById('input-habit-time').value = h.time;
+            document.getElementById('input-habit-color').value = h.color;
+            document.getElementById('bottom-drawer').className = 'bottom-section edit-mode';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-edit-view').classList.add('active');
+            fm.style.display = 'none';
+        };
+
+        window.closeEditMode = () => {
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-normal-view').classList.add('active');
+            renderActiveHabit(); window.popMarble();
+        };
+
+        window.saveHabitChanges = () => {
+            const h = habitsData[currentHabitIndex]; if(!h) return;
+            h.name = document.getElementById('input-habit-name').value.trim() || h.name;
+            h.time = document.getElementById('input-habit-time').value.trim() || h.time;
+            h.color = document.getElementById('input-habit-color').value;
+            window.closeEditMode(); initScroller(); window.saveState();
+        };
+
+        window.deleteCurrentHabit = () => {
+            if(habitsData.length <= 1) return;
+            if(confirm("למחוק?")){ habitsData.splice(currentHabitIndex, 1); currentHabitIndex = 0; window.closeEditMode(); initScroller(); window.saveState(); }
+        };
+
+        window.openStatsMode = () => {
+            populateStatsData();
+            document.getElementById('bottom-drawer').className = 'bottom-section stats-mode';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-stats-view').classList.add('active');
+            fm.style.display = 'none';
+        };
+
+        window.closeStatsMode = () => {
+            document.getElementById('bottom-drawer').className = 'bottom-section';
+            document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('drawer-normal-view').classList.add('active');
+            renderActiveHabit(); window.popMarble();
+        };
+
+        function populateStatsData() {
+            const h = habitsData[currentHabitIndex]; if(!h) return;
+            let total = 0, base = 0, extra = 0, streak = 0, isStreakActive = true, last7Days = [];
+            for (let i = unlockedDays - 1; i >= 0; i--) {
+                const s = userStats.daysData[i]?.habits[h.id] || { min: 0, breakthrough: 0 };
+                total += (s.min + s.breakthrough); base += s.min; extra += s.breakthrough;
+                if (s.min > 0) { if (isStreakActive) streak++; } else { isStreakActive = false; }
+            }
+            for (let i = 6; i >= 0; i--) {
+                const dayIdx = (unlockedDays - 1) - i;
+                if (dayIdx >= 0) { const s = userStats.daysData[dayIdx]?.habits[h.id] || { min: 0, breakthrough: 0 }; last7Days.push(s.min + s.breakthrough); }
+                else { last7Days.push(0); }
+            }
+            document.getElementById('stats-title').innerText = h.name;
+            document.getElementById('stats-title').style.color = h.color;
+            document.getElementById('stats-total').innerText = total;
+            document.getElementById('stats-base').innerText = base;
+            document.getElementById('stats-extra').innerText = extra;
+            document.getElementById('stats-streak').innerText = streak;
+            const maxVal = Math.max(...last7Days, 1);
+            document.getElementById('stats-graph').innerHTML = last7Days.map(val => `<div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px;"><div style="font-size:10px; color:#94a3b8; font-weight:bold;">${val > 0 ? val : ''}</div><div style="width:100%; max-width:24px; height:60px; background:#f1f5f9; border-radius:6px; position:relative; overflow:hidden;"><div style="position:absolute; bottom:0; left:0; width:100%; height:${(val/maxVal)*100}%; background:${h.color}; border-radius:6px; transition:0.5s;"></div></div></div>`).join('');
+        }
+
+        window.openProfilePopup = () => {
+            document.getElementById('stat-days-active').innerText = unlockedDays;
+            let total = 0; userStats.daysData.forEach(d => { if (d.habits) Object.values(d.habits).forEach(st => total += st.min + st.breakthrough); });
+            document.getElementById('stat-total-habits').innerText = total;
+            updateProfileUI();
+            document.getElementById('profile-popup').classList.add('active');
+        };
+
+        window.closeProfilePopup = () => document.getElementById('profile-popup').classList.remove('active');
+        window.switchPopupView = (viewId, el) => {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            el.classList.add('active');
+        };
+        window.applyPresetBg = (val) => {
+            if(val.startsWith('#')) { customBgs.appColor = val; customBgs.appUrl = ''; }
+            else { customBgs.appUrl = val; }
+            document.getElementById('input-app-bg-url').value = customBgs.appUrl || '';
+            applyCustomBgs(); window.saveState();
+        };
+        window.handleAdminLogin = () => {
+            const pass = document.getElementById('admin-pass').value;
+            if(pass === '1234') {
+                alert('ברוך הבא אדמין! הגישה למסד הנתונים נפתחה.');
+                unlockedDays = 63; buildJars(); window.saveState();
+            } else {
+                alert('סיסמה שגויה');
+            }
+        };
+        window.handleBackdropClick = (e, id) => { if(e.target.id === id) document.getElementById(id).classList.remove('active'); };
+
+        // --- 9. הפעלה ---
+        function updateLidProximity() {
+            const lid = document.getElementById(`lid-${currentDayView}`);
+            if (!lid) return;
+            let openFactor = 0;
+            if (window.isAnimatingJump) {
+                openFactor = 1;
+            } else if (window.isDrag) {
+                const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+                const r = fm.getBoundingClientRect();
+                const dist = Math.sqrt(Math.pow((r.left + 30) - (jr.left + jr.width / 2), 2) + Math.pow((r.top + 30) - (jr.top + 50), 2));
+                openFactor = Math.max(0, Math.min(1, 1 - (dist - 60) / 180));
+            }
+            const hasFallingBall = currentBalls.some(b => b.position.y > 0 && b.position.y < 120);
+            if (hasFallingBall) openFactor = 1;
+            lid.style.transition = (window.isDrag && !hasFallingBall) ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            lid.style.transform = `translateY(${openFactor * -55}px) rotate(${openFactor * -32}deg)`;
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            Composite.allBodies(world).forEach(b => {
+                if (b.label === 'habit-ball') drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle);
+            });
+            updateFloatingPosition();
+            updateLidProximity();
+            Engine.update(engine, 1000 / 60);
+            requestAnimationFrame(loop);
+        }
+        
+        document.addEventListener('pointermove', (e) => {
+            const rect = document.querySelector('.app-container').getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            document.documentElement.style.setProperty('--light-pos-x', x + '%');
+            document.documentElement.style.setProperty('--light-pos-y', y + '%');
+        });
+
+        window.onload = () => {
+            updateProfileUI();
+            buildJars();
+            initScroller();
+            const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) { document.querySelectorAll('.jar-slide').forEach(s => s.classList.remove('active-slide')); e.target.classList.add('active-slide'); moveCanvas(parseInt(e.target.dataset.index)); } }), { threshold:0.6, root:document.getElementById('jars-slider') });
+            document.querySelectorAll('.jar-slide').forEach(s => obs.observe(s));
+            moveCanvas(currentDayView);
+            checkNewUser();
+            loop();
+            setTimeout(() => { if(habitsData.length > 0) renderActiveHabit(); }, 200);
+        };
+
+        document.getElementById('drawer-handle').addEventListener('click', () => { 
+            const bd = document.getElementById('bottom-drawer');
+            if (bd.classList.contains('stats-mode')) window.closeStatsMode(); 
+            else if (document.getElementById('drawer-normal-view').classList.contains('active')) window.openStatsMode(); 
+        });
+
+        const sc = document.getElementById('habit-scroller');
+        let lidx = -1;
+        sc.addEventListener('scroll', () => {
+            const center = sc.getBoundingClientRect().left + sc.offsetWidth/2;
+            let closest = -1, min = Infinity;
+            document.querySelectorAll('.habit-item').forEach((it, i) => { const d = Math.abs(center - (it.getBoundingClientRect().left + it.offsetWidth/2)); if(d < min){ min = d; closest = i; } });
+            if(closest !== -1 && closest !== lidx) { lidx = closest; currentHabitIndex = closest; window.popMarble(); }
+        });
+
+        // --- חיבור לגוגל דמה (ללא שגיאות) ---
+        window.connectGoogle = () => {
+            alert("פונקציית הסנכרון עם גוגל אינה זמינה כרגע. הנתונים נשמרים מקומית במכשיר.");
+        };
+    </script>
+</body>
+</html>
