@@ -9,6 +9,57 @@
 
     <style>
         /* Dev Tools Styling */
+        #mode-switcher-container {
+            position: relative;
+            z-index: 5000;
+            pointer-events: auto;
+        }
+        .mode-trigger {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .mode-trigger:hover { background: #1e293b; }
+        .mode-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 160px;
+            border: 1px solid #f1f5f9;
+        }
+        .mode-menu.active { display: flex; }
+        .mode-option {
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: right;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mode-option:hover { background: #f1f5f9; color: var(--primary-color); }
+        .mode-option span { font-size: 14px; }
         #dev-tools-panel {
             position: fixed;
             bottom: 20px;
@@ -818,13 +869,27 @@
 
     <div class="app-container">
         <!-- Header -->
-        <div class="header-ui">
-            <div style="flex: 1;"></div> 
+        <div class="header-ui" id="main-header-ui">
             <div class="user-pill" onclick="window.openProfilePopup()">
                 <div class="admin-indicator" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
                 <div class="name" id="display-profile-name" style="display:none;"></div>
                 <div class="user-avatar" id="header-avatar">
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" alt="פרופיל" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+            </div>
+            <div style="flex: 1;"></div> 
+            <div id="mode-switcher-container">
+                <button class="mode-trigger" onclick="document.getElementById('mode-menu').classList.toggle('active')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M2 6h20M2 18h20"/></svg>
+                    תצוגת מצבים
+                </button>
+                <div class="mode-menu" id="mode-menu">
+                    <div class="mode-option" onclick="window.setAppMode('normal')">מסך ראשי <span>🏠</span></div>
+                    <div class="mode-option" onclick="window.setAppMode('onboarding')">אונבורדינג <span>✨</span></div>
+                    <div class="mode-option" onclick="window.setAppMode('stats')">סטטיסטיקה <span>📊</span></div>
+                    <div class="mode-option" onclick="window.setAppMode('edit')">עריכת הרגל <span>✏️</span></div>
+                    <div class="mode-option" onclick="window.setAppMode('reward')">פופ-אפ פרס <span>🎁</span></div>
+                    <div class="mode-option" onclick="window.setAppMode('empty')" style="color: var(--danger-color); border-top: 1px solid #f1f5f9; margin-top: 4px;">מצב ריק (איפוס) <span>🗑️</span></div>
                 </div>
             </div>
         </div>
@@ -2390,6 +2455,42 @@
         };
 
         // --- 9. הפעלה ---
+        window.setAppMode = (mode) => {
+            const menu = document.getElementById('mode-menu');
+            const drawer = document.getElementById('bottom-drawer');
+            menu.classList.remove('active');
+
+            // Close any open popups
+            document.getElementById('reward-popup').classList.remove('active');
+            document.getElementById('profile-popup').classList.remove('active');
+
+            switch(mode) {
+                case 'normal':
+                    window.closeStatsMode();
+                    window.closeEditMode();
+                    drawer.className = 'bottom-section';
+                    document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+                    document.getElementById('drawer-normal-view').classList.add('active');
+                    window.respawnMarble();
+                    break;
+                case 'onboarding':
+                    window.openAddMode();
+                    break;
+                case 'stats':
+                    window.openStatsMode();
+                    break;
+                case 'edit':
+                    window.openEditMode();
+                    break;
+                case 'reward':
+                    window.setAppMode('normal');
+                    setTimeout(() => document.getElementById('reward-popup').classList.add('active'), 300);
+                    break;
+                case 'empty':
+                    window.resetAppState();
+                    break;
+            }
+        };
         function updateLidProximity() {
             const lid = document.getElementById(`lid-${currentDayView}`);
             if (!lid) return;
