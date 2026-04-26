@@ -8,6 +8,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 
     <style>
+        /* Dev Tools Styling */
+        #dev-tools-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: auto;
+        }
+        .dev-btn {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .dev-btn:hover { background: #1e293b; transform: scale(1.05); }
+        .dev-btn.reward { background: var(--primary-color); }
+
         /* Magnet Eye Styling */
         .magnet-eye-btn {
             width: 40px;
@@ -690,6 +718,73 @@
             50% { transform: translate(-50%, -10px); }
         }
 
+        /* --- Reward Popup --- */
+        .reward-popup {
+            position: fixed;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9) translateY(20px);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px) saturate(1.8);
+            padding: 40px;
+            border-radius: 48px;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
+            z-index: 5000;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.7s cubic-bezier(0.2, 1, 0.3, 1);
+            border: none;
+            width: 80%;
+            max-width: 320px;
+        }
+        .reward-popup.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) translateY(0);
+            pointer-events: auto;
+        }
+        .reward-icon-anim {
+            font-size: 64px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+            animation: rewardIconBounce 2s infinite ease-in-out;
+        }
+        @keyframes rewardIconBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.1); }
+        }
+        .reward-popup.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+        .reward-popup h2 {
+            margin: 0;
+            font-size: 30px;
+            background: linear-gradient(135deg, #1e293b 0%, var(--primary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            line-height: 1.2;
+        }
+        .reward-popup p {
+            margin: 15px 0 0;
+            font-size: 17px;
+            color: #64748b;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+        .reward-glow-bg {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, var(--glow-color-solid) 0%, transparent 60%);
+            transform: translate(-50%, -50%);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: -1;
+        }
+
         /* --- Popups --- */
         .popup-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
         .popup-backdrop.active { opacity: 1; pointer-events: all; }
@@ -898,8 +993,21 @@
         <div id="marble-glow" class="marble-pulse"></div>
         <canvas id="floating-marble" width="60" height="60"></canvas>
 
-        <!-- Popups -->
-        <div class="popup-backdrop" id="profile-popup" onclick="window.handleBackdropClick(event, 'profile-popup')">
+        <!-- Dev Tools -->
+    <div id="dev-tools-panel">
+        <button class="dev-btn" onclick="currentBalls.forEach(b => Matter.Composite.remove(world, b)); currentBalls = [];">🧹 נקה צנצנת</button>
+    </div>
+
+    <!-- Popups -->
+        <!-- Reward Popup -->
+    <div id="reward-popup" class="reward-popup">
+        <div class="reward-glow-bg"></div>
+        <div class="reward-icon-anim">🎁</div>
+        <h2>יצאנו לדרך!</h2>
+        <p>כל הכבוד על ההרגל החדש.<br>כדי להתחיל בסטייל, קבל <strong>3 גולות בונוס</strong> במתנה!</p>
+    </div>
+
+    <div class="popup-backdrop" id="profile-popup" onclick="window.handleBackdropClick(event, 'profile-popup')">
             <div class="popup-content">
                 <button class="close-popup-btn" onclick="window.closeProfilePopup()">✕</button>
                 <div class="popup-nav">
@@ -1276,6 +1384,7 @@
                     render: { fillStyle: d.color } 
                 });
                 b.habitId = d.habitId;
+                b.isGift = d.isGift || false;
                 currentBalls.push(b);
                 Composite.add(world, b);
             });
@@ -1285,6 +1394,44 @@
         }
 
         const fm = document.getElementById('floating-marble');
+
+        function drawGift(c, x, y, r, a) {
+            // Gift balls now look like 'Premium Golden Marbles'
+            c.save();
+            c.translate(x, y);
+            c.beginPath();
+            c.arc(0, 0, r, 0, Math.PI * 2);
+            c.clip();
+
+            // Golden Base
+            let g = c.createRadialGradient(-r * 0.4, -r * 0.4, 0, 0, 0, r * 1.2);
+            g.addColorStop(0, "#fff9c4");
+            g.addColorStop(0.2, "#fdd835");
+            g.addColorStop(0.5, "#fbc02d");
+            g.addColorStop(1, "#f57f17");
+            c.fillStyle = g;
+            c.fill();
+
+            // Internal Sparkle Swirl
+            c.save();
+            c.rotate(a + Math.PI/4);
+            c.globalAlpha = 0.6;
+            c.fillStyle = "#ffffff";
+            c.beginPath();
+            c.moveTo(0, r * 0.6);
+            c.bezierCurveTo(r * 0.8, 0, -r * 0.8, 0, 0, -r * 0.6);
+            c.bezierCurveTo(-r * 0.2, 0, r * 0.2, 0, 0, r * 0.6);
+            c.fill();
+            c.restore();
+
+            // Specular Reflection
+            c.beginPath();
+            c.ellipse(-r * 0.4, -r * 0.4, r * 0.25, r * 0.15, -Math.PI / 4, 0, Math.PI * 2);
+            c.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            c.fill();
+
+            c.restore();
+        }
 
         function drawMarble(c, x, y, r, a, col, alpha = 1.0) {
             c.save();
@@ -1611,6 +1758,64 @@
                 customInput.style.display = 'none';
             }
         };
+        window.triggerFirstHabitReward = () => {
+            // Reset current balls if testing to see the effect clearly
+            if(habitsData.length === 0) {
+                habitsData.push({ id: 999, name: 'הרגל בדיקה', amount: 1, unit: 'פעמים', color: '#239B62' });
+                currentHabitIndex = 0;
+                initScroller();
+            }
+            
+            const popup = document.getElementById('reward-popup');
+            popup.classList.add('active');
+            
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate([100, 50, 100]);
+
+            setTimeout(() => {
+                popup.classList.remove('active');
+                
+                // Visual logic: Drop 3 "fiofi" balls (Gift marbles) that aren't counted in stats
+                setTimeout(() => {
+                    // Visual flag to open the lid
+                    window.isAnimatingJump = true; 
+                    
+                    for(let i = 0; i < 3; i++) {
+                        setTimeout(() => {
+                            const h = habitsData[0];
+                            const scale = getScaleFactor(currentBalls.length + 1);
+                            const spawnX = 170 + (Math.random() * 20 - 10);
+                            
+                            const b = Bodies.circle(spawnX, 40, 26 * scale, {
+                                restitution: 0.5, friction: 0.01, density: 0.05,
+                                label: 'habit-ball', 
+                                render: { fillStyle: h ? h.color : '#239B62' } 
+                            });
+                            
+                            b.isGift = true;
+                            b.habitId = h ? h.id : 0;
+                            
+                            // Move lid barrier away
+                            Matter.Body.setPosition(physicsLid, { x: 170, y: -200 });
+                            
+                            currentBalls.push(b);
+                            Composite.add(world, b);
+                            Matter.Body.setVelocity(b, {x: (Math.random() - 0.5) * 2, y: 10});
+                            
+                            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
+                            
+                            // On the last ball, reset the lid flag after a delay
+                            if (i === 2) {
+                                setTimeout(() => { 
+                                    window.isAnimatingJump = false; 
+                                    window.saveState();
+                                }, 1500);
+                            }
+                        }, i * 500);
+                    }
+                }, 500);
+            }, 3500);
+        };
+
         window.finishOnboarding = () => {
             document.querySelector('.back-onboarding-btn').style.display = 'none';
             const amt = parseInt(document.getElementById('onboarding-target-display').innerText);
@@ -1636,6 +1841,9 @@
                    window.isTutorialMode = true;
                 }
                 window.respawnMarble();
+                if (habitsData.length === 1) {
+                    setTimeout(() => window.triggerFirstHabitReward(), 1000);
+                }
             }, 100);
             window.saveState();
         };
@@ -1779,7 +1987,8 @@
                         }
                     });
 
-                    const b = Bodies.circle((contRect.left + targetX) - cr.left, 120, currentRadius, {
+                    // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
+                    const b = Bodies.circle((contRect.left + targetX) - cr.left, 60, currentRadius, {
                         restitution: 0.4, 
                         friction: 0.001, 
                         frictionAir: 0.01, 
@@ -1789,7 +1998,11 @@
                         render: { fillStyle: h.color } 
                     });
                     b.habitId = h.id;
-                    Matter.Body.setVelocity(b, {x:0, y:7}); currentBalls.push(b); Composite.add(world, b); 
+                    // Disable lid barrier for a moment to let the ball in
+                    Matter.Body.setPosition(physicsLid, { x: 170, y: -200 });
+                    Matter.Body.setVelocity(b, {x:0, y:8}); 
+                    currentBalls.push(b); 
+                    Composite.add(world, b); 
                     fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
                     const gl = document.getElementById('marble-glow'); if(gl) gl.style.opacity = '0';
 
@@ -2165,6 +2378,11 @@
             
             lid.style.transform = `translate(${slideOut}px, ${lift}px) rotate(${screwRotation}deg)`;
             
+            // Ensure physics lid barrier returns to position when lid is closed
+            if (openFactor < 0.1 && !window.isAnimatingJump) {
+                 Matter.Body.setPosition(physicsLid, { x: 170, y: 40 });
+            }
+
             // Add a small 'rattle' effect when the lid is just starting to unscrew
             if (openFactor > 0.02 && openFactor < 0.3) {
                 const jitter = Math.sin(Date.now() * 0.2) * 1.2;
@@ -2231,7 +2449,11 @@
                     }
 
                     if (b.render.visible !== false) {
-                        drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle, alpha);
+                        if (b.isGift) {
+                            drawGift(ctx, b.position.x, b.position.y, b.circleRadius, b.angle);
+                        } else {
+                            drawMarble(ctx, b.position.x, b.position.y, b.circleRadius, b.angle, b.render.fillStyle, alpha);
+                        }
                     }
                 }
             });
