@@ -31,40 +31,23 @@
         }
 
         /* Floating Add Button */
-        .floating-add-btn {
-            position: absolute;
-            bottom: 25px;
-            left: 20px;
-            width: 56px;
-            height: 56px;
-            background: var(--text-main);
-            color: white;
-            border-radius: 20px;
-            display: flex;
+        .habit-item.add-habit-trigger span:first-child {
+            display: flex !important;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 12px 24px rgba(0,0,0,0.18);
-            cursor: pointer;
-            z-index: 150;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border: none;
-            pointer-events: auto;
-        }
-        .floating-add-btn:active {
-            transform: scale(0.9) translateY(2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .floating-add-btn svg {
             width: 28px;
             height: 28px;
+            background: #f1f5f9;
+            color: #94a3b8;
+            border-radius: 50%;
+            font-size: 20px;
+            margin-bottom: 2px;
+            transition: all 0.3s;
         }
-        /* Hide FAB when in sub-menus/modes */
-        .app-container:has(.bottom-section.edit-mode) .floating-add-btn,
-        .app-container:has(.bottom-section.onboarding-mode) .floating-add-btn,
-        .app-container:has(.bottom-section.stats-mode) .floating-add-btn {
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(30px) scale(0.5);
+        .habit-item.add-habit-trigger.active span:first-child {
+            background: #e2e8f0;
+            color: #1e293b;
+            transform: scale(1.1);
         }
 
         /* Dev Tools Styling */
@@ -371,18 +354,18 @@
 
         .jars-slider::before, .jars-slider::after {
             content: '';
-            flex: 0 0 calc(max(0px, 50% - 180px));
-            min-width: calc(max(0px, 50% - 180px));
+            flex: 0 0 calc(max(0px, 50% - 195px));
+            min-width: calc(max(0px, 50% - 195px));
         }
 
         .jar-slide { 
-            flex: 0 0 340px; 
+            flex: 0 0 390px; 
             height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
             box-sizing: border-box; 
-            padding-top: 60px;
-            padding-bottom: 160px; 
-            margin: 0 10px;
+            padding-top: 50px;
+            padding-bottom: 150px; 
+            margin: 0;
             transition: opacity 0.5s ease;
             opacity: 0.4; 
         }
@@ -391,19 +374,19 @@
         .jar-slide.active-slide.locked { opacity: 0.6; }
 
         .jar-wrapper { 
-            position: relative; width: 340px; height: 480px; direction: rtl; z-index: 2; 
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0.85); 
+            position: relative; width: 390px; height: 620px; direction: rtl; z-index: 2; 
+            transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+            transform: scale(0.9); 
         }
         .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
-        canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 26; touch-action: none; }
+        canvas#physics-canvas { position: absolute; top: 0; left: 0; z-index: 26; touch-action: none; height: 620px; }
 
         /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
         .jar-cap-detail {
             will-change: transform;
-            position: absolute; top: 22px; left: 85px; width: 170px; height: 36px;
+            position: absolute; top: 10px; left: 105px; width: 180px; height: 38px;
             background: linear-gradient(to right, 
                 #1e293b 0%, 
                 #475569 15%, 
@@ -447,20 +430,20 @@
         .jar-cap-detail.open { transform: translateY(-50px) rotate(-30deg); }
 
         .jar-opening {
-            position: absolute; top: 46px; left: 92px; width: 156px; height: 16px;
+            position: absolute; top: 34px; left: 117px; width: 156px; height: 16px;
             border-radius: 50%; background: rgba(255, 255, 255, 0.1); z-index: 15;
             box-shadow: 
                 inset 0 0 10px rgba(0,0,0,0.2);
             border: 1.5px solid rgba(255,255,255,0.1);
         }
         .jar-opening-front {
-            position: absolute; top: 54px; left: 92px; width: 156px; height: 8px;
+            position: absolute; top: 42px; left: 117px; width: 156px; height: 8px;
             border-radius: 0 0 100px 100px; z-index: 25;
             border-bottom: 2px solid rgba(255,255,255,0.4);
             pointer-events: none;
         }
         .jar-neck {
-            position: absolute; top: 48px; left: 92px; width: 156px; height: 50px;
+            position: absolute; top: 36px; left: 117px; width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
             background: 
                 linear-gradient(to right, 
@@ -472,7 +455,7 @@
             border: none;
         }
         .jar-neck-front {
-            position: absolute; top: 48px; left: 92px; width: 156px; height: 50px;
+            position: absolute; top: 36px; left: 117px; width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
             background: 
                 repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 13px),
@@ -510,23 +493,23 @@
         }
         .jar-reflection {
             position: absolute;
-            top: 97px; left: 30px; width: 280px; height: 333px;
-            border-radius: 40px 40px 85px 85px;
+            top: 85px; left: 0px; width: 390px; height: 505px;
+            border-radius: 40px 40px 100px 100px;
             pointer-events: none;
-            z-index: 28; /* מעל הקנבס של הפיזיקה */
+            z-index: 28;
             overflow: hidden;
-            opacity: 0.7;
+            opacity: 0.75;
         }
         /* הלומת אור מרכזית - השתקפות חלון */
         .jar-reflection::before {
             content: '';
             position: absolute;
-            top: 10%; left: 15%;
-            width: 35px; height: 120px;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 100%);
-            border-radius: 20px;
-            filter: blur(4px);
-            transform: rotate(5deg);
+            top: 8%; left: 12%;
+            width: 45px; height: 160px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 25px;
+            filter: blur(5px);
+            transform: rotate(3deg);
         }
         /* הלומת אור משנית - פס אנכי */
         .jar-reflection::after {
@@ -543,21 +526,19 @@
         .jar-body {
             z-index: 20;
             position: absolute;
-            top: 97px; left: 30px; width: 280px; height: 333px;
-            border-radius: 40px 40px 85px 85px;
-            /* Fully transparent background */
-            background: transparent;
+            top: 85px; left: 0px; width: 390px; height: 505px;
+            border-radius: 40px 40px 100px 100px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%);
             border: none;
-            /* Removed blur to ensure looking through the glass is clear */
             backdrop-filter: none;
             overflow: hidden;
             box-shadow: 
-                /* Minimal reflections for glass edges without opaque background */
-                inset 0 30px 40px -10px rgba(255,255,255,0.25), 
-                inset 0 -25px 50px rgba(0,0,0,0.05), 
-                inset 2px 2px 10px rgba(255,255,255,0.2),
-                0 35px 75px rgba(0,0,0,0.12);
-            transition: box-shadow 0.5s ease, background 0.4s ease;
+                inset 0 40px 60px -10px rgba(255,255,255,0.3), 
+                inset 0 -40px 80px rgba(0,0,0,0.08), 
+                inset 3px 3px 15px rgba(255,255,255,0.25),
+                inset -3px 0 15px rgba(0,0,0,0.03),
+                0 45px 90px rgba(0,0,0,0.15);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Global Background Blur when Drawer is expanded */
@@ -600,14 +581,7 @@
         .bottom-section.onboarding-mode { background: #ffffff; }
         
         .drawer-handle {
-            display: flex;
-            width: 40px;
-            height: 4px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            margin: 12px 0 4px;
-            opacity: 0.8;
-            flex-shrink: 0;
+            display: none;
         }
 
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 8px; touch-action: pan-y; }
@@ -678,7 +652,7 @@
             justify-content: flex-start;
             gap: 12px;
             width: fit-content;
-            margin: 0 25px 4px auto;
+            margin: 0;
             padding: 0;
             z-index: 110;
             pointer-events: none;
@@ -970,24 +944,26 @@
         }
 
         .count-pop-anim {
-            animation: countFloatUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: countFloatUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         @keyframes countFloatUp {
             0% {
                 transform: translate(0, 0) scale(0.6);
                 opacity: 0;
-                filter: blur(6px);
+                filter: blur(8px);
             }
-            30% {
-                transform: translate(15px, -50px) scale(1.6);
+            35% {
+                /* Moves leftward and up toward center */
+                transform: translate(-70px, -80px) scale(2.2);
                 opacity: 1;
                 filter: blur(0px);
             }
             100% {
-                transform: translate(35px, -200px) scale(2.5);
+                /* Lands in the visual center of the jar area */
+                transform: translate(-140px, -280px) scale(3.8);
                 opacity: 0;
-                filter: blur(12px);
+                filter: blur(20px);
             }
         }
 
@@ -1192,13 +1168,10 @@
 
         <!-- Drawer -->
         <div class="bottom-section" id="bottom-drawer">
-            <button class="floating-add-btn" id="main-fab" onclick="event.stopPropagation(); window.openAddMode()" title="הוספת הרגל">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </button>
             <div class="drawer-handle" id="drawer-handle"></div>
             
             <div id="drawer-normal-view" class="drawer-view active">
-                <!-- Management Section (Slightly more inward) -->
+                <!-- Management Section (Left) -->
                 <div style="position: absolute; top: 12px; left: 56px; z-index: 110;">
                     <div id="management-buttons-container" style="display: flex; align-items: center; gap: 4px;">
                         <div class="edit-btn" onclick="event.stopPropagation(); window.openEditMode()" title="עריכת הרגל">
@@ -1214,13 +1187,14 @@
                     </div>
                 </div>
 
-                <div id="marble-drop-zone-container" style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 60px; height: 10px; z-index: 1000;">
-                    <div id="marble-drop-zone" style="width: 60px; height: 60px; position: absolute; top: -30px; left: 0; pointer-events: none;"></div>
+                <!-- Right Corner: Marble Drop Zone -->
+                <div id="marble-drop-zone-container" style="position: absolute; top: 12px; right: 25px; width: 60px; height: 60px; z-index: 1000;">
+                    <div id="marble-drop-zone" style="width: 60px; height: 60px; position: absolute; top: 0; left: 0; pointer-events: none;"></div>
                 </div>
 
-                <!-- Progress & Stats (Now Grouped at Top Right) -->
-                <div style="margin-top: 25px; width: 100%;">
-                    <div class="drawer-info-pill">
+                <!-- Progress & Stats (Now Centered) -->
+                <div style="margin-top: 25px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+                    <div class="drawer-info-pill" style="margin: 0 auto 4px auto; justify-content: center;">
                         <span class="day-label" id="drawer-day-label">יום 1</span>
                         <div class="count-label">
                             <span id="drawer-current-count" style="font-size: 18px;">0</span>
@@ -1228,7 +1202,7 @@
                             <span id="drawer-goal-count">1</span>
                         </div>
                     </div>
-                    <div class="progress-bar-wrapper" style="margin-bottom: 8px;">
+                    <div class="progress-bar-wrapper" style="margin: 0 auto 12px auto;">
                         <div class="progress-bar-fill" id="drawer-progress-fill"></div>
                     </div>
                 </div>
@@ -1418,6 +1392,7 @@
                         </div>
 
                         <div style="margin-top:15px; text-align:right;">
+                            <button id="btn-enable-motion" onclick="window.requestMotionPermission()" style="width:100%; background:#e0f2fe; border:1.5px solid #bae6fd; padding:12px; border-radius:12px; font-weight:800; color:#0369a1; margin-bottom:10px; cursor:pointer;">📳 הפעל חיישני תנועה (לשקשוק הצנצנת)</button>
                             <label style="display: block; cursor: pointer; text-align: center; background: #f8fafc; border: 1.5px solid #e2e8f0; color: #64748b; padding: 10px; border-radius: 12px; font-weight: 800; font-size: 13px;">
                                 🏺 העלה טקסטורה לצנצנת
                                 <input type="file" accept="image/*" hidden onchange="window.handleJarBgUpload(event)">
@@ -1693,25 +1668,25 @@
         engine.velocityIterations = 10;
         let currentBalls = [];
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
-        canvas.width = 340; canvas.height = 480;
+        canvas.width = 390; canvas.height = 620;
         const wallOptions = { isStatic: true, friction: 0.001, frictionStatic: 0.01, restitution: 0.3, render: { visible: false } };
         // Create a massive physics ceiling to prevent any upward escapes
-        const physicsLid = Bodies.rectangle(170, 40, 300, 100, { ...wallOptions, label: 'physics-lid' });
+        const physicsLid = Bodies.rectangle(195, 25, 300, 100, { ...wallOptions, label: 'physics-lid' });
         Composite.add(world, [
-            // Thick Floor
-            Bodies.rectangle(170, 460, 400, 100, wallOptions),
-            // Slanted Bottom Corners (Thickened to block tunneling)
-            Bodies.rectangle(55, 420, 120, 80, { ...wallOptions, angle: Math.PI / 5 }),
-            Bodies.rectangle(285, 420, 120, 80, { ...wallOptions, angle: -Math.PI / 5 }),
-            // Side Walls (Extremely thick to keep balls inside the glass area)
-            Bodies.rectangle(-20, 250, 100, 600, wallOptions), 
-            Bodies.rectangle(360, 250, 100, 600, wallOptions),
-            // Neck narrowers - Blocking the shoulders of the jar
-            Bodies.rectangle(60, 110, 120, 80, { ...wallOptions, angle: -Math.PI / 4.5 }),
-            Bodies.rectangle(280, 110, 120, 80, { ...wallOptions, angle: Math.PI / 4.5 }),
-            // Internal Neck walls - Tighter vertical barriers
-            Bodies.rectangle(88, 50, 30, 150, wallOptions),
-            Bodies.rectangle(252, 50, 30, 150, wallOptions),
+            // Thick Floor lowered even more for expanded jar
+            Bodies.rectangle(195, 595, 400, 100, wallOptions),
+            // Slanted Bottom Corners adjusted for new height
+            Bodies.rectangle(40, 560, 140, 100, { ...wallOptions, angle: Math.PI / 5 }),
+            Bodies.rectangle(350, 560, 140, 100, { ...wallOptions, angle: -Math.PI / 5 }),
+            // Side Walls
+            Bodies.rectangle(-25, 280, 50, 800, wallOptions), 
+            Bodies.rectangle(415, 280, 50, 800, wallOptions),
+            // Neck narrowers shifted up
+            Bodies.rectangle(85, 100, 120, 80, { ...wallOptions, angle: -Math.PI / 4.5 }),
+            Bodies.rectangle(305, 100, 120, 80, { ...wallOptions, angle: Math.PI / 4.5 }),
+            // Internal Neck walls shifted up
+            Bodies.rectangle(113, 38, 30, 150, wallOptions),
+            Bodies.rectangle(277, 38, 30, 150, wallOptions),
             physicsLid
         ]);
         Composite.add(world, MouseConstraint.create(engine, { mouse: Mouse.create(canvas), constraint: { stiffness: 0.2, render: { visible: false } } }));
@@ -1790,14 +1765,25 @@
         const fm = document.getElementById('floating-marble');
 
         function drawGift(c, x, y, r, a) {
-            // Gift balls now look like 'Premium Golden Marbles'
             c.save();
             c.translate(x, y);
+            
+            // Add a soft floor shadow if the ball is low enough
+            if (y > 500) {
+                c.save();
+                c.translate(0, r * 1.05);
+                c.scale(1, 0.2);
+                c.beginPath();
+                c.arc(0, 0, r, 0, Math.PI * 2);
+                c.fillStyle = 'rgba(0,0,0,0.15)';
+                c.fill();
+                c.restore();
+            }
+
             c.beginPath();
             c.arc(0, 0, r, 0, Math.PI * 2);
             c.clip();
 
-            // 1. Solid White Base (No border, no shadow)
             c.fillStyle = '#ffffff';
             c.fill();
 
@@ -2228,14 +2214,14 @@
                     setTimeout(() => {
                         const h = habitsData[0];
                         const scale = getScaleFactor(currentBalls.length + 1);
-                        const spawnX = 170 + (Math.random() * 20 - 10);
+                        const spawnX = 195 + (Math.random() * 20 - 10);
                         const b = Bodies.circle(spawnX, 40, 26 * scale, {
                             restitution: 0.5, friction: 0.01, density: 0.05,
                             label: 'habit-ball', render: { fillStyle: h ? h.color : '#239B62' } 
                         });
                         b.isGift = true;
                         b.habitId = h ? h.id : 0;
-                        Matter.Body.setPosition(physicsLid, { x: 170, y: -200 });
+                        Matter.Body.setPosition(physicsLid, { x: 195, y: -200 });
                         currentBalls.push(b);
                         Composite.add(world, b);
                         Matter.Body.setVelocity(b, {x: (Math.random() - 0.5) * 2, y: 10});
@@ -2307,7 +2293,6 @@
             habitsData.forEach((h, i) => {
                 const el = document.createElement('div'); 
                 el.className = 'habit-item' + (i===currentHabitIndex?' active':''); 
-                // Amount tag placed above habit name
                 el.innerHTML = `<span class="habit-goal-tag">${h.amount || 1} ${h.unit || 'פעמים'}</span><span>${h.name}</span>`;
                 el.onclick = (e) => { 
                     e.stopPropagation(); 
@@ -2316,6 +2301,18 @@
                 };
                 sc.appendChild(el);
             });
+
+            // Add "New Habit" button at the end of the scroller
+            const addEl = document.createElement('div');
+            addEl.className = 'habit-item add-habit-trigger';
+            addEl.innerHTML = `<span class="habit-goal-tag">+</span><span>הוסף</span>`;
+            addEl.onclick = (e) => {
+                e.stopPropagation();
+                addEl.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                setTimeout(() => window.openAddMode(), 300);
+            };
+            sc.appendChild(addEl);
+
             renderDots();
         }
 
@@ -2511,6 +2508,7 @@
                         render: { fillStyle: h.color } 
                     });
                     b.habitId = h.id;
+                    if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
                     // Disable lid barrier for a moment to let the ball in
                     Matter.Body.setPosition(physicsLid, { x: 170, y: -200 });
                     Matter.Body.setVelocity(b, {x:0, y:8}); 
@@ -2548,10 +2546,12 @@
                         const fb = document.createElement('div');
                         fb.className = 'count-feedback-pop count-pop-anim';
                         fb.style.color = h.color;
-                        fb.style.left = (mRect.left - cRect.left + mRect.width / 2 - 20) + 'px';
+                        // Centering the container width relative to the drop zone start point
+                        fb.style.left = (mRect.left - cRect.left + mRect.width / 2 - 80) + 'px';
                         fb.style.top = (mRect.top - cRect.top - 20) + 'px';
                         fb.style.width = '160px';
                         fb.style.textAlign = 'center';
+                        fb.style.zIndex = '2000'; // Ensure it's above everything
                         
                         if (stats.breakthrough > 0) {
                             fb.innerHTML = `
@@ -2583,6 +2583,8 @@
         fm.addEventListener('pointerdown', e => { 
             const bottomDrawer = document.getElementById('bottom-drawer');
             if(bottomDrawer.classList.contains('edit-mode') || bottomDrawer.classList.contains('stats-mode') || window.isAnimatingJump) return; 
+            
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
             
             hasEverInteracted = true;
             if (!hasSeenTutorial) {
@@ -2857,6 +2859,64 @@
         };
         window.handleBackdropClick = (e, id) => { if(e.target.id === id) document.getElementById(id).classList.remove('active'); };
 
+        // --- Shake Detection Logic ---
+        let lastAcc = { x: 0, y: 0, z: 0 };
+        const SHAKE_THRESHOLD = 12;
+        window.isMotionEnabled = false;
+
+        window.requestMotionPermission = async () => {
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceMotionEvent.requestPermission();
+                    if (permission === 'granted') {
+                        window.initMotionListener();
+                    }
+                } catch (e) { console.error(e); }
+            } else {
+                window.initMotionListener();
+            }
+        };
+
+        window.initMotionListener = () => {
+            if (window.isMotionEnabled) return;
+            window.isMotionEnabled = true;
+            document.getElementById('btn-enable-motion').style.display = 'none';
+            
+            window.addEventListener('devicemotion', (event) => {
+                const acc = event.accelerationIncludingGravity;
+                if (!acc) return;
+
+                const deltaX = Math.abs(lastAcc.x - acc.x);
+                const deltaY = Math.abs(lastAcc.y - acc.y);
+                const deltaZ = Math.abs(lastAcc.z - acc.z);
+
+                if (deltaX > SHAKE_THRESHOLD || deltaY > SHAKE_THRESHOLD || deltaZ > SHAKE_THRESHOLD) {
+                    const intensity = Math.max(deltaX, deltaY, deltaZ);
+                    window.triggerShakePhysics(intensity);
+                }
+
+                lastAcc = { x: acc.x, y: acc.y, z: acc.z };
+            });
+        };
+
+        window.triggerShakePhysics = (intensity) => {
+            if (!currentBalls.length) return;
+            
+            // Apply randomized forces to simulate shaking contents
+            currentBalls.forEach(ball => {
+                const forceMagnitude = 0.005 * intensity * ball.mass;
+                Matter.Body.applyForce(ball, ball.position, {
+                    x: (Math.random() - 0.5) * forceMagnitude * 2,
+                    y: (Math.random() - 0.5) * forceMagnitude * 2
+                });
+                // Add a little spin
+                ball.torque += (Math.random() - 0.5) * intensity * 0.5;
+            });
+
+            // Light feedback
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
+        };
+
         window.resetAppState = () => {
             if (confirm("להתחיל מחדש? כל ההרגלים, ההתקדמות והגולות יימחקו לצמיתות.")) {
                 // 1. Wipe Physics
@@ -2972,7 +3032,7 @@
             
             // Ensure physics lid barrier returns to position when lid is closed
             if (openFactor < 0.1 && !window.isAnimatingJump) {
-                 Matter.Body.setPosition(physicsLid, { x: 170, y: 40 });
+                 Matter.Body.setPosition(physicsLid, { x: 195, y: 25 });
             }
 
             // Add a small 'rattle' effect when the lid is just starting to unscrew
@@ -3005,7 +3065,7 @@
                     if (isMagnetMode) {
                         if (isMatching) {
                             // Gentle Magnetic Clustering: Soft pull to bottom-center
-                            const dx = 170 - b.position.x;
+                            const dx = 195 - b.position.x;
                             const dy = 445 - b.position.y; 
                             
                             Matter.Body.applyForce(b, b.position, {
@@ -3026,7 +3086,7 @@
                             alpha = 0.04;
                             // Float non-matching balls upwards so they don't block the stacking formation
                             Matter.Body.applyForce(b, b.position, { 
-                                x: (b.position.x - 170) * 0.0005, // Repel from center horizontally
+                                x: (b.position.x - 195) * 0.0005, // Repel from center horizontally
                                 y: -0.002 * b.mass // Anti-gravity float
                             });
                         }
@@ -3064,6 +3124,25 @@
         });
 
         window.onload = () => {
+            // Physics Collision Haptics
+            Matter.Events.on(engine, 'collisionStart', (event) => {
+                if (typeof window.navigator.vibrate === 'function') {
+                    const pairs = event.pairs;
+                    for (let i = 0; i < pairs.length; i++) {
+                        if (pairs[i].bodyA.label === 'habit-ball' || pairs[i].bodyB.label === 'habit-ball') {
+                            // Only vibrate on significant impact velocity to avoid buzzing
+                            const vA = pairs[i].bodyA.velocity;
+                            const vB = pairs[i].bodyB.velocity;
+                            const impact = Math.sqrt(vA.x**2 + vA.y**2) + Math.sqrt(vB.x**2 + vB.y**2);
+                            if (impact > 2) {
+                                window.navigator.vibrate(5);
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+
             updateProfileUI();
             buildJars();
             initScroller();
@@ -3139,7 +3218,12 @@
                 item.style.opacity = 0.4 + (0.6 * progress);
                 
                 if (progress > 0.85) {
-                    item.style.color = habitsData[i].color;
+                    if (i < habitsData.length) {
+                        item.style.color = habitsData[i].color;
+                    } else {
+                        // Special styling for "Add Habit" item
+                        item.style.color = "#1e293b";
+                    }
                     item.classList.add('active');
                 } else {
                     item.style.color = "#94a3b8";
@@ -3148,15 +3232,22 @@
             });
             
             if(closest !== -1 && closest !== lidx) {
-                if (lidx !== -1 && typeof window.navigator.vibrate === 'function') window.navigator.vibrate(5);
+                if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(8);
                 
                 // Deactivate magnet mode if switching habits
                 if (isMagnetMode) window.toggleMagnet();
                 
                 lidx = closest;
-                currentHabitIndex = closest;
-                // Smoothly update marble visuals without 'popping' it in/out
-                renderActiveHabit(true);
+
+                if (closest < habitsData.length) {
+                    currentHabitIndex = closest;
+                    fm.style.display = 'block'; 
+                    renderActiveHabit(true);
+                } else {
+                    // If scrolling to the "Add" trigger, hide marble
+                    fm.style.display = 'none';
+                    document.getElementById('marble-glow').style.opacity = '0';
+                }
             }
         });
 
