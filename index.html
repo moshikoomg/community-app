@@ -30,6 +30,43 @@
             margin-top: 10px;
         }
 
+        /* Floating Add Button */
+        .floating-add-btn {
+            position: absolute;
+            bottom: 25px;
+            left: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--text-main);
+            color: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.18);
+            cursor: pointer;
+            z-index: 150;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: none;
+            pointer-events: auto;
+        }
+        .floating-add-btn:active {
+            transform: scale(0.9) translateY(2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .floating-add-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+        /* Hide FAB when in sub-menus/modes */
+        .app-container:has(.bottom-section.edit-mode) .floating-add-btn,
+        .app-container:has(.bottom-section.onboarding-mode) .floating-add-btn,
+        .app-container:has(.bottom-section.stats-mode) .floating-add-btn {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(30px) scale(0.5);
+        }
+
         /* Dev Tools Styling */
         #mode-switcher-container {
             position: relative;
@@ -153,11 +190,11 @@
         /* Onboarding Redesign Styles */
         .onboarding-scroll-area {
             width: 100%;
-            max-height: 190px;
+            max-height: 25vh;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
             padding: 4px;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
             scrollbar-width: none;
         }
         .onboarding-scroll-area::-webkit-scrollbar { display: none; }
@@ -253,14 +290,15 @@
         body {
             margin: 0; padding: 0;
             font-family: 'Heebo', sans-serif;
-            background-color: #e2e8f0; /* Neutral screen background */
+            background-color: #cbd5e1; 
             display: flex; justify-content: center; align-items: center;
             height: 100dvh; overflow: hidden;
-            touch-action: manipulation;
+            touch-action: none; 
+            overscroll-behavior: none;
         }
 
         .app-container {
-            width: 100%; height: 100%;
+            width: 100%; height: 100dvh;
             background-color: #f8fafc;
             background-size: cover;
             background-position: center;
@@ -269,11 +307,12 @@
             position: relative; overflow: hidden;
             transition: background 0.4s ease, background-image 0.4s ease;
             backdrop-filter: saturate(1.2);
+            margin: 0 auto;
         }
 
         @media (min-width: 420px) {
             .app-container {
-                width: 390px; height: 844px; max-height: 92vh; 
+                width: 390px; height: 844px; max-height: 100dvh; 
                 border-radius: 48px; 
                 box-shadow: 0 40px 80px rgba(0,0,0,0.25), inset 0 0 1px 1px rgba(255,255,255,0.1); 
             }
@@ -314,7 +353,7 @@
             display: none;
         }
 
-        .top-section { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
+        .top-section { flex: 1 1 auto; position: relative; width: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
         .app-container:has(.bottom-section.edit-mode) .top-section,
         .app-container:has(.bottom-section.stats-mode) .top-section,
         .app-container:has(.bottom-section.onboarding-mode) .top-section {
@@ -340,7 +379,10 @@
             flex: 0 0 340px; 
             height: 100%; display: flex; justify-content: center; 
             align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
-            box-sizing: border-box; padding-bottom: 155px; margin: 0 10px;
+            box-sizing: border-box; 
+            padding-top: 60px;
+            padding-bottom: 160px; 
+            margin: 0 10px;
             transition: opacity 0.5s ease;
             opacity: 0.4; 
         }
@@ -537,40 +579,35 @@
 
         /* --- Drawer --- */
         .bottom-section {
-            background: #ffffff; border-radius: 32px 32px 0 0; 
-            box-shadow: 0 -12px 40px rgba(0,0,0,0.08); 
+            background: transparent; 
             z-index: 100; display: flex; flex-direction: column; align-items: center; 
             position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 105px; box-sizing: border-box;
-            transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            height: 185px; box-sizing: border-box;
+            transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
+            pointer-events: auto;
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+            touch-action: none; 
             overflow: hidden;
         }
-        .bottom-section.edit-mode { height: 360px; }
-        .bottom-section.stats-mode { height: 55vh; }
-        .bottom-section.onboarding-mode { height: 390px; }
+        .bottom-section.edit-mode, 
+        .bottom-section.stats-mode, 
+        .bottom-section.onboarding-mode {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(1.5);
+            pointer-events: auto;
+        }
+        .bottom-section.onboarding-mode { background: #ffffff; }
         
         .drawer-handle {
-            width: 100%; height: 28px; position: absolute; top: 0; left: 0; z-index: 10;
-            display: flex; justify-content: center; align-items: center; cursor: grab;
-        }
-        .drawer-handle::after {
-            content: ''; width: 48px; height: 5px; background-color: #cbd5e1; border-radius: 10px; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: inset 0 1px 1px rgba(0,0,0,0.05);
-            opacity: 0;
-            transform: translateY(4px);
-        }
-        .bottom-section:hover .drawer-handle::after {
-            background-color: #94a3b8;
-            width: 52px;
-        }
-        .bottom-section.stats-mode .drawer-handle::after,
-        .bottom-section.edit-mode .drawer-handle::after,
-        .bottom-section.onboarding-mode .drawer-handle::after {
-            background-color: #94a3b8;
-            opacity: 1;
-            transform: translateY(2px);
-            width: 50px;
+            display: flex;
+            width: 40px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin: 12px 0 4px;
+            opacity: 0.8;
+            flex-shrink: 0;
         }
 
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 8px; touch-action: pan-y; }
@@ -636,47 +673,69 @@
         }
 
         .drawer-info-pill {
-            position: relative;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: flex-start;
+            gap: 12px;
+            width: fit-content;
+            margin: 0 25px 4px auto;
             padding: 0;
-            background: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
             z-index: 110;
             pointer-events: none;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .drawer-info-pill.activated {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: 1.5px solid var(--habit-active-color, #f1f5f9) !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important;
         }
         .drawer-info-pill .day-label {
-            font-size: 14px;
-            font-weight: 900;
-            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 800;
+            color: #94a3b8;
             white-space: nowrap;
-            transition: color 0.4s;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
         .drawer-info-pill.activated .day-label {
             color: #1e293b;
         }
         .drawer-info-pill .divider {
-            width: 1.5px;
-            height: 14px;
-            background: #f1f5f9;
+            width: 2px;
+            height: 16px;
+            background: #e2e8f0;
+            border-radius: 4px;
         }
         .drawer-info-pill .count-label {
             font-size: 14px;
             font-weight: 900;
-            color: #cbd5e1;
+            color: #475569;
             white-space: nowrap;
             display: flex;
-            align-items: center;
+            align-items: baseline;
             gap: 3px;
-            transition: color 0.4s;
+        }
+
+        .progress-bar-wrapper {
+            width: 140px;
+            height: 5px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            margin: 0 25px 12px auto;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--habit-active-color, var(--primary-color));
+            border-radius: 10px;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px var(--glow-color);
         }
         .drawer-info-pill.activated .count-label {
             color: var(--habit-active-color, var(--primary-color));
@@ -685,7 +744,7 @@
         .habit-scroller-outer {
             position: relative;
             width: 100%;
-            margin-top: 0px;
+            margin-top: -8px;
             display: flex;
             align-items: center;
         }
@@ -695,6 +754,7 @@
             padding: 0; -webkit-overflow-scrolling: touch;
             cursor: grab;
             position: relative; z-index: 5;
+            pointer-events: auto;
             mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
             -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
         }
@@ -704,14 +764,14 @@
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
         .habit-item {
             flex: 0 0 auto; scroll-snap-align: center; 
-            padding: 8px 24px; font-size: 16px; color: #cbd5e1; font-weight: 800;
+            padding: 12px 28px; font-size: 16px; color: #cbd5e1; font-weight: 800;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap; cursor: pointer;
             border: none !important; background: none !important; box-shadow: none !important;
-            margin: 0 5px;
+            margin: 0 8px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             letter-spacing: -0.2px;
-            gap: 2px;
+            gap: 4px;
         }
         .habit-item.active {
             font-size: 23px;
@@ -754,10 +814,10 @@
         .stats-title { font-size: 24px; font-weight: 900; color: var(--text-main); }
         .stats-subtitle { font-size: 12px; color: #94a3b8; font-weight: 700; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 15px; }
-        .stat-box { background: #f8fafc; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #f1f5f9; }
-        .stat-val { font-size: 28px; font-weight: 900; color: var(--text-main); line-height: 1.1; }
+        .stat-box { background: transparent; padding: 10px; text-align: center; border: none; }
+        .stat-val { font-size: 32px; font-weight: 900; color: var(--text-main); line-height: 1; margin-bottom: 4px; text-shadow: 0 2px 10px rgba(255,255,255,0.5); }
         .stat-label { font-size: 11px; color: #64748b; font-weight: 700; }
-        .graph-container { display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; margin-bottom: 10px; }
+        .graph-container { display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 15px 0; background: transparent; border: none; margin-bottom: 10px; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- Onboarding View --- */
@@ -810,9 +870,9 @@
             display: none !important;
         }
 
-        /* Adjusting for mobile keyboard */
+        /* Adjusting for mobile keyboard - Responsive to screen */
         .app-container:has(.custom-flow-active) .bottom-section.onboarding-mode {
-            height: 480px; 
+            height: 100%; 
             transition: height 0.3s ease-out;
         }
         
@@ -1132,10 +1192,21 @@
 
         <!-- Drawer -->
         <div class="bottom-section" id="bottom-drawer">
+            <button class="floating-add-btn" id="main-fab" onclick="event.stopPropagation(); window.openAddMode()" title="הוספת הרגל">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
             <div class="drawer-handle" id="drawer-handle"></div>
             
             <div id="drawer-normal-view" class="drawer-view active">
-                <!-- Left Side Actions: Magnet & Manage -->
+                <!-- Management Section (Slightly more inward) -->
+                <div style="position: absolute; top: 12px; left: 56px; z-index: 110;">
+                    <div id="management-buttons-container" style="display: flex; align-items: center; gap: 4px;">
+                        <div class="edit-btn" onclick="event.stopPropagation(); window.openEditMode()" title="עריכת הרגל">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Left Corner: Magnet Toggle -->
                 <div style="position: absolute; top: 12px; left: 12px; z-index: 115;">
                     <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט">
@@ -1143,39 +1214,30 @@
                     </div>
                 </div>
 
-                <!-- Management Section (Slightly more inward) -->
-                <div style="position: absolute; top: 12px; left: 56px; z-index: 110;">
-                    <div id="management-buttons-container" style="display: flex; align-items: center; gap: 4px;">
-                        <div class="add-btn" id="main-add-button" onclick="event.stopPropagation(); window.openAddMode()" title="הוספת הרגל">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        </div>
-                        <div class="edit-btn" onclick="event.stopPropagation(); window.openEditMode()" title="עריכת הרגל">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Side Info: Stats -->
-                <div style="position: absolute; top: 12px; right: 20px; display: flex; align-items: center; gap: 8px; z-index: 110;">
-                    <div class="drawer-info-pill">
-                        <span class="day-label" id="drawer-day-label">יום 1</span>
-                        <div class="divider" style="width:1.5px; height:14px; background:#f1f5f9; transition: opacity 0.4s;"></div>
-                        <div class="count-label">
-                            <span id="drawer-current-count">0</span>
-                            <span style="opacity: 0.2; margin: 0 1px; font-weight: 400;">/</span>
-                            <span id="drawer-goal-count">1</span>
-                        </div>
-                    </div>
-                </div>
-                
                 <div id="marble-drop-zone-container" style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 60px; height: 10px; z-index: 1000;">
                     <div id="marble-drop-zone" style="width: 60px; height: 60px; position: absolute; top: -30px; left: 0; pointer-events: none;"></div>
                 </div>
 
-                <div class="dots-container" id="picker-dots"></div>
-                <div class="habit-scroller-outer">
+                <!-- Progress & Stats (Now Grouped at Top Right) -->
+                <div style="margin-top: 25px; width: 100%;">
+                    <div class="drawer-info-pill">
+                        <span class="day-label" id="drawer-day-label">יום 1</span>
+                        <div class="count-label">
+                            <span id="drawer-current-count" style="font-size: 18px;">0</span>
+                            <span style="opacity: 0.3; font-weight: 600;">/</span>
+                            <span id="drawer-goal-count">1</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-wrapper" style="margin-bottom: 8px;">
+                        <div class="progress-bar-fill" id="drawer-progress-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Habit Selection -->
+                <div class="habit-scroller-outer" style="margin-top: -2px;">
                     <div class="habit-scroller" id="habit-scroller"></div>
                 </div>
+                <div class="dots-container" id="picker-dots" style="margin-bottom: 15px;"></div>
             </div>
 
             <div id="drawer-edit-view" class="drawer-view">
@@ -1489,6 +1551,7 @@
             const dayLabel = document.getElementById('drawer-day-label');
             const countCur = document.getElementById('drawer-current-count');
             const countGoal = document.getElementById('drawer-goal-count');
+            const progressFill = document.getElementById('drawer-progress-fill');
             const infoPill = document.querySelector('.drawer-info-pill');
             
             if(dayLabel) dayLabel.innerText = `יום ${currentDayView + 1}`;
@@ -1499,14 +1562,16 @@
                 countCur.innerText = currentCount;
                 countGoal.innerText = `${h.amount || 1} ${h.unit || 'פעמים'}`;
 
-                if (infoPill) infoPill.classList.toggle('activated', isActivated);
-                
+                const progressPercent = Math.min(100, (currentCount / (h.amount || 1)) * 100);
+                if (progressFill) {
+                    progressFill.style.width = progressPercent + '%';
+                    progressFill.style.backgroundColor = h.color;
+                }
+
                 if (isActivated) {
                     countCur.style.color = h.color;
-                    countGoal.style.color = h.color;
                 } else {
-                    countCur.style.color = '#cbd5e1';
-                    countGoal.style.color = '#cbd5e1';
+                    countCur.style.color = '#475569';
                 }
             }
 
@@ -2095,21 +2160,41 @@
         };
 
         window.openAddMode = () => {
+            // Clean up custom flow state and inputs first
             window.deactivateCustomFlow();
             filterExistingPresets();
-            document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
+
+            // Open the drawer into onboarding mode
+            const drawer = document.getElementById('bottom-drawer');
+            drawer.className = 'bottom-section onboarding-mode';
+
+            // Reset all internal onboarding views to Step 1
             document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
             document.getElementById('drawer-onboarding-view').classList.add('active');
             
             const step1 = document.getElementById('drawer-onboarding-step1');
-            step1.classList.remove('custom-flow-active');
             step1.style.display = 'flex';
+            step1.classList.remove('custom-flow-active');
             
+            // Reset UI specifics
             document.querySelector('.onboarding-target-inner').style.display = 'none';
-            document.getElementById('custom-flow-trigger-btn').style.display = 'block';
-            document.getElementById('custom-habit-input').value = '';
+            const triggerBtn = document.getElementById('custom-flow-trigger-btn');
+            if(triggerBtn) triggerBtn.style.display = 'block';
             
-            fm.style.display = 'none';
+            const input = document.getElementById('custom-habit-input');
+            if(input) {
+                input.value = '';
+                input.style.borderColor = '#e2e8f0';
+            }
+
+            // Hide the floating marble visuals
+            if(typeof fm !== 'undefined') fm.style.display = 'none';
+            const gl = document.getElementById('marble-glow');
+            if (gl) gl.style.opacity = '0';
+
+            // Reset scroll to top of presets
+            const scrollArea = document.querySelector('.onboarding-scroll-area');
+            if(scrollArea) scrollArea.scrollTop = 0;
         };
 
         window.adjTarget = (v) => {
@@ -2569,7 +2654,6 @@
             const unitSelect = document.getElementById('input-habit-unit');
             const customUnitInput = document.getElementById('input-habit-unit-custom');
             
-            // Check if existing unit is in presets
             const isPreset = Array.from(unitSelect.options).some(opt => opt.value === h.unit);
             if (isPreset) {
                 unitSelect.value = h.unit;
@@ -2588,7 +2672,11 @@
             document.getElementById('input-habit-color').value = h.color;
             document.getElementById('bottom-drawer').className = 'bottom-section edit-mode';
             document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
-            document.getElementById('drawer-edit-view').classList.add('active');
+            const editView = document.getElementById('drawer-edit-view');
+            if (editView) {
+                editView.classList.add('active');
+                editView.style.paddingTop = '80px';
+            }
             fm.style.display = 'none';
         };
 
@@ -2631,21 +2719,19 @@
 
         window.openStatsMode = () => {
             const bd = document.getElementById('bottom-drawer');
-            if (!bd) return;
+            if (!bd || habitsData.length === 0) return;
             
-            // Safety check for stats population
-            try {
-                populateStatsData();
-            } catch (e) {
-                console.error("Stats population failed", e);
-            }
+            populateStatsData();
             
             bd.classList.remove('edit-mode', 'onboarding-mode');
             bd.classList.add('stats-mode');
             
             document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
             const statsView = document.getElementById('drawer-stats-view');
-            if (statsView) statsView.classList.add('active');
+            if (statsView) {
+                statsView.classList.add('active');
+                statsView.style.paddingTop = '20px';
+            }
             
             fm.style.display = 'none';
             const gl = document.getElementById('marble-glow');
@@ -2987,6 +3073,36 @@
             checkNewUser();
             loop();
             setTimeout(() => { if(habitsData.length > 0) renderActiveHabit(); }, 200);
+
+            // Gesture Control for Drawer
+            const drawer = document.getElementById('bottom-drawer');
+            let touchStartY = 0;
+            let isModeActive = () => drawer.classList.contains('stats-mode') || drawer.classList.contains('edit-mode') || drawer.classList.contains('onboarding-mode');
+
+            drawer.addEventListener('touchstart', e => {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            drawer.addEventListener('touchend', e => {
+                const touchEndY = e.changedTouches[0].clientY;
+                const diff = touchStartY - touchEndY;
+                const threshold = 50;
+
+                if (diff > threshold && !isModeActive()) {
+                    // Swiped Up: Reveal data
+                    window.openStatsMode();
+                } else if (diff < -threshold && isModeActive()) {
+                    // Swiped Down: Return to canvas
+                    if (drawer.classList.contains('edit-mode')) window.closeEditMode();
+                    else if (drawer.classList.contains('stats-mode')) window.closeStatsMode();
+                    else if (drawer.classList.contains('onboarding-mode') && habitsData.length > 0) {
+                        drawer.className = 'bottom-section';
+                        document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+                        document.getElementById('drawer-normal-view').classList.add('active');
+                        window.respawnMarble();
+                    }
+                }
+            }, { passive: true });
         };
 
         document.getElementById('drawer-handle').addEventListener('click', () => { 
