@@ -68,20 +68,54 @@
         }
         .mode-trigger:hover { background: #1e293b; }
         .mode-menu {
-            position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            padding: 8px;
-            display: none;
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 280px;
+            height: 100%;
+            background: #ffffff;
+            z-index: 15000;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
             flex-direction: column;
-            gap: 4px;
-            min-width: 160px;
-            border: 1px solid #f1f5f9;
+            gap: 8px;
+            padding: 24px;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+            border-radius: 24px 0 0 24px;
+            box-sizing: border-box;
         }
-        .mode-menu.active { display: flex; }
+        .mode-menu.active { right: 0; }
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 14500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 900;
+            color: #1e293b;
+        }
         .mode-option {
             padding: 10px 12px;
             border-radius: 10px;
@@ -1261,16 +1295,27 @@
             </div>
 
             <div id="mode-switcher-container" style="flex-shrink: 0;">
-                <button class="mode-trigger" onclick="document.getElementById('mode-menu').classList.toggle('active')" style="padding: 12px; border-radius: 50%;">
+                <div class="sidebar-overlay" id="sidebar-overlay" onclick="window.toggleSidebar()"></div>
+                <button class="mode-trigger" onclick="window.toggleSidebar()" style="padding: 12px; border-radius: 50%;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M2 6h20M2 18h20"/></svg>
                 </button>
-                <div class="mode-menu" id="mode-menu" style="top: calc(100% + 5px);">
+                <div class="mode-menu" id="mode-menu">
+                    <div class="sidebar-header">
+                        <h3>תפריט ניווט</h3>
+                        <button onclick="window.toggleSidebar()" style="background:none; border:none; color:#64748b; cursor:pointer; padding:4px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                        </button>
+                    </div>
                     <div class="mode-option" onclick="window.setAppMode('normal')">מסך ראשי <span>🏠</span></div>
-                    <div class="mode-option" onclick="window.setAppMode('onboarding')">אונבורדינג <span>✨</span></div>
                     <div class="mode-option" onclick="window.setAppMode('stats')">סטטיסטיקה <span>📊</span></div>
-                    <div class="mode-option" onclick="window.setAppMode('edit')">עריכת הרגל <span>✏️</span></div>
-                    <div class="mode-option" onclick="window.setAppMode('reward')">פופ-אפ פרס <span>🎁</span></div>
-                    <div class="mode-option" onclick="window.setAppMode('empty')" style="color: var(--danger-color); border-top: 1px solid #f1f5f9; margin-top: 4px;">מצב ריק (איפוס) <span>🗑️</span></div>
+                    <div class="mode-option" onclick="window.setAppMode('onboarding')">הוספת הרגל חדש <span>✨</span></div>
+                    <div class="mode-option" onclick="window.setAppMode('edit')">עריכת הרגל נוכחי <span>✏️</span></div>
+                    
+                    <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid #f1f5f9;">
+                        <div class="mode-option" onclick="window.openProfilePopup(); window.toggleSidebar();">הגדרות ועיצוב <span>⚙️</span></div>
+                        <div class="mode-option" onclick="window.setAppMode('reward')">בדיקת פופ-אפ פרס <span>🎁</span></div>
+                        <div class="mode-option" onclick="window.setAppMode('empty')" style="color: var(--danger-color); font-weight: 900;">איפוס אפליקציה <span>🗑️</span></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2543,7 +2588,7 @@
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
-                const easedP = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+                const easedP = p * p * p; // Cubic Ease-In for natural acceleration towards the jar
                 const curX = startX + (targetX - startX) * easedP, curY = startY + (targetY - startY) * easedP;
                 
                 // Calculate momentary velocity and angle for smear effect
@@ -2562,7 +2607,7 @@
                 const scale = 1 + Math.sin(p * Math.PI) * 0.1;
                 const blurVal = Math.min(4, speed * 0.3);
                 
-                fm.style.transform = `rotate(${angle}deg) scale(${scale * stretch}, ${scale / stretch}) rotate(${-angle + p * 180}deg)`;
+                fm.style.transform = `rotate(${angle}deg) scale(${scale * stretch}, ${scale / stretch}) rotate(${-angle + p * 360}deg)`; // More spin on entry
                 fm.style.filter = `blur(${blurVal}px)`;
 
                 lastX = curX; lastY = curY;
@@ -2617,7 +2662,7 @@
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
                     // Disable lid barrier for a moment to let the ball in
                     Matter.Body.setPosition(physicsLid, { x: canvas.width / 2, y: -1000 });
-                    Matter.Body.setVelocity(b, {x:0, y:12}); 
+                    Matter.Body.setVelocity(b, {x: (targetX - startX) * 0.05, y: 18}); // Increased Y velocity for punchy entry 
                     currentBalls.push(b); 
                     Composite.add(world, b); 
                     fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
@@ -3188,10 +3233,19 @@
         };
 
         // --- 9. הפעלה ---
+        window.toggleSidebar = () => {
+            const menu = document.getElementById('mode-menu');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isActive = menu.classList.toggle('active');
+            overlay.classList.toggle('active', isActive);
+        };
+
         window.setAppMode = (mode) => {
             const menu = document.getElementById('mode-menu');
+            const overlay = document.getElementById('sidebar-overlay');
             const drawer = document.getElementById('bottom-drawer');
             menu.classList.remove('active');
+            overlay.classList.remove('active');
 
             // Close any open popups
             document.getElementById('reward-popup').classList.remove('active');
