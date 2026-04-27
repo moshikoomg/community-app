@@ -336,7 +336,7 @@
             display: none;
         }
 
-        .top-section { flex: 1 1 auto; position: relative; width: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
+        .top-section { flex: 1 1 auto; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
         .app-container:has(.bottom-section.edit-mode) .top-section,
         .app-container:has(.bottom-section.stats-mode) .top-section,
         .app-container:has(.bottom-section.onboarding-mode) .top-section {
@@ -360,10 +360,10 @@
         .jar-slide { 
             flex: 0 0 100%; 
             height: 100%; display: flex; justify-content: center; 
-            align-items: center; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
+            align-items: flex-end; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
             box-sizing: border-box; 
-            padding-top: 50px;
-            padding-bottom: 150px; 
+            padding-top: 20px;
+            padding-bottom: 0px; 
             margin: 0;
             transition: opacity 0.5s ease;
             opacity: 0.4; 
@@ -721,9 +721,9 @@
         .habit-scroller-outer {
             position: relative;
             width: 100%;
-            margin-top: -8px;
             display: flex;
             align-items: center;
+            z-index: 200;
         }
 
         .habit-scroller {
@@ -751,14 +751,14 @@
             gap: 4px;
         }
         .habit-item.active {
-            font-size: 23px;
+            font-size: 19px;
             transform: scale(1.0);
             filter: blur(0);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0px;
-            color: #94a3b8; /* Default inactive color */
+            color: #94a3b8;
         }
         .habit-item.activated.active {
             color: var(--habit-active-color, var(--text-main));
@@ -1137,21 +1137,48 @@
 
     <div class="app-container">
         <!-- Header -->
-        <div class="header-ui" id="main-header-ui">
-            <div class="user-pill" onclick="window.openProfilePopup()">
+        <div class="header-ui" id="main-header-ui" style="align-items: flex-start; height: auto; padding: 20px; background: linear-gradient(to bottom, rgba(248, 250, 252, 0.9) 0%, rgba(248, 250, 252, 0) 100%); backdrop-filter: none;">
+            <div class="user-pill" onclick="window.openProfilePopup()" style="flex-shrink: 0;">
                 <div class="admin-indicator" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
                 <div class="name" id="display-profile-name" style="display:none;"></div>
                 <div class="user-avatar" id="header-avatar">
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" alt="פרופיל" style="width:100%; height:100%; object-fit:cover;">
                 </div>
             </div>
-            <div style="flex: 1;"></div> 
-            <div id="mode-switcher-container">
-                <button class="mode-trigger" onclick="document.getElementById('mode-menu').classList.toggle('active')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M2 6h20M2 18h20"/></svg>
-                    תצוגת מצבים
+
+            <!-- Unified Top Status Bar -->
+            <div id="top-status-bar" style="flex: 1; display: flex; flex-direction: column; align-items: center; pointer-events: auto; transform: translateY(0); margin-top: 5px;">
+                <div id="active-habit-header-name" style="font-size: 16px; font-weight: 900; color: #1e293b; margin-bottom: 0px;">שם ההרגל</div>
+                <div class="drawer-info-pill" style="background: none; border: none; box-shadow: none; padding: 0; min-height: auto;">
+                    <span class="day-label" id="drawer-day-label" style="font-size: 11px; opacity: 0.7;">יום 1</span>
+                    <div class="divider" style="height: 10px; width: 1px; background: #e2e8f0; margin: 0 8px;"></div>
+                    <div class="count-label" style="font-size: 14px;">
+                        <span id="drawer-current-count" style="font-size: 18px;">0</span>
+                        <span style="opacity: 0.2; font-weight: 600; margin: 0 2px;">/</span>
+                        <span id="drawer-goal-count" style="font-size: 14px; opacity: 0.5;">1</span>
+                    </div>
+                </div>
+                <div class="progress-bar-wrapper" style="margin: 6px 0 0 0; width: 120px; height: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div class="progress-bar-fill" id="drawer-progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- Habit Scroller and Drop Zone Integrated Above Jar -->
+            <div style="position: absolute; top: 75px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 150;">
+                <div id="marble-drop-zone-container" style="width: 60px; height: 60px; margin-bottom: -15px; position: relative;">
+                    <div id="marble-drop-zone" style="width: 60px; height: 60px; pointer-events: none;"></div>
+                </div>
+                <div class="habit-scroller-outer" style="pointer-events: auto; margin-top: 5px;">
+                    <div class="habit-scroller" id="habit-scroller" style="height: 60px;"></div>
+                </div>
+                <div class="dots-container" id="picker-dots" style="pointer-events: auto; margin-top: -5px;"></div>
+            </div>
+
+            <div id="mode-switcher-container" style="flex-shrink: 0;">
+                <button class="mode-trigger" onclick="document.getElementById('mode-menu').classList.toggle('active')" style="padding: 12px; border-radius: 50%;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M2 6h20M2 18h20"/></svg>
                 </button>
-                <div class="mode-menu" id="mode-menu">
+                <div class="mode-menu" id="mode-menu" style="top: calc(100% + 5px);">
                     <div class="mode-option" onclick="window.setAppMode('normal')">מסך ראשי <span>🏠</span></div>
                     <div class="mode-option" onclick="window.setAppMode('onboarding')">אונבורדינג <span>✨</span></div>
                     <div class="mode-option" onclick="window.setAppMode('stats')">סטטיסטיקה <span>📊</span></div>
@@ -1165,6 +1192,7 @@
         <!-- Days Display Removed from top -->
 
         <div class="top-section" id="clickable-top-section" 
+             style="padding-top: 0px; height: 100%;"
              onclick="window.handleTopSectionClick(event)" 
              onpointerdown="window.handleHabitSwipeStart(event)" 
              onpointermove="window.handleHabitSwipeMove(event)" 
@@ -1196,32 +1224,11 @@
                 </div>
 
                 <!-- Right Corner: Marble Drop Zone -->
-                <div id="marble-drop-zone-container" style="position: absolute; top: -32px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; z-index: 1000;">
-                    <div id="marble-drop-zone" style="width: 60px; height: 60px; position: absolute; top: 0; left: 0; pointer-events: none;"></div>
-                </div>
+                <!-- drop zone moved -->
 
-                <!-- Progress & Stats (Moved Up) -->
-                <div style="margin-top: 16px; width: 100%; display: flex; flex-direction: column; align-items: center;">
-                    <div class="drawer-info-pill" style="margin: 0 auto 2px auto; justify-content: center; gap: 8px;">
-                        <span class="day-label" id="drawer-day-label" style="font-size: 11px; opacity: 0.7;">יום 1</span>
-                        <div class="divider" style="height: 10px; width: 1px; background: #e2e8f0;"></div>
-                        <div class="count-label">
-                            <span id="drawer-current-count" style="font-size: 18px;">0</span>
-                            <span style="opacity: 0.2; font-weight: 600; margin: 0 2px;">/</span>
-                            <span id="drawer-goal-count" style="font-size: 14px; opacity: 0.5;">1</span>
-                        </div>
-                    </div>
-                    <div class="progress-bar-wrapper" style="margin: 4px auto 10px auto;">
-                        <div class="progress-bar-fill" id="drawer-progress-fill"></div>
-                    </div>
-                </div>
+                <!-- Info Moved to Top -->
 
-                <!-- Habit Selection (Moved Down) -->
-                <div class="habit-scroller-outer" style="margin-top: 0px;">
-                    <div class="habit-scroller" id="habit-scroller"></div>
-                </div>
-                
-                <div class="dots-container" id="picker-dots" style="margin-bottom: 15px;"></div>
+                <!-- Scroller and Drops moved to top -->
             </div>
 
             <div id="drawer-edit-view" class="drawer-view">
@@ -1563,13 +1570,17 @@
                 countCur.innerText = currentCount;
                 countGoal.innerText = `${h.amount || 1} ${h.unit || 'פעמים'}`;
 
+                const habitHeaderName = document.getElementById('active-habit-header-name');
+                if (habitHeaderName) {
+                    habitHeaderName.innerText = h.name;
+                    habitHeaderName.style.color = h.color;
+                }
+
                 // Progress bar now represents progress towards Leveling Up (Growth)
                 const progressPercent = (effectiveStreak / GROWTH_TARGET) * 100;
                 if (progressFill) {
                     progressFill.style.width = progressPercent + '%';
                     progressFill.style.backgroundColor = h.color;
-                    // Add a hint that this is growth progress
-                    
                 }
 
                 if (isActivated) {
@@ -2481,14 +2492,14 @@
             const color = h ? h.color : '#239B62';
             const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
-            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 20; 
+            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 60; 
             const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(200, Math.min(400, distance * 0.7)), startTime = performance.now();
             
             let lastX = startX, lastY = startY;
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
-                const curX = startX + (targetX - startX) * p, jumpH = Math.min(50, distance * 0.25), curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * jumpH;
+                const curX = startX + (targetX - startX) * p, jumpH = 0, curY = startY + (targetY - startY) * p;
                 
                 // Calculate momentary velocity and angle for smear effect
                 const vx = curX - lastX, vy = curY - lastY;
@@ -2598,7 +2609,7 @@
                         fb.style.color = h.color;
                         // Centering the container width relative to the drop zone start point
                         fb.style.left = (mRect.left - cRect.left + mRect.width / 2 - 80) + 'px';
-                        fb.style.top = (mRect.top - cRect.top - 40) + 'px';
+                        fb.style.top = (mRect.top - cRect.top + 60) + 'px';
                         fb.style.width = '160px';
                         fb.style.textAlign = 'center';
                         fb.style.zIndex = '2000'; // Ensure it's above everything
@@ -2799,59 +2810,84 @@
 
         window.habitSwipeState = { startX: 0, isSwiping: false, scrollStart: 0 };
         window.handleHabitSwipeStart = (e) => {
-            if (window.isDrag || window.isAnimatingJump) return;
+            if (window.isAnimatingJump || habitsData.length === 0) return;
+            const bd = document.getElementById('bottom-drawer');
+            if (bd.classList.contains('edit-mode') || bd.classList.contains('stats-mode')) return;
+
             const touch = e.touches ? e.touches[0] : e;
             window.habitSwipeState.startX = touch.clientX;
             window.habitSwipeState.startY = touch.clientY;
             window.habitSwipeState.scrollStart = document.getElementById('habit-scroller').scrollLeft;
             window.habitSwipeState.isSwiping = false;
-            lastPointerId = e.pointerId || null;
+            
+            // Instant Magnetize Logic
+            window.isDrag = true;
+            fm.classList.add('dragging');
+            fm.classList.remove('marble-pulse');
+            fm.style.display = 'block';
+            fm.style.opacity = '1';
+            fm.style.visibility = 'visible';
 
-            // Start long press timer (3 seconds) to summon the ball
-            if (habitsData.length > 0 && !window.isAnimatingJump) {
-                clearTimeout(longPressTimer);
-                longPressTimer = setTimeout(() => {
-                    if (!window.habitSwipeState.isSwiping) {
-                        window.summonMarble(touch.clientX, touch.clientY, lastPointerId);
-                    }
-                }, 3000);
-            }
+            // Snap marble to touch
+            const cont = document.querySelector('.app-container');
+            const rect = cont.getBoundingClientRect();
+            fm.style.transition = 'transform 0.2s cubic-bezier(0.19, 1, 0.22, 1)';
+            fm.style.left = (touch.clientX - 30 - rect.left) + 'px';
+            fm.style.top = (touch.clientY - 30 - rect.top) + 'px';
+            fm.style.transform = 'scale(1.25)';
+
+            if (e.pointerId) e.currentTarget.setPointerCapture(e.pointerId);
         };
         window.handleHabitSwipeMove = (e) => {
+            if (!window.isDrag || window.isAnimatingJump) return;
+            
             const touch = e.touches ? e.touches[0] : e;
             const currentX = touch.clientX;
             const currentY = touch.clientY;
             const diffX = window.habitSwipeState.startX - currentX;
-            const diffY = window.habitSwipeState.startY - currentY;
+            
+            // 1. Move Marble (Magnet Logic)
+            const cont = document.querySelector('.app-container');
+            const rect = cont.getBoundingClientRect();
+            fm.style.transition = 'none'; // Instant movement during drag
+            fm.style.left = (currentX - 30 - rect.left) + 'px';
+            fm.style.top = (currentY - 30 - rect.top) + 'px';
+            fm.style.transform = `scale(1.15) rotate(${diffX * -0.2}deg)`;
 
-            // Cancel long press if moved significantly
-            if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
-                clearTimeout(longPressTimer);
-            }
-
-            // If user is dragging the marble, don't swipe habits
-            if (window.isDrag || window.isAnimatingJump) return;
-
-            // Sensitivity threshold
-            if (!window.habitSwipeState.isSwiping && Math.abs(diffX) > 10) {
+            // 2. Simultaneous Habit Scroller Interaction
+            if (Math.abs(diffX) > 5) {
                 window.habitSwipeState.isSwiping = true;
-            }
-
-            if (window.habitSwipeState.isSwiping) {
                 const sc = document.getElementById('habit-scroller');
-                // We multiply the diff slightly for a more responsive feel when swiping the larger jar area
-                const multiplier = e.currentTarget.id === 'clickable-top-section' ? 1.2 : 1.0;
+                const multiplier = e.currentTarget.id === 'clickable-top-section' ? 1.3 : 1.0;
                 sc.scrollLeft = window.habitSwipeState.scrollStart + (diffX * multiplier);
-                
-                // Prevent default browser behavior (scrolling the page) while switching habits
                 if (e.cancelable) e.preventDefault();
             }
         };
         window.handleHabitSwipeEnd = (e) => {
-            clearTimeout(longPressTimer);
+            if (!window.isDrag) return;
+            window.isDrag = false;
+            fm.classList.remove('dragging');
+
+            const contRect = document.querySelector('.app-container').getBoundingClientRect();
+            const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+            const r = fm.getBoundingClientRect();
+            const cx = r.left + 30;
+            const cy = r.top + 30;
+            
+            // Determine if released inside jar zone
+            if (cx > jr.left - 50 && cx < jr.right + 50 && cy < jr.bottom && cy > jr.top - 120) {
+                performNaturalJump(cx - contRect.left, cy - contRect.top);
+            } else {
+                // Return to base
+                fm.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                fm.style.transform = 'scale(1)';
+                window.respawnMarble();
+            }
+
             if (window.habitSwipeState.isSwiping) {
                 window.habitSwipeState.isSwiping = false;
             }
+            if (e.pointerId) e.currentTarget.releasePointerCapture(e.pointerId);
         };
         window.handleTopSectionClick = (e) => {
             if (window.habitSwipeState.isSwiping || window.isDrag || window.isAnimatingJump) return;
@@ -3171,7 +3207,7 @@
 
             // Apply visual transformations - Removed slideOut to keep lid centered
             const screwRotation = openFactor * -20;
-            const lift = openFactor * -75;
+            const lift = openFactor * -65;
             
             lid.style.transform = `translateY(${lift}px) rotate(${screwRotation}deg)`;
             
