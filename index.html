@@ -1829,8 +1829,10 @@
             
             // Lid barrier positioned at the top of the mouth opening
             window.physicsLid = Bodies.rectangle(centerX, mouthY - 10, 180, 60, { ...wallOptions, label: 'physics-lid' });
+            const ceiling = Bodies.rectangle(centerX, -100, w * 2, 200, { ...wallOptions, label: 'physics-ceiling' });
             
             Composite.add(world, [
+                ceiling,
                 // Bottom Floor - widened to catch balls in corners
                 Bodies.rectangle(centerX, bottomY + 10, w * 1.5, 20, wallOptions),
                 
@@ -2357,14 +2359,15 @@
                 for(let i = 0; i < 3; i++) {
                     setTimeout(() => {
                         const h = habitsData[0];
-                        const spawnX = 195 + (Math.random() * 20 - 10);
-                        const b = Bodies.circle(spawnX, 40, 26, {
+                        const bodyTop = document.querySelector('.jar-body')?.offsetTop || 300;
+                        const spawnX = (canvas.width / 2) + (Math.random() * 20 - 10);
+                        const b = Bodies.circle(spawnX, bodyTop - 35, 26, {
                             restitution: 0.5, friction: 0.01, density: 0.05,
                             label: 'habit-ball', render: { fillStyle: h ? h.color : '#239B62' } 
                         });
                         b.isGift = true;
                         b.habitId = h ? h.id : 0;
-                        Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -200 });
+                        Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -1000 });
                         currentBalls.push(b);
                         Composite.add(world, b);
                         Matter.Body.setVelocity(b, {x: (Math.random() - 0.5) * 2, y: 10});
@@ -2573,7 +2576,6 @@
                 if (p < 1) requestAnimationFrame(animate);
                 else {
                     fm.style.filter = 'none';
-                    const cr = canvas.getBoundingClientRect(); 
                     const h = habitsData[currentHabitIndex];
                     if(!h) return;
                     const stats = userStats.daysData[currentDayView].habits[h.id];
@@ -2607,7 +2609,7 @@
                     const currentRadius = 26; // Constant size
 
                     // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
-                    const b = Bodies.circle((contRect.left + targetX) - cr.left, targetY, currentRadius, {
+                    const b = Bodies.circle(canvas.width / 2, bodyTop - 35, currentRadius, {
                         isStatic: false,
                         restitution: 0.3,
                         friction: 0.05,
@@ -2620,32 +2622,31 @@
                     b.habitId = h.id;
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
                     // Disable lid barrier for a moment to let the ball in
-                    Matter.Body.setPosition(physicsLid, { x: 170, y: -300 });
-                    Matter.Body.setVelocity(b, {x:0, y:8}); 
+                    Matter.Body.setPosition(physicsLid, { x: canvas.width / 2, y: -1000 });
+                    Matter.Body.setVelocity(b, {x:0, y:12}); 
                     currentBalls.push(b); 
                     Composite.add(world, b); 
                     fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
                     const gl = document.getElementById('marble-glow'); if(gl) gl.style.opacity = '0';
                     
-                    // Activate session colors upon first throw
                     if (!sessionActivated) {
                         sessionActivated = true;
                         renderActiveHabit();
                     }
 
-                    // Compression Effect: Push existing balls down and towards center
                     currentBalls.forEach(ball => {
-                        const dx = 170 - ball.position.x;
+                        const dx = (canvas.width/2) - ball.position.x;
                         Matter.Body.applyForce(ball, ball.position, {
                             x: dx * 0.0008,
-                            y: 0.05 * ball.mass 
+                            y: 0.03 * ball.mass 
                         });
                     });
 
-                    // Visual stability: Jar impact shake removed as requested
-
-                    window.isAnimatingJump = false; 
-                    window.saveState();
+                    // Hold lid open for 800ms to ensure ball passes through barrier zone
+                    setTimeout(() => {
+                        window.isAnimatingJump = false; 
+                        window.saveState();
+                    }, 800);
                     
                     // Single Unified Score Feedback: Emerging from the JAR CENTER, growing and fading away
                     const bodyEl = document.querySelector('.jar-body');
