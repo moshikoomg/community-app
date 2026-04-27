@@ -1804,7 +1804,7 @@
         }
         window.buildJars = buildJars;
 
-        const { Engine, Bodies, Composite, Mouse, MouseConstraint } = Matter, engine = Engine.create(), world = engine.world;
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 1.0; // כוח כבידה טבעי המדמה 9.8m/s^2 במערכת פיקסלים
         engine.positionIterations = 10;
         engine.velocityIterations = 10;
         let currentBalls = [];
@@ -3324,7 +3324,7 @@
                         const forceMag = isFull ? 0.0001 : 0.00001;
                         Matter.Body.applyForce(b, b.position, { 
                             x: (170 - b.position.x) * forceMag, 
-                            y: 0.0008 * b.mass 
+                            y: 0 // הכבידה הגלובלית מטפלת בנפילה
                         });
                     }
 
