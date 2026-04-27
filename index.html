@@ -621,7 +621,7 @@
             display: none;
         }
 
-        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 8px; touch-action: pan-y; }
+        .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 8px; touch-action: pan-y; overflow-y: auto; max-height: 100%; padding-bottom: 60px; scroll-behavior: smooth; }
         .drawer-view.active { display: flex; }
 
         .edit-btn { color: #cbd5e1; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 50%; } .edit-btn:hover { background: #f8fafc; color: #94a3b8 !important; }
@@ -2887,24 +2887,19 @@
             renderActiveHabit(); window.popMarble();
         };
 
-        window.habitSwipeState = { startX: 0, isSwiping: false, scrollStart: 0 };
+        window.habitSwipeState = { startX: 0, startY: 0, gestureType: 'none', scrollStart: 0, threshold: 12 };
         window.handleHabitSwipeStart = (e) => {
             if (window.isAnimatingJump || habitsData.length === 0) return;
             const bd = document.getElementById('bottom-drawer');
             if (bd.classList.contains('edit-mode') || bd.classList.contains('stats-mode') || bd.classList.contains('onboarding-mode')) return;
-
-            // Avoid triggering if clicking specific UI buttons like the mode trigger or profile
             if (e.target.closest('.user-pill') || e.target.closest('.mode-trigger') || e.target.closest('.mode-menu')) return;
 
             const touch = e.touches ? e.touches[0] : e;
             window.habitSwipeState.startX = touch.clientX;
             window.habitSwipeState.startY = touch.clientY;
             window.habitSwipeState.scrollStart = document.getElementById('habit-scroller').scrollLeft;
-            window.habitSwipeState.isSwiping = false;
-
-            // Global Magnetism: Summon marble to finger instantly
-            window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
-            window.isDrag = true; // Essential: allow move events to fire
+            window.habitSwipeState.gestureType = 'none';
+            window.isDrag = true;
             
             if (e.pointerId && e.currentTarget.setPointerCapture) {
                 try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err) {}
@@ -2912,59 +2907,67 @@
         };
         window.handleHabitSwipeMove = (e) => {
             if (!window.isDrag || window.isAnimatingJump) return;
-            
             const touch = e.touches ? e.touches[0] : e;
-            const currentX = touch.clientX;
-            const currentY = touch.clientY;
-            
-            // 1. Move Marble Absolute Precision (Snapped to finger)
-            const cont = document.querySelector('.app-container');
-            const rect = cont.getBoundingClientRect();
-            const x = (currentX - rect.left) - 30;
-            const y = (currentY - rect.top) - 30;
-            
-            fm.style.transition = 'none';
-            fm.style.left = x + 'px';
-            fm.style.top = y + 'px';
-            
-            const diffX = window.habitSwipeState.startX - currentX;
-            fm.style.transform = `scale(1.25) rotate(${diffX * -0.3}deg)`;
+            const dx = touch.clientX - window.habitSwipeState.startX;
+            const dy = touch.clientY - window.habitSwipeState.startY;
 
-            // 2. Simultaneous Habit Scroller Interaction
-            const dragDistance = currentX - window.habitSwipeState.startX;
-            if (Math.abs(dragDistance) > 5) {
-                window.habitSwipeState.isSwiping = true;
+            if (window.habitSwipeState.gestureType === 'none') {
+                if (Math.abs(dx) > window.habitSwipeState.threshold) window.habitSwipeState.gestureType = 'scroll';
+                else if (dy < -window.habitSwipeState.threshold) {
+                    window.habitSwipeState.gestureType = 'drop';
+                    window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
+                }
+                return;
+            }
+
+            if (window.habitSwipeState.gestureType === 'scroll') {
                 const sc = document.getElementById('habit-scroller');
-                const multiplier = e.currentTarget.id === 'clickable-top-section' ? 1.8 : 1.0;
-                sc.scrollLeft = window.habitSwipeState.scrollStart + (dragDistance * multiplier);
-                if (e.cancelable) e.preventDefault();
+                sc.scrollLeft = window.habitSwipeState.scrollStart + dx * 1.5;
+
+                // מעבר רציף: אם המשתמש גלל אופקית ואז משך למעלה משמעותית
+                if (dy < -window.habitSwipeState.threshold * 2.5) {
+                    window.habitSwipeState.gestureType = 'drop';
+                    window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
+                    if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
+                }
+            } else if (window.habitSwipeState.gestureType === 'drop') {
+                const cont = document.querySelector('.app-container');
+                const rect = cont.getBoundingClientRect();
+                fm.style.left = (touch.clientX - rect.left - 30) + 'px';
+                fm.style.top = (touch.clientY - rect.top - 30) + 'px';
+                
+                // לוגיקת שקיפות למעקב: הכדור חצי שקוף כשהוא רחוק מהצנצנת ונעשה אטום כשמתקרבים
+                const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+                const distToJar = Math.abs(touch.clientY - (jr.top + 100));
+                const opacity = Math.max(0.4, Math.min(1, 1 - (distToJar / 400)));
+                
+                const isCancelled = touch.clientY > window.habitSwipeState.startY + 50;
+                fm.style.opacity = isCancelled ? '0.2' : opacity;
+                fm.style.filter = isCancelled ? 'grayscale(1) blur(8px)' : (opacity < 0.6 ? 'blur(2px)' : 'none');
             }
         };
         window.handleHabitSwipeEnd = (e) => {
             if (!window.isDrag) return;
             window.isDrag = false;
+            const touch = e.changedTouches ? e.changedTouches[0] : e;
+
+            if (window.habitSwipeState.gestureType === 'drop') {
+                const isCancelled = touch.clientY > window.habitSwipeState.startY;
+                const contRect = document.querySelector('.app-container').getBoundingClientRect();
+                const r = fm.getBoundingClientRect();
+                
+                if (!isCancelled) {
+                    performNaturalJump(r.left + 30 - contRect.left, r.top + 30 - contRect.top);
+                } else {
+                    fm.style.opacity = '0';
+                    window.respawnMarble();
+                }
+            }
+
             fm.classList.remove('dragging');
-
-            const contRect = document.querySelector('.app-container').getBoundingClientRect();
-            const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
-            const r = fm.getBoundingClientRect();
-            const cx = r.left + 30;
-            const cy = r.top + 30;
-            
-            // Determine if released inside jar zone
-            if (cx > jr.left - 50 && cx < jr.right + 50 && cy < jr.bottom && cy > jr.top - 120) {
-                performNaturalJump(cx - contRect.left, cy - contRect.top);
-            } else {
-                // Return to base
-                fm.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                fm.style.transform = 'scale(1)';
-                window.respawnMarble();
-            }
-
-            if (window.habitSwipeState.isSwiping) {
-                window.habitSwipeState.isSwiping = false;
-            }
-            if (e.pointerId) e.currentTarget.releasePointerCapture(e.pointerId);
+            fm.style.filter = 'none';
+            window.habitSwipeState.gestureType = 'none';
+            if (e.pointerId && e.currentTarget.releasePointerCapture) e.currentTarget.releasePointerCapture(e.pointerId);
         };
         window.handleTopSectionClick = (e) => {
             if (window.habitSwipeState.isSwiping || window.isDrag || window.isAnimatingJump) return;
@@ -3133,6 +3136,11 @@
 
         window.summonMarble = (clientX, clientY, pId) => {
             if (habitsData.length === 0 || window.isAnimatingJump) return;
+            
+            // Clear horizontal scroll momentum
+            const sc = document.getElementById('habit-scroller');
+            if (sc) sc.style.pointerEvents = 'none';
+            setTimeout(() => { if (sc) sc.style.pointerEvents = 'auto'; }, 500);
             
             const cont = document.querySelector('.app-container');
             const rect = cont.getBoundingClientRect();
