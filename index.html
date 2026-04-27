@@ -373,19 +373,19 @@
         .jar-slide.active-slide.locked { opacity: 0.6; }
 
         .jar-wrapper { 
-            position: relative; width: 100%; max-width: 400px; height: 580px; direction: rtl; z-index: 2; 
+            position: relative; width: 100%; max-width: 400px; height: 850px; direction: rtl; z-index: 2; 
             transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1);
             transform: scale(0.9); 
         }
         .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
-        canvas#physics-canvas { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 26; touch-action: none; height: 580px; width: 100%; }
+        canvas#physics-canvas { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 26; touch-action: none; height: 850px; width: 100%; }
 
         /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
         .jar-cap-detail {
             will-change: transform;
-            position: absolute; top: 10px; 
+            position: absolute; top: 165px; 
             left: 50%; 
             margin-left: -90px; /* Half of width 180px to center exactly */
             width: 180px; height: 38px;
@@ -432,20 +432,20 @@
         .jar-cap-detail.open { transform: translateY(-50px) rotate(-30deg); }
 
         .jar-opening {
-            position: absolute; top: 34px; left: 50%; transform: translateX(-50%); width: 156px; height: 16px;
+            position: absolute; top: 189px; left: 50%; transform: translateX(-50%); width: 156px; height: 16px;
             border-radius: 50%; background: rgba(255, 255, 255, 0.1); z-index: 15;
             box-shadow: 
                 inset 0 0 10px rgba(0,0,0,0.2);
             border: 1.5px solid rgba(255,255,255,0.1);
         }
         .jar-opening-front {
-            position: absolute; top: 42px; left: 50%; transform: translateX(-50%); width: 156px; height: 8px;
+            position: absolute; top: 197px; left: 50%; transform: translateX(-50%); width: 156px; height: 8px;
             border-radius: 0 0 100px 100px; z-index: 25;
             border-bottom: 2px solid rgba(255,255,255,0.4);
             pointer-events: none;
         }
         .jar-neck {
-            position: absolute; top: 36px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
+            position: absolute; top: 191px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
             background: 
                 linear-gradient(to right, 
@@ -457,7 +457,7 @@
             border: none;
         }
         .jar-neck-front {
-            position: absolute; top: 36px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
+            position: absolute; top: 191px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
             background: 
                 repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 13px),
@@ -495,8 +495,8 @@
         }
         .jar-reflection {
             position: absolute;
-            top: 85px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 495px;
-            border-radius: 40px 40px 100px 100px;
+            top: 240px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 600px;
+            border-radius: 40px 40px 120px 120px;
             pointer-events: none;
             z-index: 28;
             overflow: hidden;
@@ -528,8 +528,8 @@
         .jar-body {
             z-index: 20;
             position: absolute;
-            top: 85px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 495px;
-            border-radius: 40px 40px 100px 100px;
+            top: 240px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 600px;
+            border-radius: 40px 40px 120px 120px;
             background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%);
             border: none;
             backdrop-filter: none;
@@ -620,7 +620,43 @@
             opacity: 0.35;
         }
 
-        #marble-drop-zone { width: 60px; height: 60px; pointer-events: none; }
+        #marble-drop-zone {
+            width: 52px; 
+            height: 52px; 
+            pointer-events: none; 
+            border-radius: 50%;
+            background: white;
+            background: radial-gradient(circle at 30% 30%, #fff 0%, #f8fafc 20%, #e2e8f0 80%, #94a3b8 100%);
+            box-shadow: 
+                inset -2px -2px 6px rgba(0,0,0,0.1), 
+                inset 2px 2px 6px rgba(255,255,255,0.8), 
+                0 4px 10px rgba(0,0,0,0.05);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #marble-drop-zone::after {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: var(--habit-active-color, var(--primary-color));
+            mask-image: radial-gradient(circle at center, transparent 30%, black 100%);
+            -webkit-mask-image: radial-gradient(circle at center, transparent 10%, black 70%);
+            opacity: 0.15;
+        }
+        #marble-drop-zone::before {
+            content: '';
+            position: absolute;
+            width: 70%; height: 20%;
+            top: 15%; left: 15%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.9), transparent);
+            border-radius: 50%;
+            filter: blur(1px);
+            transform: rotate(-25deg);
+        }
         
         #floating-marble {
             position: absolute; z-index: 1000; cursor: grab; touch-action: none;
@@ -753,7 +789,7 @@
         }
         .habit-item.active {
             font-size: 24px;
-            transform: scale(1.2) translateY(5px);
+            transform: scale(1.2) translateY(2px);
             filter: blur(0);
             display: flex;
             flex-direction: column;
@@ -1173,9 +1209,7 @@
                 <!-- Dots Indicators -->
                 <div class="dots-container" id="picker-dots" style="pointer-events: auto; margin-top: 5px; margin-bottom: 12px;"></div>
                 <!-- Marble Drop Zone Second (Bottom) -->
-                <div id="marble-drop-zone-container" style="width: 60px; height: 60px; position: relative; margin-top: 5px; pointer-events: auto;" onclick="window.popMarble()">
-                    <div id="marble-drop-zone" style="width: 60px; height: 60px; pointer-events: none;"></div>
-                </div>
+                <!-- Idle drop zone removed to ensure no balls are visible outside the jar when not interacting -->
             </div>
 
             <div id="mode-switcher-container" style="flex-shrink: 0;">
@@ -1734,7 +1768,7 @@
             const container = document.querySelector('.app-container');
             const w = Math.min(container.offsetWidth, 420);
             canvas.width = w;
-            canvas.height = 580;
+            canvas.height = 850;
             updatePhysicsBoundaries(w);
         }
         
@@ -1742,18 +1776,21 @@
             Composite.clear(world, false);
             const wallOptions = { isStatic: true, friction: 0.001, frictionStatic: 0.01, restitution: 0.3, render: { visible: false } };
             const centerX = w / 2;
-            window.physicsLid = Bodies.rectangle(centerX, 25, 300, 100, { ...wallOptions, label: 'physics-lid' });
+            // Mouth of the jar remains at the same height relative to neck/cap
+            window.physicsLid = Bodies.rectangle(centerX, 180, 300, 100, { ...wallOptions, label: 'physics-lid' });
             
             Composite.add(world, [
-                Bodies.rectangle(centerX, 570, w + 100, 100, wallOptions),
-                Bodies.rectangle(centerX - 155, 535, 140, 100, { ...wallOptions, angle: Math.PI / 5 }),
-                Bodies.rectangle(centerX + 155, 535, 140, 100, { ...wallOptions, angle: -Math.PI / 5 }),
-                Bodies.rectangle(-25, 280, 50, 800, wallOptions),
-                Bodies.rectangle(w + 25, 280, 50, 800, wallOptions),
-                Bodies.rectangle(centerX - 110, 100, 120, 80, { ...wallOptions, angle: -Math.PI / 4.5 }),
-                Bodies.rectangle(centerX + 110, 100, 120, 80, { ...wallOptions, angle: Math.PI / 4.5 }),
-                Bodies.rectangle(centerX - 82, 38, 30, 150, wallOptions),
-                Bodies.rectangle(centerX + 82, 38, 30, 150, wallOptions),
+                // Floor moved down from 705 to 830 to match taller body (240 + 600 - small padding)
+                Bodies.rectangle(centerX, 830, w + 100, 100, wallOptions),
+                // Diagonals moved down from 670 to 790
+                Bodies.rectangle(centerX - 155, 795, 140, 100, { ...wallOptions, angle: Math.PI / 5 }),
+                Bodies.rectangle(centerX + 155, 795, 140, 100, { ...wallOptions, angle: -Math.PI / 5 }),
+                Bodies.rectangle(-25, 400, 50, 1200, wallOptions),
+                Bodies.rectangle(w + 25, 400, 50, 1200, wallOptions),
+                Bodies.rectangle(centerX - 110, 255, 120, 80, { ...wallOptions, angle: -Math.PI / 4.5 }),
+                Bodies.rectangle(centerX + 110, 255, 120, 80, { ...wallOptions, angle: Math.PI / 4.5 }),
+                Bodies.rectangle(centerX - 82, 193, 30, 150, wallOptions),
+                Bodies.rectangle(centerX + 82, 193, 30, 150, wallOptions),
                 window.physicsLid
             ]);
 
@@ -1842,7 +1879,7 @@
             c.translate(x, y);
             
             // Add a soft floor shadow if the ball is low enough
-            if (y > 450) {
+            if (y > 520) {
                 c.save();
                 c.translate(0, r * 1.05);
                 c.scale(1, 0.2);
@@ -1996,44 +2033,22 @@
         let marbleInteractionCount = 0;
         let hasEverInteracted = false;
         function updateFloatingPosition() {
-            const dz = document.getElementById('marble-drop-zone'), cont = document.querySelector('.app-container');
+            const cont = document.querySelector('.app-container');
             const gl = document.getElementById('marble-glow');
-            if(!dz || !cont) return;
-            const r = dz.getBoundingClientRect(), cr = cont.getBoundingClientRect();
             const tt = document.getElementById('tutorial-tooltip');
-            
-            const centerX = (r.left - cr.left + r.width / 2);
-            const centerY = (r.top - cr.top + r.height / 2);
-            
-            // Position marble at base only when not being dragged or jumping
-            if (!window.isDrag && !window.isAnimatingJump) {
-                const currentLeft = centerX - 30;
-                const currentTop = centerY - 30;
-                fm.style.left = currentLeft + 'px';
-                fm.style.top = currentTop + 'px';
-                if(gl) {
-                    gl.style.left = (centerX - 65) + 'px'; // Center 130px width
-                    gl.style.top = (centerY - 65) + 'px';
-                    gl.style.opacity = '0.6';
-                    gl.style.filter = 'blur(18px)';
-                    gl.style.transform = 'scale(1)';
-                }
-            } else {
-                // When leaving the base (drag or jump), the glow disperses and fades
+            if(!cont) return;
+
+            // When dragging, we disperse the glow
+            if (window.isDrag || window.isAnimatingJump) {
                 if(gl) {
                     gl.style.opacity = '0';
                     gl.style.transform = 'scale(2.2)';
                     gl.style.filter = 'blur(30px)';
                 }
-            }
-
-            // Tutorial Tooltip logic
-            if (window.isTutorialMode && !window.isDrag && !window.isAnimatingJump && fm.style.display !== 'none') {
-                tt.style.display = 'block'; 
-                tt.style.left = centerX + 'px'; 
-                tt.style.top = (centerY - 85) + 'px';
-            } else if (tt) {
-                tt.style.display = 'none';
+                if (tt) tt.style.display = 'none';
+            } else {
+                // Marble is hidden when not active, so glow is hidden too
+                if(gl) gl.style.opacity = '0';
             }
         }
 
@@ -2406,67 +2421,24 @@
             });
         }
 
-        window.respawnMarble = () => {
-            const isDrawerNormal = document.getElementById('drawer-normal-view').classList.contains('active');
-            if (!isDrawerNormal) return;
-
-            // Sync cleanup
-            fm.classList.remove('marble-pulse');
-            
-            // Sync initial hidden state
-            const initTrans = 'none';
-            fm.style.transition = initTrans;
-            fm.style.transform = 'scale(0.1)';
-            fm.style.opacity = '0';
+        window.respawnMarble = (forceShow = false) => {
+            // Marbles are now only visible during interaction.
+            // This function resets the marble state to hidden until the next interaction starts.
             fm.style.display = 'none';
+            fm.style.opacity = '0';
             fm.style.visibility = 'hidden';
-
-            updateFloatingPosition();
-            
-            requestAnimationFrame(() => {
-                renderActiveHabit();
-
-                setTimeout(() => {
-                    if(!window.isDrag && !window.isAnimatingJump) {
-                        // Apply base transform for animation to build upon
-                        fm.style.transform = 'translateY(0)';
-                        fm.classList.add('marble-pulse');
-                    }
-                }, 800);
-            });
+            fm.classList.remove('marble-pulse');
+            const gl = document.getElementById('marble-glow');
+            if (gl) gl.style.opacity = '0';
+            renderActiveHabit();
         };
 
         window.popMarble = (e) => { 
             if(e) e.stopPropagation();
-            if(window.isAnimatingJump) return;
-            
-            // If marble is already visible, just pulse it instead of hiding/showing (prevents 'jumps')
-            if (fm.style.display !== 'none' && parseFloat(fm.style.opacity) > 0.5) {
-                fm.classList.remove('marble-pulse');
-                void fm.offsetWidth; // Force reflow to restart pulse
-                fm.classList.add('marble-pulse');
-                renderActiveHabit();
-                return;
-            }
-
-            fm.classList.remove('marble-pulse');
-            fm.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s';
-            fm.style.transform = 'scale(0.3)';
-            fm.style.opacity = '0.3';
-            setTimeout(() => {
-                fm.style.display = 'block'; 
-                fm.style.opacity = '1'; 
-                fm.style.visibility = 'visible';
-                fm.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s'; 
-                renderActiveHabit(); 
-                fm.style.transform = 'scale(1) rotate(0deg)'; 
-                setTimeout(() => { 
-                    if(!window.isDrag && !window.isAnimatingJump) {
-                        fm.style.transform = 'translateY(0)';
-                        fm.classList.add('marble-pulse'); 
-                    }
-                }, 600);
-            }, 180);
+            const dz = document.getElementById('marble-drop-zone');
+            dz.style.transform = 'scale(1.2)';
+            setTimeout(() => dz.style.transform = 'scale(1)', 150);
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
         };
 
         // --- 7. לוגיקת משחק ואנימציה ---
@@ -2499,7 +2471,7 @@
             const color = h ? h.color : '#239B62';
             const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
-            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 60; 
+            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 215; 
             const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(350, Math.min(600, distance * 0.8)), startTime = performance.now();
             
             let lastX = startX, lastY = startY;
@@ -2567,7 +2539,7 @@
                     const currentRadius = 26; // Constant size
 
                     // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
-                    const b = Bodies.circle((contRect.left + targetX) - cr.left, 60, currentRadius, {
+                    const b = Bodies.circle((contRect.left + targetX) - cr.left, 215, currentRadius, {
                         restitution: 0.4, 
                         friction: 0.001, 
                         frictionAir: 0.01, 
@@ -2607,17 +2579,17 @@
                     window.saveState();
                     
                     // Single Unified Score Feedback: Emerging from the floating marble base, growing and fading away
-                    const marbleBase = document.getElementById('marble-drop-zone');
-                    if (marbleBase) {
-                        const mRect = marbleBase.getBoundingClientRect();
+                    const currentHabitEl = document.querySelector('.habit-item.active');
+                    if (currentHabitEl) {
+                        const mRect = currentHabitEl.getBoundingClientRect();
                         const cRect = contRect; // Uses contRect from parent scope
                         
                         const fb = document.createElement('div');
                         fb.className = 'count-feedback-pop count-pop-anim';
                         fb.style.color = h.color;
-                        // Centering the container width relative to the drop zone start point
+                        // Feedback now pops from the selection area
                         fb.style.left = (mRect.left - cRect.left + mRect.width / 2 - 80) + 'px';
-                        fb.style.top = (mRect.top - cRect.top + 60) + 'px';
+                        fb.style.top = (mRect.top - cRect.top + 20) + 'px';
                         fb.style.width = '160px';
                         fb.style.textAlign = 'center';
                         fb.style.zIndex = '2000'; // Ensure it's above everything
@@ -2643,7 +2615,7 @@
                     }
                     
                     // Seamless respawn
-                    setTimeout(() => window.respawnMarble(), 150);
+                    setTimeout(() => window.respawnMarble(true), 150);
                 }
             }
             requestAnimationFrame(animate);
@@ -3215,7 +3187,7 @@
             
             // Ensure physics lid barrier returns to position when lid is closed
             if (openFactor < 0.1 && !window.isAnimatingJump) {
-                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: 25 });
+                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: 180 });
             }
 
             // Add a small 'rattle' effect when the lid is just starting to unscrew
@@ -3249,7 +3221,7 @@
                         if (isMatching) {
                             // Gentle Magnetic Clustering: Soft pull to bottom-center
                             const dx = 195 - b.position.x;
-                            const dy = 505 - b.position.y; 
+                            const dy = 550 - b.position.y; 
                             
                             Matter.Body.applyForce(b, b.position, {
                                 x: dx * 0.0035, // Reduced from 0.012 for a softer glide
@@ -3307,6 +3279,11 @@
         });
 
         window.onload = () => {
+            // Ensure marble is explicitly hidden on startup
+            fm.style.display = 'none';
+            fm.style.opacity = '0';
+            document.getElementById('marble-glow').style.opacity = '0';
+
             // Physics Collision Haptics
             Matter.Events.on(engine, 'collisionStart', (event) => {
                 if (typeof window.navigator.vibrate === 'function') {
@@ -3396,7 +3373,7 @@
                 const maxDist = 120; 
                 let progress = Math.pow(Math.max(0, 1 - (dist / maxDist)), 2);
                 const scale = 0.75 + (0.55 * progress); 
-                const translateY = 15 * progress;
+                const translateY = 4 * progress;
                 
                 item.style.transform = `scale(${scale}) translateY(${translateY}px)`;
                 item.style.opacity = 0.4 + (0.6 * progress);
