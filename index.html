@@ -2911,30 +2911,32 @@
             const touch = e.touches ? e.touches[0] : e;
             const dx = touch.clientX - window.habitSwipeState.startX;
             const dy = touch.clientY - window.habitSwipeState.startY;
+            const absDx = Math.abs(dx);
+            const absDy = Math.abs(dy);
 
             if (window.habitSwipeState.gestureType === 'none') {
-                const absDx = Math.abs(dx);
-                const absDy = Math.abs(dy);
-
-                // Logic: If movement is primarily horizontal, it's a scroll. If primarily vertical-up, it's a drop.
-                if (absDx > window.habitSwipeState.threshold && absDx > absDy) {
+                // זיהוי כיוון ראשוני ברגישות גבוהה
+                if (absDx > 12 && absDx > absDy) {
                     window.habitSwipeState.gestureType = 'scroll';
-                } else if (dy < -window.habitSwipeState.threshold && absDy > absDx) {
+                } else if (dy < -12 && absDy > absDx) {
                     window.habitSwipeState.gestureType = 'drop';
                     window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
+                } else if (dy > 12 && absDy > absDx) {
+                    window.habitSwipeState.gestureType = 'drawer';
                 }
                 return;
             }
 
             if (window.habitSwipeState.gestureType === 'scroll') {
                 const sc = document.getElementById('habit-scroller');
-                sc.scrollLeft = window.habitSwipeState.scrollStart + dx * 1.5;
-
-                // מעבר רציף: אם המשתמש גלל אופקית ואז משך למעלה משמעותית
-                if (dy < -window.habitSwipeState.threshold * 2.5) {
-                    window.habitSwipeState.gestureType = 'drop';
-                    window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
-                    if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
+                // גלילה חלקה יותר
+                sc.scrollLeft = window.habitSwipeState.scrollStart - dx;
+            } else if (window.habitSwipeState.gestureType === 'drawer') {
+                // סגירת סטטיסטיקה במשיכה למטה
+                if (dy > 60) {
+                    const bd = document.getElementById('bottom-drawer');
+                    if (bd.classList.contains('stats-mode')) window.closeStatsMode();
+                    else if (bd.classList.contains('edit-mode')) window.closeEditMode();
                 }
             } else if (window.habitSwipeState.gestureType === 'drop') {
                 const cont = document.querySelector('.app-container');
@@ -2967,13 +2969,14 @@
             if (!window.isDrag) return;
             window.isDrag = false;
             const touch = e.changedTouches ? e.changedTouches[0] : e;
+            const finalDy = touch.clientY - window.habitSwipeState.startY;
 
             if (window.habitSwipeState.gestureType === 'drop') {
-                const isCancelled = touch.clientY > window.habitSwipeState.startY;
                 const contRect = document.querySelector('.app-container').getBoundingClientRect();
                 const r = fm.getBoundingClientRect();
                 
-                if (!isCancelled) {
+                // אם המשיכה הייתה מהירה מספיק למעלה או שהכדור כבר גבוה
+                if (finalDy < -40) {
                     performNaturalJump(r.left + 30 - contRect.left, r.top + 30 - contRect.top);
                 } else {
                     fm.style.opacity = '0';
