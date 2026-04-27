@@ -1166,9 +1166,10 @@
 
         <div class="top-section" id="clickable-top-section" 
              onclick="window.handleTopSectionClick(event)" 
-             ontouchstart="window.handleHabitSwipeStart(event)" 
-             ontouchmove="window.handleHabitSwipeMove(event)" 
-             ontouchend="window.handleHabitSwipeEnd(event)">
+             onpointerdown="window.handleHabitSwipeStart(event)" 
+             onpointermove="window.handleHabitSwipeMove(event)" 
+             onpointerup="window.handleHabitSwipeEnd(event)"
+             onpointercancel="window.handleHabitSwipeEnd(event)">
             <div class="jars-slider" id="jars-slider"></div>
             <canvas id="physics-canvas"></canvas>
         </div>
@@ -1428,7 +1429,7 @@
         // --- 1. משתנים גלובליים ---
         const STAGE_GAP = 21, TOTAL_DISPLAY_DAYS = 63;
         let currentUser = { displayName: "שם משתמש", profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" };
-        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false, hasSeenTutorial = false, sessionActivated = false;
+        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false, hasSeenTutorial = false, sessionActivated = false, longPressTimer = null; let lastPointerId = null;
         let habitsData = [];
         const HABIT_PALETTE = ['#239B62', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#2dd4bf', '#fb923c', '#6366f1', '#ec4899', '#84cc16'];
         window.getNextUniqueColor = () => {
@@ -2647,7 +2648,7 @@
             fm.style.transition = 'none'; 
             sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
         });
-        fm.addEventListener('pointermove', e => {
+        document.addEventListener('pointermove', e => {
             if(!window.isDrag) return; 
             tx=e.clientX-sx; ty=e.clientY-sy; 
             const rot = tx * 0.2; 
@@ -2674,7 +2675,7 @@
                 // Lid handled by global loop
             }
         });
-        fm.addEventListener('pointerup', e => {
+        document.addEventListener('pointerup', e => {
             if(!window.isDrag) return; window.isDrag=false; fm.classList.remove('dragging');
             const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             const r = fm.getBoundingClientRect(), cx = r.left + 30, cy = r.top + 30;
@@ -2799,17 +2800,37 @@
         window.habitSwipeState = { startX: 0, isSwiping: false, scrollStart: 0 };
         window.handleHabitSwipeStart = (e) => {
             if (window.isDrag || window.isAnimatingJump) return;
-            // Only start habit swipe if we aren't interacting with the marble
-            window.habitSwipeState.startX = e.touches[0].clientX;
+            const touch = e.touches ? e.touches[0] : e;
+            window.habitSwipeState.startX = touch.clientX;
+            window.habitSwipeState.startY = touch.clientY;
             window.habitSwipeState.scrollStart = document.getElementById('habit-scroller').scrollLeft;
             window.habitSwipeState.isSwiping = false;
+            lastPointerId = e.pointerId || null;
+
+            // Start long press timer (3 seconds) to summon the ball
+            if (habitsData.length > 0 && !window.isAnimatingJump) {
+                clearTimeout(longPressTimer);
+                longPressTimer = setTimeout(() => {
+                    if (!window.habitSwipeState.isSwiping) {
+                        window.summonMarble(touch.clientX, touch.clientY, lastPointerId);
+                    }
+                }, 3000);
+            }
         };
         window.handleHabitSwipeMove = (e) => {
+            const touch = e.touches ? e.touches[0] : e;
+            const currentX = touch.clientX;
+            const currentY = touch.clientY;
+            const diffX = window.habitSwipeState.startX - currentX;
+            const diffY = window.habitSwipeState.startY - currentY;
+
+            // Cancel long press if moved significantly
+            if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
+                clearTimeout(longPressTimer);
+            }
+
             // If user is dragging the marble, don't swipe habits
             if (window.isDrag || window.isAnimatingJump) return;
-            
-            const currentX = e.touches[0].clientX;
-            const diffX = window.habitSwipeState.startX - currentX;
 
             // Sensitivity threshold
             if (!window.habitSwipeState.isSwiping && Math.abs(diffX) > 10) {
@@ -2827,8 +2848,8 @@
             }
         };
         window.handleHabitSwipeEnd = (e) => {
+            clearTimeout(longPressTimer);
             if (window.habitSwipeState.isSwiping) {
-                // Logic for snapping to closest habit is handled by habit-scroller's native snap-type
                 window.habitSwipeState.isSwiping = false;
             }
         };
@@ -2981,6 +3002,47 @@
 
                 lastAcc = { x: acc.x, y: acc.y, z: acc.z };
             });
+        };
+
+        window.summonMarble = (clientX, clientY, pId) => {
+            if (habitsData.length === 0 || window.isDrag || window.isAnimatingJump) return;
+            
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate([100, 50, 100]);
+
+            const cont = document.querySelector('.app-container');
+            const rect = cont.getBoundingClientRect();
+
+            window.isDrag = true;
+            window.isTutorialMode = false;
+            const tt = document.getElementById('tutorial-tooltip');
+            if(tt) tt.style.display = 'none';
+
+            fm.style.display = 'block';
+            fm.style.opacity = '1';
+            fm.style.visibility = 'visible';
+            fm.classList.add('dragging');
+            fm.classList.remove('marble-pulse');
+            
+            // Handle Pointer Capture if ID exists to maintain drag
+            if (pId !== null && fm.setPointerCapture) {
+                try { fm.setPointerCapture(pId); } catch(e) {}
+            }
+            
+            // Set drag reference points
+            window.sx = clientX;
+            window.sy = clientY;
+            window.tx = 0;
+            window.ty = 0;
+
+            fm.style.transition = 'all 0.5s cubic-bezier(0.19, 1, 0.22, 1)';
+            fm.style.left = (clientX - 30 - rect.left) + 'px';
+            fm.style.top = (clientY - 30 - rect.top) + 'px';
+            fm.style.transform = 'scale(1.25) rotate(0deg)';
+            
+            const gl = document.getElementById('marble-glow');
+            if(gl) gl.style.opacity = '0';
+            
+            renderActiveHabit();
         };
 
         window.triggerShakePhysics = (intensity) => {
