@@ -2914,17 +2914,22 @@
             const absDx = Math.abs(dx);
             const absDy = Math.abs(dy);
 
-            // Default choice mode: swiping left/right
+            // Axis Lock Logic: Determine intent before allowing marble activation
             if (window.habitSwipeState.gestureType === 'none') {
                 const sensitivity = window.habitSwipeState.threshold;
+                // If movement exceeds threshold, lock into a specific axis
                 if (absDx > sensitivity || absDy > sensitivity) {
-                    if (absDx > absDy) {
+                    // Explicit check: Horizontal bias locks into scrolling
+                    if (absDx > absDy * 1.5) {
                         window.habitSwipeState.gestureType = 'scroll';
-                    } else if (dy < -sensitivity) {
-                        // Initiating upward throw gesture
+                    } 
+                    // Vertical bias (Upwards) activates marble throw
+                    else if (dy < -sensitivity && absDy > absDx) {
                         window.habitSwipeState.gestureType = 'drop';
                         window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
-                    } else if (dy > sensitivity) {
+                    } 
+                    // Vertical bias (Downwards) triggers drawer navigation
+                    else if (dy > sensitivity && absDy > absDx) {
                         window.habitSwipeState.gestureType = 'drawer';
                     }
                 }
@@ -3152,7 +3157,10 @@
         window.summonMarble = (clientX, clientY, pId) => {
             if (habitsData.length === 0 || window.isAnimatingJump) return;
             
-            // Clear horizontal scroll momentum
+            // Lock logic: Only summon if the active gesture is intended for a drop
+            if (window.habitSwipeState.gestureType !== 'drop' && window.habitSwipeState.gestureType !== 'none') return;
+
+            // Clear horizontal scroll momentum to freeze habits in place
             const sc = document.getElementById('habit-scroller');
             if (sc) sc.style.pointerEvents = 'none';
             setTimeout(() => { if (sc) sc.style.pointerEvents = 'auto'; }, 500);
