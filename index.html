@@ -1147,8 +1147,8 @@
             </div>
 
             <!-- Unified Top Status Bar -->
-            <div id="top-status-bar" style="flex: 1; display: flex; flex-direction: column; align-items: center; pointer-events: auto; transform: translateY(0); margin-top: 5px;">
-                <div id="active-habit-header-name" style="font-size: 16px; font-weight: 900; color: #1e293b; margin-bottom: 0px;">שם ההרגל</div>
+            <div id="top-status-bar" style="flex: 1; display: flex; flex-direction: column; align-items: center; pointer-events: auto; transform: translateY(0); margin-top: 12px;">
+                
                 <div class="drawer-info-pill" style="background: none; border: none; box-shadow: none; padding: 0; min-height: auto;">
                     <span class="day-label" id="drawer-day-label" style="font-size: 11px; opacity: 0.7;">יום 1</span>
                     <div class="divider" style="height: 10px; width: 1px; background: #e2e8f0; margin: 0 8px;"></div>
@@ -1164,14 +1164,17 @@
             </div>
 
             <!-- Habit Scroller and Drop Zone Integrated Above Jar -->
-            <div style="position: absolute; top: 75px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 150;">
-                <div id="marble-drop-zone-container" style="width: 60px; height: 60px; margin-bottom: -15px; position: relative;">
-                    <div id="marble-drop-zone" style="width: 60px; height: 60px; pointer-events: none;"></div>
-                </div>
-                <div class="habit-scroller-outer" style="pointer-events: auto; margin-top: 5px;">
+            <div style="position: absolute; top: 70px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 150;">
+                <!-- Habit Scroller First (Top) -->
+                <div class="habit-scroller-outer" style="pointer-events: auto; width: 100%;">
                     <div class="habit-scroller" id="habit-scroller" style="height: 60px;"></div>
                 </div>
-                <div class="dots-container" id="picker-dots" style="pointer-events: auto; margin-top: -5px;"></div>
+                <!-- Dots Indicators -->
+                <div class="dots-container" id="picker-dots" style="pointer-events: auto; margin-top: -5px; margin-bottom: 5px;"></div>
+                <!-- Marble Drop Zone Second (Bottom) -->
+                <div id="marble-drop-zone-container" style="width: 60px; height: 60px; position: relative; margin-top: 5px;">
+                    <div id="marble-drop-zone" style="width: 60px; height: 60px; pointer-events: none;"></div>
+                </div>
             </div>
 
             <div id="mode-switcher-container" style="flex-shrink: 0;">
@@ -1746,8 +1749,7 @@
         // Create a massive physics ceiling to prevent any upward escapes
         
 
-        function getScaleFactor(count) {
-            // Keep balls at constant original size
+        function getScaleFactor() {
             return 1.0;
         }
 
@@ -1791,11 +1793,11 @@
                 if (dayData) dayData.savedBalls = saved;
             }
 
-            const scale = getScaleFactor(saved.length);
+            const scale = 1.0;
             
             // Always spawn ALL balls for the day into the physics world
             saved.forEach(d => {
-                const b = Bodies.circle(d.x, d.y, 26 * scale, {
+                const b = Bodies.circle(d.x, d.y, 26, {
                     restitution: 0.4, 
                     friction: 0.001, 
                     frictionAir: 0.01, 
@@ -2266,9 +2268,8 @@
                 for(let i = 0; i < 3; i++) {
                     setTimeout(() => {
                         const h = habitsData[0];
-                        const scale = getScaleFactor(currentBalls.length + 1);
                         const spawnX = 195 + (Math.random() * 20 - 10);
-                        const b = Bodies.circle(spawnX, 40, 26 * scale, {
+                        const b = Bodies.circle(spawnX, 40, 26, {
                             restitution: 0.5, friction: 0.01, density: 0.05,
                             label: 'habit-ball', render: { fillStyle: h ? h.color : '#239B62' } 
                         });
@@ -2641,11 +2642,12 @@
             requestAnimationFrame(animate);
         }
 
-        fm.addEventListener('pointerdown', e => { 
+        fm.addEventListener('pointerdown', e => {
             const bottomDrawer = document.getElementById('bottom-drawer');
             if(bottomDrawer.classList.contains('edit-mode') || bottomDrawer.classList.contains('stats-mode') || window.isAnimatingJump) return; 
             
-            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
+            // Use the unified summon function to ensure central alignment regardless of where on the marble was clicked
+            window.summonMarble(e.clientX, e.clientY, e.pointerId);
             
             hasEverInteracted = true;
             if (!hasSeenTutorial) {
@@ -2653,38 +2655,29 @@
                 window.saveState();
             }
             marbleInteractionCount++;
-            if (window.isTutorialMode) { window.isTutorialMode = false; document.getElementById('tutorial-tooltip').style.display = 'none'; }
-            window.isDrag=true; fm.classList.add('dragging'); 
-            fm.classList.remove('marble-pulse'); 
-            fm.style.transition = 'none'; 
-            sx=e.clientX; sy=e.clientY; tx=0; ty=0; fm.setPointerCapture(e.pointerId); 
+            fm.setPointerCapture(e.pointerId);
         });
         document.addEventListener('pointermove', e => {
-            if(!window.isDrag) return; 
-            tx=e.clientX-sx; ty=e.clientY-sy; 
-            const rot = tx * 0.2; 
-            fm.style.transform=`translate(${tx}px, ${ty}px) scale(1.15) rotate(${rot}deg)`;
+            if(!window.isDrag || window.isAnimatingJump) return; 
+            
+            const cont = document.querySelector('.app-container');
+            const rect = cont.getBoundingClientRect();
+            
+            // Absolute position snapping to finger
+            const x = (e.clientX - rect.left) - 30;
+            const y = (e.clientY - rect.top) - 30;
+            
+            fm.style.transition = 'none';
+            fm.style.left = x + 'px';
+            fm.style.top = y + 'px';
+            
+            const rot = (e.clientX - sx) * 0.3;
+            fm.style.transform = `scale(1.25) rotate(${rot}deg)`;
+            
             const gl = document.getElementById('marble-glow');
-            if(gl) {
-                // Logic now handled globally in updateFloatingPosition to ensure dispersion
-            }
+            if(gl) gl.style.opacity = '0';
             
-            // Dynamic Lid Logic
-            const lid = document.getElementById(`lid-${currentDayView}`);
-            const contRect = document.querySelector('.app-container').getBoundingClientRect();
-            const jarRect = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
-            const mR = fm.getBoundingClientRect();
-            const mX = mR.left + 30, mY = mR.top + 30;
-            const lX = jarRect.left + jarRect.width / 2, lY = jarRect.top + 50;
-            const dist = Math.sqrt(Math.pow(mX - lX, 2) + Math.pow(mY - lY, 2));
-            
-            const maxDist = 220, minDist = 60;
-            let openness = 1 - (dist - minDist) / (maxDist - minDist);
-            openness = Math.max(0, Math.min(1, openness));
-            
-            if(lid && !window.isAnimatingJump) {
-                // Lid handled by global loop
-            }
+            // Dynamic Lid Logic handled via updateLidProximity in the main loop
         });
         document.addEventListener('pointerup', e => {
             if(!window.isDrag) return; window.isDrag=false; fm.classList.remove('dragging');
@@ -2812,31 +2805,24 @@
         window.handleHabitSwipeStart = (e) => {
             if (window.isAnimatingJump || habitsData.length === 0) return;
             const bd = document.getElementById('bottom-drawer');
-            if (bd.classList.contains('edit-mode') || bd.classList.contains('stats-mode')) return;
+            if (bd.classList.contains('edit-mode') || bd.classList.contains('stats-mode') || bd.classList.contains('onboarding-mode')) return;
+
+            // Avoid triggering if clicking specific UI buttons like the mode trigger or profile
+            if (e.target.closest('.user-pill') || e.target.closest('.mode-trigger') || e.target.closest('.mode-menu')) return;
 
             const touch = e.touches ? e.touches[0] : e;
             window.habitSwipeState.startX = touch.clientX;
             window.habitSwipeState.startY = touch.clientY;
             window.habitSwipeState.scrollStart = document.getElementById('habit-scroller').scrollLeft;
             window.habitSwipeState.isSwiping = false;
+
+            // Global Magnetism: Summon marble to finger instantly
+            window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
+            window.isDrag = true; // Essential: allow move events to fire
             
-            // Instant Magnetize Logic
-            window.isDrag = true;
-            fm.classList.add('dragging');
-            fm.classList.remove('marble-pulse');
-            fm.style.display = 'block';
-            fm.style.opacity = '1';
-            fm.style.visibility = 'visible';
-
-            // Snap marble to touch
-            const cont = document.querySelector('.app-container');
-            const rect = cont.getBoundingClientRect();
-            fm.style.transition = 'transform 0.2s cubic-bezier(0.19, 1, 0.22, 1)';
-            fm.style.left = (touch.clientX - 30 - rect.left) + 'px';
-            fm.style.top = (touch.clientY - 30 - rect.top) + 'px';
-            fm.style.transform = 'scale(1.25)';
-
-            if (e.pointerId) e.currentTarget.setPointerCapture(e.pointerId);
+            if (e.pointerId && e.currentTarget.setPointerCapture) {
+                try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err) {}
+            }
         };
         window.handleHabitSwipeMove = (e) => {
             if (!window.isDrag || window.isAnimatingJump) return;
@@ -2844,22 +2830,27 @@
             const touch = e.touches ? e.touches[0] : e;
             const currentX = touch.clientX;
             const currentY = touch.clientY;
-            const diffX = window.habitSwipeState.startX - currentX;
             
-            // 1. Move Marble (Magnet Logic)
+            // 1. Move Marble Absolute Precision (Snapped to finger)
             const cont = document.querySelector('.app-container');
             const rect = cont.getBoundingClientRect();
-            fm.style.transition = 'none'; // Instant movement during drag
-            fm.style.left = (currentX - 30 - rect.left) + 'px';
-            fm.style.top = (currentY - 30 - rect.top) + 'px';
-            fm.style.transform = `scale(1.15) rotate(${diffX * -0.2}deg)`;
+            const x = (currentX - rect.left) - 30;
+            const y = (currentY - rect.top) - 30;
+            
+            fm.style.transition = 'none';
+            fm.style.left = x + 'px';
+            fm.style.top = y + 'px';
+            
+            const diffX = window.habitSwipeState.startX - currentX;
+            fm.style.transform = `scale(1.25) rotate(${diffX * -0.3}deg)`;
 
             // 2. Simultaneous Habit Scroller Interaction
-            if (Math.abs(diffX) > 5) {
+            const dragDistance = currentX - window.habitSwipeState.startX;
+            if (Math.abs(dragDistance) > 5) {
                 window.habitSwipeState.isSwiping = true;
                 const sc = document.getElementById('habit-scroller');
-                const multiplier = e.currentTarget.id === 'clickable-top-section' ? 1.3 : 1.0;
-                sc.scrollLeft = window.habitSwipeState.scrollStart + (diffX * multiplier);
+                const multiplier = e.currentTarget.id === 'clickable-top-section' ? 1.8 : 1.0;
+                sc.scrollLeft = window.habitSwipeState.scrollStart + (dragDistance * multiplier);
                 if (e.cancelable) e.preventDefault();
             }
         };
@@ -3041,40 +3032,39 @@
         };
 
         window.summonMarble = (clientX, clientY, pId) => {
-            if (habitsData.length === 0 || window.isDrag || window.isAnimatingJump) return;
+            if (habitsData.length === 0 || window.isAnimatingJump) return;
             
-            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate([100, 50, 100]);
-
             const cont = document.querySelector('.app-container');
             const rect = cont.getBoundingClientRect();
 
-            window.isDrag = true;
+            // Clear tutorial
             window.isTutorialMode = false;
             const tt = document.getElementById('tutorial-tooltip');
             if(tt) tt.style.display = 'none';
 
+            // Setup Global Drag Coordinates
+            window.sx = clientX;
+            window.sy = clientY;
+            window.isDrag = true;
+
+            // Visual Activation
             fm.style.display = 'block';
             fm.style.opacity = '1';
             fm.style.visibility = 'visible';
             fm.classList.add('dragging');
             fm.classList.remove('marble-pulse');
             
-            // Handle Pointer Capture if ID exists to maintain drag
-            if (pId !== null && fm.setPointerCapture) {
-                try { fm.setPointerCapture(pId); } catch(e) {}
-            }
-            
-            // Set drag reference points
-            window.sx = clientX;
-            window.sy = clientY;
-            window.tx = 0;
-            window.ty = 0;
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(12);
 
-            fm.style.transition = 'all 0.5s cubic-bezier(0.19, 1, 0.22, 1)';
-            fm.style.left = (clientX - 30 - rect.left) + 'px';
-            fm.style.top = (clientY - 30 - rect.top) + 'px';
+            // Precision Positioning: Center exactly on touch
+            const targetLeft = (clientX - rect.left) - 30;
+            const targetTop = (clientY - rect.top) - 30;
+
+            fm.style.transition = 'none';
+            fm.style.left = targetLeft + 'px';
+            fm.style.top = targetTop + 'px';
             fm.style.transform = 'scale(1.25) rotate(0deg)';
-            
+
             const gl = document.getElementById('marble-glow');
             if(gl) gl.style.opacity = '0';
             
