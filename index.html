@@ -2942,8 +2942,19 @@
                 const opacity = Math.max(0.4, Math.min(1, 1 - (distToJar / 400)));
                 
                 const isCancelled = touch.clientY > window.habitSwipeState.startY + 50;
-                fm.style.opacity = isCancelled ? '0.2' : opacity;
-                fm.style.filter = isCancelled ? 'grayscale(1) blur(8px)' : (opacity < 0.6 ? 'blur(2px)' : 'none');
+                const jarCenterX = jr.left + jr.width / 2 - rect.left;
+                const mouthY = (document.querySelector('.jar-body').offsetTop - 60);
+                const distanceToMouth = Math.sqrt(Math.pow((touch.clientX - rect.left) - jarCenterX, 2) + Math.pow((touch.clientY - rect.top) - mouthY, 2));
+                
+                // Ghost logic: starts very transparent and blurry, becomes solid and sharp near the target
+                const ghostProgress = Math.max(0, Math.min(1, 1 - (distanceToMouth / 400)));
+                const ghostOpacity = isCancelled ? 0.2 : (0.4 + (ghostProgress * 0.6));
+                const ghostBlur = isCancelled ? 8 : (4 * (1 - ghostProgress));
+                const ghostScale = 1.2 + (ghostProgress * 0.3);
+
+                fm.style.opacity = ghostOpacity;
+                fm.style.filter = isCancelled ? 'grayscale(1) blur(8px)' : `blur(${ghostBlur}px) drop-shadow(0 ${10 * (1 - ghostProgress)}px 20px rgba(0,0,0,0.1))`;
+                fm.style.transform = `scale(${ghostScale}) rotate(${(touch.clientX - window.habitSwipeState.startX) * 0.5}deg)`;
             }
         };
         window.handleHabitSwipeEnd = (e) => {
@@ -3157,8 +3168,9 @@
 
             // Visual Activation
             fm.style.display = 'block';
-            fm.style.opacity = '1';
+            fm.style.opacity = '0.4';
             fm.style.visibility = 'visible';
+            fm.style.filter = 'blur(4px)';
             fm.classList.add('dragging');
             fm.classList.remove('marble-pulse');
             
@@ -3171,7 +3183,7 @@
             fm.style.transition = 'none';
             fm.style.left = targetLeft + 'px';
             fm.style.top = targetTop + 'px';
-            fm.style.transform = 'scale(1.25) rotate(0deg)';
+            fm.style.transform = 'scale(1.2) rotate(0deg)';
 
             const gl = document.getElementById('marble-glow');
             if(gl) gl.style.opacity = '0';
@@ -3252,17 +3264,19 @@
             const menu = document.getElementById('mode-menu');
             const overlay = document.getElementById('sidebar-overlay');
             const drawer = document.getElementById('bottom-drawer');
-            menu.classList.remove('active');
-            overlay.classList.remove('active');
+            
+            // Close sidebar
+            if (menu) menu.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
 
             // Close any open popups
-            document.getElementById('reward-popup').classList.remove('active');
-            document.getElementById('profile-popup').classList.remove('active');
+            const rewardPop = document.getElementById('reward-popup');
+            const profilePop = document.getElementById('profile-popup');
+            if (rewardPop) rewardPop.classList.remove('active');
+            if (profilePop) profilePop.classList.remove('active');
 
             switch(mode) {
                 case 'normal':
-                    window.closeStatsMode();
-                    window.closeEditMode();
                     drawer.className = 'bottom-section';
                     document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
                     document.getElementById('drawer-normal-view').classList.add('active');
@@ -3272,14 +3286,27 @@
                     window.openAddMode();
                     break;
                 case 'stats':
-                    window.openStatsMode();
+                    if (habitsData.length > 0) {
+                        window.openStatsMode();
+                    } else {
+                        alert('אנא הוסף הרגל ראשון כדי לראות סטטיסטיקה');
+                        window.openAddMode();
+                    }
                     break;
                 case 'edit':
-                    window.openEditMode();
+                    if (habitsData.length > 0) {
+                        window.openEditMode();
+                    } else {
+                        alert('אין הרגל לערוך, בוא נוסיף אחד!');
+                        window.openAddMode();
+                    }
                     break;
                 case 'reward':
                     window.setAppMode('normal');
-                    setTimeout(() => document.getElementById('reward-popup').classList.add('active'), 300);
+                    setTimeout(() => {
+                        const rp = document.getElementById('reward-popup');
+                        if (rp) rp.classList.add('active');
+                    }, 400);
                     break;
                 case 'empty':
                     window.resetAppState();
