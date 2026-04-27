@@ -385,7 +385,7 @@
         
         .jar-cap-detail {
             will-change: transform;
-            position: absolute; top: 165px; 
+            position: absolute; top: 220px; 
             left: 50%; 
             margin-left: -90px; /* Half of width 180px to center exactly */
             width: 180px; height: 38px;
@@ -432,20 +432,20 @@
         .jar-cap-detail.open { transform: translateY(-50px) rotate(-30deg); }
 
         .jar-opening {
-            position: absolute; top: 189px; left: 50%; transform: translateX(-50%); width: 156px; height: 16px;
+            position: absolute; top: 244px; left: 50%; transform: translateX(-50%); width: 156px; height: 16px;
             border-radius: 50%; background: rgba(255, 255, 255, 0.1); z-index: 15;
             box-shadow: 
                 inset 0 0 10px rgba(0,0,0,0.2);
             border: 1.5px solid rgba(255,255,255,0.1);
         }
         .jar-opening-front {
-            position: absolute; top: 197px; left: 50%; transform: translateX(-50%); width: 156px; height: 8px;
+            position: absolute; top: 252px; left: 50%; transform: translateX(-50%); width: 156px; height: 8px;
             border-radius: 0 0 100px 100px; z-index: 25;
             border-bottom: 2px solid rgba(255,255,255,0.4);
             pointer-events: none;
         }
         .jar-neck {
-            position: absolute; top: 191px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
+            position: absolute; top: 246px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
             background: 
                 linear-gradient(to right, 
@@ -457,7 +457,7 @@
             border: none;
         }
         .jar-neck-front {
-            position: absolute; top: 191px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
+            position: absolute; top: 246px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
             background: 
                 repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 13px),
@@ -495,7 +495,7 @@
         }
         .jar-reflection {
             position: absolute;
-            top: 240px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 600px;
+            top: 295px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 600px;
             border-radius: 40px 40px 120px 120px;
             pointer-events: none;
             z-index: 28;
@@ -528,7 +528,7 @@
         .jar-body {
             z-index: 20;
             position: absolute;
-            top: 240px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 600px;
+            top: 295px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 600px;
             border-radius: 40px 40px 120px 120px;
             background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%);
             border: none;
@@ -1777,7 +1777,7 @@
             const wallOptions = { isStatic: true, friction: 0.001, frictionStatic: 0.01, restitution: 0.3, render: { visible: false } };
             const centerX = w / 2;
             // Mouth of the jar remains at the same height relative to neck/cap
-            window.physicsLid = Bodies.rectangle(centerX, 180, 300, 100, { ...wallOptions, label: 'physics-lid' });
+            window.physicsLid = Bodies.rectangle(centerX, 235, 300, 100, { ...wallOptions, label: 'physics-lid' });
             
             Composite.add(world, [
                 // Floor moved down from 705 to 830 to match taller body (240 + 600 - small padding)
@@ -2471,7 +2471,7 @@
             const color = h ? h.color : '#239B62';
             const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
-            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 215; 
+            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 270; 
             const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(350, Math.min(600, distance * 0.8)), startTime = performance.now();
             
             let lastX = startX, lastY = startY;
@@ -2539,7 +2539,7 @@
                     const currentRadius = 26; // Constant size
 
                     // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
-                    const b = Bodies.circle((contRect.left + targetX) - cr.left, 215, currentRadius, {
+                    const b = Bodies.circle((contRect.left + targetX) - cr.left, 270, currentRadius, {
                         restitution: 0.4, 
                         friction: 0.001, 
                         frictionAir: 0.01, 
@@ -3170,7 +3170,7 @@
                 const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
                 const r = fm.getBoundingClientRect();
                 // Calculate distance between floating marble center and jar mouth center
-                const dist = Math.sqrt(Math.pow((r.left + 30) - (jr.left + jr.width / 2), 2) + Math.pow((r.top + 30) - (jr.top + 50), 2));
+                const dist = Math.sqrt(Math.pow((r.left + 30) - (jr.left + jr.width / 2), 2) + Math.pow((r.top + 30) - (jr.top + 105), 2));
                 
                 // Open lid as marble gets closer than 240px, fully open at 80px
                 openFactor = Math.max(0, Math.min(1, 1 - (dist - 80) / 160));
@@ -3187,7 +3187,7 @@
             
             // Ensure physics lid barrier returns to position when lid is closed
             if (openFactor < 0.1 && !window.isAnimatingJump) {
-                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: 180 });
+                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: 235 });
             }
 
             // Add a small 'rattle' effect when the lid is just starting to unscrew
