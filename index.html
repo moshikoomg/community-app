@@ -35,19 +35,14 @@
             display: flex !important;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
-            background: #f1f5f9;
-            color: #94a3b8;
-            border-radius: 50%;
-            font-size: 20px;
-            margin-bottom: 2px;
+            color: #cbd5e1;
+            font-size: 50px;
+            font-weight: 300;
             transition: all 0.3s;
         }
         .habit-item.add-habit-trigger.active span:first-child {
-            background: #e2e8f0;
             color: #1e293b;
-            transform: scale(1.1);
+            transform: scale(1.2);
         }
 
         /* Dev Tools Styling */
@@ -822,8 +817,8 @@
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 75px); }
         .habit-item {
             flex: 0 0 140px; scroll-snap-align: center; 
-            padding: 20px 0px; font-size: 20px; color: #cbd5e1; font-weight: 800;
-            transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            padding: 20px 0px; font-size: 20px; color: #94a3b8; font-weight: 800;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
             white-space: nowrap; cursor: pointer;
             border: none !important; background: none !important; box-shadow: none !important;
             margin: 0 10px;
@@ -1232,7 +1227,7 @@
             </div>
 
             <!-- Unified Top Status Bar -->
-            <div id="top-status-bar" style="flex: 1; display: flex; flex-direction: column; align-items: center; pointer-events: auto; transform: translateY(0); margin-top: 12px;">
+            <div id="top-status-bar" onpointerdown="event.stopPropagation()" style="flex: 1; display: flex; flex-direction: column; align-items: center; pointer-events: auto; transform: translateY(0); margin-top: 12px;">
                 
                 <div class="drawer-info-pill" style="background: none; border: none; box-shadow: none; padding: 0; min-height: auto;">
                     <span class="day-label" id="drawer-day-label" style="font-size: 11px; opacity: 0.7;">יום 1</span>
@@ -1251,11 +1246,16 @@
             <!-- Habit Scroller and Drop Zone Integrated Above Jar -->
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: var(--jar-base-y); display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 150;">
                 <!-- Habit Scroller Entire Top Area -->
-                <div class="habit-scroller-outer" id="habit-scroller-outer">
+                <div class="habit-scroller-outer" id="habit-scroller-outer" onpointerdown="event.stopPropagation()">
                     <div class="habit-scroller" id="habit-scroller"></div>
                 </div>
                 <!-- Dots Indicators - Relative to scroller bottom -->
                 <div class="dots-container" id="picker-dots" style="pointer-events: auto; position: absolute; top: calc(var(--jar-base-y) - 85px);"></div>
+
+                <!-- Magnet Toggle (Eye) - Repositioned near cap -->
+                <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט" style="position: absolute; top: calc(var(--jar-base-y) - 42px); left: calc(50% - 134px); z-index: 160;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </div>
             </div>
 
             <div id="mode-switcher-container" style="flex-shrink: 0;">
@@ -1300,12 +1300,7 @@
                     </div>
                 </div>
 
-                <!-- Left Corner: Magnet Toggle -->
-                <div style="position: absolute; top: 22px; left: 12px; z-index: 115;">
-                    <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    </div>
-                </div>
+                
 
                 <!-- Right Corner: Marble Drop Zone -->
                 <!-- drop zone moved -->
@@ -1960,7 +1955,7 @@
             c.fill();
 
             // 2. Golden Base
-            let g = c.createRadialGradient(-r * 0.4, -r * 0.4, 0, 0, 0, r * 1.2);
+            let g = c.createRadialGradient(-scaledR * 0.4, -scaledR * 0.4, 0, 0, 0, scaledR * 1.2);
             g.addColorStop(0, "#fff9c4");
             g.addColorStop(0.2, "#fdd835");
             g.addColorStop(0.5, "#fbc02d");
@@ -1990,19 +1985,25 @@
         }
 
         function drawMarble(c, x, y, r, a, col, alpha = 1.0) {
+            const scaledR = r * 1.1; // Increase scale by 10%
             c.save();
             c.globalAlpha = alpha;
             c.translate(x, y);
 
-            // 0. Explicit White Underlay (Ensures perfectly opaque base exactly behind the ball)
+            // 0. Explicit White Underlay
             c.beginPath();
-            c.arc(0, 0, r, 0, Math.PI * 2);
+            c.arc(0, 0, scaledR, 0, Math.PI * 2);
             c.fillStyle = '#ffffff';
             c.fill();
 
+            // Add 2px semi-transparent white outer stroke
+            c.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            c.lineWidth = 2;
+            c.stroke();
+
             // 1. Sharp Outer Boundary
             c.beginPath();
-            c.arc(0, 0, r, 0, Math.PI * 2);
+            c.arc(0, 0, scaledR, 0, Math.PI * 2);
             c.clip();
 
             // 2. Depth Base (Slightly grayed towards edges for dimension)
@@ -2021,14 +2022,14 @@
 
             // 3. Rim Light
             c.beginPath();
-            c.arc(0, 0, r - 0.5, 0, Math.PI * 2);
+            c.arc(0, 0, scaledR - 0.5, 0, Math.PI * 2);
             c.strokeStyle = "rgba(255,255,255,0.45)";
             c.lineWidth = 1;
             c.stroke();
 
             // 4. Internal Swirl
             const baseR = 26;
-            const scale = r / baseR;
+            const scale = scaledR / baseR;
             const widthFactor = 1.0 + (1.0 - scale) * 2.2; 
 
             c.save();
@@ -2040,31 +2041,31 @@
             // Use multiply to respect the parent alpha for ghosting
             c.globalAlpha = alpha * 0.85;
             c.beginPath();
-            c.moveTo(0, r * 0.8);
-            c.bezierCurveTo(r * 0.7 * widthFactor, r * 0.2, -r * 0.7 * widthFactor, -r * 0.2, 0, -r * 0.8);
-            c.bezierCurveTo(-r * 0.3 * widthFactor, -r * 0.2, r * 0.3 * widthFactor, r * 0.2, 0, r * 0.8);
+            c.moveTo(0, scaledR * 0.8);
+            c.bezierCurveTo(scaledR * 0.7 * widthFactor, scaledR * 0.2, -scaledR * 0.7 * widthFactor, -scaledR * 0.2, 0, -scaledR * 0.8);
+            c.bezierCurveTo(-scaledR * 0.3 * widthFactor, -scaledR * 0.2, scaledR * 0.3 * widthFactor, scaledR * 0.2, 0, scaledR * 0.8);
             c.fill();
             c.restore();
 
             // 5. Ultra Sharp Specular Highlight
             c.save();
-            c.translate(-r * 0.45, -r * 0.45);
+            c.translate(-scaledR * 0.45, -scaledR * 0.45);
             c.rotate(-Math.PI / 8);
             c.fillStyle = 'rgba(255, 255, 255, 0.95)';
             c.beginPath();
-            c.ellipse(0, 0, r * 0.18, r * 0.1, 0, 0, Math.PI * 2);
+            c.ellipse(0, 0, scaledR * 0.18, scaledR * 0.1, 0, 0, Math.PI * 2);
             c.fill();
             
             // Secondary secondary reflection - also multiplied
             c.beginPath();
             c.globalAlpha = alpha * 0.4;
-            c.ellipse(r * 0.2, r * 0.3, r * 0.08, r * 0.04, 0, 0, Math.PI * 2);
+            c.ellipse(scaledR * 0.2, scaledR * 0.3, scaledR * 0.08, scaledR * 0.04, 0, 0, Math.PI * 2);
             c.fill();
             c.restore();
 
             // 6. Subtle bottom bounce light
             c.beginPath();
-            c.ellipse(0, r * 0.7, r * 0.5, r * 0.2, 0, 0, Math.PI * 2);
+            c.ellipse(0, scaledR * 0.7, scaledR * 0.5, scaledR * 0.2, 0, 0, Math.PI * 2);
             c.fillStyle = 'rgba(255,255,255,0.2)';
             c.fill();
 
@@ -2439,7 +2440,7 @@
                 el.onclick = (e) => { 
                     e.stopPropagation(); 
                     el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
-                    if (currentHabitIndex === i && fm.style.display === 'none') window.popMarble(); 
+                    // Ball spawn disabled on click as per request
                 };
                 sc.appendChild(el);
             });
@@ -2447,7 +2448,7 @@
             // Add "New Habit" button at the end of the scroller
             const addEl = document.createElement('div');
             addEl.className = 'habit-item add-habit-trigger';
-            addEl.innerHTML = `<span class="habit-goal-tag">+</span><span>הוסף</span>`;
+            addEl.innerHTML = `<span>+</span>`;
             addEl.onclick = (e) => {
                 e.stopPropagation();
                 addEl.scrollIntoView({ behavior: 'smooth', inline: 'center' });
@@ -3310,8 +3311,8 @@
                             // Apply a small rotational torque to help them settle into gaps
                             b.torque += (Math.random() - 0.5) * 0.2;
                         } else {
-                            // Ghost state for non-matching balls
-                            alpha = 0.04;
+                            // Full opacity for non-matching balls as per request
+                            alpha = 1.0;
                             // Float non-matching balls upwards so they don't block the stacking formation
                             Matter.Body.applyForce(b, b.position, { 
                                 x: (b.position.x - 195) * 0.0005, // Repel from center horizontally
@@ -3449,18 +3450,19 @@
                 const translateY = 0;
                 
                 item.style.transform = `scale(${scale})`;
-                item.style.opacity = 0.4 + (0.6 * progress);
+                item.style.opacity = '1'; 
+                item.style.filter = 'none';
                 
                 if (progress > 0.85) {
                     if (i < habitsData.length) {
                         item.style.color = habitsData[i].color;
                     } else {
-                        // Special styling for "Add Habit" item
                         item.style.color = "#1e293b";
                     }
                     item.classList.add('active');
                 } else {
-                    item.style.color = "#94a3b8";
+                    // Non-active habits are now fully visible and more readable
+                    item.style.color = "#94a3b8"; 
                     item.classList.remove('active');
                 }
             });
