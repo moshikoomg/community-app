@@ -2888,7 +2888,7 @@
             renderActiveHabit(); window.popMarble();
         };
 
-        window.habitSwipeState = { startX: 0, startY: 0, gestureType: 'none', scrollStart: 0, threshold: 25 };
+        window.habitSwipeState = { startX: 0, startY: 0, gestureType: 'none', scrollStart: 0, threshold: 8 };
         window.handleHabitSwipeStart = (e) => {
             if (window.isAnimatingJump || habitsData.length === 0) return;
             const bd = document.getElementById('bottom-drawer');
@@ -2914,55 +2914,45 @@
             const absDx = Math.abs(dx);
             const absDy = Math.abs(dy);
 
+            // Default choice mode: swiping left/right
             if (window.habitSwipeState.gestureType === 'none') {
-                // זיהוי כיוון ראשוני ברגישות גבוהה
-                if (absDx > 12 && absDx > absDy) {
-                    window.habitSwipeState.gestureType = 'scroll';
-                } else if (dy < -12 && absDy > absDx) {
-                    window.habitSwipeState.gestureType = 'drop';
-                    window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
-                } else if (dy > 12 && absDy > absDx) {
-                    window.habitSwipeState.gestureType = 'drawer';
+                const sensitivity = window.habitSwipeState.threshold;
+                if (absDx > sensitivity || absDy > sensitivity) {
+                    if (absDx > absDy) {
+                        window.habitSwipeState.gestureType = 'scroll';
+                    } else if (dy < -sensitivity) {
+                        // Initiating upward throw gesture
+                        window.habitSwipeState.gestureType = 'drop';
+                        window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
+                    } else if (dy > sensitivity) {
+                        window.habitSwipeState.gestureType = 'drawer';
+                    }
                 }
                 return;
             }
 
             if (window.habitSwipeState.gestureType === 'scroll') {
                 const sc = document.getElementById('habit-scroller');
-                // גלילה חלקה יותר
                 sc.scrollLeft = window.habitSwipeState.scrollStart - dx;
-            } else if (window.habitSwipeState.gestureType === 'drawer') {
-                // סגירת סטטיסטיקה במשיכה למטה
-                if (dy > 60) {
-                    const bd = document.getElementById('bottom-drawer');
-                    if (bd.classList.contains('stats-mode')) window.closeStatsMode();
-                    else if (bd.classList.contains('edit-mode')) window.closeEditMode();
-                }
             } else if (window.habitSwipeState.gestureType === 'drop') {
                 const cont = document.querySelector('.app-container');
                 const rect = cont.getBoundingClientRect();
+                
+                // Visual feedback for cancellation
+                const isCancelled = dy > -20; // If user dragged up but then moved finger back down
+                
+                if (isCancelled) {
+                    fm.style.opacity = '0.2';
+                    fm.style.filter = 'grayscale(1) blur(10px)';
+                    fm.style.transform = 'scale(0.8)';
+                } else {
+                    fm.style.opacity = '1';
+                    fm.style.filter = 'none';
+                    fm.style.transform = `scale(${1.2 + Math.min(0.3, Math.abs(dy)/500)})`;
+                }
+
                 fm.style.left = (touch.clientX - rect.left - 30) + 'px';
                 fm.style.top = (touch.clientY - rect.top - 30) + 'px';
-                
-                // לוגיקת שקיפות למעקב: הכדור חצי שקוף כשהוא רחוק מהצנצנת ונעשה אטום כשמתקרבים
-                const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
-                const distToJar = Math.abs(touch.clientY - (jr.top + 100));
-                const opacity = Math.max(0.4, Math.min(1, 1 - (distToJar / 400)));
-                
-                const isCancelled = touch.clientY > window.habitSwipeState.startY + 50;
-                const jarCenterX = jr.left + jr.width / 2 - rect.left;
-                const mouthY = (document.querySelector('.jar-body').offsetTop - 60);
-                const distanceToMouth = Math.sqrt(Math.pow((touch.clientX - rect.left) - jarCenterX, 2) + Math.pow((touch.clientY - rect.top) - mouthY, 2));
-                
-                // Ghost logic: starts very transparent and blurry, becomes solid and sharp near the target
-                const ghostProgress = Math.max(0, Math.min(1, 1 - (distanceToMouth / 400)));
-                const ghostOpacity = isCancelled ? 0.2 : (0.4 + (ghostProgress * 0.6));
-                const ghostBlur = isCancelled ? 8 : (4 * (1 - ghostProgress));
-                const ghostScale = 1.2 + (ghostProgress * 0.3);
-
-                fm.style.opacity = ghostOpacity;
-                fm.style.filter = isCancelled ? 'grayscale(1) blur(8px)' : `blur(${ghostBlur}px) drop-shadow(0 ${10 * (1 - ghostProgress)}px 20px rgba(0,0,0,0.1))`;
-                fm.style.transform = `scale(${ghostScale}) rotate(${(touch.clientX - window.habitSwipeState.startX) * 0.5}deg)`;
             }
         };
         window.handleHabitSwipeEnd = (e) => {
@@ -2975,19 +2965,24 @@
                 const contRect = document.querySelector('.app-container').getBoundingClientRect();
                 const r = fm.getBoundingClientRect();
                 
-                // אם המשיכה הייתה מהירה מספיק למעלה או שהכדור כבר גבוה
-                if (finalDy < -40) {
+                // Only release if the swipe finished significantly higher than it started
+                if (finalDy < -80) {
                     performNaturalJump(r.left + 30 - contRect.left, r.top + 30 - contRect.top);
                 } else {
-                    fm.style.opacity = '0';
-                    window.respawnMarble();
+                    // User cancelled by moving back down or not moving high enough
+                    fm.animate([
+                        { opacity: fm.style.opacity, transform: fm.style.transform },
+                        { opacity: 0, transform: 'scale(0.2)' }
+                    ], { duration: 200, easing: 'ease-in' }).onfinish = () => window.respawnMarble();
                 }
             }
 
             fm.classList.remove('dragging');
             fm.style.filter = 'none';
             window.habitSwipeState.gestureType = 'none';
-            if (e.pointerId && e.currentTarget.releasePointerCapture) e.currentTarget.releasePointerCapture(e.pointerId);
+            if (e.pointerId && e.currentTarget.releasePointerCapture) {
+                try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(err) {}
+            }
         };
         window.handleTopSectionClick = (e) => {
             if (window.habitSwipeState.isSwiping || window.isDrag || window.isAnimatingJump) return;
