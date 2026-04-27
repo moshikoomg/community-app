@@ -562,7 +562,8 @@
         /* --- Drawer --- */
         .bottom-section {
             background: transparent; 
-            z-index: 100; display: flex; flex-direction: column; align-items: center; 
+            z-index: 10000; /* השכבה העליונה ביותר */
+            display: flex; flex-direction: column; align-items: center; 
             position: absolute; bottom: 0; left: 0; width: 100%;
             height: 120px; box-sizing: border-box;
             transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
@@ -575,6 +576,7 @@
         .bottom-section.stats-mode, 
         .bottom-section.onboarding-mode {
             height: 100%;
+            left: 0; /* וידוא היצמדות לשמאל */
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(20px) saturate(1.5);
             pointer-events: auto;
@@ -755,10 +757,10 @@
 
         .habit-scroller-outer {
             position: absolute;
-            top: 60px;
+            top: 50px;
             left: 0;
             width: 100%;
-            height: calc(var(--jar-base-y) - 100px);
+            height: calc(var(--jar-base-y) - 130px);
             display: flex;
             align-items: center;
             z-index: 200;
@@ -1250,7 +1252,7 @@
                     <div class="habit-scroller" id="habit-scroller"></div>
                 </div>
                 <!-- Dots Indicators - Relative to scroller bottom -->
-                <div class="dots-container" id="picker-dots" style="pointer-events: auto; position: absolute; top: calc(var(--jar-base-y) - 85px);"></div>
+                <div class="dots-container" id="picker-dots" style="pointer-events: auto; position: absolute; top: calc(var(--jar-base-y) - 102px); z-index: 220; width: 100%; justify-content: center; gap: 8px; padding: 10px 0; transition: all 0.3s ease-out;"></div>
 
                 <!-- Magnet Toggle (Eye) - Repositioned near cap -->
                 <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט" style="position: absolute; top: calc(var(--jar-base-y) - 42px); left: calc(50% - 134px); z-index: 160;">
@@ -1799,7 +1801,7 @@
         }
         window.buildJars = buildJars;
 
-        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 1.0; // כוח כבידה טבעי המדמה 9.8m/s^2 במערכת פיקסלים
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 5.0; // כבידה עדינה יותר למניעת דחיסה מוגזמת
         engine.positionIterations = 10;
         engine.velocityIterations = 10;
         let currentBalls = [];
@@ -1910,14 +1912,15 @@
             // Always spawn ALL balls for the day into the physics world
             saved.forEach(d => {
                 const b = Bodies.circle(d.x, d.y, 26, {
-                    restitution: 0.4, 
-                    friction: 0.001, 
-                    frictionAir: 0.01, 
-                    frictionStatic: 0.005, 
-                    density: 0.04,
-                    angle: d.angle, 
-                    label: 'habit-ball', 
-                    render: { fillStyle: d.color } 
+                    isStatic: false,
+                    restitution: 0.3,
+                    friction: 0.05,
+                    frictionAir: 0.01,
+                    frictionStatic: 0.1,
+                    density: 0.5,
+                    angle: d.angle,
+                    label: 'habit-ball',
+                    render: { fillStyle: d.color }
                 });
                 b.habitId = d.habitId;
                 b.isGift = d.isGift || false;
@@ -2605,13 +2608,14 @@
 
                     // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
                     const b = Bodies.circle((contRect.left + targetX) - cr.left, targetY, currentRadius, {
-                        restitution: 0.4, 
-                        friction: 0.001, 
-                        frictionAir: 0.01, 
-                        frictionStatic: 0.005, 
-                        density: 0.04, 
-                        label: 'habit-ball', 
-                        render: { fillStyle: h.color } 
+                        isStatic: false,
+                        restitution: 0.3,
+                        friction: 0.05,
+                        frictionAir: 0.01,
+                        frictionStatic: 0.1,
+                        density: 0.5,
+                        label: 'habit-ball',
+                        render: { fillStyle: h.color }
                     });
                     b.habitId = h.id;
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
