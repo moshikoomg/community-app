@@ -257,6 +257,7 @@
         
 
         :root {
+            --jar-base-y: 44dvh;
             --glow-color: rgba(35, 155, 98, 0.3);
             --light-pos-x: 50%;
             --light-pos-y: 30%;
@@ -373,19 +374,19 @@
         .jar-slide.active-slide.locked { opacity: 0.6; }
 
         .jar-wrapper { 
-            position: relative; width: 100%; max-width: 400px; height: 850px; direction: rtl; z-index: 2; 
+            position: relative; width: 100%; max-width: 400px; height: 100%; direction: rtl; z-index: 2; 
             transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1);
             transform: scale(0.9); 
         }
         .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
-        canvas#physics-canvas { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 26; touch-action: none; height: 850px; width: 100%; }
+        canvas#physics-canvas { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 26; touch-action: none; height: 950px; width: 100%; }
 
         /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
         .jar-cap-detail {
             will-change: transform;
-            position: absolute; top: 280px; 
+            position: absolute; top: calc(var(--jar-base-y) - 70px); 
             left: 50%; 
             margin-left: -90px; /* Half of width 180px to center exactly */
             width: 180px; height: 38px;
@@ -432,20 +433,20 @@
         .jar-cap-detail.open { transform: translateY(-50px) rotate(-30deg); }
 
         .jar-opening {
-            position: absolute; top: 304px; left: 50%; transform: translateX(-50%); width: 156px; height: 16px;
+            position: absolute; top: calc(var(--jar-base-y) - 46px); left: 50%; transform: translateX(-50%); width: 156px; height: 16px;
             border-radius: 50%; background: rgba(255, 255, 255, 0.1); z-index: 15;
             box-shadow: 
                 inset 0 0 10px rgba(0,0,0,0.2);
             border: 1.5px solid rgba(255,255,255,0.1);
         }
         .jar-opening-front {
-            position: absolute; top: 312px; left: 50%; transform: translateX(-50%); width: 156px; height: 8px;
+            position: absolute; top: calc(var(--jar-base-y) - 38px); left: 50%; transform: translateX(-50%); width: 156px; height: 8px;
             border-radius: 0 0 100px 100px; z-index: 25;
             border-bottom: 2px solid rgba(255,255,255,0.4);
             pointer-events: none;
         }
         .jar-neck {
-            position: absolute; top: 306px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
+            position: absolute; top: calc(var(--jar-base-y) - 44px); left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
             background: 
                 linear-gradient(to right, 
@@ -457,7 +458,7 @@
             border: none;
         }
         .jar-neck-front {
-            position: absolute; top: 306px; left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
+            position: absolute; top: calc(var(--jar-base-y) - 44px); left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
             border-radius: 12px 12px 0 0;
             background: 
                 repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 13px),
@@ -495,7 +496,7 @@
         }
         .jar-reflection {
             position: absolute;
-            top: 350px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 480px;
+            top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 410px;
             border-radius: 40px 40px 120px 120px;
             pointer-events: none;
             z-index: 28;
@@ -528,7 +529,7 @@
         .jar-body {
             z-index: 20;
             position: absolute;
-            top: 350px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 480px;
+            top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; height: 440px;
             border-radius: 40px 40px 120px 120px;
             background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%);
             border: none;
@@ -565,7 +566,7 @@
             background: transparent; 
             z-index: 100; display: flex; flex-direction: column; align-items: center; 
             position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 185px; box-sizing: border-box;
+            height: 120px; box-sizing: border-box;
             transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
             pointer-events: auto;
             padding-bottom: env(safe-area-inset-bottom, 20px);
@@ -1768,7 +1769,7 @@
             const container = document.querySelector('.app-container');
             const w = Math.min(container.offsetWidth, 420);
             canvas.width = w;
-            canvas.height = 850;
+            canvas.height = 950;
             updatePhysicsBoundaries(w);
         }
         
@@ -1776,21 +1777,40 @@
             Composite.clear(world, false);
             const wallOptions = { isStatic: true, friction: 0.001, frictionStatic: 0.01, restitution: 0.3, render: { visible: false } };
             const centerX = w / 2;
-            // Mouth of the jar remains at the same height relative to neck/cap
-            window.physicsLid = Bodies.rectangle(centerX, 295, 300, 100, { ...wallOptions, label: 'physics-lid' });
+            
+            // Calculate dynamic Y positions based on CSS variables and element layout
+            const bodyEl = document.querySelector('.jar-body');
+            const baseY = bodyEl ? bodyEl.offsetTop : (window.innerHeight * 0.35);
+            const neckY = baseY - 45;
+            const mouthY = baseY - 55;
+            const jarHeight = 410;
+            const bottomY = baseY + jarHeight - 5;
+            
+            // Lid barrier positioned at the top of the mouth opening
+            window.physicsLid = Bodies.rectangle(centerX, mouthY - 10, 180, 60, { ...wallOptions, label: 'physics-lid' });
             
             Composite.add(world, [
-                // Floor moved down from 705 to 830 to match taller body (240 + 600 - small padding)
-                Bodies.rectangle(centerX, 830, w + 100, 100, wallOptions),
-                // Diagonals moved down from 670 to 790
-                Bodies.rectangle(centerX - 155, 795, 140, 100, { ...wallOptions, angle: Math.PI / 5 }),
-                Bodies.rectangle(centerX + 155, 795, 140, 100, { ...wallOptions, angle: -Math.PI / 5 }),
-                Bodies.rectangle(-25, 400, 50, 1200, wallOptions),
-                Bodies.rectangle(w + 25, 400, 50, 1200, wallOptions),
-                Bodies.rectangle(centerX - 110, 255, 120, 80, { ...wallOptions, angle: -Math.PI / 4.5 }),
-                Bodies.rectangle(centerX + 110, 255, 120, 80, { ...wallOptions, angle: Math.PI / 4.5 }),
-                Bodies.rectangle(centerX - 82, 193, 30, 150, wallOptions),
-                Bodies.rectangle(centerX + 82, 193, 30, 150, wallOptions),
+                // Bottom Floor
+                Bodies.rectangle(centerX, bottomY, 180, 30, wallOptions),
+                
+                // Rounded Bottom Corners
+                Bodies.rectangle(centerX - 130, bottomY - 13, 120, 40, { ...wallOptions, angle: Math.PI / 8 }),
+                Bodies.rectangle(centerX + 130, bottomY - 13, 120, 40, { ...wallOptions, angle: -Math.PI / 8 }),
+                Bodies.rectangle(centerX - 175, bottomY - 53, 100, 40, { ...wallOptions, angle: Math.PI / 4 }),
+                Bodies.rectangle(centerX + 175, bottomY - 53, 100, 40, { ...wallOptions, angle: -Math.PI / 4 }),
+
+                // Body Side Walls
+                Bodies.rectangle(centerX - 195, baseY + 220, 30, 420, wallOptions),
+                Bodies.rectangle(centerX + 195, baseY + 220, 30, 420, wallOptions),
+                
+                // Shoulders
+                Bodies.rectangle(centerX - 150, baseY + 35, 140, 40, { ...wallOptions, angle: Math.PI / 4 }),
+                Bodies.rectangle(centerX + 150, baseY + 35, 140, 40, { ...wallOptions, angle: -Math.PI / 4 }),
+                
+                // Neck Walls
+                Bodies.rectangle(centerX - 78, neckY, 20, 140, wallOptions),
+                Bodies.rectangle(centerX + 78, neckY, 20, 140, wallOptions),
+                
                 window.physicsLid
             ]);
 
@@ -2471,7 +2491,9 @@
             const color = h ? h.color : '#239B62';
             const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
-            const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 330; 
+            const targetX = jr.left - contRect.left + jr.width / 2;
+            const bodyTop = document.querySelector('.jar-body').offsetTop;
+            const targetY = bodyTop - 20;
             const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(350, Math.min(600, distance * 0.8)), startTime = performance.now();
             
             let lastX = startX, lastY = startY;
@@ -2539,7 +2561,7 @@
                     const currentRadius = 26; // Constant size
 
                     // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
-                    const b = Bodies.circle((contRect.left + targetX) - cr.left, 330, currentRadius, {
+                    const b = Bodies.circle((contRect.left + targetX) - cr.left, targetY, currentRadius, {
                         restitution: 0.4, 
                         friction: 0.001, 
                         frictionAir: 0.01, 
@@ -2551,7 +2573,7 @@
                     b.habitId = h.id;
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
                     // Disable lid barrier for a moment to let the ball in
-                    Matter.Body.setPosition(physicsLid, { x: 170, y: -200 });
+                    Matter.Body.setPosition(physicsLid, { x: 170, y: -300 });
                     Matter.Body.setVelocity(b, {x:0, y:8}); 
                     currentBalls.push(b); 
                     Composite.add(world, b); 
@@ -3170,10 +3192,11 @@
                 const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
                 const r = fm.getBoundingClientRect();
                 // Calculate distance between floating marble center and jar mouth center
-                const dist = Math.sqrt(Math.pow((r.left + 30) - (jr.left + jr.width / 2), 2) + Math.pow((r.top + 30) - (jr.top + 105), 2));
+                const bodyTop = document.querySelector('.jar-body').offsetTop;
+                const dist = Math.sqrt(Math.pow((r.left + 30) - (jr.left + jr.width / 2), 2) + Math.pow((r.top + 30) - (jr.top + bodyTop - 160), 2));
                 
                 // Open lid as marble gets closer than 240px, fully open at 80px
-                openFactor = Math.max(0, Math.min(1, 1 - (dist - 80) / 160));
+                openFactor = Math.max(0, Math.min(1, 1 - (dist - 40) / 180));
                 
                 // Disable transition during active drag for 1:1 response
                 lid.style.transition = 'none';
@@ -3187,7 +3210,8 @@
             
             // Ensure physics lid barrier returns to position when lid is closed
             if (openFactor < 0.1 && !window.isAnimatingJump) {
-                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: 295 });
+                 const bodyTop = document.querySelector('.jar-body')?.offsetTop || (window.innerHeight * 0.44);
+                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: bodyTop - 65 });
             }
 
             // Add a small 'rattle' effect when the lid is just starting to unscrew
@@ -3221,7 +3245,7 @@
                         if (isMatching) {
                             // Gentle Magnetic Clustering: Soft pull to bottom-center
                             const dx = 195 - b.position.x;
-                            const dy = 550 - b.position.y; 
+                            const dy = 780 - b.position.y; 
                             
                             Matter.Body.applyForce(b, b.position, {
                                 x: dx * 0.0035, // Reduced from 0.012 for a softer glide
