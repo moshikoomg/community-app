@@ -807,6 +807,7 @@
             overflow-x: auto; 
             scroll-snap-type: x mandatory; 
             scrollbar-width: none; 
+            touch-action: pan-x; /* Ensures native horizontal scroll is prioritized */
             width: 100%;
             height: 100%;
             padding: 0; 
@@ -2887,7 +2888,7 @@
             renderActiveHabit(); window.popMarble();
         };
 
-        window.habitSwipeState = { startX: 0, startY: 0, gestureType: 'none', scrollStart: 0, threshold: 12 };
+        window.habitSwipeState = { startX: 0, startY: 0, gestureType: 'none', scrollStart: 0, threshold: 25 };
         window.handleHabitSwipeStart = (e) => {
             if (window.isAnimatingJump || habitsData.length === 0) return;
             const bd = document.getElementById('bottom-drawer');
@@ -2912,8 +2913,13 @@
             const dy = touch.clientY - window.habitSwipeState.startY;
 
             if (window.habitSwipeState.gestureType === 'none') {
-                if (Math.abs(dx) > window.habitSwipeState.threshold) window.habitSwipeState.gestureType = 'scroll';
-                else if (dy < -window.habitSwipeState.threshold) {
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+
+                // Logic: If movement is primarily horizontal, it's a scroll. If primarily vertical-up, it's a drop.
+                if (absDx > window.habitSwipeState.threshold && absDx > absDy) {
+                    window.habitSwipeState.gestureType = 'scroll';
+                } else if (dy < -window.habitSwipeState.threshold && absDy > absDx) {
                     window.habitSwipeState.gestureType = 'drop';
                     window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
                 }
