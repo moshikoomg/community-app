@@ -363,8 +363,7 @@
             height: 100%; display: flex; justify-content: center; 
             align-items: flex-end; scroll-snap-align: center; scroll-snap-stop: always; position: relative; 
             box-sizing: border-box; 
-            padding-top: 20px;
-            padding-bottom: 0px; 
+            padding: 0; 
             margin: 0;
             transition: opacity 0.5s ease;
             opacity: 0.4; 
@@ -379,7 +378,7 @@
             transform: scale(0.9); 
         }
         .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
-        canvas#physics-canvas { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 26; touch-action: none; height: 950px; width: 100%; }
+        canvas#physics-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 26; touch-action: none; }
 
         /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -496,8 +495,9 @@
         }
         .jar-reflection {
             position: absolute;
-            top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px;
+            top: var(--jar-base-y); left: 0; width: 100%;
             height: calc(100% - var(--jar-base-y));
+            bottom: 0;
             border-radius: 60px 60px 0 0;
             pointer-events: none;
             z-index: 28;
@@ -530,9 +530,10 @@
         .jar-body {
             z-index: 20;
             position: absolute;
-            top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px;
+            top: var(--jar-base-y); left: 0; width: 100%;
             height: calc(100% - var(--jar-base-y));
-            border-radius: 60px 60px 0 0;
+            bottom: 0;
+            border-radius: 64px 64px 0 0;
             background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%);
             border: none;
             backdrop-filter: none;
@@ -1827,14 +1828,14 @@
             const baseY = bodyEl ? bodyEl.offsetTop : (window.innerHeight * 0.35);
             const neckY = baseY - 45;
             const mouthY = baseY - 55;
-            const bottomY = canvas.height - 2;
+            const bottomY = canvas.height;
             
             // Lid barrier positioned at the top of the mouth opening
             window.physicsLid = Bodies.rectangle(centerX, mouthY - 10, 180, 60, { ...wallOptions, label: 'physics-lid' });
             
             Composite.add(world, [
-                // Bottom Floor
-                Bodies.rectangle(centerX, bottomY, 180, 30, wallOptions),
+                // Bottom Floor - widened to catch balls in corners
+                Bodies.rectangle(centerX, bottomY + 10, w * 1.5, 20, wallOptions),
                 
                 // Rounded Bottom Corners
                 Bodies.rectangle(centerX - 130, bottomY - 10, 150, 40, { ...wallOptions, angle: Math.PI / 12 }),
