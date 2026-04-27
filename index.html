@@ -1164,7 +1164,8 @@
 
         <!-- Days Display Removed from top -->
 
-        <div class="top-section" id="clickable-top-section" onclick="window.handleTopSectionClick(event)" 
+        <div class="top-section" id="clickable-top-section" 
+             onclick="window.handleTopSectionClick(event)" 
              ontouchstart="window.handleHabitSwipeStart(event)" 
              ontouchmove="window.handleHabitSwipeMove(event)" 
              ontouchend="window.handleHabitSwipeEnd(event)">
@@ -2798,23 +2799,30 @@
         window.habitSwipeState = { startX: 0, isSwiping: false, scrollStart: 0 };
         window.handleHabitSwipeStart = (e) => {
             if (window.isDrag || window.isAnimatingJump) return;
+            // Only start habit swipe if we aren't interacting with the marble
             window.habitSwipeState.startX = e.touches[0].clientX;
             window.habitSwipeState.scrollStart = document.getElementById('habit-scroller').scrollLeft;
             window.habitSwipeState.isSwiping = false;
         };
         window.handleHabitSwipeMove = (e) => {
+            // If user is dragging the marble, don't swipe habits
             if (window.isDrag || window.isAnimatingJump) return;
+            
             const currentX = e.touches[0].clientX;
             const diffX = window.habitSwipeState.startX - currentX;
 
+            // Sensitivity threshold
             if (!window.habitSwipeState.isSwiping && Math.abs(diffX) > 10) {
                 window.habitSwipeState.isSwiping = true;
             }
 
             if (window.habitSwipeState.isSwiping) {
                 const sc = document.getElementById('habit-scroller');
-                // High-fidelity scrolling logic mirroring standard scroll behavior
-                sc.scrollLeft = window.habitSwipeState.scrollStart + diffX;
+                // We multiply the diff slightly for a more responsive feel when swiping the larger jar area
+                const multiplier = e.currentTarget.id === 'clickable-top-section' ? 1.2 : 1.0;
+                sc.scrollLeft = window.habitSwipeState.scrollStart + (diffX * multiplier);
+                
+                // Prevent default browser behavior (scrolling the page) while switching habits
                 if (e.cancelable) e.preventDefault();
             }
         };
