@@ -711,7 +711,7 @@
             width: 0%;
             background: var(--habit-active-color, var(--primary-color));
             border-radius: 10px;
-            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
             box-shadow: 0 0 10px var(--glow-color);
         }
         .drawer-info-pill.activated .count-label {
@@ -741,24 +741,27 @@
         .habit-scroller::before, .habit-scroller::after { content: ''; flex: 0 0 calc(50% - 45px); }
         .habit-item {
             flex: 0 0 auto; scroll-snap-align: center; 
-            padding: 12px 28px; font-size: 16px; color: #cbd5e1; font-weight: 800;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 12px 32px; font-size: 16px; color: #cbd5e1; font-weight: 800;
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease, color 0.3s ease;
             white-space: nowrap; cursor: pointer;
             border: none !important; background: none !important; box-shadow: none !important;
-            margin: 0 8px;
+            margin: 0 4px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             letter-spacing: -0.2px;
             gap: 4px;
+            will-change: transform, opacity;
         }
         .habit-item.active {
-            font-size: 19px;
-            transform: scale(1.0);
+            font-size: 24px;
+            transform: scale(1.2) translateY(5px);
             filter: blur(0);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0px;
             color: #94a3b8;
+            font-weight: 900;
+            z-index: 10;
         }
         .habit-item.activated.active {
             color: var(--habit-active-color, var(--text-main));
@@ -952,21 +955,19 @@
 
         @keyframes countFloatUp {
             0% {
-                transform: translate(0, 0) scale(0.6);
+                transform: translate(0, 20px) scale(0.6);
                 opacity: 0;
-                filter: blur(8px);
+                filter: blur(10px);
             }
-            35% {
-                /* Moves leftward and up toward center */
-                transform: translate(-70px, -80px) scale(2.2);
+            40% {
+                transform: translate(-70px, -120px) scale(2.5);
                 opacity: 1;
                 filter: blur(0px);
             }
             100% {
-                /* Lands in the visual center of the jar area */
-                transform: translate(-140px, -280px) scale(3.8);
+                transform: translate(-140px, -320px) scale(4.2);
                 opacity: 0;
-                filter: blur(20px);
+                filter: blur(25px);
             }
         }
 
@@ -1170,9 +1171,9 @@
                     <div class="habit-scroller" id="habit-scroller" style="height: 60px;"></div>
                 </div>
                 <!-- Dots Indicators -->
-                <div class="dots-container" id="picker-dots" style="pointer-events: auto; margin-top: -5px; margin-bottom: 5px;"></div>
+                <div class="dots-container" id="picker-dots" style="pointer-events: auto; margin-top: 5px; margin-bottom: 12px;"></div>
                 <!-- Marble Drop Zone Second (Bottom) -->
-                <div id="marble-drop-zone-container" style="width: 60px; height: 60px; position: relative; margin-top: 5px;">
+                <div id="marble-drop-zone-container" style="width: 60px; height: 60px; position: relative; margin-top: 5px; pointer-events: auto;" onclick="window.popMarble()">
                     <div id="marble-drop-zone" style="width: 60px; height: 60px; pointer-events: none;"></div>
                 </div>
             </div>
@@ -1336,7 +1337,7 @@
 
         <div id="tutorial-tooltip" class="tutorial-bounce">גרור אותי לצנצנת! 👆</div>
         <div id="marble-glow" class="marble-pulse"></div>
-        <canvas id="floating-marble" width="60" height="60"></canvas>
+        <canvas id="floating-marble" width="60" height="60" style="display: none;"></canvas>
 
         <!-- Dev Tools -->
     
@@ -1538,6 +1539,22 @@
             reader.readAsDataURL(file);
         };
 
+        function animateValue(obj, start, end, duration) {
+            if (start === end) return;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                // Ease Out Quint
+                const easedProgress = 1 - Math.pow(1 - progress, 5);
+                obj.innerHTML = Math.floor(easedProgress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
         function updateStatsUI() {
             if(!habitsData[currentHabitIndex]) return;
             const h = habitsData[currentHabitIndex];
@@ -1548,29 +1565,31 @@
             const countGoal = document.getElementById('drawer-goal-count');
             const progressFill = document.getElementById('drawer-progress-fill');
             
-            // Calculate Growth Streak (Days with Breakthrough > 0)
             let growthStreak = 0;
             const GROWTH_TARGET = 7;
             
-            // Look back from current day to find consecutive breakthrough days
             for (let i = currentDayView; i >= 0; i--) {
                 const dayHabit = userStats.daysData[i]?.habits[h.id];
                 if (dayHabit && dayHabit.breakthrough > 0) {
                     growthStreak++;
                 } else if (i < currentDayView) {
-                    // Only break if it's a past day. Today can still be worked on.
                     break;
                 }
             }
-            // Cap streak at 7 for visual purposes until reset
             const effectiveStreak = Math.min(GROWTH_TARGET, growthStreak);
 
             if(dayLabel) dayLabel.innerText = `יום ${currentDayView + 1}`;
             if(countCur && countGoal) {
                 const currentCount = currentBalls.filter(b => b.habitId === h.id && !b.isGift).length;
+                const previousVal = parseInt(countCur.innerText) || 0;
                 const isActivated = currentCount > 0;
 
-                countCur.innerText = currentCount;
+                if (previousVal !== currentCount) {
+                    animateValue(countCur, previousVal, currentCount, 800);
+                } else {
+                    countCur.innerText = currentCount;
+                }
+
                 countGoal.innerText = `${h.amount || 1} ${h.unit || 'פעמים'}`;
 
                 const habitHeaderName = document.getElementById('active-habit-header-name');
@@ -1579,7 +1598,6 @@
                     habitHeaderName.style.color = h.color;
                 }
 
-                // Progress bar now represents progress towards Leveling Up (Growth)
                 const progressPercent = (effectiveStreak / GROWTH_TARGET) * 100;
                 if (progressFill) {
                     progressFill.style.width = progressPercent + '%';
@@ -1967,16 +1985,6 @@
             drawMarble(uctx, 30, 30, 26, 0, h.color);
             
             if(!window.isAnimatingJump && habitsData.length > 0) {
-                if (fm.style.display === 'none') {
-                    fm.style.display = 'block';
-                    fm.style.opacity = '1';
-                    fm.style.visibility = 'visible';
-                }
-                const glow = document.getElementById('marble-glow');
-                if (glow) {
-                    glow.style.opacity = '0.6';
-                    glow.style.background = `radial-gradient(circle, ${h.color} 0%, transparent 70%)`;
-                }
                 updateFloatingPosition();
             }
             updateStatsUI(); renderDots();
@@ -2335,7 +2343,10 @@
                 }
                 window.respawnMarble();
                 if (habitsData.length === 1) {
-                    setTimeout(() => window.triggerFirstHabitReward(), 1000);
+                    setTimeout(() => {
+                        window.triggerFirstHabitReward();
+                        window.popMarble();
+                    }, 1000);
                 }
             }, 100);
             window.saveState();
@@ -2407,18 +2418,13 @@
             fm.style.transition = initTrans;
             fm.style.transform = 'scale(0.1)';
             fm.style.opacity = '0';
-            fm.style.display = 'block';
-            fm.style.visibility = 'visible';
+            fm.style.display = 'none';
+            fm.style.visibility = 'hidden';
 
             updateFloatingPosition();
             
             requestAnimationFrame(() => {
                 renderActiveHabit();
-                // Faster, smoother entry to maintain continuity
-                const spawnTrans = 'transform 0.6s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.4s ease-out';
-                fm.style.transition = spawnTrans;
-                fm.style.transform = 'scale(1)';
-                fm.style.opacity = '1';
 
                 setTimeout(() => {
                     if(!window.isDrag && !window.isAnimatingJump) {
@@ -2494,13 +2500,14 @@
             const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
             const targetX = jr.left - contRect.left + jr.width / 2, targetY = (jr.top - contRect.top) + 60; 
-            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(200, Math.min(400, distance * 0.7)), startTime = performance.now();
+            const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(350, Math.min(600, distance * 0.8)), startTime = performance.now();
             
             let lastX = startX, lastY = startY;
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
-                const curX = startX + (targetX - startX) * p, jumpH = 0, curY = startY + (targetY - startY) * p;
+                const easedP = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+                const curX = startX + (targetX - startX) * easedP, curY = startY + (targetY - startY) * easedP;
                 
                 // Calculate momentary velocity and angle for smear effect
                 const vx = curX - lastX, vy = curY - lastY;
@@ -2887,6 +2894,11 @@
             const isExtended = bd.classList.contains('stats-mode') || 
                                bd.classList.contains('edit-mode') || 
                                bd.classList.contains('onboarding-mode');
+
+            if (!isExtended && habitsData.length > 0) {
+                window.popMarble();
+                return;
+            }
 
             if (!isExtended) return;
 
@@ -3381,11 +3393,12 @@
                     closest = i;
                 }
 
-                const maxDist = 150; 
-                let progress = Math.max(0, 1 - (dist / maxDist));
-                const scale = 0.85 + (0.15 * progress);
+                const maxDist = 120; 
+                let progress = Math.pow(Math.max(0, 1 - (dist / maxDist)), 2);
+                const scale = 0.75 + (0.55 * progress); 
+                const translateY = 15 * progress;
                 
-                item.style.transform = `scale(${scale})`;
+                item.style.transform = `scale(${scale}) translateY(${translateY}px)`;
                 item.style.opacity = 0.4 + (0.6 * progress);
                 
                 if (progress > 0.85) {
@@ -3412,7 +3425,6 @@
 
                 if (closest < habitsData.length) {
                     currentHabitIndex = closest;
-                    fm.style.display = 'block'; 
                     renderActiveHabit(true);
                 } else {
                     // If scrolling to the "Add" trigger, hide marble
