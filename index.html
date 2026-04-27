@@ -373,7 +373,7 @@
             transform: scale(0.9); 
         }
         .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
-        canvas#physics-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 26; touch-action: none; }
+        canvas#physics-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; touch-action: none; pointer-events: none; background: transparent; }
 
         /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -523,7 +523,7 @@
         }
 
         .jar-body {
-            z-index: 20;
+            z-index: 10;
             position: absolute;
             top: var(--jar-base-y); left: 0; width: 100%;
             height: calc(100% - var(--jar-base-y));
@@ -1801,9 +1801,9 @@
         }
         window.buildJars = buildJars;
 
-        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 5.0; // כבידה עדינה יותר למניעת דחיסה מוגזמת
-        engine.positionIterations = 10;
-        engine.velocityIterations = 10;
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 1.2; // כבידה יציבה יותר
+        engine.positionIterations = 6;
+        engine.velocityIterations = 6;
         let currentBalls = [];
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
         
@@ -1817,15 +1817,13 @@
         
         function updatePhysicsBoundaries(w) {
             Composite.clear(world, false);
-            const wallOptions = { isStatic: true, friction: 0.001, frictionStatic: 0.01, restitution: 0.3, render: { visible: false } };
+            const wallOptions = { isStatic: true, friction: 0.05, frictionStatic: 0.1, restitution: 0.4, render: { visible: false } };
             const centerX = w / 2;
-            
-            // Calculate dynamic Y positions based on CSS variables and element layout
             const bodyEl = document.querySelector('.jar-body');
-            const baseY = bodyEl ? bodyEl.offsetTop : (window.innerHeight * 0.35);
+            const baseY = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
             const neckY = baseY - 45;
-            const mouthY = baseY - 55;
-            const bottomY = canvas.height;
+            const mouthY = baseY - 60;
+            const bottomY = canvas.height - 20;
             
             // Lid barrier positioned at the top of the mouth opening
             window.physicsLid = Bodies.rectangle(centerX, mouthY - 10, 180, 60, { ...wallOptions, label: 'physics-lid' });
@@ -1937,30 +1935,20 @@
         const fm = document.getElementById('floating-marble');
 
         function drawGift(c, x, y, r, a) {
+            const sR = r * 1.15;
             c.save();
             c.translate(x, y);
             
-            // Add a soft floor shadow if the ball is low enough
-            if (y > 520) {
-                c.save();
-                c.translate(0, r * 1.05);
-                c.scale(1, 0.2);
-                c.beginPath();
-                c.arc(0, 0, r, 0, Math.PI * 2);
-                c.fillStyle = 'rgba(0,0,0,0.15)';
-                c.fill();
-                c.restore();
-            }
+            
 
             c.beginPath();
-            c.arc(0, 0, r, 0, Math.PI * 2);
+            c.arc(0, 0, sR, 0, Math.PI * 2);
             c.clip();
 
             c.fillStyle = '#ffffff';
             c.fill();
 
-            // 2. Golden Base
-            let g = c.createRadialGradient(-scaledR * 0.4, -scaledR * 0.4, 0, 0, 0, scaledR * 1.2);
+            let g = c.createRadialGradient(-sR * 0.4, -sR * 0.4, 0, 0, 0, sR * 1.2);
             g.addColorStop(0, "#fff9c4");
             g.addColorStop(0.2, "#fdd835");
             g.addColorStop(0.5, "#fbc02d");
@@ -1968,22 +1956,20 @@
             c.fillStyle = g;
             c.fill();
 
-            // Internal Sparkle Swirl
             c.save();
             c.rotate(a + Math.PI/4);
             c.globalAlpha = 0.6;
             c.fillStyle = "#ffffff";
             c.beginPath();
-            c.moveTo(0, r * 0.6);
-            c.bezierCurveTo(r * 0.8, 0, -r * 0.8, 0, 0, -r * 0.6);
-            c.bezierCurveTo(-r * 0.2, 0, r * 0.2, 0, 0, r * 0.6);
+            c.moveTo(0, sR * 0.6);
+            c.bezierCurveTo(sR * 0.8, 0, -sR * 0.8, 0, 0, -sR * 0.6);
+            c.bezierCurveTo(-sR * 0.2, 0, sR * 0.2, 0, 0, sR * 0.6);
             c.fill();
             c.restore();
 
-            // Specular Reflection
             c.beginPath();
-            c.ellipse(-r * 0.4, -r * 0.4, r * 0.25, r * 0.15, -Math.PI / 4, 0, Math.PI * 2);
-            c.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            c.ellipse(-sR * 0.4, -sR * 0.4, sR * 0.25, sR * 0.15, -Math.PI / 4, 0, Math.PI * 2);
+            c.fillStyle = 'rgba(255, 255, 255, 0.9)';
             c.fill();
 
             c.restore();
@@ -2353,29 +2339,36 @@
             popup.classList.remove('active');
             if (rewardTimeout) clearTimeout(rewardTimeout);
             
-            // Visual logic: Drop 3 "fiofi" balls (Gift marbles) that aren't counted in stats
             setTimeout(() => {
                 window.isAnimatingJump = true; 
+                const bodyTop = document.querySelector('.jar-body')?.offsetTop || 300;
+                Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -1000 });
+
                 for(let i = 0; i < 3; i++) {
                     setTimeout(() => {
                         const h = habitsData[0];
-                        const bodyTop = document.querySelector('.jar-body')?.offsetTop || 300;
-                        const spawnX = (canvas.width / 2) + (Math.random() * 20 - 10);
-                        const b = Bodies.circle(spawnX, bodyTop - 35, 26, {
-                            restitution: 0.5, friction: 0.01, density: 0.05,
+                        const spawnX = (canvas.width / 2) + (Math.random() * 30 - 15);
+                        const b = Bodies.circle(spawnX, bodyTop - 150, 26, {
+                            restitution: 0.4, friction: 0.05, density: 0.05,
                             label: 'habit-ball', render: { fillStyle: h ? h.color : '#239B62' } 
                         });
                         b.isGift = true;
                         b.habitId = h ? h.id : 0;
-                        Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -1000 });
+                        
                         currentBalls.push(b);
                         Composite.add(world, b);
-                        Matter.Body.setVelocity(b, {x: (Math.random() - 0.5) * 2, y: 10});
+                        Matter.Body.setVelocity(b, {x: (Math.random() - 0.5) * 3, y: 8});
                         if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
-                        if (i === 2) setTimeout(() => { window.isAnimatingJump = false; window.saveState(); }, 1500);
-                    }, i * 500);
+                        
+                        if (i === 2) {
+                            setTimeout(() => {
+                                window.isAnimatingJump = false;
+                                window.saveState();
+                            }, 1500);
+                        }
+                    }, i * 600);
                 }
-            }, 500);
+            }, 300);
         };
 
         window.triggerFirstHabitReward = () => {
@@ -2541,8 +2534,9 @@
             const contRect = document.querySelector('.app-container').getBoundingClientRect(), jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
             const startX = fromX !== null ? fromX : (parseFloat(fm.style.left) + 30), startY = fromY !== null ? fromY : (parseFloat(fm.style.top) + 30);
             const targetX = jr.left - contRect.left + jr.width / 2;
-            const bodyTop = document.querySelector('.jar-body').offsetTop;
-            const targetY = bodyTop - 20;
+            const bodyEl = document.querySelector('.jar-body');
+            const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
+            const targetY = bodyTop - 50;
             const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2)), duration = Math.max(350, Math.min(600, distance * 0.8)), startTime = performance.now();
             
             let lastX = startX, lastY = startY;
@@ -2609,7 +2603,7 @@
                     const currentRadius = 26; // Constant size
 
                     // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
-                    const b = Bodies.circle(canvas.width / 2, bodyTop - 35, currentRadius, {
+                    const b = Bodies.circle(canvas.width / 2, bodyTop - 120, currentRadius, {
                         isStatic: false,
                         restitution: 0.3,
                         friction: 0.05,
@@ -3264,9 +3258,10 @@
             lid.style.transform = `translateY(${lift}px) rotate(${screwRotation}deg)`;
             
             // Ensure physics lid barrier returns to position when lid is closed
-            if (openFactor < 0.1 && !window.isAnimatingJump) {
-                 const bodyTop = document.querySelector('.jar-body')?.offsetTop || (window.innerHeight * 0.44);
-                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: bodyTop - 65 });
+            if (openFactor < 0.05 && !window.isAnimatingJump) {
+                 const bodyEl = document.querySelector('.jar-body');
+                 const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
+                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: bodyTop - 70 });
             }
 
             // Add a small 'rattle' effect when the lid is just starting to unscrew
@@ -3335,6 +3330,23 @@
                     }
 
                     if (b.render.visible !== false) {
+                        // Draw dynamic floor shadow if ball is near the bottom
+                        const floorY = canvas.height - 20;
+                        const distToFloor = floorY - b.position.y;
+                        const shadowThreshold = 60;
+                        if (distToFloor < shadowThreshold) {
+                             const shadowOpacity = Math.max(0, (1 - distToFloor / shadowThreshold) * 0.25);
+                             ctx.save();
+                             // The shadow stays on the floor level
+                             ctx.translate(b.position.x, floorY - 2);
+                             ctx.scale(1, 0.2);
+                             ctx.beginPath();
+                             ctx.arc(0, 0, b.circleRadius * 1.2, 0, Math.PI * 2);
+                             ctx.fillStyle = `rgba(0, 0, 0, ${shadowOpacity})`;
+                             ctx.fill();
+                             ctx.restore();
+                        }
+
                         if (b.isGift) {
                             drawGift(ctx, b.position.x, b.position.y, b.circleRadius, b.angle);
                         } else {
