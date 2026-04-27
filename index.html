@@ -346,8 +346,8 @@
 
         /* --- Slider --- */
         .jars-slider {
-            display: flex; width: 100%; height: 100%; overflow-x: auto;
-            scroll-snap-type: x mandatory; align-items: center; scrollbar-width: none;
+            display: flex; width: 100%; height: 100%; overflow-x: hidden;
+            align-items: center; scrollbar-width: none;
             direction: ltr; scroll-behavior: smooth;
         }
         .jars-slider::-webkit-scrollbar { display: none; }
@@ -1164,7 +1164,10 @@
 
         <!-- Days Display Removed from top -->
 
-        <div class="top-section" id="clickable-top-section" onclick="window.handleTopSectionClick(event)">
+        <div class="top-section" id="clickable-top-section" onclick="window.handleTopSectionClick(event)" 
+             ontouchstart="window.handleHabitSwipeStart(event)" 
+             ontouchmove="window.handleHabitSwipeMove(event)" 
+             ontouchend="window.handleHabitSwipeEnd(event)">
             <div class="jars-slider" id="jars-slider"></div>
             <canvas id="physics-canvas"></canvas>
         </div>
@@ -2792,9 +2795,37 @@
             renderActiveHabit(); window.popMarble();
         };
 
-        window.handleTopSectionClick = (e) => {
-            // Prevent click handling if marble is being dragged or jumping
+        window.habitSwipeState = { startX: 0, isSwiping: false, scrollStart: 0 };
+        window.handleHabitSwipeStart = (e) => {
             if (window.isDrag || window.isAnimatingJump) return;
+            window.habitSwipeState.startX = e.touches[0].clientX;
+            window.habitSwipeState.scrollStart = document.getElementById('habit-scroller').scrollLeft;
+            window.habitSwipeState.isSwiping = false;
+        };
+        window.handleHabitSwipeMove = (e) => {
+            if (window.isDrag || window.isAnimatingJump) return;
+            const currentX = e.touches[0].clientX;
+            const diffX = window.habitSwipeState.startX - currentX;
+
+            if (!window.habitSwipeState.isSwiping && Math.abs(diffX) > 10) {
+                window.habitSwipeState.isSwiping = true;
+            }
+
+            if (window.habitSwipeState.isSwiping) {
+                const sc = document.getElementById('habit-scroller');
+                // High-fidelity scrolling logic mirroring standard scroll behavior
+                sc.scrollLeft = window.habitSwipeState.scrollStart + diffX;
+                if (e.cancelable) e.preventDefault();
+            }
+        };
+        window.handleHabitSwipeEnd = (e) => {
+            if (window.habitSwipeState.isSwiping) {
+                // Logic for snapping to closest habit is handled by habit-scroller's native snap-type
+                window.habitSwipeState.isSwiping = false;
+            }
+        };
+        window.handleTopSectionClick = (e) => {
+            if (window.habitSwipeState.isSwiping || window.isDrag || window.isAnimatingJump) return;
 
             const bd = document.getElementById('bottom-drawer');
             const isExtended = bd.classList.contains('stats-mode') || 
