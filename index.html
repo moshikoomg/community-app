@@ -366,7 +366,7 @@
             display: none;
         }
 
-        .top-section { flex: 1 1 auto; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
+        .top-section { flex: 1 1 auto; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; touch-action: none; -webkit-user-select: none; user-select: none; }
         .app-container:has(.bottom-section.edit-mode) .top-section,
         .app-container:has(.bottom-section.stats-mode) .top-section,
         .app-container:has(.bottom-section.onboarding-mode) .top-section {
@@ -2888,20 +2888,24 @@
             renderActiveHabit(); window.popMarble();
         };
 
-        window.habitSwipeState = { startX: 0, startY: 0, gestureType: 'none', scrollStart: 0, threshold: 8 };
+        window.habitSwipeState = { startX: 0, startY: 0, lastX: 0, lastY: 0, gestureType: 'none', scrollStart: 0, threshold: 22, tapThreshold: 8, isCanceled: false };
         window.handleHabitSwipeStart = (e) => {
             if (window.isAnimatingJump || habitsData.length === 0) return;
+            if (e.pointerType === 'touch' && !e.isPrimary) return;
             const bd = document.getElementById('bottom-drawer');
             if (bd.classList.contains('edit-mode') || bd.classList.contains('stats-mode') || bd.classList.contains('onboarding-mode')) return;
-            if (e.target.closest('.user-pill') || e.target.closest('.mode-trigger') || e.target.closest('.mode-menu')) return;
+            if (e.target.closest('.user-pill') || e.target.closest('.mode-trigger') || e.target.closest('.mode-menu') || e.target.closest('.magnet-eye-btn')) return;
 
             const touch = e.touches ? e.touches[0] : e;
             window.habitSwipeState.startX = touch.clientX;
             window.habitSwipeState.startY = touch.clientY;
+            window.habitSwipeState.lastX = touch.clientX;
+            window.habitSwipeState.lastY = touch.clientY;
             window.habitSwipeState.scrollStart = document.getElementById('habit-scroller').scrollLeft;
             window.habitSwipeState.gestureType = 'none';
+            window.habitSwipeState.isCanceled = false;
             window.isDrag = true;
-            
+
             if (e.pointerId && e.currentTarget.setPointerCapture) {
                 try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err) {}
             }
@@ -2911,49 +2915,60 @@
             const touch = e.touches ? e.touches[0] : e;
             const dx = touch.clientX - window.habitSwipeState.startX;
             const dy = touch.clientY - window.habitSwipeState.startY;
+            
+            // Update last tracking coordinates for lid sync
+            window.habitSwipeState.lastX = touch.clientX;
+            window.habitSwipeState.lastY = touch.clientY;
             const absDx = Math.abs(dx);
             const absDy = Math.abs(dy);
+            const sensitivity = window.habitSwipeState.threshold;
 
-            // Axis Lock Logic: Determine intent before allowing marble activation
+            // 1. Gesture Recognition Stage (Waiting/Lock Logic)
             if (window.habitSwipeState.gestureType === 'none') {
-                const sensitivity = window.habitSwipeState.threshold;
-                // If movement exceeds threshold, lock into a specific axis
                 if (absDx > sensitivity || absDy > sensitivity) {
-                    // Explicit check: Horizontal bias locks into scrolling
                     if (absDx > absDy * 1.5) {
                         window.habitSwipeState.gestureType = 'scroll';
-                    } 
-                    // Vertical bias (Upwards) activates marble throw
-                    else if (dy < -sensitivity && absDy > absDx) {
+                    } else if (dy < -sensitivity) {
                         window.habitSwipeState.gestureType = 'drop';
                         window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
-                    } 
-                    // Vertical bias (Downwards) triggers drawer navigation
-                    else if (dy > sensitivity && absDy > absDx) {
-                        window.habitSwipeState.gestureType = 'drawer';
+                    } else if (absDy > sensitivity || absDx > sensitivity) {
+                        window.habitSwipeState.gestureType = 'ignore';
                     }
                 }
                 return;
             }
+            if (window.habitSwipeState.gestureType === 'ignore') return;
 
+            // 2. Continuous Logic for Modes
             if (window.habitSwipeState.gestureType === 'scroll') {
                 const sc = document.getElementById('habit-scroller');
-                sc.scrollLeft = window.habitSwipeState.scrollStart - dx;
-            } else if (window.habitSwipeState.gestureType === 'drop') {
+                sc.scrollLeft = window.habitSwipeState.scrollStart + dx;
+                
+                // COMBO MOVE: Transition from scroll to drop if finger flicks upward suddenly
+                if (dy < -sensitivity * 2 && absDy > absDx) {
+                    window.habitSwipeState.gestureType = 'drop';
+                    window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
+                }
+            } 
+            
+            if (window.habitSwipeState.gestureType === 'drop') {
                 const cont = document.querySelector('.app-container');
                 const rect = cont.getBoundingClientRect();
                 
-                // Visual feedback for cancellation
-                const isCancelled = dy > -20; // If user dragged up but then moved finger back down
+                // 3. Cancel Logic (Manganon Haharta)
+                // If current finger Y is below the start point (or close to it), flag for cancellation
+                const cancelThreshold = -30;
+                window.habitSwipeState.isCanceled = dy > cancelThreshold;
                 
-                if (isCancelled) {
-                    fm.style.opacity = '0.2';
-                    fm.style.filter = 'grayscale(1) blur(10px)';
-                    fm.style.transform = 'scale(0.8)';
+                if (window.habitSwipeState.isCanceled) {
+                    fm.style.opacity = '0.3';
+                    fm.style.filter = 'grayscale(1) blur(8px) contrast(0.5)';
+                    fm.style.transform = 'scale(0.8) translateY(20px)';
                 } else {
                     fm.style.opacity = '1';
                     fm.style.filter = 'none';
-                    fm.style.transform = `scale(${1.2 + Math.min(0.3, Math.abs(dy)/500)})`;
+                    const stretch = 1 + Math.min(0.2, absDy/1000);
+                    fm.style.transform = `scale(${1.2 * stretch}) rotate(${dx * 0.2}deg)`;
                 }
 
                 fm.style.left = (touch.clientX - rect.left - 30) + 'px';
@@ -2970,7 +2985,7 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             // TAP DETECTION: If distance moved is less than 10px, it's a tap
-            if (dist < 10 && window.habitSwipeState.gestureType === 'none') {
+            if (dist < window.habitSwipeState.tapThreshold && window.habitSwipeState.gestureType === 'none') {
                 const bd = document.getElementById('bottom-drawer');
                 const isExtended = bd.classList.contains('stats-mode') || 
                                    bd.classList.contains('edit-mode') || 
@@ -3002,15 +3017,16 @@
                 const contRect = document.querySelector('.app-container').getBoundingClientRect();
                 const r = fm.getBoundingClientRect();
                 
-                // Only release if the swipe finished significantly higher than it started
-                if (finalDy < -80) {
+                // Drop ball only if not canceled and finger moved sufficiently up
+                if (!window.habitSwipeState.isCanceled && finalDy < -60) {
                     performNaturalJump(r.left + 30 - contRect.left, r.top + 30 - contRect.top);
                 } else {
-                    // User cancelled by moving back down or not moving high enough
+                    // Smooth Cancel Animation
                     fm.animate([
-                        { opacity: fm.style.opacity, transform: fm.style.transform },
-                        { opacity: 0, transform: 'scale(0.2)' }
-                    ], { duration: 200, easing: 'ease-in' }).onfinish = () => window.respawnMarble();
+                        { opacity: fm.style.opacity, transform: fm.style.transform, filter: fm.style.filter },
+                        { opacity: 0, transform: 'scale(0.5) translateY(50px)', filter: 'blur(20px)' }
+                    ], { duration: 300, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }).onfinish = () => window.respawnMarble();
+                    if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(5);
                 }
             }
 
@@ -3157,6 +3173,7 @@
 
         window.summonMarble = (clientX, clientY, pId) => {
             if (habitsData.length === 0 || window.isAnimatingJump) return;
+            if (window.isDrag && window.habitSwipeState.gestureType !== 'drop') return;
             
             // Lock logic: Only summon if the active gesture is intended for a drop
             if (window.habitSwipeState.gestureType !== 'drop' && window.habitSwipeState.gestureType !== 'none') return;
@@ -3331,26 +3348,35 @@
             if (!lid) return;
             let openFactor = 0;
 
-            // Reset lid transition style by default
+            // Default transition
             lid.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)';
 
-            // 1. If currently animating the 'jump' into the jar, lid is fully open
+            // 1. Case: Ball is flying/reward
             if (window.isAnimatingJump) {
                 openFactor = 1;
             } 
-            // 2. If dragging the marble, calculate proximity to open lid dynamically
+            // 2. Case: Manual Drag with 'Intent' (30px threshold)
             else if (window.isDrag) {
-                const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
-                const r = fm.getBoundingClientRect();
-                // Calculate distance between floating marble center and jar mouth center
-                const bodyTop = document.querySelector('.jar-body').offsetTop;
-                const dist = Math.sqrt(Math.pow((r.left + 30) - (jr.left + jr.width / 2), 2) + Math.pow((r.top + 30) - (jr.top + bodyTop - 160), 2));
+                const dragDistanceUp = window.habitSwipeState.startY - window.habitSwipeState.lastY;
                 
-                // Open lid as marble gets closer than 240px, fully open at 80px
-                openFactor = Math.max(0, Math.min(1, 1 - (dist - 40) / 180));
-                
-                // Disable transition during active drag for 1:1 response
-                lid.style.transition = 'none';
+                // Only start opening if upward drag exceeds 30px
+                if (dragDistanceUp > 30) {
+                    const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
+                    const r = fm.getBoundingClientRect();
+                    const bodyTop = document.querySelector('.jar-body').offsetTop;
+                    
+                    // Proximity-based calculation that syncs lid opening with finger distance to the neck
+                    const dist = Math.sqrt(Math.pow((r.left + 30) - (jr.left + jr.width / 2), 2) + Math.pow((r.top + 30) - (jr.top + bodyTop - 160), 2));
+                    
+                    // Map proximity to open factor, gated by the 30px initial move
+                    openFactor = Math.max(0, Math.min(1, 1 - (dist - 40) / 180));
+                    
+                    // Disable transition for real-time 1:1 finger tracking
+                    lid.style.transition = 'none';
+                } else {
+                    // Cancel lid movement if intent threshold not met
+                    openFactor = 0;
+                }
             }
 
             // Apply visual transformations - Removed slideOut to keep lid centered
