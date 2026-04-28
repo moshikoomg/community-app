@@ -618,7 +618,7 @@
         .bottom-section.onboarding-mode { background: #ffffff; }
         
         .drawer-handle {
-            display: none;
+            display: none; /* Keep hidden as swipe-to-open is disabled */
         }
 
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 8px; touch-action: pan-y; overflow-y: auto; max-height: 100%; padding-bottom: 60px; scroll-behavior: smooth; }
@@ -1325,7 +1325,7 @@
 
         <div class="top-section" id="clickable-top-section" 
              style="padding-top: 0px; height: 100%;"
-             onclick="window.handleTopSectionClick(event)" 
+              
              onpointerdown="window.handleHabitSwipeStart(event)" 
              onpointermove="window.handleHabitSwipeMove(event)" 
              onpointerup="window.handleHabitSwipeEnd(event)"
@@ -2964,6 +2964,38 @@
             if (!window.isDrag) return;
             window.isDrag = false;
             const touch = e.changedTouches ? e.changedTouches[0] : e;
+            
+            const dx = touch.clientX - window.habitSwipeState.startX;
+            const dy = touch.clientY - window.habitSwipeState.startY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // TAP DETECTION: If distance moved is less than 10px, it's a tap
+            if (dist < 10 && window.habitSwipeState.gestureType === 'none') {
+                const bd = document.getElementById('bottom-drawer');
+                const isExtended = bd.classList.contains('stats-mode') || 
+                                   bd.classList.contains('edit-mode') || 
+                                   bd.classList.contains('onboarding-mode');
+
+                if (isExtended) {
+                    // Close drawer if extended and tapped outside
+                    if (bd.classList.contains('stats-mode')) window.closeStatsMode();
+                    else if (bd.classList.contains('edit-mode')) window.closeEditMode();
+                    else if (bd.classList.contains('onboarding-mode') && habitsData.length > 0) {
+                        bd.className = 'bottom-section';
+                        document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
+                        document.getElementById('drawer-normal-view').classList.add('active');
+                        window.respawnMarble();
+                    }
+                } else if (habitsData.length > 0 && !window.isAnimatingJump) {
+                    // Add ball on release (TapUp) only if not dragging
+                    window.popMarble();
+                    const contRect = document.querySelector('.app-container').getBoundingClientRect();
+                    performNaturalJump(touch.clientX - contRect.left, touch.clientY - contRect.top);
+                }
+                window.habitSwipeState.gestureType = 'none';
+                return;
+            }
+
             const finalDy = touch.clientY - window.habitSwipeState.startY;
 
             if (window.habitSwipeState.gestureType === 'drop') {
@@ -2989,38 +3021,7 @@
                 try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(err) {}
             }
         };
-        window.handleTopSectionClick = (e) => {
-            if (window.habitSwipeState.isSwiping || window.isDrag || window.isAnimatingJump) return;
-
-            const bd = document.getElementById('bottom-drawer');
-            const isExtended = bd.classList.contains('stats-mode') || 
-                               bd.classList.contains('edit-mode') || 
-                               bd.classList.contains('onboarding-mode');
-
-            if (!isExtended && habitsData.length > 0) {
-                window.popMarble();
-                return;
-            }
-
-            if (!isExtended) return;
-
-            // Visual feedback: brief highlight when clicking outside
-            if (bd.classList.contains('stats-mode')) {
-                window.closeStatsMode();
-            } else if (bd.classList.contains('edit-mode')) {
-                window.closeEditMode();
-            } else if (bd.classList.contains('onboarding-mode')) {
-                // Only allow closing 'Add Mode' if the user already has at least one habit
-                // This ensures the first habit setup isn't accidentally skipped
-                if (habitsData.length > 0) {
-                    window.deactivateCustomFlow();
-                    bd.className = 'bottom-section';
-                    document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
-                    document.getElementById('drawer-normal-view').classList.add('active');
-                    window.respawnMarble();
-                }
-            }
-        };
+        window.handleTopSectionClick = (e) => { /* Logic moved to handleHabitSwipeEnd for release-only trigger */ };
 
         function populateStatsData() {
             const h = habitsData[currentHabitIndex]; if(!h) return;
@@ -3519,10 +3520,7 @@
                 const diff = touchStartY - touchEndY;
                 const threshold = 50;
 
-                if (diff > threshold && !isModeActive()) {
-                    // Swiped Up: Reveal data
-                    window.openStatsMode();
-                } else if (diff < -threshold && isModeActive()) {
+                if (diff < -threshold && isModeActive()) {
                     // Swiped Down: Return to canvas
                     if (drawer.classList.contains('edit-mode')) window.closeEditMode();
                     else if (drawer.classList.contains('stats-mode')) window.closeStatsMode();
@@ -3540,7 +3538,7 @@
             const bd = document.getElementById('bottom-drawer');
             if (bd.classList.contains('stats-mode')) window.closeStatsMode(); 
             else if (bd.classList.contains('edit-mode')) window.closeEditMode();
-            else if (document.getElementById('drawer-normal-view').classList.contains('active')) window.openStatsMode(); 
+            else if (bd.classList.contains('onboarding-mode')) { /* Keep open */ }
         });
 
         const sc = document.getElementById('habit-scroller');
