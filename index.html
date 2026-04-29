@@ -1863,13 +1863,15 @@
         
         function updatePhysicsBoundaries(w) {
             Composite.clear(world, false);
-            const wallOptions = { isStatic: true, friction: 0.05, frictionStatic: 0.1, restitution: 0.4, render: { visible: false } };
+            const wallOptions = { isStatic: true, friction: 0.1, frictionStatic: 0.2, restitution: 0.2, render: { visible: false } };
             const centerX = w / 2;
             const bodyEl = document.querySelector('.jar-body');
-            const baseY = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
+            // Improved detection of jar vertical position
+            const baseY = bodyEl && bodyEl.getBoundingClientRect().top > 0 ? bodyEl.offsetTop : (canvas.height * 0.32);
             const neckY = baseY - 45;
             const mouthY = baseY - 60;
-            const bottomY = canvas.height - 20;
+            // Floor is relative to the app container height to ensure it's always at the very bottom
+            const bottomY = canvas.height;
             
             // Lid barrier positioned at the top of the mouth opening
             window.physicsLid = Bodies.rectangle(centerX, mouthY - 10, 180, 60, { ...wallOptions, label: 'physics-lid' });
@@ -1918,7 +1920,9 @@
         function moveCanvas(idx) {
             const wrap = document.getElementById(`jar-wrapper-${idx}`);
             if(!wrap) return;
+            // Move the canvas and immediately ensure boundaries are correct for the new container
             wrap.insertBefore(canvas, wrap.firstChild);
+            resizePhysics();
             
             currentBalls.forEach(b => Composite.remove(world, b));
             currentBalls = []; 
@@ -1957,12 +1961,14 @@
             
             // Always spawn ALL balls for the day into the physics world
             saved.forEach(d => {
-                const b = Bodies.circle(d.x, d.y, 26, {
+                // Safety check: ensure balls spawn within the visible body area and not below the floor
+                const safeY = Math.min(d.y, canvas.height - 40);
+                const b = Bodies.circle(d.x, safeY, 26, {
                     isStatic: false,
                     restitution: 0.3,
-                    friction: 0.05,
-                    frictionAir: 0,
-                    frictionStatic: 0.1,
+                    friction: 0.08,
+                    frictionAir: 0.01,
+                    frictionStatic: 0.15,
                     density: 0.5,
                     angle: d.angle,
                     label: 'habit-ball',
@@ -1984,28 +1990,26 @@
             const sR = r * 1.15;
             c.save();
             c.translate(x, y);
-            
-            
 
             c.beginPath();
             c.arc(0, 0, sR, 0, Math.PI * 2);
             c.clip();
 
-            c.fillStyle = '#ffffff';
+            c.fillStyle = '#FFD700';
             c.fill();
 
             let g = c.createRadialGradient(-sR * 0.4, -sR * 0.4, 0, 0, 0, sR * 1.2);
-            g.addColorStop(0, "#fff9c4");
-            g.addColorStop(0.2, "#fdd835");
-            g.addColorStop(0.5, "#fbc02d");
-            g.addColorStop(1, "#f57f17");
+            g.addColorStop(0, "#FFFBEB");
+            g.addColorStop(0.3, "#FBBF24");
+            g.addColorStop(0.7, "#D97706");
+            g.addColorStop(1, "#92400E");
             c.fillStyle = g;
             c.fill();
 
             c.save();
             c.rotate(a + Math.PI/4);
-            c.globalAlpha = 0.6;
-            c.fillStyle = "#ffffff";
+            c.globalAlpha = 0.9;
+            c.fillStyle = "rgba(255, 255, 255, 0.8)";
             c.beginPath();
             c.moveTo(0, sR * 0.6);
             c.bezierCurveTo(sR * 0.8, 0, -sR * 0.8, 0, 0, -sR * 0.6);
@@ -2051,8 +2055,8 @@
             let g = c.createRadialGradient(-r * 0.4, -r * 0.4, 0, 0, 0, r * 1.2);
             g.addColorStop(0, "#ffffff");
             g.addColorStop(0.1, "#f8fafc");
-            g.addColorStop(0.4, "rgba(226, 232, 240, 0.2)");
-            g.addColorStop(0.85, "rgba(15, 23, 42, 0.15)");
+            g.addColorStop(0.4, "rgba(255, 255, 255, 0.9)");
+            g.addColorStop(0.85, "rgba(15, 23, 42, 0.2)");
             g.addColorStop(1, "rgba(0, 0, 0, 0.35)");
             c.fillStyle = g;
             c.fill();
@@ -2076,7 +2080,7 @@
             swirlG.addColorStop(1, col + "99");
             c.fillStyle = swirlG;
             // Use multiply to respect the parent alpha for ghosting
-            c.globalAlpha = alpha * 0.85;
+            c.globalAlpha = alpha;
             c.beginPath();
             c.moveTo(0, scaledR * 0.8);
             c.bezierCurveTo(scaledR * 0.7 * widthFactor, scaledR * 0.2, -scaledR * 0.7 * widthFactor, -scaledR * 0.2, 0, -scaledR * 0.8);
@@ -2961,7 +2965,7 @@
                 window.habitSwipeState.isCanceled = dy > -15; 
                 
                 if (window.habitSwipeState.isCanceled) {
-                    fm.style.opacity = '0.3';
+                    fm.style.opacity = '0.7';
                     fm.style.filter = 'grayscale(1) blur(8px)';
                     fm.style.transform = `scale(0.7) translate(${dx*0.2}px, 30px)`;
                 } else {
@@ -3201,7 +3205,7 @@
 
             // Visual Activation
             fm.style.display = 'block';
-            fm.style.opacity = '0.4';
+            fm.style.opacity = '1';
             fm.style.visibility = 'visible';
             fm.style.filter = 'blur(4px)';
             fm.classList.add('dragging');
@@ -3423,31 +3427,24 @@
                     let alpha = 1.0;
                     
                     if (isMagnetMode) {
+                        const centerX = canvas.width / 2;
+                        const floorY = canvas.height - 100;
                         if (isMatching) {
-                            // Gentle Magnetic Clustering: Soft pull to bottom-center
-                            const dx = 195 - b.position.x;
-                            const dy = 780 - b.position.y; 
-                            
+                            const dx = centerX - b.position.x;
+                            const dy = floorY - b.position.y;
                             Matter.Body.applyForce(b, b.position, {
-                                x: dx * 0.0035, // Reduced from 0.012 for a softer glide
-                                y: dy * 0.0045  // Reduced from 0.015 for a softer glide
+                                x: dx * 0.004,
+                                y: dy * 0.005
                             });
-                            
-                            // Soft jitter to prevent interlocking without chaotic movement
-                            Matter.Body.applyForce(b, b.position, {
-                                x: (Math.random() - 0.5) * 0.002,
-                                y: (Math.random() - 0.5) * 0.002
-                            });
-                            
-                            // Apply a small rotational torque to help them settle into gaps
-                            b.torque += (Math.random() - 0.5) * 0.2;
+                            b.torque += (Math.random() - 0.5) * 0.3;
                         } else {
-                            // Full opacity for non-matching balls as per request
                             alpha = 1.0;
-                            // Float non-matching balls upwards so they don't block the stacking formation
+                            // Keep them at the bottom but slightly to the sides
+                            const sideX = (b.position.x < centerX) ? (centerX - 100) : (centerX + 100);
+                            const dx = sideX - b.position.x;
                             Matter.Body.applyForce(b, b.position, { 
-                                x: (b.position.x - 195) * 0.0005, // Repel from center horizontally
-                                y: -0.002 * b.mass // Anti-gravity float
+                                x: dx * 0.001,
+                                y: 0.001 * b.mass
                             });
                         }
                     } else {
