@@ -936,6 +936,31 @@
             will-change: transform, opacity;
             user-select: none;
         }
+        .habit-item.active::before {
+            content: '+';
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--habit-active-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 20;
+            animation: targetPulse 1.5s infinite;
+        }
+        @keyframes targetPulse {
+            0% { transform: translateX(-50%) scale(1); opacity: 1; }
+            50% { transform: translateX(-50%) scale(1.15); opacity: 0.8; }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
         .habit-item.active {
             font-size: 36px;
             transform: scale(1.4);
@@ -2109,6 +2134,19 @@
             c.beginPath();
             c.ellipse(-sR * 0.4, -sR * 0.4, sR * 0.25, sR * 0.15, -Math.PI / 4, 0, Math.PI * 2);
             c.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            c.fill();
+
+            // 7. Precision Drag Mark
+            c.beginPath();
+            c.moveTo(-3, 0); c.lineTo(3, 0);
+            c.moveTo(0, -3); c.lineTo(0, 3);
+            c.strokeStyle = 'rgba(255,255,255,0.6)';
+            c.lineWidth = 1.5;
+            c.stroke();
+            
+            c.beginPath();
+            c.arc(0, 0, 1.5, 0, Math.PI * 2);
+            c.fillStyle = 'rgba(255,255,255,0.8)';
             c.fill();
 
             c.restore();
