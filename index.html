@@ -376,7 +376,7 @@
             display: none;
         }
 
-        .top-section { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; touch-action: pan-y; -webkit-user-select: none; user-select: none; padding-bottom: 0; margin-bottom: 0; }
+        .top-section { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; padding-bottom: 0; margin-bottom: 0; }
         .app-container:has(.bottom-section.edit-mode) .top-section,
         .app-container:has(.bottom-section.stats-mode) .top-section,
         .app-container:has(.bottom-section.onboarding-mode) .top-section {
@@ -386,9 +386,11 @@
 
         /* --- Slider --- */
         .jars-slider {
-            display: flex; width: 100%; height: 100%; overflow-x: hidden;
+            display: flex; width: 100%; height: 100%; overflow-x: auto;
             align-items: center; scrollbar-width: none;
             direction: ltr; scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
         }
         .jars-slider::-webkit-scrollbar { display: none; }
 
@@ -404,8 +406,9 @@
             box-sizing: border-box; 
             padding: 0; 
             margin: 0;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.5s ease, transform 0.5s ease;
             opacity: 0.4; 
+            will-change: transform, opacity;
         }
         .jar-slide.active-slide { opacity: 1; }
         .jar-slide.locked { filter: grayscale(1); opacity: 0.2; }
@@ -709,17 +712,17 @@
 
         #marble-glow {
             position: absolute;
-            width: 130px;
-            height: 130px;
-            background: radial-gradient(circle, var(--glow-color-solid) 0%, transparent 65%);
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, var(--habit-active-color, var(--primary-color)) 0%, transparent 75%);
             border-radius: 50%;
-            filter: blur(18px);
+            filter: blur(20px);
             opacity: 0;
             pointer-events: none;
-            z-index: 900; /* Behind the marble (1000) */
-            transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.165, 0.84, 0.44, 1), filter 0.7s ease;
-            transform-origin: center center;
-            mix-blend-mode: soft-light;
+            z-index: 800;
+            transition: opacity 0.3s ease;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
         }
 
         #floating-marble:not([style*="display: none"]) ~ #marble-glow {
@@ -1676,7 +1679,30 @@
         // --- 1. משתנים גלובליים ---
         const STAGE_GAP = 21, TOTAL_DISPLAY_DAYS = 63;
         let currentUser = { displayName: "שם משתמש", profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" };
-        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false, hasSeenTutorial = false, sessionActivated = false, longPressTimer = null; let lastPointerId = null;
+        let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false, hasSeenTutorial = false, sessionActivated = false, longPressTimer = null, lastPointerId = null, audioCtx = null;
+
+        const playSound = (type) => {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            if (type === 'click') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if (type === 'thud') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(); osc.stop(now + 0.2);
+            } else if (type === 'snap') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(450, now + 0.05);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.start(); osc.stop(now + 0.05);
+            }
+        };
         let habitsData = [];
         const HABIT_PALETTE = ['#239B62', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#2dd4bf', '#fb923c', '#6366f1', '#ec4899', '#84cc16'];
         window.getNextUniqueColor = () => {
@@ -1715,20 +1741,32 @@
         }
         loadLocalState();
 
-        window.saveState = async () => {
+        window.saveState = () => {
             if (typeof currentBalls !== 'undefined' && currentDayView >= 0) {
                 const dayData = userStats.daysData[currentDayView];
-                const w = canvas.width, h = canvas.height;
-                dayData.savedBalls = currentBalls.map(b => ({
-                    relX: b.position.x / w, 
-                    relY: b.position.y / h, 
-                    angle: b.angle, 
-                    color: b.render.fillStyle, 
-                    habitId: b.habitId
-                }));
+                if (dayData) {
+                    const w = canvas.width, h = canvas.height;
+                    dayData.savedBalls = currentBalls.map(b => ({
+                        relX: b.position.x / w,
+                        relY: b.position.y / h,
+                        angle: b.angle,
+                        color: b.render.fillStyle,
+                        habitId: b.habitId,
+                        isGift: b.isGift || false
+                    }));
+                }
             }
-            const s = { habitsData, userStats, stageBackgrounds, customBgs, unlockedDays, currentDayView, currentUser, hasSeenTutorial };
-            localStorage.setItem('habit_jar_local_state_v2', JSON.stringify(s));
+            const stateToSave = {
+                habitsData, 
+                userStats, 
+                stageBackgrounds, 
+                customBgs, 
+                unlockedDays, 
+                currentDayView, 
+                currentUser, 
+                hasSeenTutorial
+            };
+            localStorage.setItem('habit_jar_local_state_v2', JSON.stringify(stateToSave));
         };
 
         // --- 3. פונקציות עזר ו-UI ---
@@ -2456,6 +2494,8 @@
         };
 
         window.openAddMode = () => {
+            playSound('click');
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
             // הסתרת ה-X אם אין הרגלים (חובה להוסיף הרגל ראשון)
             const closeX = document.getElementById('close-onboarding-x');
             if (closeX) closeX.style.display = habitsData.length === 0 ? 'none' : 'block';
@@ -2545,7 +2585,7 @@
                             setTimeout(() => {
                                 window.isAnimatingJump = false;
                                 window.saveState();
-                            }, 1500);
+                            }, 2000);
                         }
                     }, i * 600);
                 }
@@ -2822,7 +2862,7 @@
                     setTimeout(() => {
                         window.isAnimatingJump = false; 
                         window.saveState();
-                    }, 800);
+                    }, 1200);
                     
                     // Single Unified Score Feedback: Emerging from the JAR CENTER, growing and fading away
                     const bodyEl = document.querySelector('.jar-body');
@@ -2886,7 +2926,6 @@
             const cont = document.querySelector('.app-container');
             const rect = cont.getBoundingClientRect();
             
-            // Absolute position snapping to finger
             const x = (e.clientX - rect.left) - 30;
             const y = (e.clientY - rect.top) - 30;
             
@@ -2898,9 +2937,12 @@
             fm.style.transform = `scale(1.25) rotate(${rot}deg)`;
             
             const gl = document.getElementById('marble-glow');
-            if(gl) gl.style.opacity = '0';
-            
-            // Dynamic Lid Logic handled via updateLidProximity in the main loop
+            if(gl) {
+                gl.style.opacity = '0.5';
+                gl.style.left = (e.clientX - rect.left) + 'px';
+                gl.style.top = (e.clientY - rect.top) + 'px';
+                gl.style.transform = `translate(-50%, -50%) scale(${1.2 + Math.sin(Date.now()/200)*0.1})`;
+            }
         });
         document.addEventListener('pointerup', e => {
             if(!window.isDrag) return; window.isDrag=false; fm.classList.remove('dragging');
@@ -2925,6 +2967,8 @@
 
         // --- 8. לוגיקת ממשק ותפריטים ---
         window.openEditMode = () => {
+            playSound('click');
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
             if(habitsData.length === 0) return;
             const h = habitsData[currentHabitIndex];
             document.getElementById('input-habit-name').value = h.name;
@@ -2997,6 +3041,8 @@
         };
 
         window.openStatsMode = () => {
+            playSound('click');
+            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
             const bd = document.getElementById('bottom-drawer');
             if (!bd || habitsData.length === 0) return;
             
@@ -3025,6 +3071,8 @@
 
         window.habitSwipeState = { startX: 0, startY: 0, lastX: 0, lastY: 0, gestureType: 'none', scrollStart: 0, threshold: 12, tapThreshold: 5, isCanceled: false, hasMoved: false };
         window.handleHabitSwipeStart = (e) => {
+            if (e.cancelable) e.preventDefault();
+            e.stopPropagation();
             if (window.isAnimatingJump || habitsData.length === 0) return;
             if (e.pointerType === 'touch' && !e.isPrimary) return;
             const bd = document.getElementById('bottom-drawer');
@@ -3046,6 +3094,8 @@
             }
         };
         window.handleHabitSwipeMove = (e) => {
+            if (e.cancelable) e.preventDefault();
+            e.stopPropagation();
             if (!window.isDrag || window.isAnimatingJump) return;
             const touch = e.touches ? e.touches[0] : e;
             const dx = touch.clientX - window.habitSwipeState.startX;
@@ -3053,26 +3103,28 @@
             
             const absDx = Math.abs(dx);
             const absDy = Math.abs(dy);
-            const sensitivity = 8; 
+            const lockThreshold = 10; 
 
             if (absDx > window.habitSwipeState.tapThreshold || absDy > window.habitSwipeState.tapThreshold) {
                 window.habitSwipeState.hasMoved = true;
             }
 
-            // --- Phase 1: Gesture Locking ---
+            // --- Phase 1: Hard Axis Locking ---
             if (window.habitSwipeState.gestureType === 'none') {
-                if (absDx > sensitivity || absDy > sensitivity) {
-                    // If horizontal movement is dominant, lock to scroll and DISABLE ball physics interaction
-                    if (absDx > absDy * 1.2) {
+                if (absDx > lockThreshold || absDy > lockThreshold) {
+                    // גלילה אופקית דומיננטית - נעל אפשרות לזריקה
+                    if (absDx > absDy) {
                         window.habitSwipeState.gestureType = 'scroll';
+                        // מניעת כל זימון גולה בהמשך התנועה הזו
+                        fm.style.display = 'none';
                     } 
-                    // If vertical upward movement is dominant, lock to ball drop and DISABLE scroller movement
-                    else if (dy < -sensitivity) {
+                    // תנועה אנכית (כלפי מעלה) דומיננטית - נעל אפשרות לגלילה וזמן גולה
+                    else if (dy < -lockThreshold) {
                         window.habitSwipeState.gestureType = 'drop';
                         window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
                         if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
                     } 
-                    else if (dy > sensitivity) {
+                    else {
                         window.habitSwipeState.gestureType = 'ignore';
                     }
                 }
@@ -3110,6 +3162,7 @@
             }
         };
         window.handleHabitSwipeEnd = (e) => {
+            e.stopPropagation();
             if (!window.isDrag) return;
             window.isDrag = false;
             const touch = e.changedTouches ? e.changedTouches[0] : e;
@@ -3677,6 +3730,7 @@
             updateFloatingPosition();
             updateLidProximity();
             Engine.update(engine, 1000 / 60);
+            if (Matter.Common.now() % 5000 < 20) window.saveState();
             requestAnimationFrame(loop);
         }
         
@@ -3705,6 +3759,7 @@
                             const vB = pairs[i].bodyB.velocity;
                             const impact = Math.sqrt(vA.x**2 + vA.y**2) + Math.sqrt(vB.x**2 + vB.y**2);
                             if (impact > 2) {
+                                playSound('thud');
                                 window.navigator.vibrate(5);
                                 break;
                             }
@@ -3716,7 +3771,16 @@
             updateProfileUI();
             buildJars();
             initScroller();
-            const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) { document.querySelectorAll('.jar-slide').forEach(s => s.classList.remove('active-slide')); e.target.classList.add('active-slide'); moveCanvas(parseInt(e.target.dataset.index)); } }), { threshold:0.6, root:document.getElementById('jars-slider') });
+            const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) { 
+                const idx = parseInt(e.target.dataset.index);
+                if (idx !== currentDayView) {
+                    playSound('snap');
+                    if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
+                }
+                document.querySelectorAll('.jar-slide').forEach(s => s.classList.remove('active-slide')); 
+                e.target.classList.add('active-slide'); 
+                moveCanvas(idx); 
+            } }), { threshold:0.6, root:document.getElementById('jars-slider') });
             document.querySelectorAll('.jar-slide').forEach(s => obs.observe(s));
             moveCanvas(currentDayView);
             checkNewUser();
@@ -3782,12 +3846,12 @@
 
                 const maxDist = 160; 
                 let progress = Math.pow(Math.max(0, 1 - (dist / maxDist)), 1.5);
-                const scale = 0.7 + (0.7 * progress); 
-                const translateY = 0;
+                const scale = 0.8 + (0.3 * progress); 
+                const opacity = 0.5 + (0.5 * progress);
                 
                 item.style.transform = `scale(${scale})`;
-                item.style.opacity = '1'; 
-                item.style.filter = 'none';
+                item.style.opacity = opacity; 
+                item.style.filter = progress < 0.2 ? 'blur(0.5px)' : 'none';
                 
                 if (progress > 0.85) {
                     if (i < habitsData.length) {
