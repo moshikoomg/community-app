@@ -311,7 +311,7 @@
         }
 
         .app-container {
-            width: 100%; max-width: 100%; height: 100dvh;
+            width: 100%; max-width: 100%; height: 100dvh; height: 100vh;
             background-color: #f8fafc;
             background-size: cover;
             background-position: center;
@@ -321,6 +321,7 @@
             transition: background 0.4s ease, background-image 0.4s ease;
             backdrop-filter: saturate(1.2);
             margin: 0 auto;
+            padding: 0;
         }
 
         @media (min-width: 420px) {
@@ -366,7 +367,7 @@
             display: none;
         }
 
-        .top-section { flex: 1 1 auto; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; touch-action: none; -webkit-user-select: none; user-select: none; }
+        .top-section { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; touch-action: none; -webkit-user-select: none; user-select: none; padding-bottom: 0; margin-bottom: 0; }
         .app-container:has(.bottom-section.edit-mode) .top-section,
         .app-container:has(.bottom-section.stats-mode) .top-section,
         .app-container:has(.bottom-section.onboarding-mode) .top-section {
@@ -563,6 +564,7 @@
             height: calc(100% - var(--jar-base-y));
             bottom: 0;
             border-radius: 64px 64px 0 0;
+            margin-bottom: 0;
             background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%);
             border: none;
             backdrop-filter: none;
@@ -1346,6 +1348,15 @@
                 <!-- Habit Scroller Entire Top Area -->
                 <div class="habit-scroller-outer" id="habit-scroller-outer" onpointerdown="event.stopPropagation()">
                     <div class="habit-scroller" id="habit-scroller"></div>
+                    <div class="scroll-hint-overlay">
+                        <div class="side-fade left"></div>
+                        <div class="center-swipe-hint">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                            <div style="width: 30px; height: 3px; background: #cbd5e1; border-radius: 10px;"></div>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                        </div>
+                        <div class="side-fade right"></div>
+                    </div>
                 </div>
                 <!-- Dots Indicators - Relative to scroller bottom -->
                 <div class="dots-container" id="picker-dots" style="pointer-events: auto; position: absolute; top: calc(var(--jar-base-y) - 102px); z-index: 220; width: 100%; justify-content: center; gap: 8px; padding: 10px 0; transition: all 0.3s ease-out;"></div>
@@ -1952,8 +1963,8 @@
             Composite.add(world, [
                 // Ceiling
                 Bodies.rectangle(centerX, -100, w * 2, 200, { ...wallOptions, label: 'ceiling' }),
-                // Floor
-                Bodies.rectangle(centerX, bottomY + 10, w * 1.5, 200, { ...wallOptions, label: 'floor' }),
+                // Floor - Adjusted to hit absolute bottom
+                Bodies.rectangle(centerX, bottomY + 99, w * 1.5, 200, { ...wallOptions, label: 'floor' }),
                 // Relative Side Walls
                 Bodies.rectangle(centerX - (w * 0.48), baseY + (h * 0.4), 30, h * 1.5, wallOptions),
                 Bodies.rectangle(centerX + (w * 0.48), baseY + (h * 0.4), 30, h * 1.5, wallOptions),
@@ -3691,6 +3702,9 @@
         const sc = document.getElementById('habit-scroller');
         let lidx = -1;
         sc.addEventListener('scroll', () => {
+            const hint = document.querySelector('.center-swipe-hint');
+            if(hint) hint.style.opacity = '0';
+            
             const scRect = sc.getBoundingClientRect();
             const scCenter = scRect.left + scRect.width / 2;
             const items = sc.querySelectorAll('.habit-item');
