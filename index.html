@@ -173,7 +173,7 @@
             border-radius: 50%;
         }
         .magnet-eye-btn.active {
-            color: #1e293b;
+            color: #64748b;
             background: transparent;
         }
         .magnet-eye-btn svg {
@@ -185,7 +185,7 @@
             transform: rotate(180deg);
         }
 
-        .app-container:has(.bottom-section.edit-mode) .magnet-eye-btn,
+        .app-container:has(.bottom-section.edit-mode) .controls-cluster,
         .app-container:has(.bottom-section.onboarding-mode) .magnet-eye-btn,
         .app-container:has(.bottom-section.stats-mode) .magnet-eye-btn {
             opacity: 0;
@@ -1376,8 +1376,14 @@
                 <div class="dots-container" id="picker-dots" style="pointer-events: auto; position: absolute; top: calc(var(--jar-base-y) - 102px); z-index: 220; width: 100%; justify-content: center; gap: 8px; padding: 10px 0; transition: all 0.3s ease-out;"></div>
 
                 <!-- Magnet Toggle (Eye) - Repositioned near cap -->
-                <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט" style="position: absolute; top: calc(var(--jar-base-y) - 42px); left: calc(50% - 134px); z-index: 160;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <div class="controls-cluster" style="position: absolute; top: calc(var(--jar-base-y) - 52px); left: calc((50% - 78px) / 2); transform: translateX(-50%); z-index: 160; display: flex; flex-direction: row; gap: 8px; align-items: center; background: rgba(255,255,255,0.4); backdrop-filter: blur(8px); padding: 4px 8px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.5); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+                    <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9v2a6 6 0 1 0 12 0V9"></path><path d="M18 9V7a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v2"></path><path d="M7 9V7a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v2"></path><line x1="6" y1="11" x2="18" y2="11"></line></svg>
+                    </div>
+                    <div class="magnet-eye-btn active" id="sound-toggle" onclick="window.toggleSound(event)" title="צלילים" style="color: #cbd5e1;">
+                        <svg id="sound-on-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10v4"></path><path d="M6 10v4"></path><path d="M10 10v4"></path><path d="M14 8v8"></path><path d="M18 5v14"></path><path d="M22 10v4"></path></svg>
+                        <svg id="sound-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                    </div>
                 </div>
             </div>
 
@@ -1657,10 +1663,10 @@
     <script>
         // --- 1. משתנים גלובליים ---
         const STAGE_GAP = 21, TOTAL_DISPLAY_DAYS = 63;
-        let currentUser = { displayName: "שם משתמש", profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" };
+        let currentUser = { displayName: "שם משתמש", profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" }; let isSoundEnabled = true;
         let unlockedDays = 1, currentDayView = 0, currentHabitIndex = 0, isMagnetMode = false, hasSeenTutorial = false, sessionActivated = false, longPressTimer = null, lastPointerId = null, audioCtx = null;
 
-        const playSound = (type) => {
+        const playSound = (type) => { if (!isSoundEnabled) return;
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -3614,7 +3620,7 @@
             }
         }
 
-        window.toggleMagnet = (e) => {
+        window.toggleSound = (e) => { if(e) e.stopPropagation(); isSoundEnabled = !isSoundEnabled; const btn = document.getElementById('sound-toggle'); const on = document.getElementById('sound-on-icon'); const off = document.getElementById('sound-off-icon'); if(btn) btn.classList.toggle('active', isSoundEnabled); if(on) on.style.display = isSoundEnabled ? 'block' : 'none'; if(off) off.style.display = isSoundEnabled ? 'none' : 'block'; if(isSoundEnabled) playSound('snap'); }; window.toggleMagnet = (e) => {
             if(e) e.stopPropagation();
             isMagnetMode = !isMagnetMode;
             const btn = document.getElementById('magnet-toggle');
