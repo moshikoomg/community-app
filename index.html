@@ -1951,9 +1951,9 @@
             
             Composite.add(world, [
                 // Ceiling
-                Bodies.rectangle(centerX, -100, w * 2, 200, wallOptions),
+                Bodies.rectangle(centerX, -100, w * 2, 200, { ...wallOptions, label: 'ceiling' }),
                 // Floor
-                Bodies.rectangle(centerX, bottomY + 10, w * 1.5, 20, wallOptions),
+                Bodies.rectangle(centerX, bottomY + 10, w * 1.5, 200, { ...wallOptions, label: 'floor' }),
                 // Relative Side Walls
                 Bodies.rectangle(centerX - (w * 0.48), baseY + (h * 0.4), 30, h * 1.5, wallOptions),
                 Bodies.rectangle(centerX + (w * 0.48), baseY + (h * 0.4), 30, h * 1.5, wallOptions),
@@ -3243,19 +3243,28 @@
                 const acc = event.accelerationIncludingGravity;
                 if (!acc) return;
 
-                // עדכון ווקטור הכבידה לפי הטיית המכשיר
-                // acc.x חיובי כשהמכשיר מוטה שמאלה, לכן נהפוך סימן עבור Matter.js
-                // acc.y חיובי כשהמכשיר מוטה כלפי מטה
-                const sensitivity = 2.5;
-                engine.gravity.x = -(acc.x || 0) / sensitivity;
-                engine.gravity.y = (acc.y || 0) / sensitivity;
+                // חישוב כבידה ב-360 מעלות: 
+                // acc.x מייצג הטייה לצדדים (חיובי = שמאל, שלילי = ימין)
+                // acc.y מייצג הטייה קדימה/אחורה (חיובי = ראש למעלה, שלילי = ראש למטה)
+                // במנוע Matter.js, כבידה חיובית ב-Y היא כלפי מטה על המסך.
+                
+                const gravityIntensity = 4.5; // עוצמת הכבידה המקורית של האפליקציה
+                
+                // המרת ערכי התאוצה לווקטור כבידה יחסי (נרמול לפי 9.8 מ'/שניה בריבוע)
+                let targetGX = -(acc.x || 0) / 9.8 * gravityIntensity;
+                let targetGY = (acc.y || 0) / 9.8 * gravityIntensity;
 
-                // אם המכשיר שוכב על הגב (Y קרוב ל-0), נשמור על כבידה מינימלית למטה
-                if (Math.abs(engine.gravity.y) < 0.5 && Math.abs(engine.gravity.x) < 0.5) {
-                    engine.gravity.y = 1.5;
+                // מניעת מצב שבו הכדורים קופאים כשהמכשיר מאוזן לחלוטין על השולחן
+                const totalG = Math.sqrt(targetGX * targetGX + targetGY * targetGY);
+                if (totalG < 0.3) {
+                    targetGY = 1.5; 
                 }
 
-                // זיהוי שקשוק (Shake)
+                // עדכון הכבידה במנוע הפיזיקלי
+                engine.gravity.x = targetGX;
+                engine.gravity.y = targetGY;
+
+                // זיהוי שקשוק (Shake) לערבוב הכדורים
                 const deltaX = Math.abs(lastAcc.x - acc.x);
                 const deltaY = Math.abs(lastAcc.y - acc.y);
                 const deltaZ = Math.abs(lastAcc.z - acc.z);
