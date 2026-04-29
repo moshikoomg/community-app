@@ -1673,10 +1673,13 @@
         window.saveState = async () => {
             if (typeof currentBalls !== 'undefined' && currentDayView >= 0) {
                 const dayData = userStats.daysData[currentDayView];
-                // We now always keep all balls in currentBalls (some just static/hidden),
-                // so we can simply map the whole array to save the state.
+                const w = canvas.width, h = canvas.height;
                 dayData.savedBalls = currentBalls.map(b => ({
-                    x: b.position.x, y: b.position.y, angle: b.angle, color: b.render.fillStyle, habitId: b.habitId
+                    relX: b.position.x / w, 
+                    relY: b.position.y / h, 
+                    angle: b.angle, 
+                    color: b.render.fillStyle, 
+                    habitId: b.habitId
                 }));
             }
             const s = { habitsData, userStats, stageBackgrounds, customBgs, unlockedDays, currentDayView, currentUser, hasSeenTutorial };
@@ -1931,41 +1934,35 @@
         
         function updatePhysicsBoundaries(w) {
             Composite.clear(world, false);
+            const h = canvas.height;
             const wallOptions = { isStatic: true, friction: 0.1, frictionStatic: 0.2, restitution: 0.2, render: { visible: false } };
             const centerX = w / 2;
             const bodyEl = document.querySelector('.jar-body');
-            // Improved detection of jar vertical position
-            const baseY = bodyEl && bodyEl.getBoundingClientRect().top > 0 ? bodyEl.offsetTop : (canvas.height * 0.32);
-            const neckY = baseY - 45;
-            const mouthY = baseY - 60;
-            // Floor is relative to the app container height to ensure it's always at the very bottom
-            const bottomY = canvas.height;
+            const baseY = bodyEl && bodyEl.getBoundingClientRect().top > 0 ? bodyEl.offsetTop : (h * 0.32);
             
-            // Lid barrier positioned at the top of the mouth opening
-            window.physicsLid = Bodies.rectangle(centerX, mouthY - 10, 180, 60, { ...wallOptions, label: 'physics-lid' });
-            const ceiling = Bodies.rectangle(centerX, -100, w * 2, 200, { ...wallOptions, label: 'physics-ceiling' });
+            // Relative sizes based on Width
+            const jarWidth = w * 0.94;
+            const neckWidth = w * 0.38;
+            const mouthWidth = w * 0.44;
+            const bottomY = h;
+            
+            // Lid barrier
+            window.physicsLid = Bodies.rectangle(centerX, baseY - (h * 0.08), mouthWidth * 1.2, h * 0.08, { ...wallOptions, label: 'physics-lid' });
             
             Composite.add(world, [
-                ceiling,
-                // Bottom Floor - widened to catch balls in corners
+                // Ceiling
+                Bodies.rectangle(centerX, -100, w * 2, 200, wallOptions),
+                // Floor
                 Bodies.rectangle(centerX, bottomY + 10, w * 1.5, 20, wallOptions),
-                
-                // Rounded Bottom Corners
-                Bodies.rectangle(centerX - 130, bottomY - 10, 150, 40, { ...wallOptions, angle: Math.PI / 12 }),
-                Bodies.rectangle(centerX + 130, bottomY - 10, 150, 40, { ...wallOptions, angle: -Math.PI / 12 }),
-
-                // Body Side Walls
-                Bodies.rectangle(centerX - 195, baseY + 400, 30, 1000, wallOptions),
-                Bodies.rectangle(centerX + 195, baseY + 400, 30, 1000, wallOptions),
-                
-                // Shoulders
-                Bodies.rectangle(centerX - 150, baseY + 35, 140, 40, { ...wallOptions, angle: Math.PI / 4 }),
-                Bodies.rectangle(centerX + 150, baseY + 35, 140, 40, { ...wallOptions, angle: -Math.PI / 4 }),
-                
-                // Neck Walls
-                Bodies.rectangle(centerX - 78, neckY, 20, 140, wallOptions),
-                Bodies.rectangle(centerX + 78, neckY, 20, 140, wallOptions),
-                
+                // Relative Side Walls
+                Bodies.rectangle(centerX - (w * 0.48), baseY + (h * 0.4), 30, h * 1.5, wallOptions),
+                Bodies.rectangle(centerX + (w * 0.48), baseY + (h * 0.4), 30, h * 1.5, wallOptions),
+                // Relative Shoulders
+                Bodies.rectangle(centerX - (w * 0.38), baseY + (h * 0.04), w * 0.35, 40, { ...wallOptions, angle: Math.PI / 4 }),
+                Bodies.rectangle(centerX + (w * 0.38), baseY + (h * 0.04), w * 0.35, 40, { ...wallOptions, angle: -Math.PI / 4 }),
+                // Relative Neck Walls
+                Bodies.rectangle(centerX - (neckWidth / 2 + 5), baseY - (h * 0.04), 20, h * 0.15, wallOptions),
+                Bodies.rectangle(centerX + (neckWidth / 2 + 5), baseY - (h * 0.04), 20, h * 0.15, wallOptions),
                 window.physicsLid
             ]);
 
@@ -2028,10 +2025,12 @@
             const scale = 1.0;
             
             // Always spawn ALL balls for the day into the physics world
+            const ballRadius = canvas.width * 0.062;
+            const w = canvas.width, h = canvas.height;
             saved.forEach(d => {
-                // Safety check: ensure balls spawn within the visible body area and not below the floor
-                const safeY = Math.min(d.y, canvas.height - 40);
-                const b = Bodies.circle(d.x, safeY, 26, {
+                const spawnX = d.relX ? d.relX * w : (d.x || w/2);
+                const spawnY = d.relY ? d.relY * h : (d.y || h/2);
+                const b = Bodies.circle(spawnX, Math.min(spawnY, h - ballRadius*2), ballRadius, {
                     isStatic: false,
                     restitution: 0.3,
                     friction: 0.08,
@@ -2191,7 +2190,8 @@
                 }
             });
             const uctx = fm.getContext('2d'); uctx.clearRect(0,0,60,60); 
-            drawMarble(uctx, 30, 30, 26, 0, h.color);
+            const ballRadius = canvas.width * 0.062;
+            drawMarble(uctx, 30, 30, ballRadius, 0, h.color);
             
             if(!window.isAnimatingJump && habitsData.length > 0) {
                 updateFloatingPosition();
@@ -2724,7 +2724,8 @@
                     const currentRadius = 26; // Constant size
 
                     // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
-                    const b = Bodies.circle(canvas.width / 2, bodyTop - 120, 26, {
+                    const ballRadius = canvas.width * 0.062;
+                    const b = Bodies.circle(canvas.width / 2, bodyTop - (canvas.height * 0.15), ballRadius, {
                         isStatic: false,
                         restitution: 0.3,
                         friction: 0.05,
