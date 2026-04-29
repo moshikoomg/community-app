@@ -202,11 +202,11 @@
         /* Onboarding Redesign Styles */
         .onboarding-scroll-area {
             width: 100%;
-            max-height: 25vh;
+            max-height: 220px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
             padding: 4px;
-            margin-bottom: 12px;
+            margin-bottom: 5px;
             scrollbar-width: none;
         }
         .onboarding-scroll-area::-webkit-scrollbar { display: none; }
@@ -582,7 +582,8 @@
         .app-container:has(.bottom-section.stats-mode) .top-section {
             filter: blur(15px) saturate(1.1) brightness(0.95);
             transform: scale(0.96);
-            pointer-events: none;
+            pointer-events: auto !important;
+            cursor: pointer;
         }
 
         .app-container:has(.bottom-section.onboarding-mode) .header-ui,
@@ -606,14 +607,38 @@
             touch-action: none; 
             overflow: hidden;
         }
-        .bottom-section.edit-mode, 
-        .bottom-section.stats-mode, 
-        .bottom-section.onboarding-mode {
+        .bottom-section.edit-mode {
             height: 100%;
-            left: 0; /* וידוא היצמדות לשמאל */
+            left: 0;
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(20px) saturate(1.5);
             pointer-events: auto;
+        }
+
+        .bottom-section.stats-mode {
+            height: auto;
+            max-height: 85%;
+            top: 0;
+            bottom: auto;
+            background: #ffffff;
+            border-radius: 0 0 40px 40px;
+            box-shadow: 0 10px 60px rgba(0,0,0,0.15);
+            pointer-events: auto;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 30px;
+        }
+
+        .bottom-section.onboarding-mode {
+            height: auto;
+            max-height: 85%;
+            top: 0;
+            bottom: auto;
+            background: #ffffff;
+            border-radius: 0 0 40px 40px;
+            box-shadow: 0 10px 60px rgba(0,0,0,0.15);
+            pointer-events: auto;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 30px;
         }
         .bottom-section.onboarding-mode { background: #ffffff; }
         
@@ -623,6 +648,17 @@
 
         .drawer-view { width: 100%; display: none; flex-direction: column; align-items: center; flex: 1; margin-top: 8px; touch-action: pan-y; overflow-y: auto; max-height: 100%; padding-bottom: 60px; scroll-behavior: smooth; }
         .drawer-view.active { display: flex; }
+
+        .bottom-section.onboarding-mode .drawer-handle {
+            display: block;
+            width: 40px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin: auto auto 16px;
+            order: 10;
+            flex-shrink: 0;
+        }
 
         .edit-btn { color: #cbd5e1; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 50%; } .edit-btn:hover { background: #f8fafc; color: #94a3b8 !important; }
         .add-btn { color: #cbd5e1; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 50%; } .add-btn:hover { background: #f0fdf4; color: var(--primary-color) !important; }
@@ -915,8 +951,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- Onboarding View --- */
-        #drawer-onboarding-view { padding: 0 25px; width: 100%; box-sizing: border-box; }
-        .onboarding-step { animation: fadeIn 0.4s; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        #drawer-onboarding-view { padding: 0 25px; width: 100%; box-sizing: border-box; flex-direction: column; }
+        .onboarding-step { animation: fadeIn 0.4s; width: 100%; display: flex; flex-direction: column; align-items: center; padding-top: 25px; padding-bottom: 5px; }
         .onboarding-hero-icon {
             font-size: 48px;
             margin-bottom: 15px;
@@ -966,12 +1002,12 @@
 
         /* Adjusting for mobile keyboard - Responsive to screen */
         .app-container:has(.custom-flow-active) .bottom-section.onboarding-mode {
-            height: 100%; 
-            transition: height 0.3s ease-out;
+            height: 80%; 
+            transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        .onboarding-title { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 4px; text-align: center; }
-        .onboarding-sub { font-size: 12px; font-weight: 600; color: #64748b; text-align: center; margin-bottom: 12px; max-width: 230px; line-height: 1.3; }
+        .onboarding-title { font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 2px; text-align: center; }
+        .onboarding-sub { font-size: 13px; font-weight: 600; color: #64748b; text-align: center; margin-bottom: 15px; max-width: 260px; line-height: 1.3; }
         .onboarding-sub span { color: var(--danger-color); }
 
         .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 20px; }
@@ -1264,7 +1300,7 @@
             </div>
 
             <!-- Unified Top Status Bar -->
-            <div id="top-status-bar" onpointerdown="event.stopPropagation()" style="flex: 1; display: flex; flex-direction: column; align-items: center; pointer-events: auto; transform: translateY(0); margin-top: 12px;">
+            <div id="top-status-bar" onpointerdown="event.stopPropagation()" onclick="window.openStatsMode()" style="flex: 1; display: flex; flex-direction: column; align-items: center; pointer-events: auto; transform: translateY(0); margin-top: 12px; cursor: pointer;">
                 
                 <div class="drawer-info-pill" style="background: none; border: none; box-shadow: none; padding: 0; min-height: auto;">
                     <span class="day-label" id="drawer-day-label" style="font-size: 11px; opacity: 0.7;">יום 1</span>
@@ -1388,6 +1424,9 @@
             </div>
 
             <div id="drawer-stats-view" class="drawer-view">
+                <div onclick="window.closeStatsMode()" style="position: absolute; top: 18px; left: 20px; color: #cbd5e1; cursor: pointer; padding: 8px; transition: all 0.2s; z-index: 10;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </div>
                 <div class="stats-header">
                     <div class="stats-title" id="stats-title">שם ההרגל</div>
                     <div class="stats-subtitle">ביצועים וסטטיסטיקה</div>
@@ -2870,17 +2909,16 @@
             
             populateStatsData();
             
-            bd.classList.remove('edit-mode', 'onboarding-mode');
-            bd.classList.add('stats-mode');
+            bd.className = 'bottom-section stats-mode';
             
             document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
             const statsView = document.getElementById('drawer-stats-view');
             if (statsView) {
                 statsView.classList.add('active');
-                statsView.style.paddingTop = '20px';
+                statsView.style.paddingTop = '25px';
             }
             
-            fm.style.display = 'none';
+            if(typeof fm !== 'undefined') fm.style.display = 'none';
             const gl = document.getElementById('marble-glow');
             if (gl) gl.style.opacity = '0';
         };
@@ -2989,18 +3027,21 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             // 1. Quick Tap Detection (No significant move or within tap threshold)
-            if (!window.habitSwipeState.hasMoved || (dist < window.habitSwipeState.tapThreshold && window.habitSwipeState.gestureType === 'none')) {
+            if (!window.habitSwipeState.hasMoved || (dist < window.habitSwipeState.tapThreshold)) {
                 const bd = document.getElementById('bottom-drawer');
-                const isExtended = bd.classList.contains('stats-mode') || bd.classList.contains('edit-mode') || bd.classList.contains('onboarding-mode');
+                const menu = document.getElementById('mode-menu');
+                const isDrawerExtended = bd.classList.contains('stats-mode') || bd.classList.contains('edit-mode') || bd.classList.contains('onboarding-mode');
+                const isMenuOpen = menu && menu.classList.contains('active');
 
-                if (isExtended) {
-                    if (bd.classList.contains('stats-mode')) window.closeStatsMode();
-                    else if (bd.classList.contains('edit-mode')) window.closeEditMode();
-                    else if (bd.classList.contains('onboarding-mode') && habitsData.length > 0) {
-                        bd.className = 'bottom-section';
-                        document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
-                        document.getElementById('drawer-normal-view').classList.add('active');
-                        window.respawnMarble();
+                if (isMenuOpen) {
+                    window.toggleSidebar();
+                } else if (isDrawerExtended) {
+                    // If drawer is in onboarding and there are no habits yet, don't close (mandatory first habit)
+                    if (bd.classList.contains('onboarding-mode') && habitsData.length === 0) {
+                        // Keep onboarding open
+                    } else {
+                        // Close any active mode and return to normal
+                        window.setAppMode('normal');
                     }
                 } else if (habitsData.length > 0 && !window.isAnimatingJump) {
                     window.popMarble();
@@ -3317,6 +3358,10 @@
                     drawer.className = 'bottom-section';
                     document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
                     document.getElementById('drawer-normal-view').classList.add('active');
+                    // Ensure physics lid is reset
+                    const bodyEl = document.querySelector('.jar-body');
+                    const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
+                    Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: bodyTop - 70 });
                     window.respawnMarble();
                     break;
                 case 'onboarding':
