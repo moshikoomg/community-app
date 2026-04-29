@@ -315,6 +315,7 @@
         }
 
         .app-container {
+            touch-action: none;
             width: 100%; 
             height: 100dvh; 
             max-width: 500px;
@@ -376,7 +377,7 @@
             display: none;
         }
 
-        .top-section { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; padding-bottom: 0; margin-bottom: 0; }
+        .top-section { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: grab; touch-action: none !important; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; padding-bottom: 0; margin-bottom: 0; }
         .app-container:has(.bottom-section.edit-mode) .top-section,
         .app-container:has(.bottom-section.stats-mode) .top-section,
         .app-container:has(.bottom-section.onboarding-mode) .top-section {
@@ -1433,12 +1434,14 @@
         <!-- Days Display Removed from top -->
 
         <div class="top-section" id="clickable-top-section" 
-             style="padding-top: 0px; height: 100%;"
+             style="padding-top: 0px; height: 100%; touch-action: none;"
               
+             ontouchstart="window.handleHabitSwipeStart(event)" 
+             ontouchmove="window.handleHabitSwipeMove(event)" 
+             ontouchend="window.handleHabitSwipeEnd(event)"
              onpointerdown="window.handleHabitSwipeStart(event)" 
              onpointermove="window.handleHabitSwipeMove(event)" 
-             onpointerup="window.handleHabitSwipeEnd(event)"
-             onpointercancel="window.handleHabitSwipeEnd(event)">
+             onpointerup="window.handleHabitSwipeEnd(event)">
             <div class="jars-slider" id="jars-slider"></div>
             <canvas id="physics-canvas"></canvas>
         </div>
@@ -3111,12 +3114,12 @@
 
             // --- Phase 1: Hard Axis Locking ---
             if (window.habitSwipeState.gestureType === 'none') {
-                if (absDx > lockThreshold || absDy > lockThreshold) {
-                    // גלילה אופקית דומיננטית - נעל אפשרות לזריקה
+                if (absDx > 5 || absDy > 5) {
+                    // עדיפות לגלילה אופקית על גבי הצנצנת
                     if (absDx > absDy) {
                         window.habitSwipeState.gestureType = 'scroll';
-                        // מניעת כל זימון גולה בהמשך התנועה הזו
                         fm.style.display = 'none';
+                        if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(5);
                     } 
                     // תנועה אנכית (כלפי מעלה) דומיננטית - נעל אפשרות לגלילה וזמן גולה
                     else if (dy < -lockThreshold) {
@@ -3133,9 +3136,10 @@
 
             // --- Phase 2: Isolated Action Execution ---
             if (window.habitSwipeState.gestureType === 'scroll') {
-                // Perform ONLY horizontal scrolling, ball stays hidden
+                // גרירה על הצנצנת מזיזה את הסקרולר העליון
                 const sc = document.getElementById('habit-scroller');
-                sc.scrollLeft = window.habitSwipeState.scrollStart - dx;
+                // שימוש במקדם מהירות (1.5) לגלילה חלקה ומהירה יותר מהצנצנת
+                sc.scrollLeft = window.habitSwipeState.scrollStart - (dx * 1.5);
                 window.habitSwipeState.lastX = touch.clientX;
             } 
             else if (window.habitSwipeState.gestureType === 'drop') {
