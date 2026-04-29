@@ -1847,7 +1847,7 @@
         }
         window.buildJars = buildJars;
 
-        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 1.2; // כבידה יציבה יותר
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 4.5; // כבידה יציבה יותר
         engine.positionIterations = 6;
         engine.velocityIterations = 6;
         let currentBalls = [];
@@ -1961,7 +1961,7 @@
                     isStatic: false,
                     restitution: 0.3,
                     friction: 0.05,
-                    frictionAir: 0.01,
+                    frictionAir: 0,
                     frictionStatic: 0.1,
                     density: 0.5,
                     angle: d.angle,
@@ -2649,11 +2649,11 @@
                     const currentRadius = 26; // Constant size
 
                     // Spawn slightly higher (y: 60) so it visibly passes through the neck neck
-                    const b = Bodies.circle(canvas.width / 2, bodyTop - 120, currentRadius, {
+                    const b = Bodies.circle(canvas.width / 2, bodyTop - 120, 26, {
                         isStatic: false,
                         restitution: 0.3,
                         friction: 0.05,
-                        frictionAir: 0.01,
+                        frictionAir: 0,
                         frictionStatic: 0.1,
                         density: 0.5,
                         label: 'habit-ball',
@@ -2663,7 +2663,7 @@
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
                     // Disable lid barrier for a moment to let the ball in
                     Matter.Body.setPosition(physicsLid, { x: canvas.width / 2, y: -1000 });
-                    Matter.Body.setVelocity(b, {x: (targetX - startX) * 0.05, y: 18}); // Increased Y velocity for punchy entry 
+                    Matter.Body.setVelocity(b, {x: (targetX - startX) * 0.06, y: 28}); // Increased Y velocity for punchy entry 
                     currentBalls.push(b); 
                     Composite.add(world, b); 
                     fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
@@ -2888,7 +2888,7 @@
             renderActiveHabit(); window.popMarble();
         };
 
-        window.habitSwipeState = { startX: 0, startY: 0, lastX: 0, lastY: 0, gestureType: 'none', scrollStart: 0, threshold: 22, tapThreshold: 8, isCanceled: false };
+        window.habitSwipeState = { startX: 0, startY: 0, lastX: 0, lastY: 0, gestureType: 'none', scrollStart: 0, threshold: 12, tapThreshold: 5, isCanceled: false, hasMoved: false };
         window.handleHabitSwipeStart = (e) => {
             if (window.isAnimatingJump || habitsData.length === 0) return;
             if (e.pointerType === 'touch' && !e.isPrimary) return;
@@ -2916,59 +2916,59 @@
             const dx = touch.clientX - window.habitSwipeState.startX;
             const dy = touch.clientY - window.habitSwipeState.startY;
             
-            // Update last tracking coordinates for lid sync
             window.habitSwipeState.lastX = touch.clientX;
             window.habitSwipeState.lastY = touch.clientY;
             const absDx = Math.abs(dx);
             const absDy = Math.abs(dy);
             const sensitivity = window.habitSwipeState.threshold;
 
-            // 1. Gesture Recognition Stage (Waiting/Lock Logic)
+            if (absDx > window.habitSwipeState.tapThreshold || absDy > window.habitSwipeState.tapThreshold) {
+                window.habitSwipeState.hasMoved = true;
+            }
+
+            // Continuous Transition Logic: If we are scrolling but drag upward past 25px, switch to drop mode
+            if (window.habitSwipeState.gestureType === 'scroll' && dy < -25) {
+                window.habitSwipeState.gestureType = 'drop';
+                window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
+                if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
+            }
+
             if (window.habitSwipeState.gestureType === 'none') {
                 if (absDx > sensitivity || absDy > sensitivity) {
-                    if (absDx > absDy * 1.5) {
+                    if (absDx >= absDy) {
                         window.habitSwipeState.gestureType = 'scroll';
                     } else if (dy < -sensitivity) {
                         window.habitSwipeState.gestureType = 'drop';
                         window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
-                    } else if (absDy > sensitivity || absDx > sensitivity) {
+                    } else {
                         window.habitSwipeState.gestureType = 'ignore';
                     }
                 }
                 return;
             }
-            if (window.habitSwipeState.gestureType === 'ignore') return;
 
-            // 2. Continuous Logic for Modes
             if (window.habitSwipeState.gestureType === 'scroll') {
                 const sc = document.getElementById('habit-scroller');
-                sc.scrollLeft = window.habitSwipeState.scrollStart + dx;
-                
-                // COMBO MOVE: Transition from scroll to drop if finger flicks upward suddenly
-                if (dy < -sensitivity * 2 && absDy > absDx) {
-                    window.habitSwipeState.gestureType = 'drop';
-                    window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
-                }
-            } 
+                sc.scrollLeft = window.habitSwipeState.scrollStart - dx; 
+                return;
+            }
             
             if (window.habitSwipeState.gestureType === 'drop') {
                 const cont = document.querySelector('.app-container');
                 const rect = cont.getBoundingClientRect();
                 
-                // 3. Cancel Logic (Manganon Haharta)
-                // If current finger Y is below the start point (or close to it), flag for cancellation
-                const cancelThreshold = -30;
-                window.habitSwipeState.isCanceled = dy > cancelThreshold;
+                // Cancel mechanism: Dragging back down past the origin
+                window.habitSwipeState.isCanceled = dy > -15; 
                 
                 if (window.habitSwipeState.isCanceled) {
                     fm.style.opacity = '0.3';
-                    fm.style.filter = 'grayscale(1) blur(8px) contrast(0.5)';
-                    fm.style.transform = 'scale(0.8) translateY(20px)';
+                    fm.style.filter = 'grayscale(1) blur(8px)';
+                    fm.style.transform = `scale(0.7) translate(${dx*0.2}px, 30px)`;
                 } else {
                     fm.style.opacity = '1';
                     fm.style.filter = 'none';
-                    const stretch = 1 + Math.min(0.2, absDy/1000);
-                    fm.style.transform = `scale(${1.2 * stretch}) rotate(${dx * 0.2}deg)`;
+                    const stretch = 1 + Math.min(0.2, Math.abs(dy)/800);
+                    fm.style.transform = `scale(${1.25 * stretch}) rotate(${dx * 0.1}deg)`;
                 }
 
                 fm.style.left = (touch.clientX - rect.left - 30) + 'px';
@@ -2984,15 +2984,12 @@
             const dy = touch.clientY - window.habitSwipeState.startY;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            // TAP DETECTION: If distance moved is less than 10px, it's a tap
-            if (dist < window.habitSwipeState.tapThreshold && window.habitSwipeState.gestureType === 'none') {
+            // 1. Quick Tap Detection (No significant move or within tap threshold)
+            if (!window.habitSwipeState.hasMoved || (dist < window.habitSwipeState.tapThreshold && window.habitSwipeState.gestureType === 'none')) {
                 const bd = document.getElementById('bottom-drawer');
-                const isExtended = bd.classList.contains('stats-mode') || 
-                                   bd.classList.contains('edit-mode') || 
-                                   bd.classList.contains('onboarding-mode');
+                const isExtended = bd.classList.contains('stats-mode') || bd.classList.contains('edit-mode') || bd.classList.contains('onboarding-mode');
 
                 if (isExtended) {
-                    // Close drawer if extended and tapped outside
                     if (bd.classList.contains('stats-mode')) window.closeStatsMode();
                     else if (bd.classList.contains('edit-mode')) window.closeEditMode();
                     else if (bd.classList.contains('onboarding-mode') && habitsData.length > 0) {
@@ -3002,41 +2999,47 @@
                         window.respawnMarble();
                     }
                 } else if (habitsData.length > 0 && !window.isAnimatingJump) {
-                    // Add ball on release (TapUp) only if not dragging
                     window.popMarble();
                     const contRect = document.querySelector('.app-container').getBoundingClientRect();
                     performNaturalJump(touch.clientX - contRect.left, touch.clientY - contRect.top);
                 }
-                window.habitSwipeState.gestureType = 'none';
+                resetSwipeState();
                 return;
             }
 
-            const finalDy = touch.clientY - window.habitSwipeState.startY;
-
+            // 2. Drop Logic (Successful vertical swipe)
             if (window.habitSwipeState.gestureType === 'drop') {
                 const contRect = document.querySelector('.app-container').getBoundingClientRect();
                 const r = fm.getBoundingClientRect();
-                
-                // Drop ball only if not canceled and finger moved sufficiently up
-                if (!window.habitSwipeState.isCanceled && finalDy < -60) {
+                // Higher threshold for commit (-60px) to prevent accidental drops during fast scroll
+                if (!window.habitSwipeState.isCanceled && dy < -60) {
                     performNaturalJump(r.left + 30 - contRect.left, r.top + 30 - contRect.top);
                 } else {
-                    // Smooth Cancel Animation
+                    // Visual feedback for cancellation
                     fm.animate([
                         { opacity: fm.style.opacity, transform: fm.style.transform, filter: fm.style.filter },
-                        { opacity: 0, transform: 'scale(0.5) translateY(50px)', filter: 'blur(20px)' }
-                    ], { duration: 300, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }).onfinish = () => window.respawnMarble();
+                        { opacity: 0, transform: 'scale(0.2) translateY(60px)', filter: 'blur(20px)' }
+                    ], { duration: 300, easing: 'ease-in' }).onfinish = () => window.respawnMarble();
+                    fm.animate([
+                        { opacity: fm.style.opacity, transform: fm.style.transform, filter: fm.style.filter },
+                        { opacity: 0, transform: 'scale(0.5) translateY(40px)', filter: 'blur(10px)' }
+                    ], { duration: 250, easing: 'ease-out' }).onfinish = () => window.respawnMarble();
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(5);
                 }
             }
 
-            fm.classList.remove('dragging');
-            fm.style.filter = 'none';
-            window.habitSwipeState.gestureType = 'none';
+            resetSwipeState();
             if (e.pointerId && e.currentTarget.releasePointerCapture) {
                 try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(err) {}
             }
         };
+
+        function resetSwipeState() {
+            fm.classList.remove('dragging');
+            fm.style.filter = 'none';
+            window.habitSwipeState.gestureType = 'none';
+            window.habitSwipeState.hasMoved = false;
+        }
         window.handleTopSectionClick = (e) => { /* Logic moved to handleHabitSwipeEnd for release-only trigger */ };
 
         function populateStatsData() {
