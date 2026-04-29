@@ -3237,46 +3237,57 @@
             if (window.isMotionEnabled) return;
             window.isMotionEnabled = true;
             const motionBtn = document.getElementById('btn-enable-motion');
-            if (motionBtn) motionBtn.style.display = 'none';
+            if (motionBtn) {
+                motionBtn.innerText = '✅ חיישני תנועה פעילים';
+                motionBtn.style.background = '#f0fdf4';
+                motionBtn.style.color = '#166534';
+                motionBtn.style.borderColor = '#bbf7d0';
+            }
             
             window.addEventListener('devicemotion', (event) => {
                 const acc = event.accelerationIncludingGravity;
                 if (!acc) return;
 
-                // חישוב כבידה ב-360 מעלות: 
-                // acc.x מייצג הטייה לצדדים (חיובי = שמאל, שלילי = ימין)
-                // acc.y מייצג הטייה קדימה/אחורה (חיובי = ראש למעלה, שלילי = ראש למטה)
-                // במנוע Matter.js, כבידה חיובית ב-Y היא כלפי מטה על המסך.
-                
-                const gravityIntensity = 4.5; // עוצמת הכבידה המקורית של האפליקציה
-                
-                // המרת ערכי התאוצה לווקטור כבידה יחסי (נרמול לפי 9.8 מ'/שניה בריבוע)
-                let targetGX = -(acc.x || 0) / 9.8 * gravityIntensity;
-                let targetGY = (acc.y || 0) / 9.8 * gravityIntensity;
+                // מיפוי כבידה גלובלי - מתאים את הפיזיקה לנטיית הטלפון
+                const orientation = window.orientation || 0;
+                let gx = 0, gy = 0;
 
-                // מניעת מצב שבו הכדורים קופאים כשהמכשיר מאוזן לחלוטין על השולחן
-                const totalG = Math.sqrt(targetGX * targetGX + targetGY * targetGY);
-                if (totalG < 0.3) {
-                    targetGY = 1.5; 
+                // תיקון צירים לפי סיבוב המסך
+                if (orientation === 0) {
+                    gx = -(acc.x || 0) / 9.8;
+                    gy = (acc.y || 0) / 9.8;
+                } else if (orientation === 90) {
+                    gx = -(acc.y || 0) / 9.8;
+                    gy = -(acc.x || 0) / 9.8;
+                } else if (orientation === -90) {
+                    gx = (acc.y || 0) / 9.8;
+                    gy = (acc.x || 0) / 9.8;
+                } else {
+                    gx = (acc.x || 0) / 9.8;
+                    gy = -(acc.y || 0) / 9.8;
                 }
 
-                // עדכון הכבידה במנוע הפיזיקלי
-                engine.gravity.x = targetGX;
-                engine.gravity.y = targetGY;
+                // החלקת תנועה למניעת רעידות כדורים
+                const smoothing = 0.85;
+                engine.gravity.x = (engine.gravity.x * smoothing) + (gx * (1 - smoothing));
+                engine.gravity.y = (engine.gravity.y * smoothing) + (gy * (1 - smoothing));
 
-                // זיהוי שקשוק (Shake) לערבוב הכדורים
+                // זיהוי שקשוק לערבוב
                 const deltaX = Math.abs(lastAcc.x - acc.x);
                 const deltaY = Math.abs(lastAcc.y - acc.y);
-                const deltaZ = Math.abs(lastAcc.z - acc.z);
-
-                if (deltaX > SHAKE_THRESHOLD || deltaY > SHAKE_THRESHOLD || deltaZ > SHAKE_THRESHOLD) {
-                    const intensity = Math.max(deltaX, deltaY, deltaZ);
-                    window.triggerShakePhysics(intensity);
+                if (deltaX > SHAKE_THRESHOLD || deltaY > SHAKE_THRESHOLD) {
+                    window.triggerShakePhysics(Math.max(deltaX, deltaY));
                 }
 
                 lastAcc = { x: acc.x, y: acc.y, z: acc.z };
             });
         };
+
+        // הפעלה גלובלית בלחיצה ראשונה
+        document.addEventListener('pointerdown', function initOnFirstTouch() {
+            window.requestMotionPermission();
+            document.removeEventListener('pointerdown', initOnFirstTouch);
+        }, { once: true });
 
         window.summonMarble = (clientX, clientY, pId) => {
             if (habitsData.length === 0 || window.isAnimatingJump) return;
