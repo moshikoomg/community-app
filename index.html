@@ -1101,9 +1101,9 @@
             animation: scorePopUp 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.35) forwards;
         }
         @keyframes scorePopUp {
-            0% { transform: translate(0, 0) scale(0.5); opacity: 0; filter: blur(6px); }
-            25% { transform: translate(15px, -40px) scale(1.8); opacity: 1; filter: blur(0px); }
-            100% { transform: translate(30px, -180px) scale(2.5); opacity: 0; filter: blur(15px); }
+            0% { transform: translate(0, 0) scale(0.8); opacity: 0; filter: blur(4px); }
+            25% { transform: translate(10px, -30px) scale(1.2); opacity: 1; filter: blur(0px); }
+            100% { transform: translate(20px, -100px) scale(1.4); opacity: 0; filter: blur(8px); }
         }
         .drawer-info-pill.pulse-active {
             transform: scale(1.1);
@@ -1114,7 +1114,7 @@
             position: absolute;
             pointer-events: none;
             font-weight: 900;
-            font-size: 38px;
+            font-size: 28px;
             z-index: 2100;
             display: flex;
             align-items: baseline;
@@ -1126,24 +1126,24 @@
         }
 
         .count-pop-anim {
-            animation: countFloatUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: countFloatUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         @keyframes countFloatUp {
             0% {
-                transform: translate(-50%, 40px) scale(0.5);
+                transform: translate(-50%, 20px) scale(0.8);
                 opacity: 0;
-                filter: blur(8px);
+                filter: blur(4px);
             }
             30% {
-                transform: translate(-50%, -60px) scale(2.2);
+                transform: translate(-50%, -30px) scale(1.2);
                 opacity: 1;
                 filter: blur(0px);
             }
             100% {
-                transform: translate(-50%, -320px) scale(3.8);
+                transform: translate(-50%, -100px) scale(1.4);
                 opacity: 0;
-                filter: blur(20px);
+                filter: blur(10px);
             }
         }
 
@@ -3254,8 +3254,8 @@
 
                 // תיקון צירים לפי סיבוב המסך
                 if (orientation === 0) {
-                    gx = -(acc.x || 0) / 9.8;
-                    gy = (acc.y || 0) / 9.8;
+                    gx = -(acc.x || 0) / 5; // הגדלת רגישות
+                    gy = (acc.y || 0) / 5;
                 } else if (orientation === 90) {
                     gx = -(acc.y || 0) / 9.8;
                     gy = -(acc.x || 0) / 9.8;
@@ -3268,9 +3268,10 @@
                 }
 
                 // החלקת תנועה למניעת רעידות כדורים
-                const smoothing = 0.85;
+                const smoothing = 0.92; // החלקה עדינה יותר למניעת רעידות
                 engine.gravity.x = (engine.gravity.x * smoothing) + (gx * (1 - smoothing));
                 engine.gravity.y = (engine.gravity.y * smoothing) + (gy * (1 - smoothing));
+                engine.gravity.scale = 0.001; // סקייל קבוע ליציבות
 
                 // זיהוי שקשוק לערבוב
                 const deltaX = Math.abs(lastAcc.x - acc.x);
@@ -3566,10 +3567,15 @@
                         // Standard Physics when magnet is off
                         const isFull = currentBalls.length > 15;
                         const forceMag = isFull ? 0.0001 : 0.00001;
-                        Matter.Body.applyForce(b, b.position, { 
-                            x: (170 - b.position.x) * forceMag, 
-                            y: 0 // הכבידה הגלובלית מטפלת בנפילה
-                        });
+                        if (Math.abs(engine.gravity.x) < 0.1) {
+                            Matter.Body.applyForce(b, b.position, { 
+                                x: (canvas.width/2 - b.position.x) * forceMag, 
+                                y: 0 
+                            });
+                        } else {
+                            // כשהמכשיר מוטה, אנחנו מאפשרים לכבידה הפיזיקלית להזיז את הכדורים בחופשיות
+                            Matter.Body.applyForce(b, b.position, { x: 0, y: 0 });
+                        }
                     }
 
                     if (b.render.visible !== false) {
