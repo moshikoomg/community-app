@@ -3013,43 +3013,46 @@
             const dx = touch.clientX - window.habitSwipeState.startX;
             const dy = touch.clientY - window.habitSwipeState.startY;
             
-            window.habitSwipeState.lastX = touch.clientX;
-            window.habitSwipeState.lastY = touch.clientY;
             const absDx = Math.abs(dx);
             const absDy = Math.abs(dy);
-            const sensitivity = 10; // Reduced threshold for quicker detection
+            const sensitivity = 8; 
 
             if (absDx > window.habitSwipeState.tapThreshold || absDy > window.habitSwipeState.tapThreshold) {
                 window.habitSwipeState.hasMoved = true;
             }
 
-            // Gesture Classification
+            // --- Phase 1: Gesture Locking ---
             if (window.habitSwipeState.gestureType === 'none') {
                 if (absDx > sensitivity || absDy > sensitivity) {
-                    // Lock the gesture based on dominant direction
-                    if (absDx > absDy) {
+                    // If horizontal movement is dominant, lock to scroll and DISABLE ball physics interaction
+                    if (absDx > absDy * 1.2) {
                         window.habitSwipeState.gestureType = 'scroll';
-                    } else if (dy < -sensitivity) {
+                    } 
+                    // If vertical upward movement is dominant, lock to ball drop and DISABLE scroller movement
+                    else if (dy < -sensitivity) {
                         window.habitSwipeState.gestureType = 'drop';
                         window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
                         if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
-                    } else {
+                    } 
+                    else if (dy > sensitivity) {
                         window.habitSwipeState.gestureType = 'ignore';
                     }
                 }
                 return;
             }
 
-            // Action Execution
+            // --- Phase 2: Isolated Action Execution ---
             if (window.habitSwipeState.gestureType === 'scroll') {
+                // Perform ONLY horizontal scrolling, ball stays hidden
                 const sc = document.getElementById('habit-scroller');
-                // Natural scrolling direction based on RTL context
                 sc.scrollLeft = window.habitSwipeState.scrollStart - dx;
-            } else if (window.habitSwipeState.gestureType === 'drop') {
+                window.habitSwipeState.lastX = touch.clientX;
+            } 
+            else if (window.habitSwipeState.gestureType === 'drop') {
+                // Perform ONLY marble movement, scroller stays frozen
                 const cont = document.querySelector('.app-container');
                 const rect = cont.getBoundingClientRect();
                 
-                // Cancellation check: if user drags back down towards start
                 window.habitSwipeState.isCanceled = dy > -20;
                 
                 fm.style.left = (touch.clientX - rect.left - 30) + 'px';
@@ -3065,6 +3068,7 @@
                     const stretch = 1 + Math.min(0.2, Math.abs(dy)/500);
                     fm.style.transform = `scale(${1.25 * stretch}) rotate(${dx * 0.1}deg)`;
                 }
+                window.habitSwipeState.lastY = touch.clientY;
             }
         };
         window.handleHabitSwipeEnd = (e) => {
@@ -3109,8 +3113,8 @@
             if (window.habitSwipeState.gestureType === 'drop') {
                 const contRect = document.querySelector('.app-container').getBoundingClientRect();
                 const r = fm.getBoundingClientRect();
-                // Higher threshold for commit (-60px) to prevent accidental drops during fast scroll
-                if (!window.habitSwipeState.isCanceled && dy < -60) {
+                // Vertical commit threshold
+                if (!window.habitSwipeState.isCanceled && dy < -45) {
                     performNaturalJump(r.left + 30 - contRect.left, r.top + 30 - contRect.top);
                 } else {
                     // Visual feedback for cancellation
