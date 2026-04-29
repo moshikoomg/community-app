@@ -1938,7 +1938,7 @@
         }
         window.buildJars = buildJars;
 
-        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 4.5; // כבידה יציבה יותר
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 9.8; // כבידה יציבה יותר
         engine.positionIterations = 6;
         engine.velocityIterations = 6;
         let currentBalls = [];
@@ -3293,7 +3293,7 @@
                 const smoothing = 0.92; // החלקה עדינה יותר למניעת רעידות
                 engine.gravity.x = (engine.gravity.x * smoothing) + (gx * (1 - smoothing));
                 engine.gravity.y = (engine.gravity.y * smoothing) + (gy * (1 - smoothing));
-                engine.gravity.scale = 0.001; // סקייל קבוע ליציבות
+                engine.gravity.scale = 0.0015; // סקייל קבוע ליציבות
 
                 // זיהוי שקשוק לערבוב
                 const deltaX = Math.abs(lastAcc.x - acc.x);
