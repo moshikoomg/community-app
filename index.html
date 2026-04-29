@@ -3017,26 +3017,22 @@
             window.habitSwipeState.lastY = touch.clientY;
             const absDx = Math.abs(dx);
             const absDy = Math.abs(dy);
-            const sensitivity = window.habitSwipeState.threshold;
+            const sensitivity = 10; // Reduced threshold for quicker detection
 
             if (absDx > window.habitSwipeState.tapThreshold || absDy > window.habitSwipeState.tapThreshold) {
                 window.habitSwipeState.hasMoved = true;
             }
 
-            // Continuous Transition Logic: If we are scrolling but drag upward past 25px, switch to drop mode
-            if (window.habitSwipeState.gestureType === 'scroll' && dy < -25) {
-                window.habitSwipeState.gestureType = 'drop';
-                window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
-                if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
-            }
-
+            // Gesture Classification
             if (window.habitSwipeState.gestureType === 'none') {
-                if (absDx > sensitivity || absDy > sensitivity) { if (e.cancelable) e.preventDefault();
-                    if (absDx >= absDy) {
-                        window.habitSwipeState.gestureType = 'scroll'; if (e.cancelable) e.preventDefault();
+                if (absDx > sensitivity || absDy > sensitivity) {
+                    // Lock the gesture based on dominant direction
+                    if (absDx > absDy) {
+                        window.habitSwipeState.gestureType = 'scroll';
                     } else if (dy < -sensitivity) {
                         window.habitSwipeState.gestureType = 'drop';
                         window.summonMarble(touch.clientX, touch.clientY, e.pointerId);
+                        if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
                     } else {
                         window.habitSwipeState.gestureType = 'ignore';
                     }
@@ -3044,32 +3040,31 @@
                 return;
             }
 
+            // Action Execution
             if (window.habitSwipeState.gestureType === 'scroll') {
                 const sc = document.getElementById('habit-scroller');
-                sc.scrollLeft = window.habitSwipeState.scrollStart - dx; 
-                return;
-            }
-            
-            if (window.habitSwipeState.gestureType === 'drop') {
+                // Natural scrolling direction based on RTL context
+                sc.scrollLeft = window.habitSwipeState.scrollStart - dx;
+            } else if (window.habitSwipeState.gestureType === 'drop') {
                 const cont = document.querySelector('.app-container');
                 const rect = cont.getBoundingClientRect();
                 
-                // Cancel mechanism: Dragging back down past the origin
-                window.habitSwipeState.isCanceled = dy > -15; 
+                // Cancellation check: if user drags back down towards start
+                window.habitSwipeState.isCanceled = dy > -20;
                 
+                fm.style.left = (touch.clientX - rect.left - 30) + 'px';
+                fm.style.top = (touch.clientY - rect.top - 30) + 'px';
+
                 if (window.habitSwipeState.isCanceled) {
-                    fm.style.opacity = '0.7';
-                    fm.style.filter = 'grayscale(1) blur(8px)';
-                    fm.style.transform = `scale(0.7) translate(${dx*0.2}px, 30px)`;
+                    fm.style.opacity = '0.5';
+                    fm.style.filter = 'grayscale(1) blur(4px)';
+                    fm.style.transform = 'scale(0.8)';
                 } else {
                     fm.style.opacity = '1';
                     fm.style.filter = 'none';
-                    const stretch = 1 + Math.min(0.2, Math.abs(dy)/800);
+                    const stretch = 1 + Math.min(0.2, Math.abs(dy)/500);
                     fm.style.transform = `scale(${1.25 * stretch}) rotate(${dx * 0.1}deg)`;
                 }
-
-                fm.style.left = (touch.clientX - rect.left - 30) + 'px';
-                fm.style.top = (touch.clientY - rect.top - 30) + 'px';
             }
         };
         window.handleHabitSwipeEnd = (e) => {
