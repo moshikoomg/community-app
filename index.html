@@ -528,7 +528,7 @@
             top: var(--jar-base-y); left: 0; width: 100%;
             height: calc(100% - var(--jar-base-y));
             bottom: 0;
-            border-radius: 60px 60px 0 0;
+            border-radius: 80px 80px 0 0;
             pointer-events: none;
             z-index: 28;
             overflow: hidden;
@@ -563,7 +563,7 @@
             top: var(--jar-base-y); left: 0; width: 100%;
             height: calc(100% - var(--jar-base-y));
             bottom: 0;
-            border-radius: 64px 64px 0 0;
+            border-radius: 80px 80px 0 0;
             margin-bottom: 0;
             background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%);
             border: none;
@@ -1951,29 +1951,31 @@
             const bodyEl = document.querySelector('.jar-body');
             const baseY = bodyEl && bodyEl.getBoundingClientRect().top > 0 ? bodyEl.offsetTop : (h * 0.32);
             
-            // Relative sizes based on Width
-            const jarWidth = w * 0.94;
-            const neckWidth = w * 0.38;
-            const mouthWidth = w * 0.44;
+            const neckWidth = 156; // Matching jar-neck visual width
             const bottomY = h;
             
-            // Lid barrier
-            window.physicsLid = Bodies.rectangle(centerX, baseY - (h * 0.08), mouthWidth * 1.2, h * 0.08, { ...wallOptions, label: 'physics-lid' });
+            // הקיר החוסם העליון - ממוקם בדיוק בבסיס הפקק למנוע יציאה
+            window.physicsLid = Bodies.rectangle(centerX, baseY - 35, neckWidth, 10, { ...wallOptions, label: 'physics-lid' });
             
             Composite.add(world, [
-                // Ceiling
-                Bodies.rectangle(centerX, -100, w * 2, 200, { ...wallOptions, label: 'ceiling' }),
-                // Floor - Adjusted to hit absolute bottom
-                Bodies.rectangle(centerX, bottomY + 99, w * 1.5, 200, { ...wallOptions, label: 'floor' }),
-                // Relative Side Walls
-                Bodies.rectangle(centerX - (w * 0.48), baseY + (h * 0.4), 30, h * 1.5, wallOptions),
-                Bodies.rectangle(centerX + (w * 0.48), baseY + (h * 0.4), 30, h * 1.5, wallOptions),
-                // Relative Shoulders
-                Bodies.rectangle(centerX - (w * 0.38), baseY + (h * 0.04), w * 0.35, 40, { ...wallOptions, angle: Math.PI / 4 }),
-                Bodies.rectangle(centerX + (w * 0.38), baseY + (h * 0.04), w * 0.35, 40, { ...wallOptions, angle: -Math.PI / 4 }),
-                // Relative Neck Walls
-                Bodies.rectangle(centerX - (neckWidth / 2 + 5), baseY - (h * 0.04), 20, h * 0.15, wallOptions),
-                Bodies.rectangle(centerX + (neckWidth / 2 + 5), baseY - (h * 0.04), 20, h * 0.15, wallOptions),
+                // תקרה חיצונית מוחלטת למניעת 'בריחה' מהקנבס
+                Bodies.rectangle(centerX, -500, w * 2, 100, wallOptions),
+                
+                // רצפת הצנצנת
+                Bodies.rectangle(centerX, bottomY + 50, w, 100, wallOptions),
+                
+                // קירות גוף הצנצנת (החלק הרחב)
+                Bodies.rectangle(-20, baseY + (h * 0.5), 40, h * 2, wallOptions), // קיר שמאל צמוד לקצה
+                Bodies.rectangle(w + 20, baseY + (h * 0.5), 40, h * 2, wallOptions), // קיר ימין צמוד לקצה
+                
+                // כתפי הצנצנת - חיבור רחב מהצוואר לקירות הצד
+                Bodies.rectangle(centerX - (w * 0.32), baseY + 5, w * 0.5, 40, { ...wallOptions, angle: Math.PI / 5 }),
+                Bodies.rectangle(centerX + (w * 0.32), baseY + 5, w * 0.5, 40, { ...wallOptions, angle: -Math.PI / 5 }),
+                
+                // קירות הצוואר הפנימיים
+                Bodies.rectangle(centerX - (neckWidth / 2 + 10), baseY - 20, 20, 80, wallOptions),
+                Bodies.rectangle(centerX + (neckWidth / 2 + 10), baseY - 20, 20, 80, wallOptions),
+                
                 window.physicsLid
             ]);
 
@@ -3550,28 +3552,39 @@
             
             Composite.allBodies(world).forEach(b => {
                 if (b.label === 'habit-ball') {
+                    const bodyEl = document.querySelector('.jar-body');
+                    const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
+                    
+                    // מנגנון חזרה לצנצנת במידה והכדור יצא מהגבולות
+                    const outOfBounds = b.position.y > canvas.height || b.position.y < -300 || b.position.x < -50 || b.position.x > canvas.width + 50;
+                    if (outOfBounds) {
+                        Matter.Body.setPosition(b, { x: canvas.width / 2, y: bodyTop + 100 });
+                        Matter.Body.setVelocity(b, { x: 0, y: 2 });
+                        Matter.Body.setAngularVelocity(b, 0);
+                    }
+
                     const isMatching = b.habitId === activeHabitId;
                     let alpha = 1.0;
                     
                     if (isMagnetMode) {
                         const centerX = canvas.width / 2;
-                        const floorY = canvas.height - 100;
+                        const bodyEl = document.querySelector('.jar-body');
+                        const targetY = bodyEl ? bodyEl.offsetTop - 40 : canvas.height * 0.25;
                         if (isMatching) {
                             const dx = centerX - b.position.x;
-                            const dy = floorY - b.position.y;
+                            const dy = targetY - b.position.y;
                             Matter.Body.applyForce(b, b.position, {
-                                x: dx * 0.004,
-                                y: dy * 0.005
+                                x: dx * 0.025,
+                                y: dy * 0.05
                             });
-                            b.torque += (Math.random() - 0.5) * 0.3;
+                            b.torque += (Math.random() - 0.5) * 0.5;
                         } else {
-                            alpha = 1.0;
-                            // Keep them at the bottom but slightly to the sides
-                            const sideX = (b.position.x < centerX) ? (centerX - 100) : (centerX + 100);
-                            const dx = sideX - b.position.x;
+                            // דחיית כדורים שאינם שייכים להרגל
+                            alpha = 0.35; 
+                            const dx = b.position.x - centerX;
                             Matter.Body.applyForce(b, b.position, { 
-                                x: dx * 0.001,
-                                y: 0.001 * b.mass
+                                x: dx * 0.008,
+                                y: 0.03 * b.mass
                             });
                         }
                     } else {
