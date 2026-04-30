@@ -426,6 +426,19 @@
         /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
+        /* סגירת המעבר בין הצוואר לגוף למראה זכוכית אחיד */
+        .jar-body::before {
+            content: '';
+            position: absolute;
+            top: -10px; left: 50%;
+            transform: translateX(-50%);
+            width: 170px; height: 30px;
+            background: inherit;
+            border-radius: 50% / 100%;
+            z-index: -1;
+            filter: blur(2px);
+        }
+        
         .jar-cap-detail {
             will-change: transform;
             position: absolute; top: calc(var(--jar-base-y) - 70px); 
@@ -487,35 +500,8 @@
             border-bottom: 2px solid rgba(255,255,255,0.4);
             pointer-events: none;
         }
-        .jar-neck {
-            position: absolute; top: calc(var(--jar-base-y) - 44px); left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
-            border-radius: 12px 12px 0 0;
-            background: 
-                linear-gradient(to right, 
-                    rgba(0,0,0,0.1) 0%, 
-                    rgba(255,255,255,0.02) 40%, 
-                    rgba(255,255,255,0.02) 60%, 
-                    rgba(0,0,0,0.15) 100%);
-            z-index: 14;
-            border: none;
-        }
-        .jar-neck-front {
-            position: absolute; top: calc(var(--jar-base-y) - 44px); left: 50%; transform: translateX(-50%); width: 156px; height: 50px;
-            border-radius: 12px 12px 0 0;
-            background: 
-                repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 13px),
-                linear-gradient(to right, 
-                    rgba(255,255,255,0.2) 0%, 
-                    transparent 30%, 
-                    transparent 70%, 
-                    rgba(0,0,0,0.05) 100%);
-            box-shadow: 
-                inset 10px 0 8px -6px rgba(255,255,255,0.3),
-                inset -10px 0 8px -6px rgba(0,0,0,0.05);
-            z-index: 24;
-            pointer-events: none;
-            backdrop-filter: blur(2px);
-        }
+        .jar-neck { position: absolute; top: calc(var(--jar-base-y) - 44px); left: 50%; transform: translateX(-50%); width: 156px; height: 60px; border-radius: 20px 20px 0 0; background: linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.05) 100%); z-index: 14; border: none; backdrop-filter: blur(1.5px); }
+        .jar-neck-front { position: absolute; top: calc(var(--jar-base-y) - 44px); left: 50%; transform: translateX(-50%); width: 156px; height: 62px; border-radius: 20px 20px 0 0; background: repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 13px), linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.05) 100%); box-shadow: inset 10px 0 8px -6px rgba(255,255,255,0.3), inset -10px 0 8px -6px rgba(0,0,0,0.05); z-index: 24; pointer-events: none; backdrop-filter: blur(4px); }
         
         .jar-body::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -541,7 +527,7 @@
             top: var(--jar-base-y); left: 0; width: 100%;
             height: calc(100% - var(--jar-base-y));
             bottom: 0;
-            border-radius: 80px 80px 0 0;
+            border-radius: 100px 100px 0 0;
             pointer-events: none;
             z-index: 28;
             overflow: hidden;
@@ -570,26 +556,7 @@
             transform: rotate(5deg);
         }
 
-        .jar-body {
-            z-index: 10;
-            position: absolute;
-            top: var(--jar-base-y); left: 0; width: 100%;
-            height: calc(100% - var(--jar-base-y));
-            bottom: 0;
-            border-radius: 80px 80px 0 0;
-            margin-bottom: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%);
-            border: none;
-            backdrop-filter: none;
-            overflow: hidden;
-            box-shadow: 
-                inset 0 40px 60px -10px rgba(255,255,255,0.3), 
-                inset 0 -40px 80px rgba(0,0,0,0.08), 
-                inset 3px 3px 15px rgba(255,255,255,0.25),
-                inset -3px 0 15px rgba(0,0,0,0.03),
-                0 45px 90px rgba(0,0,0,0.15);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .jar-body { z-index: 10; position: absolute; top: var(--jar-base-y); left: 0; width: 100%; height: calc(100% - var(--jar-base-y)); bottom: 0; border-radius: 120px 120px 0 0; margin-bottom: 0; background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 25%); border: none; overflow: hidden; box-shadow: inset 0 20px 30px -10px rgba(255, 255, 255, 0.7), inset 0 35px 50px -15px rgba(30, 41, 59, 0.12), inset 0 -40px 80px rgba(0,0,0,0.06), inset 0 40px 60px -20px rgba(255,255,255,0.4), 0 45px 90px rgba(0,0,0,0.15); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
         /* Global Background Blur when Drawer is expanded */
         .app-container:has(.bottom-section.onboarding-mode) .top-section,
@@ -1090,6 +1057,23 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
+        /* --- Finger Glow --- */
+        #finger-glow {
+            position: fixed;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, var(--habit-active-color, #239B62) 0%, transparent 75%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.4s ease, background 0.5s ease;
+            mix-blend-mode: screen;
+            transform: translate(-50%, -50%);
+            filter: blur(40px);
+            will-change: left, top, opacity;
+        }
+
         /* --- Score Feedback --- */
         .score-feedback {
             position: absolute;
@@ -1113,7 +1097,7 @@
         .app-container:has(.bottom-section.onboarding-mode) .score-feedback {
             bottom: 450px;
         }
-        .score-anim {
+        .tap-ripple { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); background: var(--habit-active-color, var(--primary-color)); pointer-events: none; z-index: 1000; opacity: 0.4; animation: ripple-out 0.5s cubic-bezier(0, 0, 0.2, 1) forwards; } @keyframes ripple-out { 0% { width: 0; height: 0; opacity: 0.6; box-shadow: 0 0 20px var(--habit-active-color); } 100% { width: 150px; height: 150px; opacity: 0; } } .score-anim {
             animation: scorePopUp 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.35) forwards;
         }
         @keyframes scorePopUp {
@@ -1329,6 +1313,7 @@
 <body>
 
     <div class="app-container">
+        <div id="finger-glow"></div>
         <div class="drawer-backdrop" id="drawer-backdrop" onclick="window.setAppMode('normal')"></div>
         <!-- Header -->
         <div class="header-ui" id="main-header-ui" style="align-items: flex-start; height: auto; padding: 20px; background: linear-gradient(to bottom, rgba(248, 250, 252, 0.9) 0%, rgba(248, 250, 252, 0) 100%); backdrop-filter: none;">
@@ -1699,6 +1684,19 @@
         window.isAnimatingJump = false;
         window.isTutorialMode = false;
         window.isDrag = false;
+
+        window.createTapEffect = (x, y) => {
+            const h = habitsData[currentHabitIndex];
+            const cont = document.querySelector('.app-container');
+            const rect = cont.getBoundingClientRect();
+            const ripple = document.createElement('div');
+            ripple.className = 'tap-ripple';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            if (h) ripple.style.setProperty('--habit-active-color', h.color);
+            cont.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 500);
+        };
         
 
         // --- 2. ליבת נתונים ושחזור ---
@@ -3070,6 +3068,8 @@
             window.habitSwipeState.lastX = touch.clientX;
             window.habitSwipeState.lastY = touch.clientY;
             window.habitSwipeState.scrollStart = document.getElementById('habit-scroller').scrollLeft;
+            const rect = e.currentTarget.getBoundingClientRect();
+            window.createTapEffect(touch.clientX - rect.left, touch.clientY - rect.top);
             window.habitSwipeState.gestureType = 'none';
             window.habitSwipeState.isCanceled = false;
             window.isDrag = true;
@@ -3121,7 +3121,7 @@
                 // גרירה על הצנצנת מזיזה את הסקרולר העליון
                 const sc = document.getElementById('habit-scroller');
                 // שימוש במקדם מהירות (1.5) לגלילה חלקה ומהירה יותר מהצנצנת
-                sc.scrollLeft = window.habitSwipeState.scrollStart - (dx * 1.5);
+                sc.scrollLeft = window.habitSwipeState.scrollStart - (dx * 3.0);
                 window.habitSwipeState.lastX = touch.clientX;
             } 
             else if (window.habitSwipeState.gestureType === 'drop') {
@@ -3734,6 +3734,27 @@
             const y = ((e.clientY - rect.top) / rect.height) * 100;
             document.documentElement.style.setProperty('--light-pos-x', x + '%');
             document.documentElement.style.setProperty('--light-pos-y', y + '%');
+            
+            const fg = document.getElementById('finger-glow');
+            if (fg) {
+                fg.style.left = e.clientX + 'px';
+                fg.style.top = e.clientY + 'px';
+                if (e.buttons > 0) fg.style.opacity = '0.45';
+            }
+        });
+
+        document.addEventListener('pointerdown', (e) => {
+            const fg = document.getElementById('finger-glow');
+            if (fg) {
+                fg.style.left = e.clientX + 'px';
+                fg.style.top = e.clientY + 'px';
+                fg.style.opacity = '0.45';
+            }
+        });
+
+        document.addEventListener('pointerup', () => {
+            const fg = document.getElementById('finger-glow');
+            if (fg) fg.style.opacity = '0';
         });
 
         window.onload = () => {
