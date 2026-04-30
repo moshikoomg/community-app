@@ -2268,12 +2268,12 @@
                 const spawnY = d.relY ? d.relY * h : (bodyTop - 120 - (Math.random() * 50));
                 const b = Bodies.circle(spawnX, Math.min(spawnY, h - ballRadius*2), ballRadius, {
                     isStatic: false,
-                    restitution: 0.3,
-                    slop: 0,
-                    friction: 0.8,
-                    frictionAir: 0.01,
-                    frictionStatic: 1,
-                    density: 0.5,
+                    restitution: 0.4,
+                    slop: 0.01,
+                    friction: 0.5,
+                    frictionAir: 0.005,
+                    frictionStatic: 0.8,
+                    density: 0.002,
                     angle: d.angle,
                     label: 'habit-ball',
                     collisionFilter: { group: 0, category: 0x0001, mask: 0x0001 },
@@ -2738,9 +2738,9 @@
                         const ballRadius = canvas.width * 0.062;
                         const spawnX = (canvas.width / 2) + (Math.random() * 6 - 3);
                         const b = Bodies.circle(spawnX, bodyTop - 220, ballRadius, {
-                            isStatic: false, restitution: 0, friction: 0.8, frictionAir: 0, density: 1.2,
+                            isStatic: false, restitution: 0.2, friction: 0.8, frictionAir: 0, density: 1.2,
                             label: 'habit-ball', 
-                            collisionFilter: { group: -1 },
+                            collisionFilter: { group: 0, category: 0x0001, mask: 0x0001 },
                             render: { fillStyle: '#FFD700' } 
                         });
                         b.isGift = true;
@@ -3019,15 +3019,15 @@
                     const ballRadius = canvas.width * 0.062;
                     const b = Bodies.circle(canvas.width / 2, bodyTop - (canvas.height * 0.15), ballRadius, {
                         isStatic: false,
-                        restitution: 0.1,
-                        slop: 0.05,
-                        friction: 0.8,
-                        frictionAir: 0.01,
-                        frictionStatic: 1,
-                        density: 0.5,
+                        restitution: 0.5,
+                        slop: 0.01,
+                        friction: 0.4,
+                        frictionAir: 0.002,
+                        frictionStatic: 0.6,
+                        density: 0.001,
                         sleepThreshold: 30,
                         label: 'habit-ball',
-                        collisionFilter: { group: -1 },
+                        collisionFilter: { group: 0, category: 0x0001, mask: 0x0001 },
                         render: { fillStyle: h.color }
                     });
                     b.habitId = h.id;
@@ -3048,10 +3048,10 @@
 
                     currentBalls.forEach(ball => {
                         const dx = (canvas.width/2) - ball.position.x;
-                        Matter.Body.applyForce(ball, ball.position, {
-                            x: dx * 0.0008,
-                            y: 0.03 * ball.mass 
-                        });
+                        // Let natural engine gravity handle settling
+                    if (Math.abs(ball.velocity.y) < 0.1) {
+                        Matter.Sleeping.set(ball, true);
+                    }
                     });
 
                     // Hold lid open for 800ms to ensure ball passes through barrier zone
@@ -3964,9 +3964,9 @@
                     const bodyEl = document.querySelector('.jar-body');
                     const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
 
-                    if (b.position.y < bodyTop - 45) {
+                    if (b.position.y < bodyTop - 20) {
                         const dx = (canvas.width / 2) - b.position.x;
-                        Matter.Body.applyForce(b, b.position, { x: dx * 0.002, y: 0.01 });
+                        Matter.Body.applyForce(b, b.position, { x: dx * 0.0005, y: 0.001 });
                     }
                     
                     // מנגנון חזרה מיידית לצנצנת לכל כדור שנתקע או יצא מהגבולות
