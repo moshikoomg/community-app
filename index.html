@@ -1015,13 +1015,7 @@
             display: none;
         }
 
-        .onboarding-step.custom-flow-active .custom-habit-label {
-            display: block !important;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 12px;
-            color: var(--text-main);
-        }
+        .onboarding-step.custom-flow-active .custom-habit-label { display: none !important; }
 
         .onboarding-step.custom-flow-active .custom-input-group {
             background: #ffffff;
@@ -1039,7 +1033,9 @@
             animation: fadeIn 0.5s ease-out;
         }
 
-        .onboarding-step.custom-flow-active .onboarding-hero-icon {
+        .onboarding-step.custom-flow-active .onboarding-hero-icon,
+        .onboarding-step.custom-flow-active .onboarding-title,
+        .onboarding-step.custom-flow-active .onboarding-sub {
             display: none !important;
         }
 
@@ -1250,6 +1246,9 @@
         .reward-popup.active .reward-timer-circle {
             animation: timerProgress 3.5s linear forwards;
         }
+        .success-popup.active .reward-timer-circle {
+            animation: timerProgress 10s linear forwards;
+        }
 
         .reward-popup {
             position: fixed;
@@ -1290,7 +1289,7 @@
             transform: translate(-50%, -50%) scale(1);
             pointer-events: auto;
         }
-        .reward-popup h2 {
+        .success-popup { position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%) scale(0.9) translateY(20px); background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(20px) saturate(1.8); padding: 30px 24px; border-radius: 32px; box-shadow: 0 30px 100px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5); z-index: 20000; text-align: center; opacity: 0; pointer-events: none; transition: all 0.6s cubic-bezier(0.2, 1, 0.3, 1); width: 80%; max-width: 300px; border: none; } .success-popup.active { opacity: 1; transform: translate(-50%, -50%) scale(1) translateY(0); pointer-events: auto; } .success-popup h2 { font-size: 20px; font-weight: 900; margin: 12px 0 8px; color: #1e293b; } .success-popup p { font-size: 14px; line-height: 1.4; color: #64748b; margin: 0; } .confetti { position: fixed; width: 10px; height: 10px; z-index: 19999; pointer-events: none; } .reward-popup h2 {
             margin: 0;
             font-size: 30px;
             background: linear-gradient(135deg, #1e293b 0%, var(--primary-color) 100%);
@@ -1529,8 +1528,8 @@
                 <div id="drawer-onboarding-step1" class="onboarding-step active">
                     <div class="back-onboarding-btn" onclick="window.deactivateCustomFlow()" style="position: absolute; top: 18px; left: 20px; color: #cbd5e1; cursor: pointer; display: none; padding: 8px; transition: all 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></div>
                     
-                    <div class="onboarding-title">מה המטרה הבאה?</div>
-                    <div class="onboarding-sub">בחירה אחת קטנה היום היא שינוי גדול מחר.</div>
+                    <div class="onboarding-title" id="onboarding-main-title">מה המטרה הבאה?</div>
+                    <div class="onboarding-sub" id="onboarding-main-sub">בחירה אחת קטנה היום היא שינוי גדול מחר.</div>
 
                     <div class="onboarding-scroll-area">
                         <div class="preset-grid">
@@ -1549,7 +1548,7 @@
                         </div>
                     </div>
                     
-                    <div class="custom-habit-label" id="onboarding-typing-label" style="display:none; margin-top: 10px; font-size: 16px; color: var(--primary-color);">מה ההרגל החדש שלך?</div>
+                    <div id="onboarding-typing-label" style="display:none;"></div>
                     <div class="custom-input-group" style="display:none;">
                         <input type="text" id="custom-habit-input" placeholder="לדוגמה: לנגן בגיטרה..." oninput="window.onInputHabit()">
                         <button id="custom-flow-trigger-btn" onclick="window.handleCustomHabit()">המשך</button>
@@ -1590,7 +1589,7 @@
 
     <!-- Popups -->
         <!-- Reward Popup -->
-    <div id="reward-popup" class="reward-popup">
+    <div id="success-popup" class="success-popup"><button class="reward-popup-close" onclick="window.dismissSuccessPopup()"><svg class="reward-timer-svg"><circle class="reward-timer-circle" cx="16" cy="16" r="14"></circle></svg><span style="font-size: 14px; font-weight: 900; color: #64748b; position: relative; z-index: 2; margin-top: -1px;">✕</span></button><div style="font-size: 40px; margin-bottom: 10px;">🎉</div><h2>הגולה הראשונה בפנים!</h2><p>איזו התחלה מדהימה!<br>הצעד הראשון הוא תמיד הכי חשוב. הוכחת לעצמך שזה אפשרי!</p><button onclick="window.dismissSuccessPopup()" style="margin-top: 18px; width: 100%; background: var(--primary-color); color: white; border: none; padding: 12px; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 14px;">מעולה!</button></div><div id="reward-popup" class="reward-popup">
         <button class="reward-popup-close" onclick="window.dismissRewardPopup()">
             <svg class="reward-timer-svg">
                 <circle class="reward-timer-circle" cx="16" cy="16" r="14"></circle>
@@ -1649,6 +1648,11 @@
                         <div style="margin-top:20px; text-align:right;">
                             <label style="font-size:12px; font-weight:800; color:#64748b;">כתובת תמונה מרחוק (URL)</label>
                             <input type="text" id="input-app-bg-url" onchange="window.updateCustomBgs()" placeholder="https://..." style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px; font-size:13px;">
+                        </div>
+
+                        <div style="margin-top:15px; text-align:right;">
+                            <label style="font-size:12px; font-weight:800; color:#64748b; display: flex; justify-content: space-between;"><span>גובה צבע רקע</span><span id="ratio-val">80%</span></label>
+                            <input type="range" id="input-app-ratio" min="0" max="100" value="80" oninput="document.getElementById('ratio-val').innerText = this.value + '%'; window.updateCustomBgs()" style="width:100%; margin-top:5px; accent-color: var(--primary-color);">
                         </div>
 
                         <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
@@ -1717,7 +1721,7 @@
             const available = HABIT_PALETTE.filter(c => !usedColors.includes(c.toLowerCase()));
             return available.length > 0 ? available[0] : HABIT_PALETTE[habitsData.length % HABIT_PALETTE.length];
         };
-        let stageBackgrounds = {}, customBgs = {}, userStats = { daysData: [] };
+        let stageBackgrounds = {}, customBgs = {}, userStats = { daysData: [], hasSeenFirstDropPopup: false, hasCompletedFirstHabitEver: false };
         window.isAnimatingJump = false;
         window.isTutorialMode = false;
         window.isDrag = false;
@@ -1748,11 +1752,12 @@
                 if (d) {
                     const data = JSON.parse(d);
                     habitsData = data.habitsData && data.habitsData.length > 0 ? data.habitsData : habitsData;
-                    userStats = data.userStats || { daysData: [] };
+                    userStats = Object.assign({ daysData: [], hasSeenFirstDropPopup: false, hasCompletedFirstHabitEver: false }, data.userStats || {});
                     stageBackgrounds = data.stageBackgrounds || {};
                     customBgs = data.customBgs || {};
                     unlockedDays = data.unlockedDays || 1;
                     hasSeenTutorial = data.hasSeenTutorial || false;
+                    // Data migration and initialization handled by Object.assign above
                     currentDayView = data.currentDayView !== undefined ? data.currentDayView : 0;
                     currentUser = data.currentUser || { displayName: "שם משתמש", profileImage: null };
                 }
@@ -1761,7 +1766,7 @@
         }
         loadLocalState();
 
-        window.saveState = () => {
+        window.triggerConfetti = () => { const colors = ['#239B62', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7']; for (let i = 0; i < 50; i++) { const c = document.createElement('div'); c.className = 'confetti'; c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; c.style.left = Math.random() * 100 + 'vw'; c.style.top = '-10px'; c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px'; document.body.appendChild(c); const animation = c.animate([{ transform: `translate3d(0, 0, 0) rotate(0deg)`, opacity: 1 }, { transform: `translate3d(${(Math.random() - 0.5) * 200}px, 100vh, 0) rotate(${Math.random() * 360}deg)`, opacity: 0 }], { duration: 2000 + Math.random() * 3000, easing: 'cubic-bezier(0, .9, .57, 1)' }); animation.onfinish = () => c.remove(); } }; window.saveState = () => {
             if (typeof currentBalls !== 'undefined' && currentDayView >= 0) {
                 const dayData = userStats.daysData[currentDayView];
                 if (dayData) {
@@ -1950,8 +1955,10 @@
                 appCont.style.backgroundImage = `url(${stageBg})`;
                 appCont.style.backgroundColor = 'transparent';
             } else {
+                const ratio = customBgs.appRatio !== undefined ? customBgs.appRatio : 80;
+                const color = customBgs.appColor || '#e0f2fe';
                 appCont.style.backgroundImage = 'none';
-                appCont.style.background = 'linear-gradient(to bottom, #ffffff 0%, #ffffff 40%, #e0f2fe 100%)';
+                appCont.style.background = `linear-gradient(to bottom, ${color} 0%, ${color} ${ratio}%, #ffffff ${Math.min(100, ratio + 15)}%)`;
             }
 
             document.querySelectorAll('.jar-body, .jar-reflection').forEach(jar => {
@@ -1975,6 +1982,8 @@
         window.updateCustomBgs = () => {
             customBgs = {
                 appUrl: document.getElementById('input-app-bg-url').value,
+                appColor: customBgs.appColor || '#e0f2fe',
+                appRatio: parseInt(document.getElementById('input-app-ratio')?.value || 80),
                 jarColor: document.getElementById('input-jar-color').value,
                 ...customBgs
             };
@@ -2370,6 +2379,10 @@
 
         function checkNewUser() {
             if (habitsData.length === 0) {
+                const title = document.getElementById('onboarding-main-title');
+                const sub = document.getElementById('onboarding-main-sub');
+                if (title) title.innerText = 'מה ההרגל הראשון שלך?';
+                if (sub) sub.innerText = 'בואו נמלא את הצנצנת יחד. איזה שינוי נתחיל היום?';
                 filterExistingPresets();
                 document.getElementById('bottom-drawer').className = 'bottom-section onboarding-mode';
                 document.querySelectorAll('.drawer-view').forEach(v => v.classList.remove('active'));
@@ -2388,56 +2401,43 @@
             const inputField = document.getElementById('custom-habit-input');
             const typingLabel = document.getElementById('onboarding-typing-label');
             const inputGroup = document.querySelector('.custom-input-group');
+            const targetInner = document.querySelector('.onboarding-target-inner');
 
-            // Show typing interface immediately
-            typingLabel.style.display = 'block';
-            inputGroup.style.display = 'flex';
-
-            // Smooth focus for keyboard activation
-            setTimeout(() => {
-                inputField.focus();
-                inputField.setSelectionRange(inputField.value.length, inputField.value.length);
-            }, 100);
+            // Logic: Hide name input if preset chosen, show if custom
             if (n) {
-                document.getElementById('custom-habit-input').value = n;
+                typingLabel.style.display = 'none';
+                inputGroup.style.display = 'none';
+                targetInner.style.display = 'flex';
+                inputField.value = n;
                 window.tmpH = n;
+            } else {
+                typingLabel.style.display = 'none';
+                inputGroup.style.display = 'flex';
+                targetInner.style.display = 'none';
+                setTimeout(() => {
+                    inputField.focus();
+                    inputField.setSelectionRange(inputField.value.length, inputField.value.length);
+                }, 100);
             }
+            
             if (c) window.tmpColor = c;
             else window.tmpColor = window.getNextUniqueColor();
 
-            // Auto-fill logic for presets
             if (defaultUnit) {
                 window.currentUnit = defaultUnit;
-                const customUnitInput = document.getElementById('onboarding-custom-unit-input');
-                
-                // Check if it's a standard unit or needs the custom field
                 const standardUnits = ['פעמים', 'דקות', 'ליטר', 'עמודים', 'צעדים', 'ק״מ'];
                 const isStandard = standardUnits.includes(defaultUnit);
-                
-                document.querySelectorAll('.unit-chip').forEach(chip => {
-                    const isTarget = chip.innerText === defaultUnit;
-                    chip.classList.toggle('selected', isTarget);
-                });
-
-                if (!isStandard) {
-                    document.getElementById('unit-chip-custom').classList.add('selected');
-                    customUnitInput.style.display = 'block';
-                    customUnitInput.value = defaultUnit;
-                } else {
-                    customUnitInput.style.display = 'none';
-                    customUnitInput.value = '';
-                }
+                document.querySelectorAll('.unit-chip').forEach(chip => chip.classList.toggle('selected', chip.innerText === defaultUnit));
+                const ci = document.getElementById('onboarding-custom-unit-input');
+                if (!isStandard) { 
+                    document.getElementById('unit-chip-custom').classList.add('selected'); 
+                    ci.style.display = 'block'; ci.value = defaultUnit;
+                } else { ci.style.display = 'none'; }
             }
 
-            if (defaultAmount) {
-                // Constraint: Highest suggested amount is 3
-                const suggestedAmount = Math.min(3, defaultAmount);
-                document.getElementById('onboarding-target-display').innerText = suggestedAmount;
-            } else {
-                document.getElementById('onboarding-target-display').innerText = '1';
-            }
+            const display = document.getElementById('onboarding-target-display');
+            display.innerText = defaultAmount ? Math.min(3, defaultAmount) : '1';
 
-            document.querySelector('.onboarding-target-inner').style.display = 'flex';
             document.getElementById('custom-flow-trigger-btn').style.display = 'none';
 
             // Logic to filter units based on relevance
@@ -2468,8 +2468,14 @@
             
             if (val.length > 0) {
                 const step1 = document.getElementById('drawer-onboarding-step1');
+                const targetInner = document.querySelector('.onboarding-target-inner');
                 if (!step1.classList.contains('custom-flow-active')) {
                     window.activateCustomFlow();
+                }
+                // For manual typing, show target selection once user starts typing
+                if (targetInner.style.display === 'none') {
+                    targetInner.style.display = 'flex';
+                    targetInner.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, fill: 'forwards' });
                 }
             }
         };
@@ -2515,6 +2521,10 @@
         };
 
         window.openAddMode = () => {
+            const title = document.getElementById('onboarding-main-title');
+            const sub = document.getElementById('onboarding-main-sub');
+            if (title) title.innerText = 'מה המטרה הבאה?';
+            if (sub) sub.innerText = 'בחירה אחת קטנה היום היא שינוי גדול מחר.';
             playSound('click');
             if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
             // הסתרת ה-X אם אין הרגלים (חובה להוסיף הרגל ראשון)
@@ -2575,6 +2585,12 @@
             }
         };
         let rewardTimeout = null;
+        let successTimeout = null;
+        window.dismissSuccessPopup = () => {
+            const pop = document.getElementById('success-popup');
+            pop.classList.remove('active');
+            if (successTimeout) clearTimeout(successTimeout);
+        };
         window.dismissRewardPopup = () => {
             const popup = document.getElementById('reward-popup');
             if (!popup.classList.contains('active')) return;
@@ -2834,6 +2850,19 @@
                     // Increment stats based on base goal
                     if (stats.min < (h.amount || 1)) {
                         stats.min++;
+                        let triggeredFirstBall = false;
+                    if (stats.min === 1 && !userStats.hasSeenFirstDropPopup) {
+                        userStats.hasSeenFirstDropPopup = true;
+                        triggeredFirstBall = true;
+                        window.saveState();
+                        setTimeout(() => {
+                            const pop = document.getElementById('success-popup');
+                            if (pop) pop.classList.add('active');
+                            window.triggerConfetti();
+                            if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate([100, 50, 100, 50, 200]);
+                            successTimeout = setTimeout(() => window.dismissSuccessPopup(), 10000);
+                        }, 800);
+                    }
                     } else {
                         stats.breakthrough++;
                         // Check for Level Up (Growth) when breakthrough is hit
@@ -2847,12 +2876,12 @@
                         
                         if (growthStreak >= 7) {
                             h.amount = (h.amount || 1) + 1;
-                            // Visual feedback for Level Up
                             setTimeout(() => {
                                 alert(`כל הכבוד! בזכות ההתמדה בפריצה, היעד היומי שלך עלה ל-${h.amount} ${h.unit}! 🚀`);
                                 window.updateStatsUI();
                             }, 1000);
                         }
+                        window.updateStatsUI();
                     }
                     
                     const newTotal = currentBalls.length + 1;
@@ -2877,6 +2906,7 @@
                     Matter.Body.setVelocity(b, {x: (targetX - startX) * 0.04, y: 35}); // High velocity ensures zero friction entry 
                     currentBalls.push(b); 
                     Composite.add(world, b); 
+                    window.updateStatsUI(); 
                     fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
                     const gl = document.getElementById('marble-glow'); if(gl) gl.style.opacity = '0';
                     
