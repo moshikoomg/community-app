@@ -417,14 +417,28 @@
 
         .jar-wrapper { 
             position: relative; width: 100%; max-width: 400px; height: 100%; direction: rtl; z-index: 2; 
-            transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+            transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1), filter 0.3s ease; 
             transform: scale(0.9); 
+            transform-origin: bottom center;
+        }
+        .jar-body.glint-active { 
+            filter: brightness(1.15) saturate(1.1);
+            box-shadow: inset 0 0 30px rgba(255,255,255,0.4), 0 45px 90px rgba(0,0,0,0.15);
+        }
+        .jar-body.glint-active::after {
+            opacity: 1 !important;
+            transition: opacity 0.2s ease;
         }
         .jar-slide.active-slide .jar-wrapper { transform: scale(1); }
         canvas#physics-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; touch-action: none; pointer-events: none; background: transparent; }
 
         /* --- Jar Design --- */
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .swipe-hint-arrow { position: absolute; top: 55%; width: 30px; height: 60px; opacity: 0; transition: opacity 0.3s; color: var(--habit-active-color); z-index: 25; filter: blur(1px); }
+        .swipe-hint-arrow.left { left: 5%; transform: rotate(180deg); }
+        .swipe-hint-arrow.right { right: 5%; }
+        .app-container.swiping-up .swipe-hint-arrow { opacity: 0.25; animation: arrowPulse 1.5s infinite; }
+        @keyframes arrowPulse { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.1); } }
         
         /* סגירת המעבר בין הצוואר לגוף למראה זכוכית אחיד */
         .jar-body::before {
@@ -2013,7 +2027,7 @@
                 slide.className = `jar-slide ${i === currentDayView ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
                 const info = getStageInfo(i);
-                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"><div class="jar-caustics"></div><div class="jar-distort-lens"></div></div><div class="jar-reflection"></div></div></div>`;
+                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="swipe-hint-arrow left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div><div class="swipe-hint-arrow right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"><div class="jar-caustics"></div><div class="jar-distort-lens"></div></div><div class="jar-reflection"></div></div></div>`;
                 s.appendChild(slide);
             }
             applyCustomBgs();
@@ -3088,8 +3102,10 @@
             renderActiveHabit(); window.popMarble();
         };
 
-        window.habitSwipeState = { startX: 0, startY: 0, lastX: 0, lastY: 0, gestureType: 'none', scrollStart: 0, threshold: 12, tapThreshold: 5, isCanceled: false, hasMoved: false };
+        window.habitSwipeState = { startX: 0, startY: 0, lastX: 0, lastY: 0, gestureType: 'none', scrollStart: 0, threshold: 12, tapThreshold: 5, isCanceled: false, hasMoved: false, hapticTriggered: false };
         window.handleHabitSwipeStart = (e) => {
+            const jarBody = document.querySelector('.active-slide .jar-body');
+            if (jarBody) jarBody.classList.add('glint-active');
             if (e.cancelable) e.preventDefault();
             e.stopPropagation();
             if (window.isAnimatingJump || habitsData.length === 0) return;
@@ -3108,6 +3124,7 @@
             window.createTapEffect(touch.clientX - rect.left, touch.clientY - rect.top);
             window.habitSwipeState.gestureType = 'none';
             window.habitSwipeState.isCanceled = false;
+            window.habitSwipeState.hapticTriggered = false;
             window.isDrag = true;
 
             if (e.pointerId && e.currentTarget.setPointerCapture) {
@@ -3154,6 +3171,8 @@
 
             // --- Phase 2: Isolated Action Execution ---
             if (window.habitSwipeState.gestureType === 'scroll') {
+                const jarBody = document.querySelector('.active-slide .jar-body');
+                if (jarBody) jarBody.classList.remove('glint-active');
                 // גרירה על הצנצנת מזיזה את הסקרולר העליון
                 const sc = document.getElementById('habit-scroller');
                 // שימוש במקדם מהירות (1.5) לגלילה חלקה ומהירה יותר מהצנצנת
@@ -3161,11 +3180,21 @@
                 window.habitSwipeState.lastX = touch.clientX;
             } 
             else if (window.habitSwipeState.gestureType === 'drop') {
-                // Perform ONLY marble movement, scroller stays frozen
+                const jarWrap = document.querySelector('.active-slide .jar-wrapper');
+                if (jarWrap) {
+                    const stretch = 1 + Math.min(0.08, Math.abs(dy) / 1500);
+                    const squash = 1 - (stretch - 1) * 0.5;
+                    jarWrap.style.transition = 'none';
+                    jarWrap.style.transform = `scale(${0.92 * squash}, ${1.0 * stretch})`;
+                }
                 const cont = document.querySelector('.app-container');
                 const rect = cont.getBoundingClientRect();
                 
                 window.habitSwipeState.isCanceled = dy > -20;
+                if (dy < -45 && !window.habitSwipeState.hapticTriggered) {
+                    if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
+                    window.habitSwipeState.hapticTriggered = true;
+                }
                 
                 fm.style.left = (touch.clientX - rect.left - 30) + 'px';
                 fm.style.top = (touch.clientY - rect.top - 30) + 'px';
@@ -3179,11 +3208,23 @@
                     fm.style.filter = 'none';
                     const stretch = 1 + Math.min(0.2, Math.abs(dy)/500);
                     fm.style.transform = `scale(${1.25 * stretch}) rotate(${dx * 0.1}deg)`;
+                    
+                    // Dynamic Intensity Feedback
+                    const intensity = Math.min(1, Math.abs(dy) / 250);
+                    cont.style.filter = `saturate(${1 + intensity * 0.5}) brightness(${1 - intensity * 0.1})`;
+                    cont.classList.add('swiping-up');
                 }
                 window.habitSwipeState.lastY = touch.clientY;
             }
         };
         window.handleHabitSwipeEnd = (e) => {
+            const jarWrap = document.querySelector('.active-slide .jar-wrapper');
+            const jarBody = document.querySelector('.active-slide .jar-body');
+            if (jarWrap) {
+                jarWrap.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                jarWrap.style.transform = 'scale(1)';
+            }
+            if (jarBody) jarBody.classList.remove('glint-active');
             e.stopPropagation();
             if (!window.isDrag) return;
             window.isDrag = false;
@@ -3244,6 +3285,8 @@
             }
 
             resetSwipeState();
+            document.querySelector('.app-container').style.filter = 'none';
+            document.querySelector('.app-container').classList.remove('swiping-up');
             if (e.pointerId && e.currentTarget.releasePointerCapture) {
                 try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(err) {}
             }
