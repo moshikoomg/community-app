@@ -1956,6 +1956,9 @@
             document.querySelectorAll('.jar-body, .jar-reflection').forEach(jar => {
                 if (customBgs.jarUrl) {
                     jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
+                    jar.style.backgroundPosition = 'center';
+                    jar.style.backgroundSize = 'cover';
+                    jar.style.backgroundRepeat = 'no-repeat';
                     jar.style.backgroundColor = 'transparent';
                 } else if (customBgs.jarColor) {
                     jar.style.backgroundColor = (customBgs.jarColor || '#ffffff') + '40';
