@@ -589,7 +589,7 @@
             transform: rotate(5deg);
         }
 
-        .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y)); border-radius: 16px 16px 0 0; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); border-bottom: none; overflow: hidden; box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06), 0 45px 90px rgba(0,0,0,0.15); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y)); border-radius: 80px 80px 20px 20px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); border-bottom: none; overflow: hidden; box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06), 0 45px 90px rgba(0,0,0,0.15); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes causticDance { 0% { background-position: 0% 0%; opacity: 0.1; } 50% { background-position: 100% 50%; opacity: 0.25; } 100% { background-position: 50% 100%; opacity: 0.1; } }
         .jar-caustics { display: none !important; }
         .jar-distort-lens { position: absolute; top: 5%; left: 5%; width: 90%; height: 90%; background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.15) 0%, transparent 60%); filter: blur(20px); pointer-events: none; z-index: 12; }
@@ -1306,7 +1306,7 @@
             font-weight: 600;
             line-height: 1.5;
         }
-        .reward-glow-bg {
+        .swipe-hint-ghost { position: absolute; width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; z-index: 9000; pointer-events: none; opacity: 0; filter: blur(4px); box-shadow: 0 0 30px rgba(255,255,255,0.5); } @keyframes swipeHintMove { 0% { opacity: 0; transform: translate(-50%, 50px) scale(0.8); } 20% { opacity: 0.7; transform: translate(-50%, 40px) scale(1.2); } 80% { opacity: 0.4; transform: translate(-50%, -200px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -280px) scale(0.7); } } .reward-glow-bg {
             position: absolute;
             top: 50%; left: 50%;
             width: 200%; height: 200%;
@@ -1950,7 +1950,7 @@
                 appCont.style.backgroundColor = 'transparent';
             } else {
                 appCont.style.backgroundImage = 'none';
-                appCont.style.background = `radial-gradient(circle at var(--light-pos-x) var(--light-pos-y), #ffffff 0%, #f8fafc 60%)`;
+                appCont.style.background = 'linear-gradient(to bottom, #ffffff 0%, #ffffff 40%, #e0f2fe 100%)';
             }
 
             document.querySelectorAll('.jar-body, .jar-reflection').forEach(jar => {
@@ -2046,15 +2046,15 @@
             const bodyWidth = w * 0.88;
             const wallThickness = 200;
             
-            window.physicsLid = Bodies.rectangle(centerX, baseY - 38, neckWidth - 4, 15, { ...wallOptions, label: 'physics-lid' });
+            window.physicsLid = Bodies.rectangle(centerX, baseY - 38, neckWidth - 10, 20, { ...wallOptions, label: 'physics-lid', friction: 0, frictionStatic: 0 });
             
             Composite.add(world, [
                 // Bottom Boundary
                 Bodies.rectangle(centerX, h + wallThickness/2, w * 2, wallThickness, wallOptions),
                 
                 // Inner Neck Walls (Vertical) - Increased thickness to prevent escaping
-                Bodies.rectangle(centerX - (neckWidth / 2) - wallThickness/2, baseY - 20, wallThickness, 100, wallOptions),
-                Bodies.rectangle(centerX + (neckWidth / 2) + wallThickness/2, baseY - 20, wallThickness, 100, wallOptions),
+                Bodies.rectangle(centerX - (neckWidth / 2 + 10) - wallThickness/2, baseY - 20, wallThickness, 120, wallOptions),
+                Bodies.rectangle(centerX + (neckWidth / 2 + 10) + wallThickness/2, baseY - 20, wallThickness, 120, wallOptions),
                 
                 // Jar Shoulders (Diagonal Thick Walls)
                 Bodies.rectangle(centerX - (neckWidth/2 + 22), baseY + 10, 80, wallThickness, { ...wallOptions, angle: Math.PI / 4.5 }),
@@ -2577,38 +2577,52 @@
             if (rewardTimeout) clearTimeout(rewardTimeout);
             
             setTimeout(() => {
-                window.isAnimatingJump = true; 
-                const bodyTop = document.querySelector('.jar-body')?.offsetTop || 300;
-                Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -1000 });
+                window.isAnimatingJump = true;
+                const bodyEl = document.querySelector('.jar-body');
+                const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
+                
+                // Move lid barrier away to allow entry
+                window.isAnimatingJump = true;
+                Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -5000 });
 
                 for(let i = 0; i < 3; i++) {
                     setTimeout(() => {
                         const h = habitsData[0];
-                        const spawnX = (canvas.width / 2) + (Math.random() * 30 - 15);
-                        const b = Bodies.circle(spawnX, bodyTop - 150, 26, {
-                            restitution: 0.4, friction: 0.05, density: 0.05,
-                            label: 'habit-ball', render: { fillStyle: h ? h.color : '#239B62' } 
+                        const ballRadius = canvas.width * 0.062;
+                        const spawnX = (canvas.width / 2) + (Math.random() * 6 - 3);
+                        const b = Bodies.circle(spawnX, bodyTop - 220, ballRadius, {
+                            isStatic: false, restitution: 0.4, friction: 0, frictionAir: 0, density: 1.2,
+                            label: 'habit-ball', render: { fillStyle: '#FFD700' } 
                         });
                         b.isGift = true;
                         b.habitId = h ? h.id : 0;
                         
                         currentBalls.push(b);
                         Composite.add(world, b);
-                        Matter.Body.setVelocity(b, {x: (Math.random() - 0.5) * 3, y: 8});
+                        Matter.Body.setVelocity(b, {x: 0, y: 28});
+                        
                         if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(15);
                         
                         if (i === 2) {
-                            setTimeout(() => {
-                                window.isAnimatingJump = false;
-                                window.saveState();
-                            }, 2000);
+                            // Detect when the last golden ball hits the pile to close the lid
+                            const onGoldImpact = (event) => {
+                                event.pairs.forEach(pair => {
+                                    if (pair.bodyA === b || pair.bodyB === b) {
+                                        window.isAnimatingJump = false;
+                                        window.saveState();
+                                        window.triggerSwipeHint();
+                                        Matter.Events.off(engine, 'collisionStart', onGoldImpact);
+                                    }
+                                });
+                            };
+                            Matter.Events.on(engine, 'collisionStart', onGoldImpact);
                         }
-                    }, i * 600);
+                    }, i * 500);
                 }
             }, 300);
         };
 
-        window.triggerFirstHabitReward = () => {
+        window.triggerSwipeHint = () => { const container = document.querySelector('.app-container'); const hint = document.createElement('div'); hint.className = 'swipe-hint-ghost'; const rect = container.getBoundingClientRect(); hint.style.left = '50%'; hint.style.top = (rect.height * 0.7) + 'px'; hint.style.animation = 'swipeHintMove 2s cubic-bezier(0.4, 0, 0.2, 1) forwards'; container.appendChild(hint); const fingerIcon = document.createElement('div'); fingerIcon.innerHTML = '👆'; fingerIcon.style.cssText = 'font-size: 30px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px white);'; hint.appendChild(fingerIcon); setTimeout(() => hint.remove(), 2500); }; window.triggerFirstHabitReward = () => {
             if(habitsData.length === 0) return;
             const popup = document.getElementById('reward-popup');
             popup.classList.add('active');
@@ -2855,7 +2869,7 @@
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
                     // Disable lid barrier for a moment to let the ball in
                     Matter.Body.setPosition(physicsLid, { x: canvas.width / 2, y: -1000 });
-                    Matter.Body.setVelocity(b, {x: (targetX - startX) * 0.06, y: 28}); // Increased Y velocity for punchy entry 
+                    Matter.Body.setVelocity(b, {x: (targetX - startX) * 0.04, y: 35}); // High velocity ensures zero friction entry 
                     currentBalls.push(b); 
                     Composite.add(world, b); 
                     fm.style.transition = 'none'; fm.style.opacity = '0'; fm.style.visibility = 'hidden';
@@ -2875,10 +2889,23 @@
                     });
 
                     // Hold lid open for 800ms to ensure ball passes through barrier zone
+                    const onImpact = (event) => {
+                        event.pairs.forEach(pair => {
+                            if (pair.bodyA === b || pair.bodyB === b) {
+                                window.isAnimatingJump = false;
+                                window.saveState();
+                                Matter.Events.off(engine, 'collisionStart', onImpact);
+                            }
+                        });
+                    };
+                    Matter.Events.on(engine, 'collisionStart', onImpact);
+                    // Fallback to ensure lid closes if collision missed
                     setTimeout(() => {
-                        window.isAnimatingJump = false; 
-                        window.saveState();
-                    }, 1200);
+                        if (window.isAnimatingJump) {
+                            window.isAnimatingJump = false;
+                            Matter.Events.off(engine, 'collisionStart', onImpact);
+                        }
+                    }, 1500);
                     
                     // Single Unified Score Feedback: Emerging from the JAR CENTER, growing and fading away
                     const bodyEl = document.querySelector('.jar-body');
@@ -3640,10 +3667,12 @@
             lid.style.transform = `translateY(${lift}px) rotate(${screwRotation}deg)`;
             
             // Ensure physics lid barrier returns to position when lid is closed
-            if (openFactor < 0.05 && !window.isAnimatingJump) {
-                 const bodyEl = document.querySelector('.jar-body');
-                 const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
-                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: bodyTop - 70 });
+            const bodyEl = document.querySelector('.jar-body');
+            const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
+            if (openFactor > 0.15 || window.isAnimatingJump) {
+                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -5000 });
+            } else {
+                 Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: bodyTop - 38 });
             }
 
             // Add a small 'rattle' effect when the lid is just starting to unscrew
