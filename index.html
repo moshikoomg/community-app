@@ -430,13 +430,16 @@
         .jar-body::before {
             content: '';
             position: absolute;
-            top: -10px; left: 50%;
+            top: -24px; left: 50%;
             transform: translateX(-50%);
-            width: 170px; height: 30px;
-            background: inherit;
-            border-radius: 50% / 100%;
-            z-index: -1;
-            filter: blur(2px);
+            width: 170px; height: 48px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 100% 100% 0 0 / 80% 80% 0 0;
+            z-index: 15;
+            backdrop-filter: blur(2px);
+            border-left: 2.5px solid rgba(255,255,255,0.3);
+            border-right: 2.5px solid rgba(255,255,255,0.3);
+            box-shadow: inset 0 8px 12px rgba(255,255,255,0.4);
         }
         
         .jar-cap-detail {
@@ -488,20 +491,50 @@
         .jar-cap-detail.open { transform: translateY(-50px) rotate(-30deg); }
 
         .jar-opening {
-            position: absolute; top: calc(var(--jar-base-y) - 46px); left: 50%; transform: translateX(-50%); width: 156px; height: 16px;
-            border-radius: 50%; background: rgba(255, 255, 255, 0.1); z-index: 15;
-            box-shadow: 
-                inset 0 0 10px rgba(0,0,0,0.2);
-            border: 1.5px solid rgba(255,255,255,0.1);
-        }
-        .jar-opening-front {
-            position: absolute; top: calc(var(--jar-base-y) - 38px); left: 50%; transform: translateX(-50%); width: 156px; height: 8px;
-            border-radius: 0 0 100px 100px; z-index: 25;
-            border-bottom: 2px solid rgba(255,255,255,0.4);
+            position: absolute; top: calc(var(--jar-base-y) - 42px); left: 50%; transform: translateX(-50%); width: 156px; height: 14px;
+            border-radius: 50%; background: rgba(255, 255, 255, 0.05); z-index: 21;
+            border: 1px solid rgba(255,255,255,0.4);
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.2);
             pointer-events: none;
         }
-        .jar-neck { position: absolute; top: calc(var(--jar-base-y) - 44px); left: 50%; transform: translateX(-50%); width: 156px; height: 60px; border-radius: 20px 20px 0 0; background: linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.05) 100%); z-index: 14; border: none; backdrop-filter: blur(1.5px); }
-        .jar-neck-front { position: absolute; top: calc(var(--jar-base-y) - 44px); left: 50%; transform: translateX(-50%); width: 156px; height: 62px; border-radius: 20px 20px 0 0; background: repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 13px), linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.05) 100%); box-shadow: inset 10px 0 8px -6px rgba(255,255,255,0.3), inset -10px 0 8px -6px rgba(0,0,0,0.05); z-index: 24; pointer-events: none; backdrop-filter: blur(4px); }
+        .jar-opening-front {
+            position: absolute; top: calc(var(--jar-base-y) - 36px); left: 50%; transform: translateX(-50%); width: 156px; height: 6px;
+            border-radius: 0 0 80px 80px; z-index: 25;
+            border-bottom: 1.5px solid rgba(255,255,255,0.5);
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        .jar-neck {
+            display: block !important;
+            position: absolute; 
+            top: calc(var(--jar-base-y) - 40px); 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 154px; 
+            height: 40px;
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0.08) 0%, 
+                rgba(255,255,255,0.2) 20%, 
+                rgba(255,255,255,0.25) 50%, 
+                rgba(255,255,255,0.2) 80%, 
+                rgba(255,255,255,0.08) 100%);
+            border-left: 2px solid rgba(255,255,255,0.2);
+            border-right: 2px solid rgba(255,255,255,0.2);
+            z-index: 12;
+            backdrop-filter: blur(4px);
+        }
+        .jar-neck-front {
+            display: block !important;
+            position: absolute;
+            top: calc(var(--jar-base-y) - 40px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 154px;
+            height: 40px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            z-index: 24;
+            pointer-events: none;
+        }
         
         .jar-body::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -556,7 +589,10 @@
             transform: rotate(5deg);
         }
 
-        .jar-body { z-index: 10; position: absolute; top: var(--jar-base-y); left: 0; width: 100%; height: calc(100% - var(--jar-base-y)); bottom: 0; border-radius: 120px 120px 0 0; margin-bottom: 0; background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 25%); border: none; overflow: hidden; box-shadow: inset 0 20px 30px -10px rgba(255, 255, 255, 0.7), inset 0 35px 50px -15px rgba(30, 41, 59, 0.12), inset 0 -40px 80px rgba(0,0,0,0.06), inset 0 40px 60px -20px rgba(255,255,255,0.4), 0 45px 90px rgba(0,0,0,0.15); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .jar-body { z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y)); border-radius: 16px 16px 0 0; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); border-bottom: none; overflow: hidden; box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06), 0 45px 90px rgba(0,0,0,0.15); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes causticDance { 0% { background-position: 0% 0%; opacity: 0.1; } 50% { background-position: 100% 50%; opacity: 0.25; } 100% { background-position: 50% 100%; opacity: 0.1; } }
+        .jar-caustics { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0%, transparent 10%), radial-gradient(circle at 20% 80%, rgba(255,255,255,0.3) 0%, transparent 15%); background-size: 80px 80px; filter: blur(12px); animation: causticDance 15s infinite linear; mix-blend-mode: screen; pointer-events: none; z-index: 11; }
+        .jar-distort-lens { position: absolute; top: 5%; left: 5%; width: 90%; height: 90%; background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.15) 0%, transparent 60%); filter: blur(20px); pointer-events: none; z-index: 12; }
 
         /* Global Background Blur when Drawer is expanded */
         .app-container:has(.bottom-section.onboarding-mode) .top-section,
@@ -1977,7 +2013,7 @@
                 slide.className = `jar-slide ${i === currentDayView ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
                 const info = getStageInfo(i);
-                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"></div><div class="jar-reflection"></div></div></div>`;
+                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"><div class="jar-caustics"></div><div class="jar-distort-lens"></div></div><div class="jar-reflection"></div></div></div>`;
                 s.appendChild(slide);
             }
             applyCustomBgs();
@@ -2001,35 +2037,35 @@
         function updatePhysicsBoundaries(w) {
             Composite.clear(world, false);
             const h = canvas.height;
-            const wallOptions = { isStatic: true, friction: 0.1, frictionStatic: 0.2, restitution: 0.2, render: { visible: false } };
+            const wallOptions = { isStatic: true, friction: 0.05, frictionStatic: 0.1, restitution: 0.3, render: { visible: false } };
             const centerX = w / 2;
             const bodyEl = document.querySelector('.jar-body');
             const baseY = bodyEl && bodyEl.getBoundingClientRect().top > 0 ? bodyEl.offsetTop : (h * 0.32);
             
-            const neckWidth = 156; // Matching jar-neck visual width
+            // Exact CSS Sync: Neck is 154px, Body is 88% width
+            const neckWidth = 154; 
+            const bodyWidth = w * 0.88;
             const bottomY = h;
             
-            // הקיר החוסם העליון - ממוקם בדיוק בבסיס הפקק למנוע יציאה
-            window.physicsLid = Bodies.rectangle(centerX, baseY - 35, neckWidth, 10, { ...wallOptions, label: 'physics-lid' });
+            window.physicsLid = Bodies.rectangle(centerX, baseY - 38, neckWidth - 4, 10, { ...wallOptions, label: 'physics-lid' });
             
             Composite.add(world, [
-                // תקרה חיצונית מוחלטת למניעת 'בריחה' מהקנבס
-                Bodies.rectangle(centerX, -500, w * 2, 100, wallOptions),
-                
-                // רצפת הצנצנת
+                // External Boundaries (Safety Net)
+                Bodies.rectangle(centerX, -1000, w * 5, 100, wallOptions),
                 Bodies.rectangle(centerX, bottomY + 50, w, 100, wallOptions),
                 
-                // קירות גוף הצנצנת (החלק הרחב)
-                Bodies.rectangle(-20, baseY + (h * 0.5), 40, h * 2, wallOptions), // קיר שמאל צמוד לקצה
-                Bodies.rectangle(w + 20, baseY + (h * 0.5), 40, h * 2, wallOptions), // קיר ימין צמוד לקצה
+                // Inner Neck Walls (Vertical)
+                Bodies.rectangle(centerX - (neckWidth / 2) - 5, baseY - 20, 10, 80, wallOptions),
+                Bodies.rectangle(centerX + (neckWidth / 2) + 5, baseY - 20, 10, 80, wallOptions),
                 
-                // כתפי הצנצנת - חיבור רחב מהצוואר לקירות הצד
-                Bodies.rectangle(centerX - (w * 0.32), baseY + 5, w * 0.5, 40, { ...wallOptions, angle: Math.PI / 5 }),
-                Bodies.rectangle(centerX + (w * 0.32), baseY + 5, w * 0.5, 40, { ...wallOptions, angle: -Math.PI / 5 }),
-                
-                // קירות הצוואר הפנימיים
-                Bodies.rectangle(centerX - (neckWidth / 2 + 10), baseY - 20, 20, 80, wallOptions),
-                Bodies.rectangle(centerX + (neckWidth / 2 + 10), baseY - 20, 20, 80, wallOptions),
+                // Jar Shoulders (Diagonal Transition)
+                // Positioned to bridge neckWidth and bodyWidth
+                Bodies.rectangle(centerX - (neckWidth/2 + 22), baseY + 12, 60, 10, { ...wallOptions, angle: Math.PI / 4.5 }),
+                Bodies.rectangle(centerX + (neckWidth/2 + 22), baseY + 12, 60, 10, { ...wallOptions, angle: -Math.PI / 4.5 }),
+
+                // Inner Body Walls (Strict 88% width constraint)
+                Bodies.rectangle(centerX - (bodyWidth / 2) - 5, baseY + (h * 0.5), 10, h * 2, wallOptions),
+                Bodies.rectangle(centerX + (bodyWidth / 2) + 5, baseY + (h * 0.5), 10, h * 2, wallOptions),
                 
                 window.physicsLid
             ]);
@@ -3646,14 +3682,14 @@
                     }
                     
                     // מנגנון חזרה לצנצנת במידה והכדור יצא מהגבולות
-                    const isOutOfBounds = b.position.y > canvas.height + 150 || b.position.y < -800 || b.position.x < -150 || b.position.x > canvas.width + 150;
+                    const isOutOfBounds = b.position.y > canvas.height + 100 || b.position.y < -1000 || b.position.x < -200 || b.position.x > canvas.width + 200;
                     if (isOutOfBounds) {
-                        // שיגור מיידי (Teleport) למרכז הצנצנת
-                        const spawnY = bodyTop + 60;
-                        Matter.Body.setPosition(b, { x: canvas.width / 2, y: spawnY });
-                        Matter.Body.setVelocity(b, { x: 0, y: 0.5 });
-                        Matter.Body.setAngularVelocity(b, 0);
-                        Matter.Body.setAngle(b, 0);
+                        const safeX = canvas.width / 2;
+                        const safeY = bodyTop + 100;
+                        Matter.Body.setPosition(b, { x: safeX, y: safeY });
+                        Matter.Body.setVelocity(b, { x: 0, y: 1 });
+                        Matter.Body.setAngularVelocity(b, 0.01);
+                        Matter.Body.setAngle(b, Math.random() * Math.PI);
                     }
 
                     const isMatching = b.habitId === activeHabitId;
