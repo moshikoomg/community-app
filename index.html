@@ -2020,9 +2020,9 @@
         }
         window.buildJars = buildJars;
 
-        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 9.8; // כבידה יציבה יותר
-        engine.positionIterations = 6;
-        engine.velocityIterations = 6;
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 9.8;
+        engine.positionIterations = 10;
+        engine.velocityIterations = 10;
         let currentBalls = [];
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
         
@@ -2037,35 +2037,32 @@
         function updatePhysicsBoundaries(w) {
             Composite.clear(world, false);
             const h = canvas.height;
-            const wallOptions = { isStatic: true, friction: 0.05, frictionStatic: 0.1, restitution: 0.3, render: { visible: false } };
+            const wallOptions = { isStatic: true, friction: 0.1, frictionStatic: 0.5, restitution: 0.1, render: { visible: false } };
             const centerX = w / 2;
             const bodyEl = document.querySelector('.jar-body');
             const baseY = bodyEl && bodyEl.getBoundingClientRect().top > 0 ? bodyEl.offsetTop : (h * 0.32);
             
-            // Exact CSS Sync: Neck is 154px, Body is 88% width
             const neckWidth = 154; 
             const bodyWidth = w * 0.88;
-            const bottomY = h;
+            const wallThickness = 200;
             
-            window.physicsLid = Bodies.rectangle(centerX, baseY - 38, neckWidth - 4, 10, { ...wallOptions, label: 'physics-lid' });
+            window.physicsLid = Bodies.rectangle(centerX, baseY - 38, neckWidth - 4, 15, { ...wallOptions, label: 'physics-lid' });
             
             Composite.add(world, [
-                // External Boundaries (Safety Net)
-                Bodies.rectangle(centerX, -1000, w * 5, 100, wallOptions),
-                Bodies.rectangle(centerX, bottomY + 50, w, 100, wallOptions),
+                // Bottom Boundary
+                Bodies.rectangle(centerX, h + wallThickness/2, w * 2, wallThickness, wallOptions),
                 
-                // Inner Neck Walls (Vertical)
-                Bodies.rectangle(centerX - (neckWidth / 2) - 5, baseY - 20, 10, 80, wallOptions),
-                Bodies.rectangle(centerX + (neckWidth / 2) + 5, baseY - 20, 10, 80, wallOptions),
+                // Inner Neck Walls (Vertical) - Increased thickness to prevent escaping
+                Bodies.rectangle(centerX - (neckWidth / 2) - wallThickness/2, baseY - 20, wallThickness, 100, wallOptions),
+                Bodies.rectangle(centerX + (neckWidth / 2) + wallThickness/2, baseY - 20, wallThickness, 100, wallOptions),
                 
-                // Jar Shoulders (Diagonal Transition)
-                // Positioned to bridge neckWidth and bodyWidth
-                Bodies.rectangle(centerX - (neckWidth/2 + 22), baseY + 12, 60, 10, { ...wallOptions, angle: Math.PI / 4.5 }),
-                Bodies.rectangle(centerX + (neckWidth/2 + 22), baseY + 12, 60, 10, { ...wallOptions, angle: -Math.PI / 4.5 }),
+                // Jar Shoulders (Diagonal Thick Walls)
+                Bodies.rectangle(centerX - (neckWidth/2 + 22), baseY + 10, 80, wallThickness, { ...wallOptions, angle: Math.PI / 4.5 }),
+                Bodies.rectangle(centerX + (neckWidth/2 + 22), baseY + 10, 80, wallThickness, { ...wallOptions, angle: -Math.PI / 4.5 }),
 
-                // Inner Body Walls (Strict 88% width constraint)
-                Bodies.rectangle(centerX - (bodyWidth / 2) - 5, baseY + (h * 0.5), 10, h * 2, wallOptions),
-                Bodies.rectangle(centerX + (bodyWidth / 2) + 5, baseY + (h * 0.5), 10, h * 2, wallOptions),
+                // Inner Body Walls (Thick blocks that align exactly at the 88% edge)
+                Bodies.rectangle(centerX - (bodyWidth / 2) - wallThickness/2, h/2 + baseY/2, wallThickness, h * 2, wallOptions),
+                Bodies.rectangle(centerX + (bodyWidth / 2) + wallThickness/2, h/2 + baseY/2, wallThickness, h * 2, wallOptions),
                 
                 window.physicsLid
             ]);
@@ -3732,22 +3729,7 @@
                     }
 
                     if (b.render.visible !== false) {
-                        // Draw dynamic floor shadow if ball is near the bottom
-                        const floorY = canvas.height - 20;
-                        const distToFloor = floorY - b.position.y;
-                        const shadowThreshold = 60;
-                        if (distToFloor < shadowThreshold) {
-                             const shadowOpacity = Math.max(0, (1 - distToFloor / shadowThreshold) * 0.25);
-                             ctx.save();
-                             // The shadow stays on the floor level
-                             ctx.translate(b.position.x, floorY - 2);
-                             ctx.scale(1, 0.2);
-                             ctx.beginPath();
-                             ctx.arc(0, 0, b.circleRadius * 1.2, 0, Math.PI * 2);
-                             ctx.fillStyle = `rgba(0, 0, 0, ${shadowOpacity})`;
-                             ctx.fill();
-                             ctx.restore();
-                        }
+
 
                         if (b.isGift) {
                             drawGift(ctx, b.position.x, b.position.y, b.circleRadius, b.angle);
