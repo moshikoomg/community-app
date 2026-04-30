@@ -2162,7 +2162,7 @@
             
             const boundaries = [
                 // Floor
-                Bodies.rectangle(centerX, floorY + wallThickness/2, bodyWidth - (cornerRadius * 1.5), wallThickness, wallOptions),
+                Bodies.rectangle(centerX, floorY + wallThickness/2, bodyWidth + 200, wallThickness, wallOptions),
                 // Side Walls
                 Bodies.rectangle(centerX - bodyWidth/2 - wallThickness/2, h/2, wallThickness, h * 2, wallOptions),
                 Bodies.rectangle(centerX + bodyWidth/2 + wallThickness/2, h/2, wallThickness, h * 2, wallOptions),
@@ -2173,15 +2173,15 @@
             ];
 
             // Smooth Rounded Corners (Bottom)
-            for (let i = 0; i <= 8; i++) {
-                const angle = (Math.PI / 2) * (i / 8);
+            for (let i = 0; i <= 18; i++) {
+                const angle = (Math.PI / 2) * (i / 18);
                 const lx = centerX - bodyWidth/2 + cornerRadius - Math.cos(angle) * cornerRadius;
                 const ly = floorY - cornerRadius + Math.sin(angle) * cornerRadius;
-                boundaries.push(Bodies.rectangle(lx - 10, ly + 10, 25, 25, { ...wallOptions, angle: -angle }));
+                boundaries.push(Bodies.rectangle(lx - 20, ly + 20, 80, 80, { ...wallOptions, angle: -angle }));
 
                 const rx = centerX + bodyWidth/2 - cornerRadius + Math.cos(angle) * cornerRadius;
                 const ry = floorY - cornerRadius + Math.sin(angle) * cornerRadius;
-                boundaries.push(Bodies.rectangle(rx + 10, ry + 10, 25, 25, { ...wallOptions, angle: angle }));
+                boundaries.push(Bodies.rectangle(rx + 20, ry + 20, 80, 80, { ...wallOptions, angle: angle }));
             }
 
             // Jar Shoulders (Top Curves)
@@ -3970,7 +3970,7 @@
                     }
                     
                     // מנגנון חזרה מיידית לצנצנת לכל כדור שנתקע או יצא מהגבולות
-                    const isTrulyOutOfBounds = b.position.y > (canvas.height + 50) || b.position.x < -50 || b.position.x > canvas.width + 50;
+                    const isTrulyOutOfBounds = b.position.y > (canvas.height - 50) || b.position.x < (canvas.width * 0.05) || b.position.x > (canvas.width * 0.95);
                     const isEscapedTop = b.position.y < (bodyTop - 250);
 
                     if (isTrulyOutOfBounds || isEscapedTop) {
