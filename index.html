@@ -31,18 +31,48 @@
         }
 
         /* Floating Add Button */
+        .habit-item.add-habit-trigger {
+            position: relative;
+        }
         .habit-item.add-habit-trigger span:first-child {
             display: flex !important;
             align-items: center;
             justify-content: center;
-            color: #cbd5e1;
-            font-size: 50px;
-            font-weight: 300;
-            transition: all 0.3s;
+            width: 44px;
+            height: 44px;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 50%;
+            color: #94a3b8;
+            font-size: 20px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
         .habit-item.add-habit-trigger.active span:first-child {
-            color: #1e293b;
-            transform: scale(1.2);
+            color: white;
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(35, 155, 98, 0.2);
+        }
+        .habit-item.add-habit-trigger::after {
+            content: 'חדש';
+            position: absolute;
+            bottom: -2px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #94a3b8;
+            transition: 0.3s;
+        }
+        .habit-item.add-habit-trigger.active::after {
+            color: var(--primary-color);
+            transform: translateY(2px);
+        }
+        @keyframes pulse-add-btn {
+            0% { box-shadow: 0 0 0 0 rgba(35, 155, 98, 0.6); }
+            70% { box-shadow: 0 0 0 15px rgba(35, 155, 98, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(35, 155, 98, 0); }
         }
 
         /* Dev Tools Styling */
@@ -470,14 +500,26 @@
             overflow: hidden;
         }
         .jar-cap-detail::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 200%; height: 100%;
+            content: ''; position: absolute; top: 0; left: -400%; width: 900%; height: 100%;
             background: repeating-linear-gradient(90deg, 
                 rgba(0,0,0,0) 0px, 
                 rgba(0,0,0,0) 10px, 
-                rgba(0,0,0,0.1) 11px, 
-                rgba(255,255,255,0.05) 12px);
-            transition: transform 0.5s ease-in-out;
+                rgba(0,0,0,0.12) 11px, 
+                rgba(255,255,255,0.08) 12px);
+            transition: none;
+            transform: translateX(var(--lid-texture-offset, 0px));
+            opacity: 0.6;
+            will-change: transform;
+            content: ''; position: absolute; top: 0; left: -150%; width: 400%; height: 100%;
+            background: repeating-linear-gradient(90deg, 
+                rgba(0,0,0,0) 0px, 
+                rgba(0,0,0,0) 8px, 
+                rgba(0,0,0,0.1) 9px, 
+                rgba(255,255,255,0.05) 10px);
+            transition: none;
+            transform: translateX(var(--lid-texture-offset, 0px));
             opacity: 0.4;
+            will-change: transform;
         }
         .jar-cap-detail::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 40%;
@@ -558,9 +600,9 @@
         .jar-reflection { display: none !important;
             position: absolute;
             top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%;
-            height: calc(100% - var(--jar-base-y));
-            bottom: 0;
-            border-radius: 80px 80px 20px 20px;
+            height: calc(100% - var(--jar-base-y) - 60px);
+            bottom: 60px;
+            border-radius: 80px 80px 80px 80px;
             pointer-events: none;
             z-index: 28;
             overflow: hidden;
@@ -589,7 +631,7 @@
             transform: rotate(5deg);
         }
 
-        .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y)); border-radius: 80px 80px 20px 20px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); border-bottom: none; box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y) - 60px); border-radius: 80px 80px 80px 80px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
         @keyframes causticDance { 0% { background-position: 0% 0%; opacity: 0.1; } 50% { background-position: 100% 50%; opacity: 0.25; } 100% { background-position: 50% 100%; opacity: 0.1; } }
         .jar-caustics { display: none !important; }
         .jar-distort-lens { display: none !important; }
@@ -1622,7 +1664,11 @@
                 </label>
 
                 <div style="display:flex; gap:12px; margin-bottom:20px;">
-                    <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-days-active">1</span><span style="font-size:11px; color:#94a3b8;">ימים</span></div>
+                    <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center; cursor: pointer; position: relative;" onclick="document.getElementById('input-unlocked-days').focus()">
+                    <span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-days-active">1</span>
+                    <span style="font-size:11px; color:#94a3b8;">ימים</span>
+                    <input type="number" id="input-unlocked-days" min="1" max="63" style="position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer;" onchange="window.updateUnlockedDays(this.value)">
+                </div>
                     <div style="flex:1; background:#f8fafc; padding:15px; border-radius:18px; text-align:center;"><span style="display:block; font-size:22px; font-weight:900; color:var(--primary-color);" id="stat-total-habits">0</span><span style="font-size:11px; color:#94a3b8;">גולות</span></div>
                 </div>
                 <div style="text-align: right;"><label style="font-size:13px; font-weight:700; color:#64748b;">שם תצוגה</label><input type="text" id="input-profile-name" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;" onkeyup="window.updateProfileName(this.value)"></div>
@@ -1674,7 +1720,28 @@
                         <button onclick="window.resetAppState()" style="width:100%; margin-top:10px; background:#fef2f2; border:1px solid #fee2e2; padding:12px; border-radius:12px; font-weight:900; color:var(--danger-color);">איפוס אפליקציה כללי ⚠️</button>
                     </div>
                     <div id="view-admin" class="view-section">
-                        <div style="font-size:18px; font-weight:900; margin-bottom:15px; text-align:right;">כניסת צוות</div>
+                        <div style="font-size:18px; font-weight:900; margin-bottom:15px; text-align:right;">ניהול מערכת (Admin)</div>
+                        <div id="admin-controls-panel" style="display:none; flex-direction:column; gap:12px; margin-top:15px; border-top:1px solid #f1f5f9; padding-top:15px;">
+                            <div style="text-align:right;">
+                                <label style="font-size:11px; font-weight:800; color:#64748b; display:block;">שנה ימים פתוחים (1-63)</label>
+                                <input type="range" min="1" max="63" id="admin-range-unlocked" oninput="window.updateUnlockedDays(this.value)" style="width:100%; accent-color:#3b82f6;">
+                            </div>
+                            <div style="text-align:right;">
+                                <label style="font-size:11px; font-weight:800; color:#64748b; display:block;">קפוץ ליום ספציפי</label>
+                                <input type="number" id="admin-jump-day" placeholder="מספר יום..." onchange="window.adminJumpToDay(this.value)" style="width:100%; padding:8px; border:1.5px solid #e2e8f0; border-radius:8px;">
+                            </div>
+                            <div style="text-align:right; border: 1px solid #e0f2fe; padding: 10px; border-radius: 12px; background: #f0f9ff;">
+                                <label style="font-size:11px; font-weight:900; color:#0369a1; display:block; margin-bottom:5px;">עריכת כמות כדורים ביום זה (להרגל פעיל)</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="number" id="admin-ball-count" placeholder="סה\"כ כדורים" style="flex:1; padding:8px; border:1.5px solid #bae6fd; border-radius:8px;">
+                                    <button onclick="window.adminSetBalls()" style="background:#0ea5e9; color:white; border:none; padding:0 12px; border-radius:8px; font-weight:800;">עדכן</button>
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px; border-radius:12px;">
+                                <span style="font-size:12px; font-weight:800;">הרגלים פעילים: <span id="admin-habit-count-display">0</span></span>
+                                <button onclick="window.openAddMode(); window.closeProfilePopup();" style="font-size:11px; background:#1e293b; color:white; border:none; padding:6px 12px; border-radius:8px;">+ הוסף</button>
+                            </div>
+                        </div>
                         <div style="text-align:right; margin-bottom:20px;">
                             <label style="font-size:12px; font-weight:800; color:#64748b;">סיסמת אדמין</label>
                             <input type="password" id="admin-pass" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:12px; margin-top:5px;">
@@ -1823,6 +1890,22 @@
         }
 
         window.updateProfileName = (v) => { currentUser.displayName = v.trim() || "שם משתמש"; updateProfileUI(); window.saveState(); };
+        window.updateUnlockedDays = (val) => {
+            const num = parseInt(val);
+            if (num >= 1 && num <= TOTAL_DISPLAY_DAYS) {
+                unlockedDays = num;
+                buildJars();
+                document.getElementById('stat-days-active').innerText = unlockedDays;
+                window.saveState();
+                // Move to the last unlocked day
+                const slider = document.getElementById('jars-slider');
+                if (slider) {
+                    const slideWidth = slider.offsetWidth;
+                    slider.scrollTo({ left: (unlockedDays - 1) * slideWidth, behavior: 'smooth' });
+                }
+            }
+        };
+
         window.updateProfileImage = (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -1965,9 +2048,9 @@
                 if (customBgs.jarUrl) {
                     jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
                     jar.style.backgroundPosition = 'center';
-                    jar.style.backgroundSize = 'cover';
+                    jar.style.backgroundSize = '100% 100%';
                     jar.style.backgroundRepeat = 'no-repeat';
-                    jar.style.backgroundColor = 'transparent';
+                    jar.style.backgroundColor = '#ffffff';
                 } else if (customBgs.jarColor) {
                     jar.style.backgroundColor = (customBgs.jarColor || '#ffffff') + '40';
                     jar.style.backgroundImage = 'none';
@@ -2062,8 +2145,11 @@
             window.physicsLid = Bodies.rectangle(centerX, baseY - 38, neckWidth - 10, 20, { ...wallOptions, label: 'physics-lid', friction: 0, frictionStatic: 0 });
             
             Composite.add(world, [
-                // Bottom Boundary
-                Bodies.rectangle(centerX, h + wallThickness/2, w * 2, wallThickness, wallOptions),
+                // Bottom Boundary moved up
+                Bodies.rectangle(centerX, h - 95 + wallThickness/2, w * 2, wallThickness, wallOptions),
+                // Bottom Curves (Diagonal Blocks)
+                Bodies.rectangle(centerX - (bodyWidth/2 - 30), h - 120, 100, 100, { ...wallOptions, angle: Math.PI / 4 }),
+                Bodies.rectangle(centerX + (bodyWidth/2 - 30), h - 120, 100, 100, { ...wallOptions, angle: -Math.PI / 4 }),
                 
                 // Inner Neck Walls (Vertical) - Increased thickness to prevent escaping
                 Bodies.rectangle(centerX - (neckWidth / 2 + 10) - wallThickness/2, baseY - 20, wallThickness, 120, wallOptions),
@@ -2816,7 +2902,7 @@
             function animate(currentTime) {
                 const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
                 const easedP = p * p * p; // Cubic Ease-In for natural acceleration towards the jar
-                const curX = startX + (targetX - startX) * easedP, curY = startY + (targetY - startY) * easedP;
+                const centerX = canvas.width / 2; const curX = startX + (centerX - startX) * easedP; const curY = startY + (targetY - startY) * easedP;
                 
                 // Calculate momentary velocity and angle for smear effect
                 const vx = curX - lastX, vy = curY - lastY;
@@ -2903,7 +2989,7 @@
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(20);
                     // Disable lid barrier for a moment to let the ball in
                     Matter.Body.setPosition(physicsLid, { x: canvas.width / 2, y: -1000 });
-                    Matter.Body.setVelocity(b, {x: (targetX - startX) * 0.04, y: 35}); // High velocity ensures zero friction entry 
+                    const precisionX = (canvas.width / 2 - b.position.x) * 0.1; Matter.Body.setVelocity(b, {x: precisionX, y: 45}); // Force-aligned direct entry through neck
                     currentBalls.push(b); 
                     Composite.add(world, b); 
                     window.updateStatsUI(); 
@@ -3407,11 +3493,51 @@
             document.getElementById('input-app-bg-url').value = customBgs.appUrl || '';
             applyCustomBgs(); window.saveState();
         };
+        window.adminJumpToDay = (val) => {
+            const day = parseInt(val) - 1;
+            if (day >= 0 && day < unlockedDays) {
+                currentDayView = day;
+                const slider = document.getElementById('jars-slider');
+                const slideWidth = slider.offsetWidth;
+                slider.scrollTo({ left: day * slideWidth, behavior: 'smooth' });
+                window.closeProfilePopup();
+            } else {
+                alert('יום לא פתוח או לא קיים');
+            }
+        };
+
+        window.adminSetBalls = () => {
+            const count = parseInt(document.getElementById('admin-ball-count').value);
+            const h = habitsData[currentHabitIndex];
+            if(!h) return;
+            const stats = userStats.daysData[currentDayView].habits[h.id];
+            const target = h.amount || 1;
+            
+            if (count <= target) {
+                stats.min = count;
+                stats.breakthrough = 0;
+            } else {
+                stats.min = target;
+                stats.breakthrough = count - target;
+            }
+            
+            moveCanvas(currentDayView);
+            window.updateStatsUI();
+            window.saveState();
+            alert('כמות הכדורים עודכנה בהצלחה');
+        };
+
         window.handleAdminLogin = () => {
             const pass = document.getElementById('admin-pass').value;
-            if(pass === '1234') {
-                alert('ברוך הבא אדמין! הגישה למסד הנתונים נפתחה.');
-                unlockedDays = 63; buildJars(); window.saveState();
+            if(pass === '1020') {
+                document.getElementById('admin-controls-panel').style.display = 'flex';
+                document.getElementById('admin-range-unlocked').value = unlockedDays;
+                document.getElementById('admin-habit-count-display').innerText = habitsData.length;
+                if(habitsData[currentHabitIndex]) {
+                    const stats = userStats.daysData[currentDayView].habits[habitsData[currentHabitIndex].id];
+                    document.getElementById('admin-ball-count').value = stats.min + stats.breakthrough;
+                }
+                alert('ממשק ניהול פעיל!');
             } else {
                 alert('סיסמה שגויה');
             }
@@ -3480,10 +3606,10 @@
                 }
 
                 // החלקת תנועה למניעת רעידות כדורים
-                const smoothing = 0.92; // החלקה עדינה יותר למניעת רעידות
+                const smoothing = 0.85; // רגישות גבוהה יותר לתנועה מהירה
                 engine.gravity.x = (engine.gravity.x * smoothing) + (gx * (1 - smoothing));
                 engine.gravity.y = (engine.gravity.y * smoothing) + (gy * (1 - smoothing));
-                engine.gravity.scale = 0.0015; // סקייל קבוע ליציבות
+                engine.gravity.scale = 0.002; // הגברת עוצמת הכבידה לתגובה מיידית
 
                 // זיהוי שקשוק לערבוב
                 const deltaX = Math.abs(lastAcc.x - acc.x);
@@ -3758,20 +3884,26 @@
                     const bodyEl = document.querySelector('.jar-body');
                     const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
 
-                    if (b.position.y < bodyTop && !window.isAnimatingJump && !isMagnetMode) {
-                        Matter.Body.applyForce(b, b.position, { x: (canvas.width / 2 - b.position.x) * 0.005, y: 0.1 * b.mass });
-                        if (b.velocity.y < 3) Matter.Body.setVelocity(b, { x: b.velocity.x * 0.5, y: 12 });
+                    if (b.position.y < bodyTop) {
+                        // Funnel Effect: Pull balls to center X and push down Y if they are above the jar body
+                        const dx = (canvas.width / 2) - b.position.x;
+                        Matter.Body.setPosition(b, { x: b.position.x + dx * 0.15, y: b.position.y });
+                        Matter.Body.setVelocity(b, { x: 0, y: Math.max(b.velocity.y, 25) });
                     }
                     
-                    // מנגנון חזרה לצנצנת במידה והכדור יצא מהגבולות
-                    const isOutOfBounds = b.position.y > canvas.height + 100 || b.position.y < -1000 || b.position.x < -200 || b.position.x > canvas.width + 200;
-                    if (isOutOfBounds) {
-                        const safeX = canvas.width / 2;
-                        const safeY = bodyTop + 100;
+                    // מנגנון חזרה מיידית לצנצנת לכל כדור שנתקע או יצא מהגבולות
+                    const isStuckInNeck = b.position.y < (bodyTop + 95) && !window.isAnimatingJump;
+                    const isOutsideX = b.position.x < (canvas.width * 0.08) || b.position.x > (canvas.width * 0.92);
+                    const isStuckOnEdges = b.position.y < (bodyTop + 150) && isOutsideX;
+                    const isOutOfBounds = b.position.y > canvas.height - 80 || b.position.y < -200 || b.position.x < -50 || b.position.x > canvas.width + 50;
+
+                    if (isStuckInNeck || isStuckOnEdges || isOutOfBounds) {
+                        // שיגור מיידי למרכז הפנימי של הצנצנת
+                        const safeX = (canvas.width / 2) + (Math.random() * 20 - 10);
+                        const safeY = bodyTop + (canvas.height * 0.2); // עומק בטוח בתוך הצנצנת
                         Matter.Body.setPosition(b, { x: safeX, y: safeY });
-                        Matter.Body.setVelocity(b, { x: 0, y: 1 });
-                        Matter.Body.setAngularVelocity(b, 0.01);
-                        Matter.Body.setAngle(b, Math.random() * Math.PI);
+                        Matter.Body.setVelocity(b, { x: 0, y: 5 });
+                        Matter.Body.setAngularVelocity(b, 0.1);
                     }
 
                     const isMatching = b.habitId === activeHabitId;
@@ -3945,6 +4077,11 @@
         sc.addEventListener('scroll', () => {
             const hint = document.querySelector('.center-swipe-hint');
             if(hint) hint.style.opacity = '0';
+
+            const scrollOffset = (sc.scrollLeft * 1.8) % 400;
+            document.querySelectorAll('.jar-cap-detail').forEach(lid => {
+                lid.style.setProperty('--lid-texture-offset', (-scrollOffset) + 'px');
+            });
             
             const scRect = sc.getBoundingClientRect();
             const scCenter = scRect.left + scRect.width / 2;
