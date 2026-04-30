@@ -27,7 +27,7 @@
             box-shadow: none !important;
         }
         .onboarding-title {
-            margin-top: 10px;
+            margin-top: 0px;
         }
 
         /* Floating Add Button */
@@ -316,7 +316,7 @@
         
 
         :root {
-            --jar-base-y: 32dvh;
+            --jar-base-y: 22dvh;
             --glow-color: rgba(35, 155, 98, 0.3);
             --light-pos-x: 50%;
             --light-pos-y: 30%;
@@ -631,7 +631,21 @@
             transform: rotate(5deg);
         }
 
-        .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y) - 60px); border-radius: 80px 80px 80px 80px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
+        .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y) - 60px); border-radius: 80px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06), 0 50px 100px -20px rgba(0,0,0,0.35), 0 20px 40px -15px rgba(0,0,0,0.2); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
+
+        .jar-floor-shadow {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.12);
+            filter: blur(15px);
+            border-radius: 50%;
+            z-index: 1;
+            pointer-events: none;
+        }
         @keyframes causticDance { 0% { background-position: 0% 0%; opacity: 0.1; } 50% { background-position: 100% 50%; opacity: 0.25; } 100% { background-position: 50% 100%; opacity: 0.1; } }
         .jar-caustics { display: none !important; }
         .jar-distort-lens { display: none !important; }
@@ -911,10 +925,10 @@
 
         .habit-scroller-outer {
             position: absolute;
-            top: 50px;
+            top: 30px;
             left: 0;
             width: 100%;
-            height: calc(var(--jar-base-y) - 130px);
+            height: calc(var(--jar-base-y) - 80px);
             display: flex;
             align-items: center;
             z-index: 200;
@@ -1037,7 +1051,7 @@
 
         /* --- Onboarding View --- */
         #drawer-onboarding-view { padding: 0 25px; width: 100%; box-sizing: border-box; flex-direction: column; }
-        .onboarding-step { animation: fadeIn 0.4s; width: 100%; display: flex; flex-direction: column; align-items: center; padding-top: 25px; padding-bottom: 5px; }
+        .onboarding-step { animation: fadeIn 0.4s; width: 100%; display: flex; flex-direction: column; align-items: center; padding-top: 10px; padding-bottom: 5px; }
         .onboarding-hero-icon {
             font-size: 48px;
             margin-bottom: 15px;
@@ -1436,7 +1450,7 @@
                     </div>
                 </div>
                 <!-- Dots Indicators - Relative to scroller bottom -->
-                <div class="dots-container" id="picker-dots" style="pointer-events: auto; position: absolute; top: calc(var(--jar-base-y) - 102px); z-index: 220; width: 100%; justify-content: center; gap: 8px; padding: 10px 0; transition: all 0.3s ease-out;"></div>
+                <div class="dots-container" id="picker-dots" style="pointer-events: auto; position: absolute; top: calc(var(--jar-base-y) - 75px); z-index: 220; width: 100%; justify-content: center; gap: 8px; padding: 10px 0; transition: all 0.3s ease-out;"></div>
 
                 <!-- Magnet Toggle (Eye) - Repositioned near cap -->
                 <div class="controls-cluster" id="controls-cluster-l7lb" style="position: absolute; top: calc(var(--jar-base-y) - 52px); left: calc((50% - 78px) / 2); transform: translateX(-50%); z-index: 160; display: flex; flex-direction: row; gap: 8px; align-items: center; background: transparent; backdrop-filter: none; padding: 0; border: none; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
@@ -2109,16 +2123,16 @@
                 slide.className = `jar-slide ${i === currentDayView ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
                 const info = getStageInfo(i);
-                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"><div class="glint-layer"></div><div class="jar-caustics"></div><div class="jar-distort-lens"></div></div><div class="jar-reflection"></div></div></div>`;
+                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-floor-shadow"></div><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"><div class="glint-layer"></div><div class="jar-caustics"></div><div class="jar-distort-lens"></div></div><div class="jar-reflection"></div></div></div>`;
                 s.appendChild(slide);
             }
             applyCustomBgs();
         }
         window.buildJars = buildJars;
 
-        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create(), world = engine.world; engine.gravity.y = 9.8;
-        engine.positionIterations = 10;
-        engine.velocityIterations = 10;
+        const { Engine, Bodies, Composite, Mouse, MouseConstraint, Vector } = Matter, engine = Engine.create({ enableSleeping: true }), world = engine.world; engine.gravity.y = 9.8;
+        engine.positionIterations = 60;
+        engine.velocityIterations = 60;
         let currentBalls = [];
         const canvas = document.getElementById('physics-canvas'), ctx = canvas.getContext('2d');
         
@@ -2133,38 +2147,57 @@
         function updatePhysicsBoundaries(w) {
             Composite.clear(world, false);
             const h = canvas.height;
-            const wallOptions = { isStatic: true, friction: 0.1, frictionStatic: 0.5, restitution: 0.1, render: { visible: false } };
+            const wallOptions = { isStatic: true, friction: 0.1, frictionStatic: 0.5, restitution: 0.2, render: { visible: false } };
             const centerX = w / 2;
             const bodyEl = document.querySelector('.jar-body');
-            const baseY = bodyEl && bodyEl.getBoundingClientRect().top > 0 ? bodyEl.offsetTop : (h * 0.32);
+            const baseY = bodyEl ? bodyEl.offsetTop : (h * 0.22);
             
             const neckWidth = 154; 
             const bodyWidth = w * 0.88;
-            const wallThickness = 200;
+            const wallThickness = 400;
+            const cornerRadius = 80; 
+            const floorY = h - 60;
             
-            window.physicsLid = Bodies.rectangle(centerX, baseY - 38, neckWidth - 10, 20, { ...wallOptions, label: 'physics-lid', friction: 0, frictionStatic: 0 });
+            window.physicsLid = Bodies.rectangle(centerX, baseY - 45, neckWidth + 40, 40, { ...wallOptions, label: 'physics-lid' });
             
-            Composite.add(world, [
-                // Bottom Boundary moved up
-                Bodies.rectangle(centerX, h - 95 + wallThickness/2, w * 2, wallThickness, wallOptions),
-                // Bottom Curves (Diagonal Blocks)
-                Bodies.rectangle(centerX - (bodyWidth/2 - 30), h - 120, 100, 100, { ...wallOptions, angle: Math.PI / 4 }),
-                Bodies.rectangle(centerX + (bodyWidth/2 - 30), h - 120, 100, 100, { ...wallOptions, angle: -Math.PI / 4 }),
-                
-                // Inner Neck Walls (Vertical) - Increased thickness to prevent escaping
-                Bodies.rectangle(centerX - (neckWidth / 2 + 10) - wallThickness/2, baseY - 20, wallThickness, 120, wallOptions),
-                Bodies.rectangle(centerX + (neckWidth / 2 + 10) + wallThickness/2, baseY - 20, wallThickness, 120, wallOptions),
-                
-                // Jar Shoulders (Diagonal Thick Walls)
-                Bodies.rectangle(centerX - (neckWidth/2 + 22), baseY + 10, 80, wallThickness, { ...wallOptions, angle: Math.PI / 4.5 }),
-                Bodies.rectangle(centerX + (neckWidth/2 + 22), baseY + 10, 80, wallThickness, { ...wallOptions, angle: -Math.PI / 4.5 }),
-
-                // Inner Body Walls (Thick blocks that align exactly at the 88% edge)
-                Bodies.rectangle(centerX - (bodyWidth / 2) - wallThickness/2, h/2 + baseY/2, wallThickness, h * 2, wallOptions),
-                Bodies.rectangle(centerX + (bodyWidth / 2) + wallThickness/2, h/2 + baseY/2, wallThickness, h * 2, wallOptions),
-                
+            const boundaries = [
+                // Floor
+                Bodies.rectangle(centerX, floorY + wallThickness/2, bodyWidth - (cornerRadius * 1.5), wallThickness, wallOptions),
+                // Side Walls
+                Bodies.rectangle(centerX - bodyWidth/2 - wallThickness/2, h/2, wallThickness, h * 2, wallOptions),
+                Bodies.rectangle(centerX + bodyWidth/2 + wallThickness/2, h/2, wallThickness, h * 2, wallOptions),
+                // Neck Walls
+                Bodies.rectangle(centerX - neckWidth/2 - wallThickness/2, baseY - 50, wallThickness, 100, wallOptions),
+                Bodies.rectangle(centerX + neckWidth/2 + wallThickness/2, baseY - 50, wallThickness, 100, wallOptions),
                 window.physicsLid
-            ]);
+            ];
+
+            // Smooth Rounded Corners (Bottom)
+            for (let i = 0; i <= 8; i++) {
+                const angle = (Math.PI / 2) * (i / 8);
+                const lx = centerX - bodyWidth/2 + cornerRadius - Math.cos(angle) * cornerRadius;
+                const ly = floorY - cornerRadius + Math.sin(angle) * cornerRadius;
+                boundaries.push(Bodies.rectangle(lx - 10, ly + 10, 25, 25, { ...wallOptions, angle: -angle }));
+
+                const rx = centerX + bodyWidth/2 - cornerRadius + Math.cos(angle) * cornerRadius;
+                const ry = floorY - cornerRadius + Math.sin(angle) * cornerRadius;
+                boundaries.push(Bodies.rectangle(rx + 10, ry + 10, 25, 25, { ...wallOptions, angle: angle }));
+            }
+
+            // Jar Shoulders (Top Curves)
+            for (let i = 0; i <= 6; i++) {
+                const angle = (Math.PI / 2) * (i / 6);
+                const shoulderRadius = 60;
+                const slx = centerX - neckWidth/2 - shoulderRadius + Math.cos(angle) * shoulderRadius;
+                const sly = baseY + shoulderRadius - Math.sin(angle) * shoulderRadius;
+                boundaries.push(Bodies.rectangle(slx, sly, 30, 30, { ...wallOptions, angle: angle }));
+
+                const srx = centerX + neckWidth/2 + shoulderRadius - Math.cos(angle) * shoulderRadius;
+                const sry = baseY + shoulderRadius - Math.sin(angle) * shoulderRadius;
+                boundaries.push(Bodies.rectangle(srx, sry, 30, 30, { ...wallOptions, angle: -angle }));
+            }
+            
+            Composite.add(world, boundaries);
 
             const mouse = Mouse.create(canvas);
             Composite.add(world, MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } }));
@@ -2202,6 +2235,9 @@
             Object.values(stats).forEach(s => { totalExpected += (s.min + s.breakthrough); });
 
             if (saved.length !== totalExpected) {
+                // Temporarily disable lid for initial filling
+                Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -5000 });
+                setTimeout(() => { const bTop = document.querySelector('.jar-body').offsetTop; Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: bTop - 38 }); }, 1500);
                 if (saved.length > totalExpected) {
                     saved = saved.slice(0, totalExpected);
                 } else {
@@ -2226,17 +2262,21 @@
             const ballRadius = canvas.width * 0.062;
             const w = canvas.width, h = canvas.height;
             saved.forEach(d => {
-                const spawnX = d.relX ? d.relX * w : (d.x || w/2);
-                const spawnY = d.relY ? d.relY * h : (d.y || h/2);
+                const bodyEl = document.querySelector('.jar-body');
+                const bodyTop = bodyEl ? bodyEl.offsetTop : (h * 0.32);
+                const spawnX = d.relX ? d.relX * w : (w / 2 + (Math.random() * 20 - 10));
+                const spawnY = d.relY ? d.relY * h : (bodyTop - 120 - (Math.random() * 50));
                 const b = Bodies.circle(spawnX, Math.min(spawnY, h - ballRadius*2), ballRadius, {
                     isStatic: false,
                     restitution: 0.3,
-                    friction: 0.08,
+                    slop: 0,
+                    friction: 0.8,
                     frictionAir: 0.01,
-                    frictionStatic: 0.15,
+                    frictionStatic: 1,
                     density: 0.5,
                     angle: d.angle,
                     label: 'habit-ball',
+                    collisionFilter: { group: 0, category: 0x0001, mask: 0x0001 },
                     render: { fillStyle: d.color }
                 });
                 b.habitId = d.habitId;
@@ -2255,7 +2295,7 @@
         const fm = document.getElementById('floating-marble');
 
         function drawGift(c, x, y, r, a) {
-            const sR = r * 1.15;
+            const sR = r;
             c.save();
             c.translate(x, y);
 
@@ -2307,7 +2347,7 @@
         }
 
         function drawMarble(c, x, y, r, a, col, alpha = 1.0) {
-            const scaledR = r * 1.1; // Increase scale by 10%
+            const scaledR = r; 
             c.save();
             c.globalAlpha = alpha;
             c.translate(x, y);
@@ -2698,8 +2738,10 @@
                         const ballRadius = canvas.width * 0.062;
                         const spawnX = (canvas.width / 2) + (Math.random() * 6 - 3);
                         const b = Bodies.circle(spawnX, bodyTop - 220, ballRadius, {
-                            isStatic: false, restitution: 0.4, friction: 0, frictionAir: 0, density: 1.2,
-                            label: 'habit-ball', render: { fillStyle: '#FFD700' } 
+                            isStatic: false, restitution: 0, friction: 0.8, frictionAir: 0, density: 1.2,
+                            label: 'habit-ball', 
+                            collisionFilter: { group: -1 },
+                            render: { fillStyle: '#FFD700' } 
                         });
                         b.isGift = true;
                         b.habitId = h ? h.id : 0;
@@ -2977,12 +3019,15 @@
                     const ballRadius = canvas.width * 0.062;
                     const b = Bodies.circle(canvas.width / 2, bodyTop - (canvas.height * 0.15), ballRadius, {
                         isStatic: false,
-                        restitution: 0.3,
-                        friction: 0.05,
-                        frictionAir: 0,
-                        frictionStatic: 0.1,
+                        restitution: 0.1,
+                        slop: 0.05,
+                        friction: 0.8,
+                        frictionAir: 0.01,
+                        frictionStatic: 1,
                         density: 0.5,
+                        sleepThreshold: 30,
                         label: 'habit-ball',
+                        collisionFilter: { group: -1 },
                         render: { fillStyle: h.color }
                     });
                     b.habitId = h.id;
@@ -3330,7 +3375,7 @@
                 
                 fm.style.opacity = isCommitted ? '1' : '0.8';
                 fm.style.filter = !isCommitted ? `blur(${cancelBlur}px) saturate(0.5)` : 'none';
-                fm.style.transform = `scale(${isCommitted ? gripScale : 0.95}) rotate(${dx * 0.15}deg)`; const jarWrap = document.getElementById(`jar-wrapper-${currentDayView}`); if (jarWrap && dy < 0) { const jarStretch = 1 + Math.min(0.04, Math.abs(dy)/800); const jarSquish = 1 - Math.min(0.02, Math.abs(dy)/1200); jarWrap.style.transform = `scale(${jarSquish}, ${jarStretch})`; jarWrap.classList.add('stretching'); }
+                fm.style.transform = `scale(${isCommitted ? gripScale : 0.95}) rotate(${dx * 0.15}deg)`;
                 }
                 window.habitSwipeState.lastY = touch.clientY;
             }
@@ -3506,12 +3551,37 @@
             }
         };
 
-        window.adminSetBalls = () => {
+        window.adminSetBalls = async () => {
             const count = parseInt(document.getElementById('admin-ball-count').value);
             const h = habitsData[currentHabitIndex];
             if(!h) return;
             const stats = userStats.daysData[currentDayView].habits[h.id];
             const target = h.amount || 1;
+            const currentTotal = stats.min + stats.breakthrough;
+            const delta = count - currentTotal;
+
+            if (delta > 0) {
+                window.closeProfilePopup();
+                window.isAnimatingJump = true;
+                Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -5000 });
+                
+                for(let i = 0; i < delta; i++) {
+                    await new Promise(r => setTimeout(r, 150));
+                    const ballRadius = canvas.width * 0.062;
+                    const bodyEl = document.querySelector('.jar-body');
+                    const spawnY = bodyEl.offsetTop - 120;
+                    const b = Bodies.circle(canvas.width / 2 + (Math.random() * 10 - 5), spawnY, ballRadius, {
+                        isStatic: false, restitution: 0.3, friction: 0.5, density: 0.5,
+                        label: 'habit-ball', collisionFilter: { group: -1 },
+                        render: { fillStyle: h.color }
+                    });
+                    b.habitId = h.id;
+                    currentBalls.push(b);
+                    Composite.add(world, b);
+                    Matter.Body.setVelocity(b, {x: 0, y: 15});
+                }
+                setTimeout(() => { window.isAnimatingJump = false; window.saveState(); }, 1000);
+            }
             
             if (count <= target) {
                 stats.min = count;
@@ -3521,10 +3591,9 @@
                 stats.breakthrough = count - target;
             }
             
-            moveCanvas(currentDayView);
+            if (delta <= 0) moveCanvas(currentDayView);
             window.updateStatsUI();
             window.saveState();
-            alert('כמות הכדורים עודכנה בהצלחה');
         };
 
         window.handleAdminLogin = () => {
@@ -3875,32 +3944,39 @@
             }
         };
 
+        function getDynamicBallScale() {
+            return 1.0; 
+        }
+
         function loop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const activeHabitId = habitsData[currentHabitIndex] ? habitsData[currentHabitIndex].id : null;
             
+            const currentScale = getDynamicBallScale();
             Composite.allBodies(world).forEach(b => {
                 if (b.label === 'habit-ball') {
+                    const baseRadius = canvas.width * 0.062;
+                    const targetRadius = baseRadius * currentScale;
+                    if (Math.abs(b.circleRadius - targetRadius) > 0.01) {
+                        const ratio = targetRadius / b.circleRadius;
+                        Matter.Body.scale(b, ratio, ratio);
+                    }
                     const bodyEl = document.querySelector('.jar-body');
                     const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
 
-                    if (b.position.y < bodyTop) {
-                        // Funnel Effect: Pull balls to center X and push down Y if they are above the jar body
+                    if (b.position.y < bodyTop - 45) {
                         const dx = (canvas.width / 2) - b.position.x;
-                        Matter.Body.setPosition(b, { x: b.position.x + dx * 0.15, y: b.position.y });
-                        Matter.Body.setVelocity(b, { x: 0, y: Math.max(b.velocity.y, 25) });
+                        Matter.Body.applyForce(b, b.position, { x: dx * 0.002, y: 0.01 });
                     }
                     
                     // מנגנון חזרה מיידית לצנצנת לכל כדור שנתקע או יצא מהגבולות
-                    const isStuckInNeck = b.position.y < (bodyTop + 95) && !window.isAnimatingJump;
-                    const isOutsideX = b.position.x < (canvas.width * 0.08) || b.position.x > (canvas.width * 0.92);
-                    const isStuckOnEdges = b.position.y < (bodyTop + 150) && isOutsideX;
-                    const isOutOfBounds = b.position.y > canvas.height - 80 || b.position.y < -200 || b.position.x < -50 || b.position.x > canvas.width + 50;
+                    const isTrulyOutOfBounds = b.position.y > (canvas.height + 50) || b.position.x < -50 || b.position.x > canvas.width + 50;
+                    const isEscapedTop = b.position.y < (bodyTop - 250);
 
-                    if (isStuckInNeck || isStuckOnEdges || isOutOfBounds) {
+                    if (isTrulyOutOfBounds || isEscapedTop) {
                         // שיגור מיידי למרכז הפנימי של הצנצנת
                         const safeX = (canvas.width / 2) + (Math.random() * 20 - 10);
-                        const safeY = bodyTop + (canvas.height * 0.2); // עומק בטוח בתוך הצנצנת
+                        const safeY = bodyTop + 100;
                         Matter.Body.setPosition(b, { x: safeX, y: safeY });
                         Matter.Body.setVelocity(b, { x: 0, y: 5 });
                         Matter.Body.setAngularVelocity(b, 0.1);
@@ -3910,6 +3986,7 @@
                     let alpha = 1.0;
                     
                     if (isMagnetMode) {
+                        Matter.Sleeping.set(b, false);
                         const centerX = canvas.width / 2;
                         const bodyEl = document.querySelector('.jar-body');
                         const targetY = bodyEl ? bodyEl.offsetTop - 40 : canvas.height * 0.25;
@@ -3920,28 +3997,8 @@
                                 x: dx * 0.025,
                                 y: dy * 0.05
                             });
-                            b.torque += (Math.random() - 0.5) * 0.5;
                         } else {
-                            // דחיית כדורים שאינם שייכים להרגל
-                            alpha = 0.35; 
-                            const dx = b.position.x - centerX;
-                            Matter.Body.applyForce(b, b.position, { 
-                                x: dx * 0.008,
-                                y: 0.03 * b.mass
-                            });
-                        }
-                    } else {
-                        // Standard Physics when magnet is off
-                        const isFull = currentBalls.length > 15;
-                        const forceMag = isFull ? 0.0001 : 0.00001;
-                        if (Math.abs(engine.gravity.x) < 0.1) {
-                            Matter.Body.applyForce(b, b.position, { 
-                                x: (canvas.width/2 - b.position.x) * forceMag, 
-                                y: 0 
-                            });
-                        } else {
-                            // כשהמכשיר מוטה, אנחנו מאפשרים לכבידה הפיזיקלית להזיז את הכדורים בחופשיות
-                            Matter.Body.applyForce(b, b.position, { x: 0, y: 0 });
+                            alpha = 0.35;
                         }
                     }
 
