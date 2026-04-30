@@ -427,7 +427,7 @@
         .jar-glass-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
         /* סגירת המעבר בין הצוואר לגוף למראה זכוכית אחיד */
-        .glint-layer { display: none !important; } .jar-body::before {
+        .glint-layer { display: none !important; } .jar-body::before { display: none !important;
             content: '';
             position: absolute;
             top: -24px; left: 50%;
@@ -497,7 +497,7 @@
             box-shadow: inset 0 0 5px rgba(255,255,255,0.2);
             pointer-events: none;
         }
-        .jar-opening-front {
+        .jar-opening-front { border-bottom: 1.5px solid rgba(255,255,255,0.2); opacity: 0.3;
             position: absolute; top: calc(var(--jar-base-y) - 36px); left: 50%; transform: translateX(-50%); width: 156px; height: 6px;
             border-radius: 0 0 80px 80px; z-index: 25;
             border-bottom: 1.5px solid rgba(255,255,255,0.5);
@@ -536,7 +536,7 @@
             pointer-events: none;
         }
         
-        .jar-body::after {
+        .jar-body::after { display: none !important;
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: 
                 linear-gradient(110deg, 
@@ -555,12 +555,12 @@
             filter: blur(8px);
             opacity: 0.7;
         }
-        .jar-reflection {
+        .jar-reflection { display: none !important;
             position: absolute;
-            top: var(--jar-base-y); left: 0; width: 100%;
+            top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%;
             height: calc(100% - var(--jar-base-y));
             bottom: 0;
-            border-radius: 100px 100px 0 0;
+            border-radius: 80px 80px 20px 20px;
             pointer-events: none;
             z-index: 28;
             overflow: hidden;
@@ -589,10 +589,10 @@
             transform: rotate(5deg);
         }
 
-        .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y)); border-radius: 80px 80px 20px 20px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); border-bottom: none; box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06), 0 45px 90px rgba(0,0,0,0.15); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y)); border-radius: 80px 80px 20px 20px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); border-bottom: none; box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes causticDance { 0% { background-position: 0% 0%; opacity: 0.1; } 50% { background-position: 100% 50%; opacity: 0.25; } 100% { background-position: 50% 100%; opacity: 0.1; } }
         .jar-caustics { display: none !important; }
-        .jar-distort-lens { position: absolute; top: 5%; left: 5%; width: 90%; height: 90%; background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.15) 0%, transparent 60%); filter: blur(20px); pointer-events: none; z-index: 12; }
+        .jar-distort-lens { display: none !important; }
 
         /* Global Background Blur when Drawer is expanded */
         .app-container:has(.bottom-section.onboarding-mode) .top-section,
@@ -1306,7 +1306,7 @@
             font-weight: 600;
             line-height: 1.5;
         }
-        .swipe-hint-ghost { position: absolute; width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; z-index: 9000; pointer-events: none; opacity: 0; filter: blur(4px); box-shadow: 0 0 30px rgba(255,255,255,0.5); } @keyframes swipeHintMove { 0% { opacity: 0; transform: translate(-50%, 50px) scale(0.8); } 20% { opacity: 0.7; transform: translate(-50%, 40px) scale(1.2); } 80% { opacity: 0.4; transform: translate(-50%, -200px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -280px) scale(0.7); } } .reward-glow-bg {
+        .swipe-hint-ghost { position: absolute; width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; z-index: 9000; pointer-events: none; opacity: 0; filter: none; box-shadow: 0 0 30px rgba(255,255,255,0.5); } @keyframes swipeHintMove { 0% { opacity: 0; transform: translate(-50%, 50px) scale(0.8); } 20% { opacity: 0.7; transform: translate(-50%, 40px) scale(1.2); } 80% { opacity: 0.4; transform: translate(-50%, -200px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -280px) scale(0.7); } } .reward-glow-bg {
             position: absolute;
             top: 50%; left: 50%;
             width: 200%; height: 200%;
@@ -2627,7 +2627,7 @@
             }, 300);
         };
 
-        window.triggerSwipeHint = () => { const container = document.querySelector('.app-container'); const hint = document.createElement('div'); hint.className = 'swipe-hint-ghost'; const rect = container.getBoundingClientRect(); hint.style.left = '50%'; hint.style.top = (rect.height * 0.7) + 'px'; hint.style.animation = 'swipeHintMove 2s cubic-bezier(0.4, 0, 0.2, 1) forwards'; container.appendChild(hint); const fingerIcon = document.createElement('div'); fingerIcon.innerHTML = '👆'; fingerIcon.style.cssText = 'font-size: 30px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px white);'; hint.appendChild(fingerIcon); setTimeout(() => hint.remove(), 2500); }; window.triggerFirstHabitReward = () => {
+        window.triggerSwipeHint = () => { if (sessionActivated) return; const container = document.querySelector('.app-container'); if (!container) return; const hint = document.createElement('div'); hint.className = 'swipe-hint-ghost'; const rect = container.getBoundingClientRect(); hint.style.left = '50%'; hint.style.top = (rect.height * 0.7) + 'px'; hint.style.animation = 'swipeHintMove 2s cubic-bezier(0.4, 0, 0.2, 1) forwards'; container.appendChild(hint); const fingerIcon = document.createElement('div'); fingerIcon.innerHTML = '👆'; fingerIcon.style.cssText = 'font-size: 42px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));'; hint.appendChild(fingerIcon); const labelText = 'לתיעוד'; const hintLabel = document.createElement('div'); hintLabel.style.cssText = 'position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 16px; font-weight: 900; color: #ffffff; background: #1e293b; padding: 12px 24px; border-radius: 100px; box-shadow: 0 12px 30px rgba(0,0,0,0.3); z-index: 10001; pointer-events: none; opacity: 0; transition: opacity 0.4s ease; border: 1.5px solid rgba(255,255,255,0.15);'; hintLabel.innerText = labelText; container.appendChild(hintLabel); setTimeout(() => hintLabel.style.opacity = '1', 50); setTimeout(() => { hint.remove(); hintLabel.style.opacity = '0'; setTimeout(() => hintLabel.remove(), 400); if (!sessionActivated) setTimeout(window.triggerSwipeHint, 1000); }, 2500); }; window.triggerFirstHabitReward = () => {
             if(habitsData.length === 0) return;
             const popup = document.getElementById('reward-popup');
             popup.classList.add('active');
@@ -3207,7 +3207,14 @@
                     fm.style.opacity = '1';
                     fm.style.filter = 'none';
                     const stretch = 1 + Math.min(0.2, Math.abs(dy)/500);
-                    fm.style.transform = `scale(${1.25 * stretch}) rotate(${dx * 0.1}deg)`; const jarWrap = document.getElementById(`jar-wrapper-${currentDayView}`); if (jarWrap && dy < 0) { const jarStretch = 1 + Math.min(0.04, Math.abs(dy)/800); const jarSquish = 1 - Math.min(0.02, Math.abs(dy)/1200); jarWrap.style.transform = `scale(${jarSquish}, ${jarStretch})`; jarWrap.classList.add('stretching'); }
+                    // Enhanced Grip Logic: Dynamic scaling and visual feedback for cancellation
+                const isCommitted = dy < -60;
+                const gripScale = 1.35 + (Math.abs(dy) * 0.0005);
+                const cancelBlur = !isCommitted ? Math.max(0, 4 + (dy * 0.1)) : 0;
+                
+                fm.style.opacity = isCommitted ? '1' : '0.8';
+                fm.style.filter = !isCommitted ? `blur(${cancelBlur}px) saturate(0.5)` : 'none';
+                fm.style.transform = `scale(${isCommitted ? gripScale : 0.95}) rotate(${dx * 0.15}deg)`; const jarWrap = document.getElementById(`jar-wrapper-${currentDayView}`); if (jarWrap && dy < 0) { const jarStretch = 1 + Math.min(0.04, Math.abs(dy)/800); const jarSquish = 1 - Math.min(0.02, Math.abs(dy)/1200); jarWrap.style.transform = `scale(${jarSquish}, ${jarStretch})`; jarWrap.classList.add('stretching'); }
                 }
                 window.habitSwipeState.lastY = touch.clientY;
             }
@@ -3260,10 +3267,22 @@
                     performNaturalJump(r.left + 30 - contRect.left, r.top + 30 - contRect.top);
                 } else {
                     // Visual feedback for cancellation
+                    // Natural Re-docking Animation for Cancel
+                    const currentPos = fm.getBoundingClientRect();
                     fm.animate([
-                        { opacity: fm.style.opacity, transform: fm.style.transform, filter: fm.style.filter },
-                        { opacity: 0, transform: 'scale(0.2) translateY(60px)', filter: 'blur(20px)' }
-                    ], { duration: 300, easing: 'ease-in' }).onfinish = () => window.respawnMarble();
+                        { 
+                            opacity: fm.style.opacity, 
+                            transform: fm.style.transform, 
+                            filter: fm.style.filter,
+                            top: fm.style.top
+                        },
+                        { 
+                            opacity: 0, 
+                            transform: 'scale(0.5) translateY(40px)', 
+                            filter: 'blur(15px)',
+                            top: (parseFloat(fm.style.top) + 80) + 'px'
+                        }
+                    ], { duration: 350, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }).onfinish = () => window.respawnMarble();
                     fm.animate([
                         { opacity: fm.style.opacity, transform: fm.style.transform, filter: fm.style.filter },
                         { opacity: 0, transform: 'scale(0.5) translateY(40px)', filter: 'blur(10px)' }
@@ -3454,6 +3473,8 @@
         }, { once: true });
 
         window.summonMarble = (clientX, clientY, pId) => {
+            // Reset global cancellation state
+            window.habitSwipeState.isCanceled = true;
             if (habitsData.length === 0 || window.isAnimatingJump) return;
             if (window.isDrag && window.habitSwipeState.gestureType !== 'drop') return;
             
@@ -3645,8 +3666,8 @@
             else if (window.isDrag) {
                 const dragDistanceUp = window.habitSwipeState.startY - window.habitSwipeState.lastY;
                 
-                // Only start opening if upward drag exceeds 30px
-                if (dragDistanceUp > 30) {
+                // Require significant upward movement to initiate lid opening
+                if (dragDistanceUp > 60) {
                     const jr = document.getElementById(`jar-wrapper-${currentDayView}`).getBoundingClientRect();
                     const r = fm.getBoundingClientRect();
                     const bodyTop = document.querySelector('.jar-body').offsetTop;
