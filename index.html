@@ -3059,7 +3059,7 @@
             function animate(currentTime) {
                 const elapsed = currentTime - startTime, p = Math.min(elapsed / duration, 1);
                 const easedP = p * p * p; // Cubic Ease-In for natural acceleration towards the jar
-                const centerX = canvas.width / 2; const curX = startX + (centerX - startX) * easedP; const curY = startY + (targetY - startY) * easedP;
+                const centerX = (canvas.width / 2) + scrollDelta; const curX = startX + (centerX - startX) * easedP; const curY = startY + (targetY - startY) * easedP;
                 
                 // Calculate momentary velocity and angle for smear effect
                 const vx = curX - lastX, vy = curY - lastY;
@@ -4120,7 +4120,26 @@
             return 1.0; 
         }
 
+        let lastScrollLeft = 0;
         function loop() {
+            const slider = document.getElementById('jars-slider');
+            const sliderWidth = slider.offsetWidth;
+            const currentScrollX = slider.scrollLeft;
+            const scrollDelta = currentScrollX - (currentDayView * sliderWidth);
+
+            // Sync static walls with scroll position
+            const wallBodies = Composite.allBodies(world).filter(b => b.isStatic);
+            wallBodies.forEach(wall => {
+                if (wall.label !== 'physics-lid') {
+                    const centerX = (canvas.width / 2) - scrollDelta;
+                    const originalX = wall.position.x + (currentScrollX - lastScrollLeft);
+                    // This is handled better by just drawing with offset, but for collisions:
+                }
+            });
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(-scrollDelta, 0);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const activeHabitId = habitsData[currentHabitIndex] ? habitsData[currentHabitIndex].id : null;
             
@@ -4137,7 +4156,7 @@
                     const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
 
                     if (b.position.y < bodyTop - 20) {
-                        const dx = (canvas.width / 2) - b.position.x;
+                        const dx = ((canvas.width / 2) + scrollDelta) - b.position.x;
                         Matter.Body.applyForce(b, b.position, { x: dx * 0.0005, y: 0.001 });
                     }
                     
@@ -4199,7 +4218,9 @@
             updateFloatingPosition();
             updateLidProximity();
             Engine.update(engine, 1000 / 60);
+            ctx.restore();
             if (Matter.Common.now() % 5000 < 20) window.saveState();
+            lastScrollLeft = currentScrollX;
             requestAnimationFrame(loop);
         }
         
