@@ -635,6 +635,28 @@
 
         .jar-body { transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s; z-index: 10; position: absolute; top: var(--jar-base-y); left: 50%; transform: translateX(-50%); width: 88%; height: calc(100% - var(--jar-base-y) - 60px); border-radius: 80px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 20%); border: 2px solid rgba(255,255,255,0.25); box-shadow: inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06), 0 50px 100px -20px rgba(0,0,0,0.35), 0 20px 40px -15px rgba(0,0,0,0.2); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
 
+        .jar-nav-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 25%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            opacity: 0.6;
+            pointer-events: none;
+            z-index: 5;
+            animation: arrowFloat 2s infinite ease-in-out;
+        }
+        .jar-nav-hint svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 3;
+        }
+        @keyframes arrowFloat {
+            0%, 100% { transform: translateX(0); opacity: 0.3; }
+            50% { transform: translateX(15px); opacity: 0.8; }
+        }
         .jar-floor-shadow {
             position: absolute;
             bottom: 50px;
@@ -672,6 +694,7 @@
 
         /* --- Drawer --- */
         .bottom-section {
+            cursor: ew-resize;
             background: transparent; 
             z-index: 10000; /* השכבה העליונה ביותר */
             display: flex; flex-direction: column; align-items: center; 
@@ -1523,7 +1546,7 @@
         </div>
 
         <!-- Drawer -->
-        <div class="bottom-section" id="bottom-drawer">
+        <div class="bottom-section" id="bottom-drawer" ontouchstart="window.handleShelfSwipeStart(event)" ontouchmove="window.handleShelfSwipeMove(event)" ontouchend="window.handleShelfSwipeEnd(event)" onpointerdown="window.handleShelfSwipeStart(event)" onpointermove="window.handleShelfSwipeMove(event)" onpointerup="window.handleShelfSwipeEnd(event)">
             <div class="drawer-handle" id="drawer-handle"></div>
             
             <div id="drawer-normal-view" class="drawer-view active">
@@ -2158,7 +2181,7 @@
                 slide.className = `jar-slide ${i === currentDayView ? 'active-slide' : ''} ${i >= unlockedDays ? 'locked' : ''}`;
                 slide.dataset.index = i;
                 const info = getStageInfo(i);
-                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-floor-shadow"></div><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"><div class="glint-layer"></div><div class="jar-caustics"></div><div class="jar-distort-lens"></div></div><div class="jar-reflection"></div></div></div>`;
+                slide.innerHTML = `<div class="jar-wrapper" id="jar-wrapper-${i}"><div class="jar-floor-shadow"></div><div class="jar-nav-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="jar-glass-overlay"><div class="jar-cap-detail screwing" id="lid-${i}"></div><div class="jar-opening"></div><div class="jar-opening-front"></div><div class="jar-neck"></div><div class="jar-neck-front"></div><div class="jar-body"><div class="glint-layer"></div><div class="jar-caustics"></div><div class="jar-distort-lens"></div></div><div class="jar-reflection"></div></div></div>`;
                 s.appendChild(slide);
             }
             applyCustomBgs();
@@ -3339,6 +3362,30 @@
         };
 
         window.habitSwipeState = { startX: 0, startY: 0, lastX: 0, lastY: 0, gestureType: 'none', scrollStart: 0, threshold: 12, tapThreshold: 5, isCanceled: false, hasMoved: false };
+        window.shelfSwipeState = { startX: 0, scrollStart: 0, isScrolling: false };
+        window.handleShelfSwipeStart = (e) => {
+            const bd = document.getElementById('bottom-drawer');
+            if (bd.classList.contains('edit-mode') || bd.classList.contains('stats-mode') || bd.classList.contains('onboarding-mode')) return;
+            if (e.target.closest('button, .edit-btn, .add-btn')) return;
+            const touch = e.touches ? e.touches[0] : e;
+            window.shelfSwipeState.startX = touch.clientX;
+            window.shelfSwipeState.scrollStart = document.getElementById('jars-slider').scrollLeft;
+            window.shelfSwipeState.isScrolling = true;
+        };
+        window.handleShelfSwipeMove = (e) => {
+            if (!window.shelfSwipeState.isScrolling) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - window.shelfSwipeState.startX;
+            const slider = document.getElementById('jars-slider');
+            slider.scrollLeft = window.shelfSwipeState.scrollStart - dx;
+        };
+        window.handleShelfSwipeEnd = () => {
+            window.shelfSwipeState.isScrolling = false;
+            const slider = document.getElementById('jars-slider');
+            const width = slider.offsetWidth;
+            const index = Math.round(slider.scrollLeft / width);
+            slider.scrollTo({ left: index * width, behavior: 'smooth' });
+        };
         window.handleHabitSwipeStart = (e) => {
             if (e.target.closest('button, input, select, .menu-pill, .user-pill, .edit-btn, .add-btn, .magnet-eye-btn, .scroller-nav-btn')) return;
             if (e.cancelable && e.pointerType === 'touch') e.preventDefault();
