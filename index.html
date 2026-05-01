@@ -373,11 +373,12 @@
         }
 
         /* --- Header UI --- */
-        .header-ui {
-            position: absolute; top: 0; left: 0; width: 100%;
-            padding: 15px 20px; box-sizing: border-box;
+        .header-ui { z-index: 1001 !important; 
+            padding: 40px 20px 15px !important;
+            position: absolute; top: 0; left: 0; width: 100%; height: auto;
+            box-sizing: border-box;
             display: flex; flex-direction: column; align-items: center;
-            z-index: 70; pointer-events: none;
+            pointer-events: none;
             transition: filter 0.5s ease, opacity 0.5s ease;
         }
 
@@ -407,7 +408,7 @@
             display: none;
         }
 
-        .top-section { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: grab; touch-action: none !important; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; padding-bottom: 0; margin-bottom: 0; }
+        .top-section { z-index: 100; flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: grab; touch-action: none !important; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; padding-bottom: 0; margin-bottom: 0; }
         .app-container:has(.bottom-section.edit-mode) .top-section,
         .app-container:has(.bottom-section.stats-mode) .top-section,
         .app-container:has(.bottom-section.onboarding-mode) .top-section {
@@ -924,13 +925,13 @@
         }
 
         .habit-scroller-outer {
+            margin-top: 35px !important;
             position: relative;
             width: 100%;
-            height: 120px;
-            margin-top: 10px;
+            height: 100px;
             display: flex;
             align-items: center;
-            z-index: 200;
+            z-index: 500;
             pointer-events: auto;
         }
 
@@ -999,7 +1000,18 @@
             user-select: none;
         }
         
+        .habit-item.active.magnetizing {
+            animation: habitMagnetGlow 1.5s infinite ease-in-out;
+            filter: drop-shadow(0 0 8px var(--habit-active-color));
+        }
+        @keyframes habitMagnetGlow {
+            0%, 100% { transform: scale(1.4); opacity: 1; }
+            50% { transform: scale(1.45); opacity: 0.8; }
+        }
         .habit-item.active {
+            font-size: 38px;
+            transform: scale(1.3);
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
             font-size: 36px;
             transform: scale(1.4);
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.08));
@@ -1201,19 +1213,25 @@
             position: absolute;
             pointer-events: none;
             font-weight: 900;
-            font-size: 28px;
+            font-size: 32px;
             z-index: 2100;
             display: flex;
             align-items: baseline;
             justify-content: center;
             line-height: 1;
             gap: 4px;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            text-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transform: translateX(-50%);
+            will-change: transform, opacity;
         }
 
         .count-pop-anim {
-            animation: countFloatUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: countPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes countPopIn {
+            0% { transform: translate(-50%, 40px) scale(0.2); opacity: 0; filter: blur(4px); }
+            100% { transform: translate(-50%, 0) scale(1.2); opacity: 1; filter: blur(0px); }
         }
 
         @keyframes countFloatUp {
@@ -1407,7 +1425,13 @@
         <canvas id="physics-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none;"></canvas>
         <div class="drawer-backdrop" id="drawer-backdrop" onclick="window.setAppMode('normal')"></div>
         <!-- Header -->
-        <div class="header-ui" id="main-header-ui" style="align-items: center; height: auto; padding: 20px; background: linear-gradient(to bottom, rgba(248, 250, 252, 0.9) 0%, rgba(248, 250, 252, 0) 100%); backdrop-filter: none;">
+        <div class="header-ui" id="main-header-ui" style="align-items: center; height: auto; padding: 40px 20px 20px; background: none; backdrop-filter: none;">
+            <div class="header-controls-left" style="position: absolute; top: 15px; left: 20px; z-index: 1001; display: flex; gap: 10px; align-items: center; pointer-events: auto;">
+                <div class="menu-pill" id="sound-toggle" onclick="window.toggleSound(event)" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1.5px solid #ffffff; cursor: pointer; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); color: #475569;">
+                    <svg id="sound-on-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M2 10v4"></path><path d="M6 10v4"></path><path d="M10 10v4"></path><path d="M14 8v8"></path><path d="M18 5v14"></path><path d="M22 10v4"></path></svg>
+                    <svg id="sound-off-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                </div>
+            </div>
             <div class="header-controls" id="header-controls-group" style="position: absolute; top: 15px; right: 20px; z-index: 1001; display: flex; gap: 10px; align-items: center; pointer-events: auto;">
                 <div class="user-pill" onclick="window.openProfilePopup()" style="position: relative; top: 0; right: 0;">
                     <div class="admin-indicator" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
@@ -1430,8 +1454,9 @@
             <div class="dots-container" id="picker-dots" style="pointer-events: auto; margin: -10px auto 10px auto; justify-content: center; gap: 8px; transition: all 0.3s ease-out;"></div>
 
             <!-- Small Gap then Habit Data -->
-            <div id="top-status-bar" onpointerdown="event.stopPropagation()" onclick="window.openStatsMode()" style="display: flex; flex-direction: column; align-items: center; width: 100%; pointer-events: auto; cursor: pointer; margin: 0 auto 5px auto;">
+            <div id="top-status-bar" onpointerdown="event.stopPropagation()" onclick="window.openStatsMode()" style="transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; align-items: center; width: 100%; pointer-events: auto; cursor: pointer; margin: 0 auto 5px auto;">
                 <div class="drawer-info-pill" style="background: none; border: none; box-shadow: none; padding: 0; min-height: auto;">
+                    
                     <span class="day-label" id="drawer-day-label" style="font-size: 11px; opacity: 0.7;">יום 1</span>
                     <div class="divider" style="height: 10px; width: 1px; background: #e2e8f0; margin: 0 8px;"></div>
                     <div class="count-label" style="font-size: 14px;">
@@ -1453,15 +1478,7 @@
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: var(--jar-base-y); display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 150;">
 
                 <!-- Magnet Toggle (Eye) - Repositioned near cap -->
-                <div class="controls-cluster" id="controls-cluster-l7lb" style="position: absolute; top: calc(var(--jar-base-y) - 52px); left: calc((50% - 78px) / 2); transform: translateX(-50%); z-index: 520; display: flex; flex-direction: row; gap: 8px; align-items: center; background: transparent; backdrop-filter: none; padding: 0; border: none; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
-                    <div class="magnet-eye-btn" id="magnet-toggle" onclick="window.toggleMagnet(event)" title="מצב מגנט">
-                        <svg id="el-l7lb0a" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9v2a6 6 0 1 0 12 0V9"></path><path d="M18 9V7a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v2"></path><path d="M7 9V7a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v2"></path><line x1="6" y1="11" x2="18" y2="11"></line></svg>
-                    </div>
-                    <div class="magnet-eye-btn" id="sound-toggle" onclick="window.toggleSound(event)" title="צלילים" style="color: #cbd5e1;">
-                        <svg id="sound-on-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M2 10v4"></path><path d="M6 10v4"></path><path d="M10 10v4"></path><path d="M14 8v8"></path><path d="M18 5v14"></path><path d="M22 10v4"></path></svg>
-                        <svg id="sound-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-                    </div>
-                </div>
+                
             </div>
 
             <div id="mode-switcher-container" style="flex-shrink: 0;">
@@ -1491,7 +1508,7 @@
         <!-- Days Display Removed from top -->
 
         <div class="top-section" id="clickable-top-section" 
-             style="padding-top: 0px; height: 100%; touch-action: none;"
+             style="padding-top: 0px; height: 100%; touch-action: none; z-index: 10;"
               
              ontouchstart="window.handleHabitSwipeStart(event)" 
              ontouchmove="window.handleHabitSwipeMove(event)" 
@@ -1714,6 +1731,11 @@
                         </div>
 
                         <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+
+                        <div style="margin-top:15px; text-align:right; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 10px;">
+                            <label style="font-size:13px; font-weight:800; color:#64748b;">צנצנת שקופה לגמרי (ללא צל)</label>
+                            <input type="checkbox" id="input-jar-transparent" onchange="window.updateCustomBgs()" style="width: 20px; height: 20px; accent-color: var(--primary-color); cursor: pointer;">
+                        </div>
 
                         <div style="margin-top:15px; text-align:right;">
                             <label style="font-size:12px; font-weight:800; color:#64748b;">צבע צנצנת</label>
@@ -2056,31 +2078,44 @@
                 appCont.style.background = `linear-gradient(to bottom, ${color} 0%, ${color} ${ratio}%, #ffffff ${Math.min(100, ratio + 15)}%)`;
             }
 
-            document.querySelectorAll('.jar-body, .jar-reflection').forEach(jar => {
-                if (customBgs.jarUrl) {
-                    jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
-                    jar.style.backgroundPosition = 'center';
-                    jar.style.backgroundSize = '100% 100%';
-                    jar.style.backgroundRepeat = 'no-repeat';
-                    jar.style.backgroundColor = '#ffffff';
-                } else if (customBgs.jarColor) {
-                    jar.style.backgroundColor = (customBgs.jarColor || '#ffffff') + '40';
-                    jar.style.backgroundImage = 'none';
-                } else {
+            const isJarTransparent = customBgs.jarTransparent;
+            document.querySelectorAll('.jar-body').forEach(jar => {
+                if (isJarTransparent) {
+                    jar.style.boxShadow = 'none';
+                    jar.style.border = 'none';
+                    jar.style.background = 'none';
                     jar.style.backgroundColor = 'transparent';
-                    jar.style.backgroundImage = 'none';
+                } else {
+                    jar.style.boxShadow = 'inset 0 15px 25px -5px rgba(255, 255, 255, 0.5), inset 0 -40px 80px rgba(0,0,0,0.06), 0 50px 100px -20px rgba(0,0,0,0.35), 0 20px 40px -15px rgba(0,0,0,0.2)';
+                    jar.style.border = '2px solid rgba(255,255,255,0.25)';
+                    if (customBgs.jarUrl) {
+                        jar.style.backgroundImage = `url(${customBgs.jarUrl})`;
+                        jar.style.backgroundPosition = 'center';
+                        jar.style.backgroundSize = '100% 100%';
+                        jar.style.backgroundColor = '#ffffff';
+                    } else if (customBgs.jarColor) {
+                        jar.style.backgroundColor = (customBgs.jarColor || '#ffffff') + '40';
+                        jar.style.backgroundImage = 'none';
+                    } else {
+                        jar.style.backgroundColor = 'transparent';
+                        jar.style.backgroundImage = 'none';
+                    }
                 }
+            });
+            document.querySelectorAll('.jar-reflection, .jar-floor-shadow').forEach(el => {
+                el.style.display = isJarTransparent ? 'none' : 'block';
             });
         }
         window.applyCustomBgs = applyCustomBgs;
 
         window.updateCustomBgs = () => {
             customBgs = {
+                ...customBgs,
                 appUrl: document.getElementById('input-app-bg-url').value,
                 appColor: customBgs.appColor || '#e0f2fe',
                 appRatio: parseInt(document.getElementById('input-app-ratio')?.value || 80),
                 jarColor: document.getElementById('input-jar-color').value,
-                ...customBgs
+                jarTransparent: document.getElementById('input-jar-transparent').checked
             };
             applyCustomBgs(); window.saveState();
         };
@@ -2436,6 +2471,7 @@
             const h = habitsData[currentHabitIndex]; if(!h) return;
             document.querySelectorAll('.habit-item').forEach((it, i) => {
                 it.classList.toggle('active', i === currentHabitIndex);
+                it.classList.toggle('magnetizing', i === currentHabitIndex && isMagnetMode);
                 it.classList.toggle('activated', sessionActivated);
                 if (i === currentHabitIndex) {
                     it.style.setProperty('--habit-active-color', sessionActivated ? h.color : '#94a3b8');
@@ -2837,7 +2873,13 @@
                 el.onclick = (e) => { 
                     e.stopPropagation(); 
                     if (typeof window.navigator.vibrate === 'function') window.navigator.vibrate(10);
-                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
+                    if (i === currentHabitIndex) {
+                        // Toggle magnet when clicking the currently active habit text
+                        window.toggleMagnet();
+                    } else {
+                        // Just scroll to the habit if it's not the active one
+                        el.scrollIntoView({ behavior: 'smooth', inline: 'center' }); 
+                    }
                 };
                 sc.appendChild(el);
             });
@@ -3071,31 +3113,49 @@
                         }
                     }, 1500);
                     
-                    // Single Unified Score Feedback: Emerging from the JAR CENTER, growing and fading away
+                    // Unified Score Feedback: Emerging from Jar and flying to data area
                     const bodyEl = document.querySelector('.jar-body');
-                    if (bodyEl) {
-                        const cRect = contRect; 
+                    const targetCount = document.getElementById('drawer-current-count');
+                    if (bodyEl && targetCount) {
                         const fb = document.createElement('div');
                         fb.className = 'count-feedback-pop count-pop-anim';
                         fb.style.color = h.color;
                         
-                        // Position it at the center of the jar body
-                        fb.style.left = (jr.left - cRect.left + jr.width / 2) + 'px';
-                        fb.style.top = (bodyEl.offsetTop + 180) + 'px';
-                        fb.style.width = '200px';
+                        const startX = jr.left - contRect.left + jr.width / 2;
+                        const startY = bodyEl.offsetTop + 100;
+                        
+                        fb.style.left = startX + 'px';
+                        fb.style.top = startY + 'px';
+                        fb.style.width = '100px';
                         fb.style.textAlign = 'center';
                         
-                        if (stats.breakthrough > 0) {
-                            fb.innerHTML = `
-                                <span style="font-size: 0.6em; opacity: 0.5; font-weight: 800; align-self: baseline; padding-bottom: 5px;">${stats.min}</span>
-                                <span style="font-size: 1.6em; font-weight: 950; margin-left: 4px; filter: drop-shadow(0 0 10px ${h.color}40);">+${stats.breakthrough}</span>
-                            `;
-                        } else {
-                            fb.innerText = stats.min;
-                        }
-                        
+                        fb.innerHTML = "+1";
                         document.querySelector('.app-container').appendChild(fb);
-                        setTimeout(() => fb.remove(), 1200);
+
+                        setTimeout(() => {
+                            const tRect = targetCount.getBoundingClientRect();
+                            const cRect = document.querySelector('.app-container').getBoundingClientRect();
+                            const destX = (tRect.left - cRect.left) + (tRect.width / 2);
+                            const destY = (tRect.top - cRect.top) + (tRect.height / 2);
+                            const deltaX = destX - startX;
+                            const deltaY = destY - startY;
+
+                            fb.animate([
+                                { transform: 'translate(-50%, 0) scale(1.2)', opacity: 1, filter: 'blur(0px)' },
+                                { transform: `translate(calc(-50% + ${deltaX}px), ${deltaY}px) scale(0.5)`, opacity: 0, filter: 'blur(4px)' }
+                            ], {
+                                duration: 900,
+                                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                                fill: 'forwards'
+                            }).onfinish = () => {
+                                fb.remove();
+                                targetCount.animate([
+                                    { transform: 'scale(1)', color: h.color },
+                                    { transform: 'scale(1.5)', color: h.color },
+                                    { transform: 'scale(1)', color: h.color }
+                                ], { duration: 400 });
+                            };
+                        }, 450);
                     }
 
                     // Pulse the UI Pill for haptic-visual feedback
@@ -3278,7 +3338,8 @@
 
         window.habitSwipeState = { startX: 0, startY: 0, lastX: 0, lastY: 0, gestureType: 'none', scrollStart: 0, threshold: 12, tapThreshold: 5, isCanceled: false, hasMoved: false };
         window.handleHabitSwipeStart = (e) => {
-            if (e.cancelable) e.preventDefault();
+            if (e.target.closest('button, input, select, .menu-pill, .user-pill, .edit-btn, .add-btn, .magnet-eye-btn, .scroller-nav-btn')) return;
+            if (e.cancelable && e.pointerType === 'touch') e.preventDefault();
             e.stopPropagation();
             if (window.isAnimatingJump || habitsData.length === 0) return;
             if (e.pointerType === 'touch' && !e.isPrimary) return;
@@ -3303,7 +3364,7 @@
             }
         };
         window.handleHabitSwipeMove = (e) => {
-            if (e.cancelable) e.preventDefault();
+            if (e.cancelable && window.habitSwipeState.gestureType !== 'none') e.preventDefault();
             e.stopPropagation();
             if (!window.isDrag || window.isAnimatingJump) return;
             const touch = e.touches ? e.touches[0] : e;
@@ -3519,6 +3580,9 @@
             document.getElementById('stat-days-active').innerText = unlockedDays;
             let total = 0; userStats.daysData.forEach(d => { if (d.habits) Object.values(d.habits).forEach(st => total += st.min + st.breakthrough); });
             document.getElementById('stat-total-habits').innerText = total;
+            if (document.getElementById('input-jar-transparent')) {
+                document.getElementById('input-jar-transparent').checked = customBgs.jarTransparent || false;
+            }
             updateProfileUI();
             document.getElementById('profile-popup').classList.add('active');
         };
@@ -3918,7 +3982,7 @@
             // Ensure physics lid barrier returns to position when lid is closed
             const bodyEl = document.querySelector('.jar-body');
             const bodyTop = bodyEl ? bodyEl.offsetTop : (canvas.height * 0.32);
-            if (openFactor > 0.15 || window.isAnimatingJump) {
+            if (openFactor > 0.15 || window.isAnimatingJump || (isMagnetMode && b.position.y < bodyTop + 10)) {
                  Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: -5000 });
             } else {
                  Matter.Body.setPosition(window.physicsLid, { x: canvas.width / 2, y: bodyTop - 38 });
@@ -3929,6 +3993,11 @@
                 const jitter = Math.sin(Date.now() * 0.2) * 1.2;
                 lid.style.transform += ` translateX(${jitter}px)`;
             }
+
+            const statusBar = document.getElementById('top-status-bar');
+            if (statusBar) {
+                statusBar.style.opacity = openFactor > 0.05 ? '0.5' : '1';
+            }
         }
 
         window.toggleSound = (e) => { if(e) e.stopPropagation(); isSoundEnabled = !isSoundEnabled; const btn = document.getElementById('sound-toggle'); const on = document.getElementById('sound-on-icon'); const off = document.getElementById('sound-off-icon'); if(btn) btn.classList.toggle('active', isSoundEnabled); if(on) on.style.display = isSoundEnabled ? 'block' : 'none'; if(off) off.style.display = isSoundEnabled ? 'none' : 'block'; if(isSoundEnabled) playSound('snap'); }; window.toggleMagnet = (e) => {
@@ -3936,7 +4005,7 @@
             isMagnetMode = !isMagnetMode;
             const btn = document.getElementById('magnet-toggle');
             if(btn) btn.classList.toggle('active', isMagnetMode);
-            
+            renderActiveHabit();
             if (isMagnetMode && typeof window.navigator.vibrate === 'function') {
                 window.navigator.vibrate(15);
             }
@@ -3987,17 +4056,28 @@
                         Matter.Sleeping.set(b, false);
                         const centerX = canvas.width / 2;
                         const bodyEl = document.querySelector('.jar-body');
-                        const targetY = bodyEl ? bodyEl.offsetTop - 40 : canvas.height * 0.25;
+                        const targetY = bodyEl ? bodyEl.offsetTop + 30 : canvas.height * 0.32;
                         if (isMatching) {
-                            const dx = centerX - b.position.x;
-                            const dy = targetY - b.position.y;
+                            // Soft organic attraction with individual space offsets using Sine/Cosine noise
+                            const time = Date.now() * 0.0015;
+                            const offsetX = Math.sin(time + b.id) * 40;
+                            const offsetY = Math.cos(time + b.id) * 30;
+                            const dx = (centerX + offsetX) - b.position.x;
+                            const dy = (targetY + offsetY) - b.position.y;
+                            
                             Matter.Body.applyForce(b, b.position, {
-                                x: dx * 0.025,
-                                y: dy * 0.05
+                                x: dx * 0.0015,
+                                y: dy * 0.0035
                             });
+                            // High friction to keep them suspended in the top part without flying out
+                            b.frictionAir = 0.22;
                         } else {
-                            alpha = 0.35;
+                            alpha = 0.15;
+                            b.frictionAir = 0.02;
                         }
+                    } else {
+                        // Reset friction to natural state
+                        b.frictionAir = 0.002;
                     }
 
                     if (b.render.visible !== false) {
